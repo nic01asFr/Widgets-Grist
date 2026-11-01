@@ -163,7 +163,7 @@ Ajouts **additifs** pour une page qui pose sa propre 3D au-dessus d'une carte vu
 
 **Non retenu** : un refus général d'un type de couche inconnu (la clé `type` est admise par le validateur de manifeste : le refuser risquerait des hôtes légitimes) ; un fond transparent (non trouvé, à traiter séparément) ; la fusion des fragments de bâtiments ; l'export glTF et WebXR.
 
-## 6 quinquies. Contrat 0.5 : les géométries d'une couche [testé, simulé ; navigateur à faire]
+## 6 quinquies. Contrat 0.5 : les géométries d'une couche [testé, navigateur]
 
 `getFeatures(couche, { bbox, limite })` (capacité `socle`, exige la version 0.5) : pour une page qui redessine ou extrude la figure (vue éclatée, aperçu en réalité augmentée), les géométries et propriétés d'une couche que la carte ne rend qu'en pixels. `getRows` ne donne que les attributs, `getBuildings` que le bâti du fond ; ceci lit n'importe quelle couche de la scène.
 
@@ -294,6 +294,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.32.3 | 0.3 | profil complet : le voile du premier rendu s'applique aussi (`voile=0` le retire), la page ne montre plus l'application de base puis la carte par défaut avant la scène de l'hôte. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.32.2 | 0.3 | l'aiguille du nord de la boussole suit la couleur principale. Aucune commande ajoutée, contrat 0.3, client et empreinte inchangés. |
 | 1.35.0 | 0.3 -> 0.4 | contrat 0.4, additif : `getCamera`, `watchCamera` et l'événement `mouvement` (flux de la caméra sur abonnement), `setViewMode` (vue plane verrouillée), `getBuildings` (bâtiments visibles, hauteurs, fragments), événement `clic` en un point libre ; la carte nue refuse une couche `dalles3d` (`capacite_absente`) ; règle de version : une commande exige au moins la version qui l'a introduite ; `VERSION_CLIENT` 2 ; `ready.version` annonce 0.4 (négocier par `ready.versions`) |
-| à venir (non publié) | 0.4 -> 0.5 | contrat 0.5, additif : `getFeatures(couche, { bbox, limite })` ; `VERSION_CLIENT` 3. Une commande 0.2, 0.3 ou 0.4 reste servie à un hôte resté en 0.2, 0.3 ou 0.4. |
+| 1.36.0 | 0.4 -> 0.5 | contrat 0.5, additif : `getFeatures(couche, { bbox, limite })` ; `VERSION_CLIENT` 3. Une commande 0.2, 0.3 ou 0.4 reste servie à un hôte resté en 0.2, 0.3 ou 0.4. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

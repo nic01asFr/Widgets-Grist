@@ -72,7 +72,7 @@ for (const [nom, fichiers, plafondBrut, plafondGz] of BUDGETS) {
 test('poids : le noyau du composant ne tire pas l\'application complète', () => {
   const noyau = fermeture('lib/bi/montage.js');
   assert.ok(!noyau.includes('app.js'), 'montage.js ne doit pas importer app.js');
-  assert.ok(noyau.length <= 47, `le noyau compte ${noyau.length} fichiers (plafond 47 depuis la 1.35.0 : batiments.js, importé à la demande ; mesuré : 43 en 1.26.0 : les modules d'interface et les tables liées)`);
+  assert.ok(noyau.length <= 48, `le noyau compte ${noyau.length} fichiers (plafond 48 depuis la 1.36.0 : features.js, importé à la demande comme batiments.js (plafond 47 depuis la 1.35.0) ; mesuré : 43 en 1.26.0 : les modules d'interface et les tables liées)`);
 });
 
 test('poids : la garde mord (un module qui grossit de 50 Ko fait dépasser le plafond du noyau)', () => {

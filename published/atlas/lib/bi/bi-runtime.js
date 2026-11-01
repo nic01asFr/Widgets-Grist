@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.35.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.35.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.36.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.36.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.35.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.36.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -366,6 +366,7 @@ export function attacher(map, opts = {}) {
   const horloge = opts.horloge || {};
   const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
   const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
+  let limiteurFeatures = null;    // idem pour getFeatures
   let limiteurBatiments = null;   // au plus APPELS_PAR_SECONDE lectures de bâtiments par seconde ; créé au premier appel, avec le module chargé à la demande
   const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
   /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
@@ -479,7 +480,7 @@ export function attacher(map, opts = {}) {
       // l'environnement déclaré (relief, bâti en volume, ciel, soleil) : brique chargée à la demande, jamais pour une scène qui n'en déclare pas et n'a rien à défaire
       if (manifest.environnement !== undefined || (!fusion && etatEnvironnement)) {
         try {
-          const env = await import('./environnement.js?v=1.35.0');
+          const env = await import('./environnement.js?v=1.36.0');
           if (etatEnvironnement && (!fusion || manifest.environnement !== undefined)) { env.reinitialiserEnvironnement(map, etatEnvironnement); etatEnvironnement = null; }
           const r = env.appliquerEnvironnement(map, env.environnementDeclare(manifest.environnement), { theme });
           etatEnvironnement = Object.values(r.etat).some(Boolean) ? r.etat : null;
@@ -600,7 +601,7 @@ export function attacher(map, opts = {}) {
      */
     async getBuildings(o) {
       // brique chargée À LA DEMANDE : la page maigre n'embarque pas un module que la plupart des hôtes n'appellent jamais
-      const B = await import('./batiments.js?v=1.35.0');
+      const B = await import('./batiments.js?v=1.36.0');
       const { normaliserOptionsBatiments, batimentsDeEntites, creerLimiteur, ZOOM_MINIMAL: ZOOM_MINIMAL_BATIMENTS, APPELS_PAR_SECONDE, ATTRIBUTION: ATTRIBUTION_BATIMENTS } = B, intersectionBatiments = B.intersection;
       const opt = normaliserOptionsBatiments(o);
       if (!limiteurBatiments) limiteurBatiments = creerLimiteur(maintenant);
@@ -614,6 +615,24 @@ export function attacher(map, opts = {}) {
       if (zoom < ZOOM_MINIMAL_BATIMENTS) return { ...base, features: [], total: 0, tronque: false, bounds: utile, avertissements: ["zoom-trop-faible : le bâti n'est lu qu'à partir du zoom " + ZOOM_MINIMAL_BATIMENTS + ' (zoom actuel ' + arrondi(zoom, 1) + ')'] };
       const r = batimentsDeEntites(map.querySourceFeatures('openmaptiles', { sourceLayer: 'building' }), { bbox: utile, limite: opt.limite, hauteurMin: opt.hauteurMin });
       return { ...base, features: r.features, total: r.total, tronque: r.tronque, bounds: utile.map((v) => arrondi(v, 6)), avertissements: r.avertissements };
+    },
+    /**
+     * Les géométries d'une couche (contrat 0.5), pour une page qui les redessine ou les extrude : GeoJSON borné, avec ce qu'il faut pour redessiner à l'identique
+     * (visuel, style, légende). Voir lib/bi/features.js pour les plafonds. Une couche de table (sans géométrie) ou une couche administrative est refusée.
+     */
+    async getFeatures(layer, o) {
+      const F = await import('./features.js?v=1.36.0');
+      const opt = F.normaliserOptionsFeatures(o);
+      if (!limiteurFeatures) limiteurFeatures = F.creerLimiteur(maintenant);
+      if (!limiteurFeatures()) throw new Error('getFeatures : trop_frequent (' + F.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
+      if (tables.has(layer)) throw new Error('getFeatures : ' + layer + ' est une table (sans géométrie)');
+      const c = couches.get(layer);
+      if (!c) throw new Error('couche inconnue : ' + layer);
+      if (c.admin) throw new Error('getFeatures : ' + layer + " est une couche administrative (non lue par cette commande)");
+      const r = F.featuresDeEntites(c.features, opt);
+      let legende = null; try { legende = api.getLegend(c.id); } catch (e) { /* une couche sans légende n'en rend pas */ }
+      const clone = (v) => { try { return v === undefined ? null : JSON.parse(JSON.stringify(v)); } catch (e) { return null; } };
+      return { type: 'FeatureCollection', layer: c.id, nom: c.def.name || c.id, geometrie: geom(c), features: r.features, total: r.total, tronque: r.tronque, bounds: opt.bbox, visuel: clone(c.visuel), style: clone(c.def.style), legende: clone(legende), visible: c.visible, avertissements: r.avertissements };
     },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {

@@ -6,12 +6,18 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 | Repère | Valeur actuelle |
 |---|---|
-| Contrat du composant carte BI | 0.4 (additif ; 0.3 et 0.2 restent servis) |
-| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 2, 15 586 octets |
-| Empreinte du client | `sha384-uGkFCm2s3lMQU5tCJlXwLm/MP0SUkKfy9LtodrgG6F1TkwQ/2BTrt4M0QNBwS5Hp` |
+| Contrat du composant carte BI | 0.5 (additif ; 0.4, 0.3 et 0.2 restent servis) |
+| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 3, 15 745 octets |
+| Empreinte du client | `sha384-g5sAYVxj16rSreyNXIZOR7wfzwPkr+oWX420nQ1UPVFv4RCBmRphpaDp8dH4o72j` |
 | Moteur de formulaires vendorisé | celui de la 1.13.1 (une publication d'Atlas ne le fait pas bouger) |
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
+
+## 1.36.0 — contrat carte BI 0.5, lecture des géométries d'une couche
+
+- **Contrat 0.5** (additif) : `getFeatures(couche, { bbox, limite })` rend les géométries d'une couche en GeoJSON, avec propriétés, `visuel`, `style`, `légende` et `visible`, pour une page qui les redessine ou les extrude (vue éclatée, aperçu en réalité augmentée). Plafonds comme `getBuildings` : 5000 entités, 20 000 sommets par entité, 200 000 sommets et 2 Mo au total, 5 appels par seconde ; une table (sans géométrie) et une couche administrative sont refusées. Détail : `docs/CONTRAT-CARTE-BI.md` §6 quinquies. Vérifié en navigateur sur trois couches (surface, ligne, points).
+- **`ready.version` et `ping().version` annoncent maintenant `0.5`** : un hôte qui les compare à `'0.4'` en dur doit négocier par `ready.versions`. Nouveau client d'hôte : `VERSION_CLIENT` 3, empreinte ci-dessus.
+- **Thème du document** : une graine de `Theme_document` s'écrit `#RRGGBB` (arbitrage de la spécification ThemeDef) ; un `principal` mal écrit est refusé, une autre graine mal écrite est écartée et dite. La lecture générale des chartes reste tolérante.
 
 ## 1.35.0 — contrat carte BI 0.4, dalles 3D compressées et protégées, sélection Grist
 
