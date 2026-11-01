@@ -34,6 +34,32 @@ Les statuts ne sont **plus** une enum hardcodée : ils sont lus depuis les Choic
 
 La barre de navigation inter-widgets (bas d'écran, pour passer d'une vue à l'autre) n'apparaît **que si l'URL du widget contient `?nav`** (cas « TaskFlow racine » / page suite). Sans `?nav`, chaque widget est autonome (pas de barre). Activé via `if (new URLSearchParams(location.search).has('nav')) document.body.classList.add('suite-nav')`.
 
+### Compatible ThemeDef (`--kit-*`), 01/11/2026
+
+Même motif que `grist_forms` (voir `projects/grist_forms/docs/THEME-KIT.md`) : les variables de couleur posées dans chaque `:root` (clair) et chaque `@media (prefers-color-scheme: dark) { :root {...} }` (sombre) passent par `var(--kit-x, repli)`, **repli = la valeur d'avant, inchangée**. Sans hôte qui pose un `--kit-*`, rien ne change — vérifié : remplacer chaque `var(--kit-x, repli)` par son repli redonne exactement les 8 fichiers d'avant (`kanban.html`, `gantt.html`, `calendar.html`, `dashboard.html`, `plan.html`, `cra.html`, `orgchart.html`, `index.html`), et testé en Chrome réel (serveur de dev local) : en posant `--kit-accent`/`--kit-fond`/`--kit-surface`/`--kit-texte`/`--kit-bord` sur `document.documentElement`, l'interface bascule immédiatement ; sans rien poser, le rendu est identique à l'original.
+
+| `--kit-*` | Variable(s) TaskFlow couverte(s) |
+|---|---|
+| `--kit-accent` | `--primary` |
+| `--kit-accent-survol` | `--primary-dark` (toujours utilisé pour le survol/hover dans TaskFlow) |
+| `--kit-accent-fond` | `--primary-light` |
+| `--kit-fond` | `--bg` |
+| `--kit-surface` | `--card-bg` / `--surface` |
+| `--kit-surface-2` | `--surface-2` |
+| `--kit-texte` | `--text` |
+| `--kit-texte-2` | `--text-muted` |
+| `--kit-bord` | `--border` |
+| `--kit-ok` / `--kit-ok-fond` | `--success`/`--success-light`, ou `--ok` (Plan/CRA/Orgchart) |
+| `--kit-attention` / `--kit-attention-fond` | `--warning`/`--warning-light`, ou `--warn` |
+| `--kit-alerte` / `--kit-alerte-fond` | `--danger`/`--danger-light`, ou `--over` |
+| `--kit-info` / `--kit-info-fond` | `--info`/`--info-light` |
+
+**Volontairement non thématisé** (pas de jeton `--kit-*` correspondant dans le kit, même logique que THEME-KIT.md) : `--text-light`, `--border-dark`, `--p-50`/`--p-100`, `--surface-3`, `--off`, `--radius`, `--shadow`/`--shadow-lg`, `--ink`. Un hôte qui pose `--kit-accent` etc. doit fournir des valeurs adaptées au mode actif (clair/sombre) — la cascade CSS fait le reste, `prefers-color-scheme` continue d'agir sans hôte.
+
+**Portée volontairement limitée** : seulement le crochet CSS. TaskFlow n'a aucun lecteur de la table `Theme_document` (pas de `listTables`/`fetchTable` dédié, pas de `depuis-themedef.js`) — ses widgets Grist tournent en autonome, pas derrière un hôte qui appellerait `monter({theme})`. Rien n'alimente `--kit-*` aujourd'hui ; si un lecteur est un jour demandé, réutiliser la règle d'Atlas telle quelle (`published/atlas/lib/charte/theme-document.js` + `depuis-themedef.js` : aucune ligne active → rien, plusieurs actives → rien + `plusieurs-actifs`, contenu non fiable → rien), coordonné avec `appkit-architecte` (lots TD-1/TD-2/TD-3 de `projects/appkit/docs/etudes/57-etude-themedef.md`) pour ne pas créer un lecteur divergent.
+
+`app_runtime.html` n'a pas de `:root` propre (relais pur) : rien à faire.
+
 ---
 
 ## Architecture commune
@@ -303,6 +329,28 @@ JSON `[{teamId, heures}]` = répartition de l'effort par assigné. `effCharges(t
 ### `dateCloture`
 
 Posée automatiquement au passage en statut **fait** (`TF.isDone`), effacée si réouverture. Pilote le réalisé-sur-clôture et le calcul de **délai**. Écrite par Kanban/Gantt/Calendar (au changement de statut / drag), **seulement si la colonne existe** (opt-in).
+
+### Lieu, géométrie — géolocalisation d'une réunion (dans `TASKFLOW_SCHEMA`, cadrage 01/11/2026, FAIT)
+
+Voir `CADRAGE-GEOLOCALISATION-EVENEMENTS.md` pour l'étude complète. **Exception volontaire au principe opt-in** appliqué partout ailleurs (`charges`/`dateCloture`/`portefeuille`/`TimeEntries` restent hors `TASKFLOW_SCHEMA`) : `Tasks.lieu`/`Tasks.geometrie` sont dans `TASKFLOW_SCHEMA.Tasks`, créées par `ensureSchema()` comme les colonnes de base, dans tout document TaskFlow — parce que le type « Réunion » lui-même n'est jamais opt-in, et que tout ce qu'il change d'habitude (Ordre du jour, Participants, Points à traiter) fonctionne déjà sans activation.
+
+- **`Tasks.lieu`** (Text) et **`Tasks.geometrie`** (Text, WKT `Point`) — **Cas B1**, lieu libre d'une réunion. Section « LIEU » dans le panneau (Kanban/Gantt/Calendar), visible dès que `type === 'reunion'` (plus de geste d'activation : une version intermédiaire avec bouton « Activer » + `AddColumn` à la demande a été testée en Grist réel puis retirée au profit de l'inclusion dans le schéma de base). Champ adresse avec autocomplétion BAN via `FormReferentiel.monter()` (module vendoré depuis `projects/grist_forms/shared/referentiel.js`, UMD, sans dépendance à Grist — copié tel quel en haut du fichier, dans un `<script>` séparé, avant le script principal). `onChoisir` écrit `lieu` (libellé) et `geometrie` (`POINT(lon lat)`) via `updateField`. CSS `.fr-referentiel__*` adapté aux variables TaskFlow (déjà compatibles `--kit-*`). `wireLieuInput()` (ré)attache le contrôleur à chaque `renderPanelTask()`/`renderPanel()` (le DOM est reconstruit à chaque rendu) et le détruit à la fermeture du panneau (`closePanel()`), pour éviter les fuites de requêtes en vol.
+- **Bug corrigé le 01/11/2026 (nuit) : `lieu`/`geometrie` n'étaient jamais réellement sauvegardés.** `saveTaskToGrist()` et `createTask()` (Kanban/Gantt/Calendar) construisent leur payload Grist comme un littéral `record` écrit à la main — `lieu`/`geometrie` avaient été oubliés de ce littéral lors de l'implémentation initiale. Conséquence : la saisie s'affichait correctement partout (carte, panneau) parce que `syncLocalTask()` recopie bien `data.lieu`/`data.geometrie` dans le tableau `tasks[]` en mémoire utilisé pour le rendu — mais `UpdateRecord`/`AddRecord` envoyé à Grist ne contenait jamais ces champs, donc rien n'était persisté. Découvert en testant bout-en-bout dans le vrai document Grist de l'utilisateur (saisie → rechargement à froid → colonnes `Lieu`/`Géométrie` vides). Corrigé dans les 3 widgets ; revérifié en Grist réel après correction : `Lieu`/`Géométrie` survivent bien à un rechargement complet (`POINT(2.308628 48.850699)` pour « 20 Avenue de Ségur 75007 Paris »).
+- **Icône de lieu, généralisée à tout item localisé (pas seulement les réunions) — 01/11/2026.** Icône `pin` (SVG feather-style, cohérente avec les icônes `UI_ICONS`/`uiIcon` existantes) ajoutée à `core/taskflow-core.js` (source unique, régénérée dans les 3 widgets par `npm run build:taskflow`). `UI_ICONS`/`uiIcon` vivent **dans la fermeture du module `TF`** (IIFE) — invisibles tels quels hors de ce module ; le code applicatif des widgets (hors du bloc `<taskflow-core>`) doit donc appeler `TF.ui.icon(name, size)`, pas `uiIcon(...)` directement (piège rencontré : `uiIcon` bare est `undefined` dans `renderCard`/`buildBarContent`/etc., qui sont déclarés après la fermeture de l'IIFE). Badge carte Kanban (`renderCard`, générique sur `t.lieu`, pas restreint à `type === 'reunion'`), libellé de barre/jalon Gantt (`TF.ui.icon('pin', 11)` préfixé si `t.lieu`), titre d'évènement Calendrier (`buildBarContent`, icône insérée comme nœud DOM séparé — jamais dans `textContent`, qui échapperait le SVG en texte littéral), et aperçu sous le champ LIEU dans les 3 panneaux. Plus aucun emoji 📍 dans le code (uniquement dans ce document et l'étude).
+
+### Rattachements — tâche liée à un enregistrement d'une table externe (opt-in, Cas A, FAIT 01/11/2026)
+
+Voir `CADRAGE-GEOLOCALISATION-EVENEMENTS.md` pour l'étude complète. Une v1 (`Tasks.objet` Text, saisie manuelle de la clé) a été écrite puis retirée : aucune validation, aucun garde-fou contre une clé fautive. Le modèle retenu à la place, **généralisé** au-delà du seul objet géographique sur demande explicite de Nicolas (« rattacher un enregistrement grist quelconque à une tâche ») : table pivot opt-in `Rattachements` (`tache` Ref:Tasks, `tableCibleRef`/`tableCibleNom`/`ligneCibleId`/`cleCible`/`creeLe`), créée au premier clic réel sur « Lier un objet » (`ensureRattachementsSchema()` : `AddTable` + `AddReverseColumn('Rattachements','tache')`, un seul lot, confirmation `TF.confirm` avant création — même prudence que `Portefeuilles`).
+
+- **Renommée depuis `Liaisons`** avant tout code : `projects/referentiels/` a déjà une table `Liaisons` pour un usage différent — collision de nom réelle (deux widgets peuvent coexister dans le même document), repérée avant d'écrire le premier code.
+- **Détection des tables candidates** : scan schéma seul (`_grist_Tables`/`_grist_Tables_column`, jamais les données), vendoré depuis `published/atlas/lib/geo-tables.js` (mêmes alias `geometry_json`/`geometry`/`geom`/`wkt`, mêmes alias lat/lng). Icône `pin` devant les tables géo-détectées, triées en premier — la géo-détection est une **classification**, pas une condition d'accès.
+- **Tables propres à TaskFlow exclues du picker** (`RATTACH_OWN_TABLES = {Tasks, Team, Projects, Rattachements, Disponibilites, Portefeuilles, TimeEntries}`) : le mécanisme sert à brancher des tables **externes** (parc d'objets, référentiel), pas à dupliquer les relations déjà modélisées (`assignees`/`projet`/`dependDe`/`parentTask`). Décision explicite de Nicolas après un premier essai en Grist réel.
+- **Libellé d'une ligne en cascade** : `nom` → `titre` → `libelle`/`name`/`label` → première colonne Texte/Choice non-formule → repli `#idDeLigne`. Ne suppose pas que la table externe suit la convention Atlas (`nom`) à la lettre.
+- **UI** : picker en deux temps (tables → lignes), réutilise intégralement les classes `.multi-select*` existantes (assignés/parent) — aucun CSS nouveau. Section « OBJETS LIÉS » entre PARENT et ASSIGNÉS, masquée pour une tâche non créée.
+- **Piège DOM rencontré et corrigé** : un `onclick` inline qui remplace `innerHTML` d'un ancêtre de façon synchrone détache le nœud cliqué du document **avant** qu'un écouteur global « fermer au clic extérieur » (`e.target.closest(...)`) ne s'exécute à son tour — sur un nœud détaché, `closest` renvoie `null`, et la fermeture se déclenche à tort. Fix : `event.stopPropagation()` dans l'`onclick` concerné, posé **avant** tout remplacement de `innerHTML` d'un ancêtre, chaque fois qu'un clic cumule ces deux propriétés.
+- **Cascade de suppression** : `confirmDelete(mode)` étend son lot d'actions avec un `RemoveRecord` par ligne `Rattachements` de la tâche supprimée (même lot, pas un envoi séparé — une `Ref` ne cascade pas nativement en Grist).
+- Testé bout-en-bout dans le vrai document Grist partagé : création de la table, rattachement/lecture/suppression d'une ligne de `Whiteboard_Elements`, exclusion des tables TaskFlow revérifiée après correction.
+- **`Whiteboard_Elements` volontairement NON exclue, décision vérifiée dans le code réel du whiteboard** (`projects/whiteboard/index.html`, `SCHEMA`) : `TaskRef`/`ProjRef` y sont des `Ref` natives réelles (pas un item de roadmap), mais à sens unique et cardinalité 1 (un élément → une tâche/un projet, posé depuis le whiteboard). `Rattachements` fait l'inverse (une tâche → N lignes, posé depuis le panneau tâche) — pas de recouvrement, contrairement à `Tasks`/`Team`/`Projects`.
 
 ### Portefeuille — regroupement de projets (opt-in, JPP #11)
 
