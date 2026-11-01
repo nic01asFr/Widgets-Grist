@@ -13,6 +13,12 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## Prochaine — le soleil de la scène pour la page hôte (contrat 0.7)
+
+- **Contrat 0.7, additif** (profil complet) : `setSun({ date, actif })` règle la date et l'heure du soleil d'Atlas (ISO 8601 avec son fuseau, ou millisecondes) et l'interrupteur des ombres portées ; `getSun()` rend `{ date, actif, azimut, hauteur, lever, coucher }` (azimut depuis le nord dans le sens horaire, hauteur en degrés) ; l'événement `sun` annonce chaque changement, `origine` `utilisateur` ou `api`. Une commande 0.2 à 0.6 reste servie ; `VERSION_CLIENT` 5, nouvelle empreinte du client (à annoncer sur le fil des hôtes avant publication).
+- **`exportScene3D` rend `soleil: { date, azimut, hauteur }`** pour éclairer le GLB comme la carte, et **`setViewMode(mode, { soleil })`** montre ou masque le dock soleil en mode intégré.
+- Nouveau module pur `lib/soleil-hote.js`, test `tests/bi-soleil-0-7.test.js` ; mesuré dans Chrome (réglage, événements, export). La carte ne montre aucune ombre portée du bâti (limite de MapLibre) : la lumière des faces suit le soleil, les modèles 3D portent leur ombre.
+
 ## Prochaine — le lecteur de ThemeDef d'Atlas aligné sur le kit et Form Builder
 
 - **Un seul comportement pour un même document** : `lib/charte/themedef-lecteur.js` lit `Theme_document` comme le kit et Form Builder (les 142 vecteurs de lecture du kit sont rejoués par `tests/themedef-lecteur-vecteurs.test.js`, avec la liste exacte des 15 écarts voulus, la même que celle de Form Builder). Nouveau : les 22 paires de contraste sont mesurées sur le `resolu` (avant ET après les surcharges, seuil selon le premier plan de la paire, exigences du document qui renforcent sans jamais relâcher) ; un `resolu` incomplet (moins de 26 valeurs lisibles) ou qui ne les tient pas est refusé EN ENTIER (plus de retour partiel, plus de repli sur l'autre mode) ; une surcharge refusée est ignorée sans effacer la valeur visée ; la colonne `version` de la ligne est contrôlée ; `sombre: aucun` n'applique rien en sombre ; la mesure lit `#RGB`, `rgb()` et `hsl()`. `themeDuDocument` rend désormais une `raison`. Sans `resolu`, les graines du document restent données à la charte d'Atlas (écart voulu, dit : `source: 'graines'`).

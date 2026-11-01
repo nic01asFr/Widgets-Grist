@@ -23,6 +23,7 @@ import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=2026100
 import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=20260924v';
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
+import { normaliserSetSun, reglageDepuisInstant, etatSoleil, blocSoleilExport, creerSignalSoleil } from './lib/soleil-hote.js?v=20261102a';
 import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
 import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
 import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=20261016a';
@@ -3889,7 +3890,56 @@ function updateLighting() {
     Eclairage.mettreAJourEtats();
     map.triggerRepaint();
     updateSunStrip();
+    signalerSoleilAHote();
 }
+
+/**
+ * Le soleil de la scène pour la page hôte (contrat 0.7, profil complet) : `getSun`, `setSun`, l'événement `sun`.
+ * L'azimut et la hauteur sont ceux de la lumière de la carte (SunCalc au centre de la vue) ; le lever et le coucher sont ceux de l'ancre de la scène (NOAA), comme l'éclairage public.
+ * `actif` est l'interrupteur « Ombres portées » : le soleil règle toujours la lumière de la carte, `actif` dit s'il jette des ombres sur les modèles 3D.
+ */
+const _signalSoleil = creerSignalSoleil();
+let _originSoleil = 'utilisateur';
+function etatSoleilScene() {
+    const { azimuth, altitude } = sunPosition();
+    const fuseau = fuseauScene(STATE.settings);
+    const midi = instantLocal(dateLocaleScene(STATE.settings), 720, fuseau);
+    const cl = coucherLever(midi, Number(STATE.location?.lat), Number(STATE.location?.lng));
+    return etatSoleil({ instantMs: instantScene(STATE.settings), actif: !!STATE.settings.shadows, azimut: azimuth, hauteur: altitude, lever: cl.lever, coucher: cl.coucher });
+}
+function signalerSoleilAHote() {
+    try {
+        if (!_signalSoleil.signaler(instantScene(STATE.settings), !!STATE.settings.shadows) || !_abonneHote) return;
+        _abonneHote('sun', { etat: etatSoleilScene(), origine: _originSoleil });
+    } catch (_) { /* l'hôte ne doit pas casser l'éclairage */ }
+}
+const SoleilHote = {
+    lire: etatSoleilScene,
+    poser(o) {
+        const r = normaliserSetSun(o);
+        if (r.instantMs !== undefined) {
+            const { date, minutes } = reglageDepuisInstant(r.instantMs, fuseauScene(STATE.settings));
+            STATE.settings.date = new Date(date + 'T12:00:00');
+            if (STATE.settings.dateEpinglee) STATE.settings.dateEpinglee = date;
+            STATE.settings.timeOfDay = minutes;
+        }
+        if (r.actif !== undefined && r.actif !== !!STATE.settings.shadows) {
+            STATE.settings.shadows = r.actif;
+            Models3D.scheduleBuild();
+            $('shadow-toggle')?.classList.toggle('on', r.actif);
+        }
+        _originSoleil = 'api';
+        try { updateLighting(); } finally { _originSoleil = 'utilisateur'; }
+        if (STATE.currentModule === 'soleil') renderSoleil();
+        return etatSoleilScene();
+    },
+    dock(montre) {
+        if (STATE.viewerControls) setViewerExposedFn(STATE.viewerControls, 'sun', !!montre);
+        if (typeof refreshControlsDock === 'function') refreshControlsDock();
+        return !!montre;
+    },
+    dockVisible: () => !!getViewerControl(STATE.viewerControls, 'sun')?.exposed,
+};
 
 function updateSunStrip() {
     const { azimuth, altitude, date } = sunPosition();
@@ -18755,6 +18805,8 @@ async function exporter3dScene(entree) {
         glb, octets: glb.byteLength, ancre, bbox, repere: E.REPERE, format: E.FORMAT,
         contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}), ...(stats.relief ? { relief: true } : {}) },
         ...(relief && stats.relief ? { relief: { source: relief.source, altitudeAncre: relief.altitudeAncre, exageration: relief.exageration, denivele: [stats.relief.min, stats.relief.max], pas: stats.relief.pas, zoom: relief.zoom } } : {}),
+        // le soleil de la carte à cet instant : de quoi éclairer le fichier comme elle (azimut depuis le nord, hauteur en degrés)
+        soleil: blocSoleilExport(etatSoleilScene()),
         attributions: E.fusionnerAttributions([attributions]), avertissements: [...avertissements, ...dits],
     };
 }
@@ -18785,6 +18837,7 @@ async function demarrerBi() {
                 monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, abonner: (fn) => { _abonneHote = fn; return () => { if (_abonneHote === fn) _abonneHote = null; }; }, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
                 outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
                 exporter3d: exporter3dScene,   // la scène 3D en un GLB (contrat 0.6)
+                soleil: SoleilHote,   // le soleil de la scène : getSun, setSun, dock (contrat 0.7)
                 // L'identité de l'hôte sur l'interface de l'application (lib/charte/application.js, chargé à la demande) : ce que `setTheme` a donné devient les jetons
                 // de l'application ; sans charte de l'hôte, ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi, et pourquoi).
                 // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.

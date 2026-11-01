@@ -165,6 +165,8 @@ export function brancher(rt, canevas) {
   // ce que la personne vise ou clique parmi les couches de la scène Atlas : mêmes événements que la carte BI, `layer` = identifiant de la scène
   const idSceneDe = (idCouche) => Object.keys(correspondance).find((k) => correspondance[k] === idCouche) || null;
   const desabonner = typeof canevas.abonner === 'function' ? canevas.abonner((type, c) => {
+    // le soleil a changé dans l'application (contrat 0.7) : la même forme que `getSun`, `origine` api pour l'effet de `setSun`
+    if (type === 'sun') { if (c && c.etat) rt._interne.emettre('sun', c.etat, c.origine === 'api' ? 'api' : 'utilisateur'); return; }
     if (type !== 'select' && type !== 'hover') return;
     const layer = c && c.couche ? idSceneDe(c.couche) : null;
     if (c && c.couche && !layer) return;   // une couche qui n'est pas dans la scène de la page
@@ -177,6 +179,17 @@ export function brancher(rt, canevas) {
   }
   // la scène 3D de l'application en un GLB (contrat 0.6) : elle n'existe qu'ici, la carte nue répond `capacite_absente`
   if (typeof canevas.exporter3d === 'function') api.exportScene3D = (o) => canevas.exporter3d(o);
+  // le soleil de l'application (contrat 0.7) : sa date, ses ombres, et le dock qui le montre à la personne
+  if (canevas.soleil && typeof canevas.soleil.lire === 'function') {
+    api.getSun = () => canevas.soleil.lire();
+    api.setSun = (o) => canevas.soleil.poser(o);
+    const modeAvant = api.setViewMode;
+    api.setViewMode = (mode, o = {}) => {
+      const r = modeAvant(mode, o);
+      if (o && typeof o === 'object' && typeof o.soleil === 'boolean') canevas.soleil.dock(o.soleil);
+      return { ...r, dockSoleil: canevas.soleil.dockVisible() };
+    };
+  }
   api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
   return { couches: () => ({ ...correspondance }), desabonner };
 }
