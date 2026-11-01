@@ -47,9 +47,9 @@ Chaque vecteur = une entrée, la sortie attendue (graines, mode, notes, refus), 
 
 | # | Entrée | Attendu |
 |---|--------|---------|
-| V1 | GristLight, valeurs mesurées | action = première candidate à 4,5:1 (ou redressée), fond `page-bg`, texte `text` |
-| V2 | GristDark | mode sombre, action lisible sur fond sombre, texte clair |
-| V3 | Instance à palette propre (numerique.gouv, #3E5DE7), clair | action de l'instance (redressée si besoin), notes dites |
+| V1 | GristLight, mesuré en réel sur docs.getgrist.com (control-primary-bg #16b378, primary-muted #009058, primary-dim #007548, link et control-fg #16b378, page-bg #f7f7f7, text #262633) | action = première candidate à 4,5:1 (ou redressée), fond `page-bg`, texte `text` |
+| V2 | GristDark (source : grist-core `GristDark.ts` + `Base.ts`, relevé par Atlas-BI : control-primary-bg #157a54, primary #17b378, primary-muted #1da270, link et control-fg #17b378, page-bg #262633, text #efefef) | mode sombre, première candidate d'action à 4,5:1 sur le fond et la surface dérivée, texte clair |
+| V3 | Instance à palette propre (numerique.gouv, control-primary-bg #3E5DE7 ; **autres valeurs à mesurer en réel**), clair | action de l'instance (redressée si besoin), notes dites |
 | V4 | Idem, sombre | idem |
 | V5 | `page-bg` en image | fond dérivé, valeur écartée dite |
 | V6 | `control-primary-bg` en `rgba(...)` | candidate suivante, valeur écartée dite |

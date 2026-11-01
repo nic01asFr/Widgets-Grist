@@ -38,16 +38,16 @@ Retirer une couche ne doit jamais laisser le widget illisible : la couche du des
 
 | Capacité | Form Builder | Atlas | TaskFlow | appkit |
 |----------|--------------|-------|----------|--------|
-| C1 crochet `--kit-*` | oui (`dsfr-like.css`, `theme.js`) | oui (`depuis-kit.js`) | oui, branche locale `taskflow/themedef-compatible` | **partiel** : jetons propres `--c-*`, projection de 21 clés `kit-theme/0.1` posée par `setProperty` (désactivable) ; sans thème, paquet public de repli (parité 40/40) |
-| C2 lecture `Theme_document` | oui, 22 paires, 127/142 vecteurs, 15 écarts nommés | oui, aligné (mêmes 15 écarts) | **non**, volontairement (aucun lecteur) | oui, c'est le lecteur de référence (142/142), branché au runtime |
-| C3 repli instance Grist | oui, mode `grist` (opt-in ; neuf = `grist`) | oui (`theme-instance.js`), **par défaut** | **non** | existe (paquet `hote`, opt-in), **pas chaîné** après le document : `theme.pack` est unique |
-| C4 clair/sombre | oui | clair seulement pour l'application complète (`fond-sombre-non-suivi`) | `prefers-color-scheme` seul | oui, bascule à chaud sans perdre saisie ni focus |
-| C5 contraste forcé | visiteur oui ; formulaire : à mesurer en navigateur | à confirmer | **non** : aucune occurrence de `forced-colors`/`prefers-contrast` dans les 8 fichiers ; sans lecteur, aucun thème n'est posé (la question se pose dès qu'un lecteur est ajouté) | oui ; `forced-colors` mesuré en Chrome, `prefers-contrast` unitaire seulement |  |
+| C1 crochet `--kit-*` | oui (`dsfr-like.css`, `theme.js`) | oui (`depuis-kit.js`, tests `charte-depuis-kit*`) | oui, branche locale `taskflow/themedef-compatible` | **partiel** : jetons propres `--c-*`, projection de 21 clés `kit-theme/0.1` posée par `setProperty` (désactivable) ; sans thème, paquet public de repli (parité 40/40) |
+| C2 lecture `Theme_document` | oui, 22 paires, 127/142 vecteurs, 15 écarts nommés | oui, aligné (`themedef-lecteur.js`, 142 vecteurs, mêmes 15 écarts), local non publié | **non**, volontairement (aucun lecteur) | oui, c'est le lecteur de référence (142/142), branché au runtime |
+| C3 repli instance Grist | oui, mode `grist` (opt-in ; neuf = `grist`) | oui (`theme-instance.js`), **par défaut**, publié | **non** | existe (paquet `hote`, opt-in), **pas chaîné** après le document : `theme.pack` est unique |
+| C4 clair/sombre | oui | oui : le sombre est suivi (application et fond « Thème », depuis la 1.37.0) | `prefers-color-scheme` seul | oui, bascule à chaud sans perdre saisie ni focus |
+| C5 contraste forcé | visiteur oui ; formulaire : à mesurer en navigateur | à confirmer : la préférence de contraste passe avant le thème hôte (`resolution.js`), pas de test navigateur | **non** : aucune occurrence de `forced-colors`/`prefers-contrast` dans les 8 fichiers ; sans lecteur, aucun thème n'est posé (la question se pose dès qu'un lecteur est ajouté) | oui ; `forced-colors` mesuré en Chrome, `prefers-contrast` unitaire seulement |
 | C6 écriture | geste d'activation (57 vecteurs) | lecture seule | aucune | le runtime n'écrit jamais ; l'éditeur d'apparence écrit par `lotActivation` |
 | C7 thème visiteur | oui (vitrine Form Builder) | vitrine : pas encore (`themeVisiteur`) | pas branché | n/a |
-| C8 compatibilité | tests dédiés | à confirmer | « repli = valeur d'avant » | non-régression 337 + 389 tests, parité 40/40 ; conformité complète non rejouée |
-| C9 refus dit | oui | `raison` rendue, à confirmer côté interface | n/a | oui, toast de 4 s avec la raison et les couleurs fautives |
-| C10 vecteurs communs | lecteur : oui ; instance Grist : **non** | lecteur : oui ; instance : propre | n/a | lecteur : oui ; instance : tests propres du pont |
+| C8 compatibilité | tests dédiés | 3028 tests, **pas de test « identique à l'octet » côté application** (à ajouter) | « repli = valeur d'avant » | non-régression 337 + 389 tests, parité 40/40 ; conformité complète non rejouée |
+| C9 refus dit | oui | `raison` et paires fautives produites, **rien n'est affiché à la personne** (écart à traiter) | n/a | oui, toast de 4 s avec la raison et les couleurs fautives |
+| C10 vecteurs communs | lecteur : oui ; instance Grist : **non** | lecteur : oui ; instance : tests propres, à rejouer | n/a | lecteur : oui ; instance : tests propres du pont |
 
 ## 4. Écarts déjà identifiés
 
@@ -58,6 +58,8 @@ Retirer une couche ne doit jamais laisser le widget illisible : la couche du des
 - Atlas : première couleur qui tient 3:1 parmi `control-primary-bg`, `primary-muted`, `primary-dim`, `accent-text`, `control-fg`, `link`, `primary` ; reprend aussi `page-bg` (fond) et `text` (texte) ; la police devient `systeme`.
 
 Conséquence visible : sur docs.getgrist.com (`#16b378`), un formulaire et une carte ne seraient pas du même vert. À traiter par un seul contrat « thème de l'instance → ThemeDef de graines », porté par le kit (`kit/jetons/themedef`, proposition d'appkit acceptée), avec des vecteurs (GristLight, GristDark, une instance à palette propre), dont les propriétaires de chaque widget rejouent le verdict. La décision de fond (reprendre le fond et le texte de Grist, ou seulement mode + action) revient à l'auteur.
+
+**E6. Le « sans thème » explicite manque** chez Atlas (additif : réglage ou paramètre `?theme=aucun`), TaskFlow et appkit ; Form Builder l'a (`aucune`). Atlas : sa couche « choix explicite » est la charte donnée par un hôte (`setTheme`).
 
 **E2. TaskFlow ne prend pas le thème de Grist par défaut.** Il n'a ni lecteur de `Theme_document` ni repli sur l'instance. Le faire changerait l'aspect de **tous les documents existants** : à ne faire qu'avec accord explicite, opt-in d'abord, et le test « sans thème, identique » ci-dessus.
 
