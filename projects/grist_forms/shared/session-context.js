@@ -158,13 +158,17 @@
       chain = chain.then(function () {
         if (ctx.userEmail) return null;
         return Promise.resolve(bridge.addRow(aud.tableId, {})).then(function (res) {
-          var id = Array.isArray(res) && res[0] && res[0].id != null ? res[0].id
-            : (res && res.id != null ? res.id : null);
+          // L'identifiant de LA ligne qu'on vient d'ajouter, et seulement lui : `addRow` rend la table entière, dont
+          // la première ligne n'est pas la nôtre (on lirait l'adresse d'une autre personne puis on supprimerait sa
+          // ligne). Sans identifiant sûr, on ne lit rien et on ne supprime rien.
+          var id = res && typeof res.idCree === 'number' ? res.idCree
+            : (res && !Array.isArray(res) && typeof res.id === 'number' ? res.id : null);
+          if (id == null) return null;
           return Promise.resolve(bridge.loadTable(aud.tableId)).then(function (raw) {
             var rows = rowsFromLoad(raw);
-            var row = id != null ? rows.filter(function (r) { return String(r.id) === String(id); })[0] : rows[rows.length - 1];
+            var row = rows.filter(function (r) { return String(r.id) === String(id); })[0];
             if (row && row[aud.emailCol]) ctx.userEmail = normalizeEmail(row[aud.emailCol]);
-            if (id != null && typeof bridge.deleteRow === 'function') {
+            if (typeof bridge.deleteRow === 'function') {
               return Promise.resolve(bridge.deleteRow(aud.tableId, id)).then(function () {}, function () {});
             }
             return null;

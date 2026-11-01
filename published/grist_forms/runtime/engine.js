@@ -644,7 +644,18 @@
     return String(a) === String(b);
   }
 
-  function fieldId(field) { return 'field-' + field.colId; }
+  /** L'identifiant HTML d'une question : un nom de colonne ne sort jamais de son attribut. */
+  function fieldId(field) { return 'field-' + String(field.colId).replace(/[^A-Za-z0-9_-]/g, '_'); }
+
+  /**
+   * Un entier de reglage (maximum, nombre de rangs ou de fichiers) : un nombre borne, jamais le texte brut du
+   * formulaire dans une balise ou une boucle de rendu.
+   */
+  function entierBorne(valeur, defaut, plafond) {
+    var n = Math.floor(Number(valeur));
+    if (!isFinite(n) || n < 1) return defaut;
+    return Math.min(n, plafond || 100);
+  }
 
   /**
    * « Obligatoire » se lit dans la ligne du libellé.
@@ -747,7 +758,7 @@
    * > sur chaque ecran — le moteur n'affichait son en-tete qu'a la premiere
    * > etape, et le melangeait avec la presentation.
    */
-  function renderBandeauHtml(formDef) {
+  function renderBandeauHtml(formDef, opts) {
     var brand = (formDef && formDef.branding) || {};
     var logoHtml = renderBrandImg(brand.logoUrl, brand.logoAlt, 'fr-bandeau__logo');
     var orga = brand.organisation
@@ -755,7 +766,9 @@
         (brand.organisationDetail ? '<small>' + escapeHtml(brand.organisationDetail) + '</small>' : '') +
         '</p>'
       : '';
-    var titre = formDef && formDef.title
+    // Sur la page d'accueil, le grand titre dit déjà la même chose : le répéter juste au-dessus fait lire
+    // deux fois la même phrase, et sur un téléphone il remplit tout l'écran avant le premier mot utile.
+    var titre = formDef && formDef.title && !(opts && opts.sansTitre)
       ? '<h1 class="fr-bandeau__titre">' + escapeHtml(formDef.title) + '</h1>' : '';
     if (!logoHtml && !orga && !titre) return '';
     return '<header class="fr-bandeau"><div class="fr-bandeau__inner">' +
@@ -784,7 +797,7 @@
     var encarts = '';
     if (Number(a.dureeMinutes) > 0) {
       encarts += '<div class="fr-encart fr-encart--attention">' +
-        '<strong>⏱ Environ ' + escapeHtml(String(a.dureeMinutes)) + ' minutes.</strong>' +
+        '<strong><span aria-hidden="true">⏱</span> Environ ' + escapeHtml(String(a.dureeMinutes)) + (Number(a.dureeMinutes) > 1 ? ' minutes.' : ' minute.') + '</strong>' +
         (a.dureeTexte ? ' ' + enrichirTexte(a.dureeTexte) : '') + '</div>';
     }
     var liste = a.encarts || [];
@@ -831,6 +844,16 @@
   }
 
   /**
+   * La typographie francaise d'un texte affiche : une espace insecable avant ? ! : ; et a l'interieur des guillemets
+   * francais. Fonction pure : le moteur l'applique aux textes du rendu (`typographier`), jamais aux valeurs saisies.
+   */
+  function typographie(texte) {
+    return String(texte)
+      .replace(/[ \t\n]+([?!:;»])/g, '\u00a0$1')
+      .replace(/«[ \t\n]+/g, '«\u00a0');
+  }
+
+  /**
    * Ce qui s'affiche une fois la réponse envoyée.
    *
    * @param {object} [opts] `{ enfile: true }` quand l'hôte a mis l'écriture en
@@ -845,22 +868,44 @@
       brand.successImageAlt,
       'fr-form__brand fr-form__brand--success'
     );
-    return '<div class="fr-form__success" role="status">' +
+    // Le message de fin de l'auteur dit « enregistrée » : il ne peut pas rester, en vert, au-dessus d'une phrase qui
+    // dit que la réponse est sur liste d'attente ou déjà reçue. Quand la réponse n'est pas retenue, seule la
+    // phrase de statut s'affiche, en avertissement.
+    var pasRetenue = !!(opts && opts.statut && opts.statut.message && opts.statut.code !== 'retenue');
+    var enfile = !!(opts && opts.enfile);
+    var message = (formDef && formDef.successMessage) || '';
+    // Le titre dit l'essentiel et reçoit le focus : c'est lui qu'un lecteur d'écran annonce. Le message de
+    // l'auteur vient dessous, tel quel ; sans message de sa part, une phrase simple.
+    var titre = enfile ? 'Votre réponse est gardée sur cet appareil' : 'Votre réponse est enregistrée';
+    var quand = opts && opts.quand ? dateEtHeure(opts.quand) : '';
+    return '<div class="fr-form__success" role="status" tabindex="-1">' +
       successImg +
-      (formDef && formDef.title ? '<p class="fr-text--sm">' + escapeHtml(formDef.title) + '</p>' : '') +
-      '<div class="fr-alert fr-alert--success"><p>' +
-      escapeHtml((formDef && formDef.successMessage) || 'Formulaire envoyé avec succès.') +
-      '</p></div>' +
+      (formDef && formDef.title ? '<p class="fr-text--sm fr-form__success-form">' + escapeHtml(formDef.title) + '</p>' : '') +
+      (pasRetenue ? '' : '<div class="fr-alert fr-alert--success"><h2 class="fr-h5 fr-form__success-titre">' + titre + '</h2><p>' +
+        escapeHtml(message || 'Merci, votre réponse a bien été envoyée.') + '</p></div>') +
       (opts && opts.statut && opts.statut.message
         ? '<div class="fr-alert ' + (opts.statut.code === 'retenue' ? 'fr-alert--info' : 'fr-alert--warning') +
-          '" role="status" data-statut="' + escapeHtml(opts.statut.code) + '"><p>' + escapeHtml(opts.statut.message) + '</p></div>'
+          '" data-statut="' + escapeHtml(opts.statut.code) + '"><p>' + escapeHtml(opts.statut.message) + '</p></div>'
         : '') +
-      (opts && opts.enfile
-        ? '<div class="fr-alert fr-alert--info" role="status" data-enfile="1"><p>' +
+      (enfile
+        ? '<div class="fr-alert fr-alert--info" data-enfile="1"><p>' +
           'Réponse enregistrée sur cet appareil : elle partira dès que la connexion reviendra.' +
           '</p></div>'
         : '') +
+      (quand ? '<p class="fr-hint-text fr-form__success-quand">' + (enfile ? 'Remplie' : 'Reçue') + ' le ' + escapeHtml(quand) + '.</p>' : '') +
+      (opts && opts.recommencer
+        ? '<p class="fr-form__success-suite"><button type="button" class="fr-btn fr-btn--secondary" data-action="recommencer">Remplir une autre réponse</button></p>'
+        : '') +
       '</div>';
+  }
+
+  /** « 31 octobre 2026 à 14 h 05 » : l'heure de l'appareil, dite en toutes lettres. */
+  function dateEtHeure(d) {
+    if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+    var mois = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var mm = d.getMinutes();
+    return d.getDate() + (d.getDate() === 1 ? 'er ' : ' ') + mois[d.getMonth()] + ' ' + d.getFullYear() +
+      ' à ' + d.getHours() + ' h ' + (mm < 10 ? '0' : '') + mm;
   }
 
   function placeholderAttr(field) {
@@ -1024,7 +1069,7 @@
     var checked = value ? ' checked' : '';
     return '<div class="fr-checkbox-group" data-colid="' + escapeHtml(field.colId) + '">' +
       '<input type="checkbox" id="' + id + '" name="' + escapeHtml(field.colId) + '"' + checked + ' />' +
-      '<label class="fr-label" for="' + id + '">' + escapeHtml(field.label) + '</label>' +
+      '<label class="fr-label" for="' + id + '">' + escapeHtml(field.label) + requiredHint(field) + descriptionHint(field) + '</label>' +
       '</div>';
   }
 
@@ -1125,7 +1170,7 @@
         '</label>';
     }).join('');
     // Un plafond annonce avant de choisir, pas un refus apres coup.
-    var max = field.options && field.options.maxSelected;
+    var max = entierBorne(field.options && field.options.maxSelected, 0);
     var plafond = max
       ? '<p class="fr-hint-text fr-plafond" data-max="' + max + '">' +
         selected.length + ' sur ' + max + ' maximum</p>'
@@ -1154,7 +1199,7 @@
     var max = Number.isFinite(e.max) ? e.max : 5;
     return {
       min: min,
-      max: max > min ? max : min + 4,
+      max: max > min ? Math.min(max, min + 50) : min + 4,
       libelles: Array.isArray(e.libelles) && e.libelles.length === 2 ? e.libelles : null,
       nonConcerne: !!e.nonConcerne
     };
@@ -1242,9 +1287,11 @@
   }
 
   /** Le résumé des erreurs : une liste de liens vers les questions à corriger. */
-  function resumeErreursHtml(colIds, libelleDe) {
+  function resumeErreursHtml(colIds, libelleDe, messages) {
     var items = colIds.map(function (c) {
-      return '<li><a href="#" data-aller-a="' + escapeHtml(c) + '">' + escapeHtml(libelleDe(c)) + '</a></li>';
+      // Le lien dit QUELLE question, le texte qui suit dit CE QUI est faux : le résumé se suffit à lui-même.
+      var message = messages && messages[c] ? ' : ' + escapeHtml(messages[c]) : '';
+      return '<li><a href="#" data-aller-a="' + escapeHtml(c) + '">' + escapeHtml(libelleDe(c)) + '</a>' + message + '</li>';
     }).join('');
     var n = colIds.length;
     return '<div class="fr-alert fr-alert--error fr-resume-erreurs" id="resume-erreurs" role="alert" tabindex="-1">' +
@@ -1264,14 +1311,20 @@
       var erreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1
         ? '<p class="fr-error-text" id="' + erreurId(f.colId) + '" data-error-for="' + escapeHtml(f.colId) + '">Ce champ est obligatoire.</p>'
         : '';
-      return '<div class="fr-matrice__ligne" data-colid="' + escapeHtml(f.colId) + '">' +
-        '<span class="fr-matrice__intitule">' + escapeHtml(f.label) + requiredHint(f) + '</span>' +
+      var enErreur = champsEnErreur && champsEnErreur.indexOf(f.colId) !== -1;
+      // Chaque ligne est un groupe de boutons NOMMÉ par son affirmation, décrit par les ancres de l'échelle (le sens
+      // de 1 et de 5) et par son erreur : un lecteur d'écran annonce « La place est agréable, groupe », pas « 3, bouton ».
+      return '<div class="fr-matrice__ligne" data-colid="' + escapeHtml(f.colId) + '" role="radiogroup"' +
+        ' aria-labelledby="' + fieldId(f) + '-intitule" aria-describedby="ancres-' + escapeHtml(groupe.matrice) + (enErreur ? ' ' + erreurId(f.colId) : '') + '"' +
+        (enErreur ? ' aria-invalid="true"' : '') + '>' +
+        '<span class="fr-matrice__intitule" id="' + fieldId(f) + '-intitule">' + escapeHtml(f.label) + requiredHint(f) + '</span>' +
         boutonsEchelle(f, values[f.colId], e) + erreur + '</div>';
     }).join('');
     return '<fieldset class="fr-fieldset fr-matrice" data-matrice="' + escapeHtml(groupe.matrice) + '">' +
       (entete.titre ? '<legend class="fr-fieldset__legend fr-matrice__question">' + escapeHtml(entete.titre) + '</legend>' : '') +
       (entete.consigne ? '<p class="fr-hint-text">' + escapeHtml(entete.consigne) + '</p>' : '') +
-      ancresEchelle(e) + '<div class="fr-fieldset__content">' + lignes + '</div></fieldset>';
+      '<div id="ancres-' + escapeHtml(groupe.matrice) + '">' + ancresEchelle(e) + '</div>' +
+      '<div class="fr-fieldset__content">' + lignes + '</div></fieldset>';
   }
 
   /**
@@ -1385,7 +1438,7 @@
     var id = fieldId(field);
     var reqAttr = field.required ? ' required' : '';
     var accept = (field.options && field.options.accept) || '';
-    var maxFiles = (field.options && field.options.maxFiles) || 5;
+    var maxFiles = entierBorne(field.options && field.options.maxFiles, 5, 50);
     var acceptAttr = accept ? ' accept="' + escapeHtml(accept) + '"' : '';
     var names = [];
     if (Attachments.filesFromValue) {
@@ -1397,7 +1450,7 @@
     }
     var hint = names.length
       ? '<p class="fr-hint-text">' + escapeHtml(names.join(', ')) + '</p>'
-      : '<p class="fr-hint-text">Jusqu\'à ' + maxFiles + ' fichier(s)</p>';
+      : '<p class="fr-hint-text">Jusqu’à ' + maxFiles + (maxFiles > 1 ? ' fichiers' : ' fichier') + '</p>';
     // Sur un appareil tactile, un champ qui accepte des images propose aussi la
     // prise de vue. Sans l'attribut `capture`, le telephone n'ouvre qu'un
     // selecteur de fichiers : on devait photographier ailleurs, puis retrouver
@@ -1508,7 +1561,7 @@
 
   function renderClassement(field, value, optionsList) {
     var options = resolveOptions(field, optionsList);
-    var rangs = (field.options && field.options.rangs) || Math.min(3, options.length);
+    var rangs = entierBorne(field.options && field.options.rangs, Math.min(3, options.length), 20);
     var choisis = Array.isArray(value) ? value.map(function (v) { return v == null ? '' : String(v); }) : [];
     var id = fieldId(field);
 
@@ -1612,15 +1665,23 @@
     }
     return '<div class="fr-input-group fr-geo" data-colid="' + escapeHtml(field.colId) + '" data-widget="geo" data-lieu-mode="' + mode + '">' +
       renderLabel(field, id) + (mode === 'carte' ? carte : choix) +
-      '<div class="fr-geo__ligne">' +
-      '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
-      // Avec une saisie par adresse, la carte et l'adresse sont les deux façons de dire le lieu : le texte du point
-      // n'est plus qu'une valeur interne, qu'on ne montre pas.
-      'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)"' + (mode === 'carte' ? '' : ' hidden') + ' />' +
-      '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>' +
-      '</div>' +
+      // Le texte du point (« POINT (longitude latitude) ») n'est pas fait pour le public : il n'est plus montre par
+      // defaut. Il reste atteignable (et au clavier, seule autre voie que la carte) sous « Saisir les coordonnees ».
+      // Avec une saisie par adresse, ce n'est qu'une valeur interne, jamais montree.
+      (mode === 'carte'
+        ? '<div class="fr-geo__ligne"><button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button></div>' +
+          '<details class="fr-geo__avance"' + (values && values['__avance_' + field.colId] ? ' open' : '') + '><summary>Saisir les coordonnées à la main</summary>' +
+          '<p class="fr-hint-text">Format : POINT (longitude latitude), par exemple POINT (5.37 43.29).</p>' +
+          '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
+          'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)" /></details>'
+        : '<div class="fr-geo__ligne">' +
+          '<input class="fr-input" type="text" id="' + id + '" name="' + escapeHtml(field.colId) + '" ' +
+          'value="' + escapeHtml(v) + '" placeholder="POINT (5.37 43.29)" hidden />' +
+          '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button></div>') +
       '<p class="fr-hint-text fr-geo__etat" role="status" aria-live="polite">' +
-      escapeHtml(phrasePosition(values, field.colId, v) + ((values && values['__enrichi_' + field.colId]) || '')) + '</p>' +
+      // Un retour clair apres le clic sur la carte : sans lui, seul un point rouge, non commente, dit que c'est pris.
+      escapeHtml((v && !(values && values[field.colId + '__lieuChoisi']) ? 'Lieu retenu. ' : '') +
+        phrasePosition(values, field.colId, v) + ((values && values['__enrichi_' + field.colId]) || '')) + '</p>' +
       mentionEnrichissement(field) +
       '</div>';
   }
@@ -1868,7 +1929,11 @@
     if (field.widget === 'radio' || field.widget === 'likert' || field.widget === 'echelle' ||
         field.widget === 'ouinon' || field.widget === 'pastilles') {
       var checkedRadio = rootEl.querySelector('input[name="' + field.colId + '"]:checked');
-      return checkedRadio ? checkedRadio.value : null;
+      if (!checkedRadio) return null;
+      // Oui / Non est un booléen : une condition écrite `valeur: true` ne reconnaissait pas la chaîne 'true'
+      // (comparaison lâche, 'true' == true est faux) et la question qui en dépendait ne s'affichait jamais.
+      if (field.widget === 'ouinon') return checkedRadio.value === 'true';
+      return checkedRadio.value;
     }
     if (field.widget === 'classement') {
       var bloc = rootEl.querySelector('[data-colid="' + field.colId + '"]');
@@ -1951,7 +2016,8 @@
       var v = values[f.colId];
       var empty;
       if (f.widget === 'checkbox') empty = v !== true;
-      else empty = v == null || v === '' || (Array.isArray(v) && v.length === 0);
+      // Des espaces seuls ne sont pas une réponse (la formule `Motifs` de la table les compte déjà comme absents).
+      else empty = v == null || v === '' || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0);
       if (empty) missing.push(f.colId);
     }
     return missing;
@@ -2215,6 +2281,65 @@
     return raw;
   }
 
+  // -- Brouillon : ce qu'on a commence a repondre survit a un rechargement de la page --
+  //
+  // > **Dans l'onglet seulement** (sessionStorage) : rien ne quitte l'appareil, et tout disparait a la fermeture de
+  // > l'onglet. Ce n'est pas une sauvegarde, c'est un filet : une page rechargee, un telephone qui rafraichit.
+  // > Rien n'est garde pour les fichiers, les signatures lourdes ni les valeurs internes (cle contenant `__`).
+  var BROUILLON_PREFIXE = 'formbuilder:brouillon:';
+  var BROUILLON_VALIDITE_MS = 12 * 3600 * 1000;
+  var BROUILLON_VALEUR_MAX = 20000;
+
+  /** La cle du brouillon : un formulaire, une page. */
+  function cleBrouillon(formDef) {
+    var lieu = typeof location !== 'undefined' && location ? String(location.pathname || '') : '';
+    return BROUILLON_PREFIXE + String(formDef && (formDef.id || formDef.tableId) || '') + ':' + lieu;
+  }
+
+  /** Ce qui se garde des valeurs : du texte, des nombres, des booleens, des listes de ceux-la. Fonction pure. */
+  function valeursDeBrouillon(values) {
+    function simple(v) {
+      var t = typeof v;
+      if (t === 'string') return v.length <= BROUILLON_VALEUR_MAX;
+      return v === null || t === 'boolean' || (t === 'number' && isFinite(v));
+    }
+    var out = {};
+    Object.keys(values || {}).forEach(function (k) {
+      if (k.indexOf('__') !== -1) return;
+      var v = values[k];
+      if (simple(v)) out[k] = v;
+      else if (Array.isArray(v) && v.every(simple)) out[k] = v;
+    });
+    return out;
+  }
+
+  /** Le stockage a utiliser : `bridge.brouillon` vaut `true` (l'onglet) ou un objet getItem/setItem/removeItem. */
+  function stockageDeBrouillon(bridge, formDef) {
+    if (!bridge || !bridge.brouillon || bridge.editRowId || (formDef && formDef.editRowId)) return null;
+    if (typeof bridge.brouillon === 'object' && typeof bridge.brouillon.getItem === 'function') return bridge.brouillon;
+    try { return typeof sessionStorage !== 'undefined' ? sessionStorage : null; } catch (e) { return null; }
+  }
+
+  /** Le brouillon enregistre, s'il est lisible et recent ; sinon rien. */
+  function lireBrouillon(stockage, cle) {
+    try {
+      var brut = stockage.getItem(cle);
+      if (!brut) return null;
+      var b = JSON.parse(brut);
+      if (!b || typeof b.valeurs !== 'object' || !b.valeurs || !Object.keys(b.valeurs).length) return null;
+      if (!Number.isFinite(b.date) || Date.now() - b.date > BROUILLON_VALIDITE_MS) { stockage.removeItem(cle); return null; }
+      return b;
+    } catch (e) { return null; }
+  }
+
+  /** Efface le brouillon d'un formulaire (l'hote qui recommence a zero). */
+  function effacerBrouillon(formDef, stockage) {
+    try {
+      var st = stockage || (typeof sessionStorage !== 'undefined' ? sessionStorage : null);
+      if (st) st.removeItem(cleBrouillon(formDef));
+    } catch (e) { /* stockage refuse : il n'y avait rien a effacer */ }
+  }
+
   function mount(rootEl, formDef, bridge) {
     if (!rootEl) return null;
     bridge = bridge || {};
@@ -2235,6 +2360,67 @@
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+
+    // -- Brouillon (voir plus haut) : proposé au chargement, gardé à chaque changement, effacé à l'envoi --
+    var stockageB = stockageDeBrouillon(bridge, formDef);
+    var cleB = stockageB ? cleBrouillon(formDef) : '';
+    var departB = stockageB ? JSON.stringify(valeursDeBrouillon(values)) : '';
+    var brouillonPropose = stockageB ? lireBrouillon(stockageB, cleB) : null;
+    var envoye = false;
+
+    function sauverBrouillon() {
+      // Tant que la proposition attend une réponse, elle n'est pas écrasée par ce qu'on tape à côté.
+      if (!stockageB || brouillonPropose || envoye || demonte) return;
+      var v = valeursDeBrouillon(values);
+      var json = JSON.stringify(v);
+      try {
+        if (json === departB) stockageB.removeItem(cleB);
+        else stockageB.setItem(cleB, JSON.stringify({ valeurs: v, etape: stepIndex, date: Date.now() }));
+      } catch (e) { /* stockage plein ou refusé : le brouillon se perd, pas la réponse */ }
+    }
+
+    function oublierBrouillon() {
+      envoye = true;
+      brouillonPropose = null;
+      if (stockageB) { try { stockageB.removeItem(cleB); } catch (e) { /* rien à effacer */ } }
+    }
+
+    function brouillonHtml() {
+      if (!brouillonPropose) return '';
+      return '<div class="fr-alert fr-alert--info fr-brouillon" role="region" aria-label="Réponse commencée">' +
+        '<p><strong>Vous aviez commencé à répondre.</strong> Reprendre là où vous en étiez ?</p>' +
+        '<p class="fr-brouillon__actions">' +
+        '<button type="button" class="fr-btn" data-action="reprendre-brouillon">Reprendre</button>' +
+        '<button type="button" class="fr-btn fr-btn--secondary" data-action="oublier-brouillon">Recommencer à zéro</button>' +
+        '</p></div>';
+    }
+
+    function brancherBrouillon() {
+      var reprendre = rootEl.querySelector('[data-action="reprendre-brouillon"]');
+      var oublier = rootEl.querySelector('[data-action="oublier-brouillon"]');
+      if (reprendre && typeof reprendre.addEventListener === 'function') {
+        reprendre.addEventListener('click', function () {
+          var b = brouillonPropose;
+          brouillonPropose = null;
+          if (!b) return;
+          Object.keys(b.valeurs).forEach(function (k) {
+            if (verrouilles.indexOf(k) === -1) values[k] = b.valeurs[k];
+          });
+          surAccueil = false;
+          demarreA = Date.now();
+          if (Number.isFinite(b.etape)) stepIndex = Math.max(0, b.etape);
+          render();
+          remonterEnHaut();
+        });
+      }
+      if (oublier && typeof oublier.addEventListener === 'function') {
+        oublier.addEventListener('click', function () {
+          brouillonPropose = null;
+          if (stockageB) { try { stockageB.removeItem(cleB); } catch (e) { /* rien à effacer */ } }
+          render();
+        });
+      }
+    }
 
     // ── Limites : jusqu'où le formulaire accepte de réponses (voir shared/limites.js) ──
     var limites = null;         // la forme retenue de formDef.limites
@@ -2290,10 +2476,12 @@
         if (!pl) return o;
         var n = normalizeOption(o);
         if (pl.complet) {
-          n.label = n.label + ' — complet';
+          // Espaces insécables : « — complet » et « — 10 places restantes » passent à la ligne d'un bloc, jamais
+          // coupés en deux (« 10 places / restantes ») ni avec un tiret resté seul en bout de ligne.
+          n.label = n.label + ' — complet';
           n.disabled = true;
         } else {
-          n.label = n.label + ' — ' + pl.restant + (pl.restant > 1 ? ' places restantes' : ' place restante');
+          n.label = n.label + ' — ' + pl.restant + (pl.restant > 1 ? ' places restantes' : ' place restante');
         }
         return n;
       });
@@ -2408,6 +2596,9 @@
     if (typeof rootEl.addEventListener === 'function') {
       rootEl.addEventListener('pointerdown', surPointeurEnfonce, true);
     }
+    // Un champ qu'on quitte ou une case qu'on coche : les écouteurs du champ ont mis la valeur à jour, on la garde.
+    function surChangementBrouillon() { setTimeout(sauverBrouillon, 0); }
+    if (stockageB && typeof rootEl.addEventListener === 'function') rootEl.addEventListener('change', surChangementBrouillon);
     var context = (SessionContext.emptyContext && SessionContext.emptyContext()) || {
       inGristWidget: false, canWriteNative: false, isLoggedIn: false, userEmail: '', groups: []
     };
@@ -2494,13 +2685,39 @@
       if (submitting) return;
       var doc = rootEl.ownerDocument || (typeof document !== 'undefined' ? document : null);
       var actif = doc && doc.activeElement;
-      var idActif = actif && typeof rootEl.contains === 'function' && rootEl.contains(actif)
-        ? actif.id : '';
+      var dansLeFormulaire = !!(actif && typeof rootEl.contains === 'function' && rootEl.contains(actif));
+      var idActif = dansLeFormulaire ? actif.id : '';
+      var cleActif = dansLeFormulaire && !idActif ? cleDeFocus(actif) : '';
+      var debut = null, fin = null;
+      try { if (dansLeFormulaire && typeof actif.selectionStart === 'number') { debut = actif.selectionStart; fin = actif.selectionEnd; } } catch (e) { /* type sans sélection */ }
       render();
-      if (idActif && doc && typeof doc.getElementById === 'function') {
-        var cible = doc.getElementById(idActif);
-        if (cible && typeof cible.focus === 'function') cible.focus();
+      var cible = null;
+      if (idActif && doc && typeof doc.getElementById === 'function') cible = doc.getElementById(idActif);
+      else if (cleActif && typeof rootEl.querySelector === 'function') cible = rootEl.querySelector(cleActif);
+      if (cible && typeof cible.focus === 'function') {
+        cible.focus();
+        try { if (debut !== null && typeof cible.setSelectionRange === 'function') cible.setSelectionRange(debut, fin); } catch (e2) { /* idem */ }
       }
+    }
+
+    /**
+     * Un sélecteur qui retrouve un élément sans identifiant après un redessin : son action (Précédent, Suivant,
+     * Envoyer…), ou son nom et sa valeur (une option de choix). Sans cela, la personne qui tabule du dernier champ
+     * vers « Suivant » perd le focus à chaque saisie, et un lecteur d'écran repart du début de la page.
+     */
+    function cleDeFocus(el) {
+      var guillemets = function (v) { return String(v).replace(/\\/g, '\\\\').replace(/"/g, '\\"'); };
+      var action = el.getAttribute && el.getAttribute('data-action');
+      if (action) return '[data-action="' + guillemets(action) + '"]';
+      var nom = el.getAttribute && el.getAttribute('name');
+      if (nom) {
+        var type = el.getAttribute('type');
+        var valeur = (type === 'radio' || type === 'checkbox') && el.getAttribute('value') != null
+          ? '[value="' + guillemets(el.getAttribute('value')) + '"]' : '';
+        return '[name="' + guillemets(nom) + '"]' + valeur;
+      }
+      var colonne = el.getAttribute && el.getAttribute('data-colid');
+      return colonne ? '[data-colid="' + guillemets(colonne) + '"]' : '';
     }
 
     /**
@@ -2522,7 +2739,12 @@
      * l'annonce, et l'œil n'a pas à chercher la question fautive à des écrans de là.
      * Chaque lien du résumé amène à la question, et la met au focus.
      */
-    function allerAuResume() {
+    /**
+     * Les liens du résumé d'erreurs mènent à leur question. Posés à CHAQUE rendu : le formulaire se redessine à
+     * chaque réponse, et des liens posés une seule fois devenaient inertes dès la première correction (un clic
+     * remontait en haut de page sans rien focaliser).
+     */
+    function brancherLiensResume() {
       var resume = rootEl.querySelector('#resume-erreurs');
       if (!resume) return;
       var liens = resume.querySelectorAll('[data-aller-a]');
@@ -2537,8 +2759,57 @@
           if (bloc && bloc.scrollIntoView) bloc.scrollIntoView({ block: 'center', behavior: 'auto' });
         });
       }(liens[i]));
+    }
+
+    /** Après un envoi refusé : le focus va au résumé, que l'œil et un lecteur d'écran trouvent d'abord. */
+    function allerAuResume() {
+      var resume = rootEl.querySelector('#resume-erreurs');
+      if (!resume) return;
       try { resume.focus({ preventScroll: true }); } catch (e) { /* vieux navigateur */ }
       if (resume.scrollIntoView) resume.scrollIntoView({ block: 'start', behavior: 'auto' });
+    }
+
+    /**
+     * La typographie française à l'affichage : une espace insécable avant « ? ! : ; » et à l'intérieur des guillemets
+     * français, pour qu'un « ? » ne tombe jamais seul en début de ligne. Les textes seulement : jamais une valeur
+     * saisie (champs, zones de texte), un script ou une feuille de style.
+     */
+    function typographier(racine) {
+      var doc = racine && racine.ownerDocument;
+      if (!doc || typeof doc.createTreeWalker !== 'function' || typeof NodeFilter === 'undefined') return;
+      var interdit = /^(TEXTAREA|INPUT|SCRIPT|STYLE|CODE|PRE)$/;
+      var marche = doc.createTreeWalker(racine, NodeFilter.SHOW_TEXT, null);
+      var noeuds = [];
+      for (var n = marche.nextNode(); n; n = marche.nextNode()) {
+        if (n.parentNode && interdit.test(n.parentNode.nodeName)) continue;
+        if (typographie(n.nodeValue) !== n.nodeValue) noeuds.push(n);
+      }
+      noeuds.forEach(function (t) { t.nodeValue = typographie(t.nodeValue); });
+    }
+
+    /** Ce que lit la personne quand l'envoi echoue : une phrase claire, jamais le message technique du navigateur. */
+    function messageEnvoiEchoue(err) {
+      var m = String((err && err.message) || '');
+      if (!m || /failed to fetch|networkerror|load failed|network request|timeout|timed out|err_/i.test(m)) {
+        return 'L’envoi a échoué. Vérifiez votre connexion puis réessayez : vos réponses sont gardées.';
+      }
+      return m;
+    }
+
+    /**
+     * La touche Entrée dans un champ vaut « Suivant » (ou « Envoyer » à la dernière étape).
+     *
+     * Les boutons sont de type `button` : sans écouteur, un formulaire à UN seul champ texte était soumis par le
+     * navigateur sur Entrée, ce qui rechargeait la page et perdait toute la saisie (constaté à l'écran).
+     */
+    function brancherEntree() {
+      var formEl = rootEl.querySelector && rootEl.querySelector('form');
+      if (!formEl || typeof formEl.addEventListener !== 'function') return;
+      formEl.addEventListener('submit', function (ev) {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        var bouton = rootEl.querySelector('[data-action="next"], [data-action="submit"]');
+        if (bouton && !bouton.disabled && typeof bouton.click === 'function') bouton.click();
+      });
     }
 
     function remonterEnHaut() {
@@ -2607,6 +2878,13 @@
       if (stepIndex < 0) stepIndex = 0;
       var section = sections[stepIndex];
       var fields = getVisibleFields(section, values, context);
+      // Une question signalée suit ce que la personne en fait : corrigée, son message disparaît ; encore fausse,
+      // il dit ce qui est faux MAINTENANT (« obligatoire » ne reste pas sous un champ rempli). Seules les
+      // questions déjà signalées sont revues : on n'en accuse pas une qu'on n'a pas encore demandée.
+      if (errorFields.length) {
+        var encoreEnDefaut = erreursDeSaisie(fields, values);
+        errorFields = errorFields.filter(function (c) { return encoreEnDefaut.indexOf(c) !== -1; });
+      }
       var isLast = stepIndex === sections.length - 1;
       var editId = bridge.editRowId || formDef.editRowId;
       var editHint = editId
@@ -2624,11 +2902,15 @@
       // ouvrant un questionnaire, et ce que l'enquête écrite à la main offrait
       // alors que le moteur ne le disait qu'en toutes lettres.
       var avancement = Math.round(((stepIndex + 1) / sections.length) * 100);
+      // Une seule étape : « Étape 1 sur 1 — 100 % » ferait croire que tout est déjà fait avant d'avoir répondu.
+      // Le titre reste (c'est lui qui reçoit le focus), la barre et le compte disparaissent.
       var stepperHtml = '<nav class="fr-progression" aria-label="Progression">' +
-        '<div class="fr-progression__piste"><span style="width:' + avancement + '%"></span></div>' +
-        '<p class="fr-progression__etat">' +
-        '<span>Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span>' +
-        '<span>' + avancement + ' %</span></p>' +
+        (sections.length > 1
+          ? '<div class="fr-progression__piste"><span style="width:' + avancement + '%"></span></div>' +
+            '<p class="fr-progression__etat">' +
+            '<span>Étape ' + (stepIndex + 1) + ' sur ' + sections.length + '</span>' +
+            '<span>' + avancement + ' %</span></p>'
+          : '') +
         '<h2 class="fr-progression__titre" tabindex="-1">' + escapeHtml(section.label) + '</h2>' +
         (section.description ? '<p class="fr-hint-text">' + escapeHtml(section.description) + '</p>' : '') +
         '</nav>';
@@ -2659,10 +2941,15 @@
         return rendreChamp(groupe.fields[0]);
       }).join('');
 
+      // Le DSFR demande de dire ce que l'astérisque veut dire, une fois, en tête de page : sans cela, le public voyant
+      // ne sait pas que la marque rouge signifie « obligatoire ». Rien si aucune question de l'étape n'est requise.
+      var legendeHtml = fields.some(function (f) { return f.required; })
+        ? '<p class="fr-hint-text fr-legende-obligatoire">Les champs marqués d’un astérisque (<span aria-hidden="true">*</span>) sont obligatoires.</p>'
+        : '';
       var errorHtml = submitError
         ? '<div class="fr-alert fr-alert--error" role="alert"><p>' + escapeHtml(submitError) + '</p></div>'
         : '';
-      if (errorFields.length) errorHtml += resumeErreursHtml(errorFields, libelleDe);
+      if (errorFields.length) errorHtml += resumeErreursHtml(errorFields, libelleDe, messagesErreur);
 
       // La barre d'action reste sous les yeux, et le message d'erreur s'affiche
       // à côté du bouton : en haut d'un écran long, personne ne le voit.
@@ -2677,8 +2964,14 @@
         '</div>';
 
       if (surAccueil) {
+        var accueilDef = formDef.accueil || {};
+        var titreAccueil = String(accueilDef.titre || formDef.title || '').trim().toLowerCase();
+        var memeTitre = titreAccueil && titreAccueil === String(formDef.title || '').trim().toLowerCase();
         rootEl.innerHTML = '<form class="fr-form fr-form--accueil" novalidate>' +
-          bandeauHtml + renderAccueilHtml(formDef) + '</form>';
+          (memeTitre ? renderBandeauHtml(formDef, { sansTitre: true }) : bandeauHtml) + brouillonHtml() +
+          renderAccueilHtml(formDef) + '</form>';
+        typographier(rootEl);
+        brancherBrouillon();
         var cmd = rootEl.querySelector('[data-action="commencer"]');
         if (cmd && typeof cmd.addEventListener === 'function') {
           cmd.addEventListener('click', function () {
@@ -2692,7 +2985,12 @@
       }
 
       rootEl.innerHTML = '<form class="fr-form" novalidate>' +
-        bandeauHtml + editHint + headerHtml + stepperHtml + errorHtml + fieldsHtml + navHtml + '</form>';
+        bandeauHtml + editHint + brouillonHtml() + headerHtml + stepperHtml + legendeHtml + errorHtml + fieldsHtml + navHtml + '</form>';
+      typographier(rootEl);
+      brancherBrouillon();
+      sauverBrouillon();
+      brancherEntree();
+      brancherLiensResume();
       wireEvents(fields);
       if (aSignaler) { aSignaler = false; allerAuResume(); }
     }
@@ -2857,11 +3155,16 @@
       var submitBtn = rootEl.querySelector('[data-action="submit"]');
       if (submitBtn && typeof submitBtn.addEventListener === 'function') {
         submitBtn.addEventListener('click', function () {
+          // Un envoi en cours n'en déclenche pas un second : deux clics, ou Entrée puis clic, créeraient deux lignes.
+          if (submitting) return;
           readSectionValues(rootEl, fields, values, verrouilles);
           var missing = erreursDeSaisie(fields, values);
           if (missing.length) { errorFields = missing; aSignaler = true; render(); return; }
           errorFields = []; submitting = true; submitError = ''; render();
-          var resolveAtt = Attachments.resolveAttachmentFields
+          // Les pieces jointes ne partent qu'APRES la verification des limites : un formulaire devenu complet ne laisse
+          // pas des fichiers orphelins dans le document, et un echec d'envoi n'est plus un rejet sans gestionnaire.
+          function televerser() {
+            return Attachments.resolveAttachmentFields
             ? Attachments.resolveAttachmentFields(formDef, values, {
                 // Un hôte qui sait envoyer lui-même le fait : c'est le seul
                 // chemin possible hors du navigateur (application empaquetée).
@@ -2873,13 +3176,15 @@
                 fetch: bridge.fetch
               })
             : Promise.resolve(values);
-          Promise.resolve(verifierLimites()).then(function () { return resolveAtt; }).then(function () {
+          }
+          Promise.resolve(verifierLimites()).then(televerser).then(function () {
             var enCreation = !(bridge.editRowId || formDef.editRowId);
             var data = collectSubmitData(formDef, values, context,
               { creation: enCreation, demarreA: demarreA, email: context.userEmail });
             return defaultSubmit(bridge, formDef, data);
           }).then(function (res) {
             memoriserDernieres();
+            oublierBrouillon();
             // La réponse est partie : tant qu'on relit son statut, le formulaire ne se renvoie pas.
             return lireStatut(res).then(function (st) { return { res: res, statut: st }; });
           }).then(function (fin) {
@@ -2891,13 +3196,32 @@
             // et remet le formulaire a la place de la confirmation, alors que la reponse est partie
             // (la personne renverrait la meme).
             renduEnAttente = false;
-            rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile, statut: fin.statut });
+            var autreReponse = !(bridge.editRowId || formDef.editRowId) && !(formDef.limites && formDef.limites.unique) &&
+              (!fin.statut || !fin.statut.message || fin.statut.code === 'retenue');
+            rootEl.innerHTML = renderSuccessHtml(formDef, { enfile: enfile, statut: fin.statut, quand: new Date(), recommencer: autreReponse });
+            typographier(rootEl);
+            var recommencer = rootEl.querySelector('[data-action="recommencer"]');
+            if (recommencer && typeof recommencer.addEventListener === 'function') {
+              recommencer.addEventListener('click', function () {
+                demonter();
+                var racine = rootEl;
+                // Un formulaire neuf, avec ce que l'hôte donnait au départ : rien de la réponse précédente ne reste.
+                var neuf = mount(racine, formDef, bridge);
+                if (neuf && typeof racine.scrollIntoView === 'function') { try { racine.scrollIntoView(); } catch (e4) { /* tant pis */ } }
+              });
+            }
+            // Le bouton qui avait le focus a disparu : sans cela le focus tombe sur la page et un lecteur d'écran
+            // n'annonce pas la confirmation (une zone vivante insérée avec son contenu n'est pas lue).
+            var confirmation = rootEl.querySelector('.fr-form__success');
+            if (confirmation && typeof confirmation.focus === 'function') {
+              try { confirmation.focus(); } catch (e3) { /* vieux navigateur */ }
+            }
             if (typeof bridge.surEnvoi === 'function') {
               try { bridge.surEnvoi({ enfile: enfile, resultat: res, statut: fin.statut }); } catch (e) { /* l'hôte ne casse pas l'écran de fin */ }
             }
           }, function (err) {
             submitting = false;
-            submitError = (err && err.message) || 'Erreur lors de l\'envoi.';
+            submitError = messageEnvoiEchoue(err);
             render();
           });
         });
@@ -3144,6 +3468,9 @@
             }
             var champGeo = fields.filter(function (f) { return f.colId === colId; })[0];
             if (champGeo) declencherEnrichissement(champGeo, wkt);
+            // Le retour dit que le geste a porté : sans lui, seul un point rouge, non commenté, le suggère.
+            var etatCarte = rootEl.querySelector('[data-widget="geo"][data-colid="' + colId + '"] .fr-geo__etat');
+            if (etatCarte) etatCarte.textContent = wkt ? 'Lieu retenu. ' : '';
           }
         }).then(function (vue) {
           if (demonte) { try { vue.detruire(); } catch (e) { /* déjà parti */ } return; }
@@ -3354,6 +3681,10 @@
         var champ = bloc.querySelector('input[name="' + bloc.getAttribute('data-colid') + '"]') || bloc.querySelector('input[type="text"]');
         var etat = bloc.querySelector('.fr-geo__etat');
         var champGeo = (champsPage || []).filter(function (f) { return f.colId === bloc.getAttribute('data-colid'); })[0];
+        if (champ && typeof champ.addEventListener === 'function' && bloc.querySelector('.fr-geo__avance')) {
+          // Ce qu'on tape à la main ne referme pas le repli au prochain affichage.
+          champ.addEventListener('input', function () { values['__avance_' + bloc.getAttribute('data-colid')] = true; });
+        }
         if (champGeo && champ && typeof champ.addEventListener === 'function') {
           champ.addEventListener('change', function () { declencherEnrichissement(champGeo, champ.value); });
         }
@@ -3500,6 +3831,7 @@
       renduEnAttente = false;
       if (typeof rootEl.removeEventListener === 'function') {
         rootEl.removeEventListener('pointerdown', surPointeurEnfonce, true);
+        rootEl.removeEventListener('change', surChangementBrouillon);
       }
       if (docEcoute && typeof docEcoute.removeEventListener === 'function') {
         docEcoute.removeEventListener('pointerup', relacherPointeur, { capture: true });
@@ -3667,6 +3999,7 @@
     // plus bas, sans écraser ce que l'hôte a dit.
     var pont = client ? pontDepuisClient(client, options, !contexte) : {};
     if (options.valeurs) pont.values = options.valeurs;
+    if (options.brouillon) pont.brouillon = options.brouillon;
     if (options.ligne != null) pont.editRowId = options.ligne;
     if (typeof options.surEnvoi === 'function') pont.surEnvoi = options.surEnvoi;
     if (contexte) pont.context = Object.assign({}, contexte);
@@ -3733,10 +4066,14 @@
     escapeHtml: escapeHtml,
     renderFieldHtml: renderFieldHtml,
     renderHeaderHtml: renderHeaderHtml,
+    typographie: typographie,
     renderBandeauHtml: renderBandeauHtml,
     renderAccueilHtml: renderAccueilHtml,
     aUnAccueil: aUnAccueil,
     renderSuccessHtml: renderSuccessHtml,
+    effacerBrouillon: effacerBrouillon,
+    valeursDeBrouillon: valeursDeBrouillon,
+    cleBrouillon: cleBrouillon,
     valuesFromRecord: valuesFromRecord,
     // Ce que le moteur sait rendre, dit par lui-même : une page de couverture
     // ou un compositeur n'ont pas à en tenir une copie, qui vieillirait.

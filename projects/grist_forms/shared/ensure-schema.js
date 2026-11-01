@@ -17,6 +17,9 @@
     if (!t) return 'Text';
     if (t.startsWith('RefList:')) return 'RefList';
     if (t.startsWith('Ref:')) return 'Ref';
+    // Grist écrit `DateTime:Europe/Paris` : le fuseau ne change pas le type. Sans cela, une colonne existante
+    // était refusée comme « type incompatible » et l'enregistrement du formulaire se bloquait.
+    if (t.startsWith('DateTime:')) return 'DateTime';
     return t;
   }
 

@@ -94,20 +94,29 @@ it('respects a custom builderDef', () => {
   assert.equal(inner.widgetDef.url, 'https://example.test/widget');
 });
 
-it('runtime html includes runtime-e2e upload hook', () => {
-  const doc = P.buildRuntimeDocument({
+describe('le hook d\'essai de bout en bout', () => {
+  const def = {
     id: 'demo', title: 'T', tableId: 'Contacts',
     sections: [{ fields: [{ colId: 'Piece_jointe', type: 'Attachments', label: 'PJ' }] }],
     choices: {}
-  }, {
-    engineJs: '/*engine*/',
-    typesJs: '/*types*/',
-    attachmentsJs: '/*att*/',
-    bridgeJs: '/*bridge*/'
+  };
+  const bundles = { engineJs: '/*engine*/', typesJs: '/*types*/', attachmentsJs: '/*att*/', bridgeJs: '/*bridge*/' };
+
+  it('n\'est PAS dans une page publiée ordinaire : aucun autre widget ne peut faire écrire une ligne par postMessage', () => {
+    const doc = P.buildRuntimeDocument(def, bundles);
+    assert.ok(!doc.includes('grist-forms-runtime-e2e'));
+    assert.ok(!doc.includes('runRuntimeE2EUpload'));
+    assert.ok(doc.includes('grist-forms-runtime-ready'), 'le reste du démarrage est intact');
+    assert.ok(doc.includes('function monter'));
   });
-  assert.ok(doc.includes('grist-forms-runtime-e2e'));
-  assert.ok(doc.includes('runRuntimeE2EUpload'));
-  assert.ok(doc.includes('grist-forms-runtime-ready'));
+
+  it('n\'est embarqué que sur demande explicite (e2e)', () => {
+    const doc = P.buildRuntimeDocument(def, Object.assign({ e2e: true }, bundles));
+    assert.ok(doc.includes('grist-forms-runtime-e2e'));
+    assert.ok(doc.includes('runRuntimeE2EUpload'));
+    assert.ok(doc.includes('grist-forms-runtime-ready'));
+    assert.ok(doc.includes('function monter'));
+  });
 });
 
 it('plans CreateViewSection for a custom page bound to tableRef', () => {

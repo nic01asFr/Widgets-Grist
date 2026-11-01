@@ -130,7 +130,10 @@
     return applyUserActions([['BulkAddRecord', table, [null], cols]]).then(function (res) {
       var id = res && !Array.isArray(res) && res.retValues ? res.retValues[0] : (Array.isArray(res) ? res[0] : null);
       if (Array.isArray(id)) id = id[0];
-      return fetchTable(table).then(util.toRows).then(function (rows) {
+      // La relecture est au mieux : la ligne est ÉCRITE. Sous des règles d'accès « ajout seul » la table n'est pas
+      // lisible, et faire échouer l'envoi ici ferait croire à la personne que rien n'est parti : elle renverrait, et
+      // la ligne serait en double.
+      return fetchTable(table).then(util.toRows).then(function (rows) { return rows; }, function () { return []; }).then(function (rows) {
         if (typeof id === 'number' && Array.isArray(rows)) Object.defineProperty(rows, 'idCree', { value: id, enumerable: false });
         return rows;
       });

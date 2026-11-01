@@ -226,6 +226,7 @@
   .atelier__apercu-cadre { padding: 0.8rem; font-size: 0.92rem; }
   .atelier__apercu-cadre .fr-form { max-width: none; }
   .atelier__apercu-cadre .fr-form__actions { position: static; background: none; }
+  .atelier__apercu-cadre .fr-form__actions::before { display: none; }
 
   /* Où partent les réponses : au pied du parcours, visible sans ouvrir de menu. */
   .rail__pied { margin-top: auto; padding-top: 0.8rem; border-top: 1px solid var(--grey-950, #eee); font-size: 0.82rem; }
@@ -968,11 +969,29 @@
   .cfg-badge.cond { background: #fef3c7; color: #92400e; }
   .rule-row {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
-    align-items: end;
+    margin-bottom: 0.6rem;
+    padding: 0.6rem 0.7rem;
+    background: #fff;
+    border: 1px solid #b3b3ea;
+    border-radius: 4px;
   }
+  .rule-row > .fr-select-group, .rule-row > .fr-input-group { grid-column: 1; margin: 0; min-width: 0; }
+  .rule-row > button { grid-column: 2; grid-row: 1; align-self: start; }
+  .carte-publication { margin-top: 1.25rem; padding: 1rem 1.25rem 1.25rem; background: #fff; border: 1px solid var(--grey-900, #ddd); border-radius: 6px; max-width: 52rem; }
+  .carte-publication__titre { margin: 0 0 0.5rem; font-size: 1.125rem; font-weight: 700; color: #000091; }
+  /* Un volet qui s'ouvre se reconnaît : un cadre, une flèche, et la flèche tourne quand il est ouvert. */
+  .carte-publication > details > summary, #publish-log > details > summary {
+    display: flex; align-items: center; gap: 0.5rem; margin: 0.75rem 0 0; padding: 0.65rem 0.85rem;
+    border: 1px solid #b3b3ea; border-radius: 4px; background: #f0f4ff; color: #000091;
+    font-weight: 600; cursor: pointer; list-style: none;
+  }
+  .carte-publication > details > summary::-webkit-details-marker, #publish-log > details > summary::-webkit-details-marker { display: none; }
+  .carte-publication > details > summary::before, #publish-log > details > summary::before { content: '\25B8'; transition: transform 0.15s; }
+  .carte-publication > details[open] > summary::before, #publish-log > details[open] > summary::before { transform: rotate(90deg); }
+  .carte-publication .publish-hint { display: block; margin-top: 0.5rem; max-width: none; font-size: 0.875rem; }
+  .rule-resume { margin: 0.5rem 0 0.25rem; font-size: 0.875rem; color: #3a3a3a; }
   .rule-row .fr-hint-text {
     font-size: 0.7rem;
     line-height: 1.35;
@@ -983,7 +1002,7 @@
     z-index: 30;
   }
   @media (max-width: 640px) {
-    .rule-row { grid-template-columns: 1fr; }
+    .rule-row { grid-template-columns: minmax(0, 1fr) auto; }
   }
   .preview-frame {
     background: #fff;
@@ -1159,6 +1178,13 @@ const WIDGETS_BY_TYPE = {
   Attachments: ['file'],
   Ref: ['select'], RefList: ['multiselect']
 };
+// Ce que le public voit, dit simplement : l'identifiant du contrôle n'est pas du vocabulaire d'auteur.
+const WIDGET_LABELS = {
+  text: 'Une ligne de texte', textarea: 'Un grand champ de texte', number: 'Un nombre', likert: 'Une échelle de notes',
+  checkbox: 'Une case à cocher', date: 'Un calendrier', datetime: 'Un calendrier et une heure',
+  select: 'Une liste déroulante', radio: 'Des boutons, un seul choix', multiselect: 'Des cases, plusieurs choix',
+  file: 'Un envoi de fichiers'
+};
 const CONDITION_OPERATORS = ['==', '!=', '>', '>=', '<', '<=', 'contains'];
 
 const STEPS = [
@@ -1193,8 +1219,18 @@ let demoNextId = 1;
 // ═══════════════════════════════════════════════════════════
 // UTILITAIRES
 // ═══════════════════════════════════════════════════════════
+/**
+ * Un texte posé dans du HTML : `& < > " '` sont echappes, donc aussi dans un attribut entre guillemets
+ * (un titre `x" onfocus="...` ne sort plus de son attribut).
+ */
 function esc(t) {
-  return (window.GristBridge && GristBridge.util && GristBridge.util.esc) ? GristBridge.util.esc(t) : String(t == null ? '' : t);
+  return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+/** Un texte pose entre apostrophes dans un gestionnaire en ligne (onclick="App.f('...')") : JavaScript d'abord, HTML ensuite. */
+function escJs(t) {
+  return esc(String(t == null ? '' : t).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
 }
 
 function hintIcon(tip) {
@@ -2119,7 +2155,7 @@ function renderFormsList() {
   if (S.wizardOpen) {
     const templates = (window.FormUx && FormUx.templates) ? FormUx.templates() : [];
     const tplCards = templates.map(t => `
-      <button type="button" class="wizard-card" onclick="App.applyTemplate('${esc(t.id)}')">
+      <button type="button" class="wizard-card" onclick="App.applyTemplate('${escJs(t.id)}')">
         <h3>${esc(t.label)}</h3>
         <p>${esc(t.description)}</p>
       </button>
@@ -2670,7 +2706,7 @@ function optionsDApercu(def, f) {
 function renderAjoutRapide(si) {
   const types = ((window.FormUx && FormUx.SIMPLE_TYPES) || []).map(t =>
     `<button type="button" class="ajout__type${S.typeAjout === t.key ? ' est-actif' : ''}"
-      onclick="App.typeAjout('${esc(t.key)}')">${esc(t.label)}</button>`).join('');
+      onclick="App.typeAjout('${escJs(t.key)}')">${esc(t.label)}</button>`).join('');
   // Les types moins courants (lieu, adresse, signature, curseur, heure…) ne sont pas cachés dans les
   // réglages : une liste les offre dans le même geste que les puces.
   const plus = ((window.FormUx && FormUx.ADVANCED_TYPES) || []);
@@ -2706,10 +2742,18 @@ function renderAjoutRapide(si) {
 }
 
 function typeAjout(cle) {
+  // Le geste naturel est de taper la question PUIS de choisir son type : le redessin recrée le champ, la saisie
+  // serait perdue à chaque fois. On la garde, avec la position du curseur.
+  const avant = document.getElementById('ajout-rapide');
+  const texte = avant ? avant.value : '';
   S.typeAjout = cle;
   renderBuilder();
   const champ = document.getElementById('ajout-rapide');
-  if (champ) champ.focus();
+  if (champ) {
+    champ.value = texte;
+    champ.focus();
+    try { champ.setSelectionRange(texte.length, texte.length); } catch (e) { /* type sans sélection */ }
+  }
 }
 
 function ajouterDepuisTexte(si, texte) {
@@ -2893,8 +2937,10 @@ function renderOptionsDuChamp(def, si, f, fi, isBind) {
   return `
     <div class="fr-input-group">
       <label class="fr-label" for="opt-${si}-${fi}">Options proposées ${hintIcon('Une par ligne. Elles deviendront les choix de la colonne créée dans Grist.')}</label>
-      <textarea class="fr-input" id="opt-${si}-${fi}" rows="4"
+      <textarea class="fr-input" id="opt-${si}-${fi}" rows="4" placeholder="Une option par ligne"
+        aria-describedby="opt-aide-${si}-${fi}"
         oninput="App.onFieldChoices(${si}, ${fi}, this.value)">${esc(valeur)}</textarea>
+      <p class="fr-hint-text" id="opt-aide-${si}-${fi}">Une option par ligne. Sans option, la question ne propose aucun choix.</p>
     </div>`;
 }
 
@@ -2965,7 +3011,7 @@ function renderReglagesCommuns(def, si, f, fi) {
     const dep = o.depart || {};
     const sources = [['', 'aucune'], ['aujourdhui', 'la date du jour'], ['maintenant', 'maintenant (date et heure)'], ['moi', 'le courriel de la personne connectée'],
       ['derniere', 'la dernière saisie sur cet appareil'], ['valeur', 'une valeur fixe']];
-    html += `<div class="bloc__duo"><div class="fr-select-group"><label class="fr-label" for="dep-${si}-${fi}">Valeur de départ ${hintIcon('Ce que la question montre avant qu’on y touche. Elle ne passe jamais devant une valeur déjà donnée, ni en modification d’une ligne.')}</label>
+    html += `<div class="bloc__duo"><div class="fr-select-group"><label class="fr-label" for="dep-${si}-${fi}">Réponse proposée au départ ${hintIcon('Ce que la question montre avant qu’on y touche. Elle ne passe jamais devant une valeur déjà donnée, ni en modification d’une ligne.')}</label>
       <select class="fr-select" id="dep-${si}-${fi}" onchange="App.onDepart(${si}, ${fi}, this.value, null)">
         ${sources.map(([v, l]) => `<option value="${v}" ${v === (dep.source || '') ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
       ${dep.source === 'valeur' ? `<div class="fr-input-group"><label class="fr-label" for="depv-${si}-${fi}">Valeur</label>
@@ -2994,9 +3040,9 @@ function renderReglagesCommuns(def, si, f, fi) {
     if (g) {
       html += `<div class="bloc__duo">
         <div class="fr-input-group"><label class="fr-label" for="grp-t-${si}-${fi}">Légende du groupe</label>
-          <input class="fr-input" id="grp-t-${si}-${fi}" value="${esc(g.titre || '')}" oninput="App.onGroupeDef('${esc(groupeCourant)}', 'titre', this.value)"></div>
+          <input class="fr-input" id="grp-t-${si}-${fi}" value="${esc(g.titre || '')}" oninput="App.onGroupeDef('${escJs(groupeCourant)}', 'titre', this.value)"></div>
         <div class="fr-select-group"><label class="fr-label" for="grp-c-${si}-${fi}">Disposition</label>
-          <select class="fr-select" id="grp-c-${si}-${fi}" onchange="App.onGroupeDef('${esc(groupeCourant)}', 'colonnes', this.value)">
+          <select class="fr-select" id="grp-c-${si}-${fi}" onchange="App.onGroupeDef('${escJs(groupeCourant)}', 'colonnes', this.value)">
             <option value="1" ${g.colonnes === 2 ? '' : 'selected'}>Les unes sous les autres</option>
             <option value="2" ${g.colonnes === 2 ? 'selected' : ''}>Côte à côte si la place le permet</option></select></div>
       </div>`;
@@ -3048,7 +3094,7 @@ function renderReglagesCommuns(def, si, f, fi) {
     const choix = Object.keys(formats.FORMATS).map(id =>
       `<option value="${esc(id)}" ${id === courant ? 'selected' : ''}>${esc(formats.FORMATS[id].libelle)}</option>`).join('');
     html += `
-      <div class="fr-select-group"><label class="fr-label" for="fmt-${si}-${fi}">Format contrôlé ${hintIcon('Un calcul ou un motif, jamais un appel à un service : la valeur ne quitte pas la page. Le même contrôle peut être refait côté Grist (voir l’envoi externe).')}</label>
+      <div class="fr-select-group"><label class="fr-label" for="fmt-${si}-${fi}">Vérifier la forme de la réponse ${hintIcon('Un calcul ou un motif, jamais un appel à un service : la valeur ne quitte pas la page. Le même contrôle peut être refait côté Grist (voir l’envoi externe).')}</label>
         <select class="fr-select" id="fmt-${si}-${fi}" onchange="App.onValidation(${si}, ${fi}, this.value)">
           <option value="">— aucun —</option>${choix}
         </select></div>`;
@@ -3066,14 +3112,14 @@ function renderReglagesCommuns(def, si, f, fi) {
   const p = o.prefill || {};
   if (f.colId && ['file', 'geo', 'dessin'].indexOf(f.widget) === -1) {
     html += `
-      <details class="fr-mt-1w" ${p.param ? 'open' : ''}><summary class="fr-label">Valeur reçue par l’adresse de la page</summary>
-        <div class="fr-input-group"><label class="fr-label" for="pf-${si}-${fi}">Paramètre ${hintIcon('Un QR code collé sur un objet ouvre le formulaire avec ce paramètre : ?objet=123. Rien n’est repris sans ce réglage. C’est une commodité, pas une protection : une adresse se fabrique à la main.')}</label>
+      <details class="fr-mt-1w" ${p.param ? 'open' : ''}><summary class="fr-label">Préremplir depuis le lien (QR code, adresse de la page)</summary>
+        <div class="fr-input-group"><label class="fr-label" for="pf-${si}-${fi}">Nom dans l’adresse ${hintIcon('Un QR code collé sur un objet ouvre le formulaire avec ce paramètre : ?objet=123. Rien n’est repris sans ce réglage. C’est une commodité, pas une protection : une adresse se fabrique à la main.')}</label>
           <input class="fr-input" id="pf-${si}-${fi}" value="${esc(p.param || '')}" placeholder="objet" pattern="[a-z][a-z0-9_]{0,31}"
             oninput="App.onPrefill(${si}, ${fi}, 'param', this.value)"></div>
         <div class="fr-checkbox-group"><input type="checkbox" id="pfv-${si}-${fi}" ${p.verrouille ? 'checked' : ''}
           onchange="App.onPrefill(${si}, ${fi}, 'verrouille', this.checked)">
           <label class="fr-label" for="pfv-${si}-${fi}">La personne ne peut pas la changer</label></div>
-        <div class="fr-input-group"><label class="fr-label" for="pfl-${si}-${fi}">Paramètre du texte à montrer</label>
+        <div class="fr-input-group"><label class="fr-label" for="pfl-${si}-${fi}">Nom dans l’adresse du texte à montrer</label>
           <input class="fr-input" id="pfl-${si}-${fi}" value="${esc(p.libelleParam || '')}" placeholder="objet_nom"
             oninput="App.onPrefill(${si}, ${fi}, 'libelleParam', this.value)"></div>
       </details>`;
@@ -3632,7 +3678,7 @@ function renderLimiteQuestion(def, f) {
   const actif = i >= 0;
   return `<section class="bloc">
     <h4 class="bloc__titre">Nombre de réponses par choix ${hintIcon('Facultatif. Quand un choix a atteint son maximum, il n’est plus proposé : « complet » s’affiche à sa place. Sert à limiter des places, des créneaux, des portions, des salles…')}</h4>
-    <div class="fr-checkbox-group"><input type="checkbox" id="lim-q-actif" ${actif ? 'checked' : ''} onchange="App.onLimiteQuestion('${esc(f.colId)}', this.checked)">
+    <div class="fr-checkbox-group"><input type="checkbox" id="lim-q-actif" ${actif ? 'checked' : ''} onchange="App.onLimiteQuestion('${escJs(f.colId)}', this.checked)">
       <label class="fr-label" for="lim-q-actif">Limiter le nombre de réponses de chaque choix</label></div>
     ${actif ? reglageLimiteChoix(def, parChoix[i], i, f) : ''}
   </section>`;
@@ -3997,6 +4043,29 @@ function renderConditionValueInput(scope, si, fi, ruleIndex, sourceField, curren
   return `<input class="fr-input" value="${esc(v)}" oninput="${onChange}" placeholder="Valeur">`;
 }
 
+/**
+ * La condition dite en une phrase : « S'affiche si « Âge » est supérieur à 18. »
+ *
+ * Quatre colonnes de listes ne se lisent pas ; une phrase, si. Seules les règles qui regardent une question
+ * précédente sont dites ainsi : les autres (situation, identité) gardent leur ligne de réglage.
+ */
+function phraseConditions(compound, prior, scope) {
+  const dites = (compound.rules || []).map(rule => {
+    const col = rule.field || rule.path;
+    const src = prior.find(p => p.colId === col);
+    if (!src || ruleSelectKey(rule).indexOf('field:') !== 0) return null;
+    const op = (FormUx.operatorsForType(src.type) || []).find(o => o.value === rule.operator);
+    const prend = FormUx.operatorTakesValue(rule.operator);
+    // Une règle à moitié écrite ne se dit pas : on ne montre que ce qui est complet.
+    if (!op || (prend && (rule.value == null || rule.value === ''))) return null;
+    return '« ' + (src.label || col) + ' » : ' + String(op.label).toLowerCase() + (prend ? ' « ' + String(rule.value) + ' »' : '');
+  }).filter(Boolean);
+  if (!dites.length) return '';
+  const lien = compound.op === 'or' ? ' ou ' : ' et ';
+  return '<p class="rule-resume"><strong>' + (scope === 'section' ? 'L’étape' : 'La question') + ' s’affiche si</strong> ' +
+    esc(dites.join(lien)) + '.</p>';
+}
+
 function renderConditionEditor(scope, si, fi, condition, prior) {
   const compound = FormUx.normalizeToCompound(condition);
   const enabled = !!condition;
@@ -4059,13 +4128,13 @@ function renderConditionEditor(scope, si, fi, condition, prior) {
     const opTip = operatorTip(rule.operator, isAud, isCtx);
     return `
       <div class="rule-row">
-        <div class="fr-select-group">${hintLabel('Source', CONDITION_SOURCE_TIP)}
+        <div class="fr-select-group">${hintLabel('Réponse à regarder', CONDITION_SOURCE_TIP)}
           <select class="fr-select" onchange="${fieldSelect}">
             <option value="">—</option>
-            <optgroup label="Contexte">${CONTEXT_RULE_OPTS.map(o =>
+            <optgroup label="Situation de la personne">${CONTEXT_RULE_OPTS.map(o =>
               `<option value="${esc(o.key)}" ${selKey === o.key ? 'selected' : ''}>${esc(o.label)}</option>`
             ).join('')}</optgroup>
-            <optgroup label="Audience">${AUDIENCE_RULE_OPTS.map(o =>
+            <optgroup label="Identité de la personne">${AUDIENCE_RULE_OPTS.map(o =>
               `<option value="${esc(o.key)}" ${selKey === o.key ? 'selected' : ''}>${esc(o.label)}</option>`
             ).join('')}</optgroup>
             ${prior.length ? `<optgroup label="Questions précédentes">${prior.map(p =>
@@ -4074,10 +4143,10 @@ function renderConditionEditor(scope, si, fi, condition, prior) {
           </select>
           <p class="fr-hint-text">${esc(srcTip)}</p>
         </div>
-        <div class="fr-select-group">${hintLabel('Opérateur', opTip)}
+        <div class="fr-select-group">${hintLabel('Comparaison', opTip)}
           <select class="fr-select" onchange="${opSelect}">${opOpts}</select>
         </div>
-        <div class="fr-input-group">${hintLabel('Valeur', isAud ? valueHint : (isCtx && rule.path !== 'userEmail' ? 'Oui = critère vrai, Non = critère faux.' : CONDITION_VALUE_TIP))}
+        <div class="fr-input-group">${hintLabel('Valeur attendue', isAud ? valueHint : (isCtx && rule.path !== 'userEmail' ? 'Oui = critère vrai, Non = critère faux.' : CONDITION_VALUE_TIP))}
           ${!FormUx.operatorTakesValue(rule.operator)
             ? `<input class="fr-input" disabled value="" placeholder="Aucune valeur à saisir" aria-label="Aucune valeur : ${esc(opTip)}">`
             : isCtx && rule.path !== 'userEmail'
@@ -4095,7 +4164,7 @@ function renderConditionEditor(scope, si, fi, condition, prior) {
                     : `App.onFieldRule(${si}, ${fi}, ${ri}, 'value', this.value)`}">`
               : renderConditionValueInput(scope, si, fi, ri, src, rule.value))}
         </div>
-        <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer la règle" onclick="${delFn}">✕</button>
+        <button type="button" class="fr-btn fr-btn--tertiary-no-outline" title="Supprimer cette condition" aria-label="Supprimer cette condition" onclick="${delFn}">✕</button>
       </div>`;
   }).join('');
 
@@ -4109,14 +4178,15 @@ function renderConditionEditor(scope, si, fi, condition, prior) {
         </label>
       </div>
       <div class="fr-select-group fr-mt-1w">
-        ${hintLabel('Combinaison des règles', CONDITION_COMBO_TIP)}
+        ${hintLabel('Quand il y a plusieurs conditions', CONDITION_COMBO_TIP)}
         <select class="fr-select" onchange="${opFn}">
-          <option value="and" ${compound.op === 'and' ? 'selected' : ''}>Toutes (ET)</option>
-          <option value="or" ${compound.op === 'or' ? 'selected' : ''}>Au moins une (OU)</option>
+          <option value="and" ${compound.op === 'and' ? 'selected' : ''}>Toutes doivent être vraies</option>
+          <option value="or" ${compound.op === 'or' ? 'selected' : ''}>Une seule suffit</option>
         </select>
       </div>
+      ${phraseConditions(compound, prior, scope)}
       ${rulesHtml}
-      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" onclick="${addFn}">+ Ajouter une règle</button>
+      <button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" onclick="${addFn}">+ Ajouter une condition</button>
     </div>`;
 }
 
@@ -4178,7 +4248,7 @@ function renderFieldEditor(def, si, f, fi) {
     `<option value="${esc(t.key)}" ${typeKey === t.key ? 'selected' : ''}>${esc(t.label)}</option>`
   ).join('');
   const widgetChoices = WIDGETS_BY_TYPE[f.type] || ['text'];
-  const widgetOptions = widgetChoices.map(w => `<option value="${w}" ${f.widget === w ? 'selected' : ''}>${w}</option>`).join('');
+  const widgetOptions = widgetChoices.map(w => `<option value="${w}" ${f.widget === w ? 'selected' : ''}>${esc(WIDGET_LABELS[w] || w)}</option>`).join('');
   const prior = priorFields(def, si, fi);
   const refParents = prior.filter(p => p.type === 'Ref');
   const dynParents = prior.filter(p => p.type === 'Ref' || p.type === 'Choice' || p.type === 'Text' || p.type === 'Bool');
@@ -4297,8 +4367,8 @@ function renderFieldEditor(def, si, f, fi) {
           </div>` : ''}
 
         <details class="json-preview">
-          <summary>Technique</summary>
-          <div class="fr-select-group fr-mt-1w"><label class="fr-label">Contrôle de saisie</label>
+          <summary>Avancé</summary>
+          <div class="fr-select-group fr-mt-1w"><label class="fr-label">Façon de répondre</label>
             <select class="fr-select" onchange="App.onFieldInput(${si}, ${fi}, 'widget', this.value)">${widgetOptions}</select>
           </div>
         </details>
@@ -4451,13 +4521,32 @@ function removeField(si, fi) {
 
 function onSectionInput(si, prop, value) {
   marquerModifie(); S.currentDef.sections[si][prop] = value; }
+/**
+ * Le canevas suit ce qu'on tape.
+ *
+ * > Redessiner tout le compositeur à chaque touche ferait perdre le curseur du champ qu'on remplit. Seul le
+ * > canevas (ce que le public lira) est donc redessiné, après une courte pause, et jamais s'il porte le focus.
+ */
+function rafraichirCanevas() {
+  clearTimeout(S._tCanevas);
+  S._tCanevas = setTimeout(() => {
+    const canevas = document.getElementById('canevas');
+    if (!canevas || !S.currentDef) return;
+    if (canevas.contains(document.activeElement)) return;
+    const haut = canevas.scrollTop;
+    canevas.innerHTML = renderCanevas(S.currentDef);
+    canevas.scrollTop = haut;
+  }, 200);
+}
+
 function onFieldInput(si, fi, prop, value) {
-  marquerModifie(); S.currentDef.sections[si].fields[fi][prop] = value; }
+  marquerModifie(); S.currentDef.sections[si].fields[fi][prop] = value; rafraichirCanevas(); }
 function onFieldOption(si, fi, key, value) {
   const f = S.currentDef.sections[si].fields[fi];
   f.options = f.options || {};
   if (value === '' || value == null) delete f.options[key];
   else f.options[key] = value;
+  rafraichirCanevas();
 }
 
 function onFieldLabelBlur(si, fi) {
@@ -4541,6 +4630,7 @@ function onFieldChoices(si, fi, text) {
   const f = S.currentDef.sections[si].fields[fi];
   const list = text.split('\n').map(s => s.trim()).filter(Boolean);
   if (f.colId) S.currentDef.choices[f.colId] = list;
+  rafraichirCanevas();
 }
 
 /** Une option numérique : vide l'efface, un nombre s'écrit comme nombre. */
@@ -5562,18 +5652,29 @@ function renderPublishStep() {
           <tr><th scope="row">Pièces jointes, photo, signature</th><td>oui</td><td>oui</td><td>non</td></tr>
           <tr><th scope="row">Places restantes affichées</th><td>oui</td><td>non</td><td>non (la page ne lit rien)</td></tr>
         </tbody></table></div>
-      <p class="fr-text--sm">Pour des personnes sans compte, <strong>la page hors de Grist</strong> est la façon de partager un lien sans rien montrer des autres réponses. Voir <code>docs/EXPOSITION.md</code>.</p>
+      <p class="fr-text--sm">Pour des personnes sans compte, <strong>la page hors de Grist</strong> est la façon de partager un lien sans rien montrer des autres réponses.</p>
     </details>
-    <p>Crée une page Grist dédiée pour remplir le formulaire (bundle figé : moteur, audience, styles).</p>
+    <section class="carte-publication" aria-labelledby="pub-doc">
+    <h3 class="carte-publication__titre" id="pub-doc">Dans votre document Grist</h3>
+    <p>Crée dans le document une page pour remplir ce formulaire. Une fois en ligne, cette page garde la version publiée : modifier le formulaire ici ne la change qu’à la prochaine remise en ligne.</p>
     <p class="fr-text--sm">Version : <strong>${esc(row ? row.Version : 0)}</strong> — Statut : <strong>${esc(row ? row.Statut : 'brouillon (non enregistré)')}</strong></p>
     ${alreadyPublished ? `<div class="fr-alert fr-alert--warning fr-mb-2w"><p>Une version est déjà en ligne. <strong>Remettre en ligne</strong> remplace le formulaire figé sur la page publiée (même URL).</p></div>` : ''}
     ${S.isDemo ? `<div class="fr-alert fr-alert--info fr-mb-2w"><p>Mode démo : publication simulée, sans écriture Grist.</p></div>` : ''}
     <button class="fr-btn" onclick="App.publishForm()">${btnLabel}</button>
-    <span class="publish-hint">Le bundle inclut session, audience et moteur de conditions. Les droits Grist restent la vraie barrière de sécurité.</span>
+    <span class="publish-hint">Les droits du document restent la vraie protection : voyez « Qui voit les réponses ? » juste dessous.</span>
+    </section>
+    <section class="carte-publication" aria-labelledby="pub-acces">
+    <h3 class="carte-publication__titre" id="pub-acces">Qui voit les réponses</h3>
+    <p>Les personnes qui remplissent la page du document en sont éditeurs : dites ici ce qu’elles peuvent lire des réponses des autres.</p>
     ${renderAccesBloc()}
+    </section>
+    <section class="carte-publication" aria-labelledby="pub-ext">
+    <h3 class="carte-publication__titre" id="pub-ext">Pour des personnes sans compte</h3>
+    <p>Une page à part, à déposer sur un site : on y répond sans compte Grist et sans rien voir des autres réponses.</p>
     ${renderExterneBloc()}
+    </section>
     <details class="json-preview fr-mt-3w">
-      <summary>Journal technique</summary>
+      <summary>Détails de la mise en ligne</summary>
       <div id="publish-log-entries" class="fr-mt-1w"></div>
     </details>
   `;
@@ -5612,7 +5713,7 @@ function renderAccesBloc() {
   const peutPoser = plan.ok && plan.regles.length && !pose;
   return `
     <details class="fr-mt-3w" ${a.ouvert ? 'open' : ''} ontoggle="App.onAcces('ouvert', this.open)">
-      <summary class="fr-label">Qui voit les réponses ?${pose ? ' — règles posées' : ''}</summary>
+      <summary class="fr-label">Choisir ce que les participants lisent${pose ? ' — règles posées' : ''}</summary>
       <p class="fr-text--sm fr-mt-1w">Une page de formulaire est une page de votre document : <strong>celles et ceux qui la remplissent en sont éditeurs</strong> et voient tout ce que les
         règles d’accès ne leur cachent pas. Pour exposer le formulaire sans exposer les réponses, dites ici ce qu’ils peuvent lire. Une règle ne peut que retirer des droits :
         les participants doivent déjà être éditeurs (ou arriver par un lien public en édition). Pour des personnes qui n’ont pas de compte, préférez la page hors de Grist, plus bas.</p>
@@ -5795,12 +5896,12 @@ function renderExterneBloc() {
   const erreurs = plan && !plan.ok ? plan.errors : [];
   return `
     <details class="fr-mt-3w" ${x.ouvert ? 'open' : ''} ontoggle="App.externeOuvrir(this.open)">
-      <summary class="fr-label">Envoyer depuis une page hors de Grist</summary>
+      <summary class="fr-label">Préparer la page hors de Grist</summary>
       <div class="fr-alert fr-alert--warning fr-mt-1w"><p><strong>À savoir avant de l’ouvrir.</strong>
         Toute personne qui a la page peut envoyer, sans limite : Grist accepte la ligne, puis une colonne la juge (« Conforme »).
         Rien n’est refusé. Les pièces jointes, dessins et signatures ne peuvent pas partir depuis une page hors de Grist.
         Ce qui est collecté ainsi l’est sur une page publique : le dire est de votre responsabilité.</p></div>
-      ${erreurs.length ? `<div class="fr-alert fr-alert--error fr-mt-1w"><p>${erreurs.map(esc).join('<br>')}</p></div>` : ''}
+      ${erreurs.length ? `<div class="fr-alert fr-alert--warning fr-mt-1w"><p><strong>À régler d’abord :</strong> ${erreurs.map(esc).join(' ')}</p></div>` : ''}
       ${avertissements.length ? `<div class="fr-alert fr-alert--info fr-mt-1w"><p>${avertissements.map(esc).join('<br>')}</p></div>` : ''}
 
       <h3 class="fr-h6 fr-mt-2w">1. Préparer la table</h3>
@@ -5810,7 +5911,7 @@ function renderExterneBloc() {
       ${x.message ? `<p class="fr-text--sm fr-mt-1w" role="status">${esc(x.message)}</p>` : ''}
 
       <h3 class="fr-h6 fr-mt-2w">2. Publier le formulaire natif</h3>
-      <p class="fr-text--sm">Dans Grist, ouvrez la page de formulaire créée sur la table « ${esc(def.tableId)} », cliquez sur <strong>Publier</strong>,
+      <p class="fr-text--sm">Dans Grist, ouvrez la page de formulaire créée sur ${def.tableId ? 'la table « ' + esc(def.tableId) + ' »' : 'la table des réponses'}, cliquez sur <strong>Publier</strong>,
         puis sur <strong>Partager</strong> et copiez le lien. La clé n’apparaît qu’à cet endroit, et Grist ne la donne à aucun programme.</p>
 
       <h3 class="fr-h6 fr-mt-2w">3. Coller le lien</h3>
@@ -6078,7 +6179,9 @@ async function publishForm() {
       })
     ]);
     const fullHtml = Publish.buildRuntimeDocument(def,
-      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText });
+      { bridgeJs, typesJs, attachmentsJs, sessionContextJs, carteJs, dessinJs, referentielJs, formatsJs, enrichirJs, saisiesJs, conditionsJs, limitesJs, engineJs, cssText,
+        // Le hook d'essai de bout en bout n'est embarque que pour un essai demande (?e2e=1), jamais en production.
+        e2e: /([?&])e2e=1(?:&|$)/.test(location.search || '') });
     const { html, js } = Publish.splitHtmlJs(fullHtml);
     const optionsStr = Publish.buildCustomViewOptions({ html, js });
 
