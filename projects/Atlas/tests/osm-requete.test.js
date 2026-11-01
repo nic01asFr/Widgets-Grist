@@ -41,3 +41,21 @@ describe('messageRefusOsm — un refus dit sa cause', () => {
     assert.equal(messageRefusOsm(500), 'HTTP 500');
   });
 });
+
+it('avecReprises : un refus passager (502, 503, 504, 429) est repris, une réponse bonne ou un autre refus est rendu tel quel', async () => {
+  const { avecReprises, messageRefusOsm } = await import('../lib/osm-requete.js');
+  const attentes = [];
+  const attendre = async (ms) => { attentes.push(ms); };
+  let n = 0;
+  const reprises = [];
+  const r = await avecReprises(async () => { n++; return n < 3 ? { ok: false, status: 502 } : { ok: true, status: 200 }; }, { attendre, surReprise: (k, s) => reprises.push([k, s]) });
+  assert.equal(r.status, 200); assert.equal(n, 3); assert.deepEqual(attentes, [1500, 3000]); assert.deepEqual(reprises, [[1, 502], [2, 502]]);
+  n = 0; const r2 = await avecReprises(async () => { n++; return { ok: false, status: 406 }; }, { attendre });
+  assert.equal(r2.status, 406); assert.equal(n, 1, 'un 406 ne se règle pas en attendant');
+  n = 0; const r3 = await avecReprises(async () => { n++; return { ok: false, status: 502 }; }, { attendre, essais: 2 });
+  assert.equal(r3.status, 502); assert.equal(n, 2);
+  n = 0; const r4 = await avecReprises(async () => { n++; if (n === 1) throw new Error('réseau'); return { ok: true, status: 200 }; }, { attendre });
+  assert.equal(r4.status, 200);
+  await assert.rejects(() => avecReprises(async () => { throw new Error('hors ligne'); }, { attendre }), /hors ligne/);
+  assert.match(messageRefusOsm(502), /surchargé ou indisponible \(502\)/);
+});

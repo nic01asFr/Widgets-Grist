@@ -246,7 +246,7 @@ import {
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
 import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=20261010a';
 import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=20261010a';
-import { enTetesOsm, messageRefusOsm } from './lib/osm-requete.js?v=20260926a';
+import { enTetesOsm, messageRefusOsm, avecReprises } from './lib/osm-requete.js?v=20261101a';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
 import { capUtilisable } from './lib/cap-position.js?v=20261010a';
@@ -12386,7 +12386,9 @@ async function runOSM(key) {
         const b = map.getBounds();
         const bbox = `${b.getSouth()},${b.getWest()},${b.getNorth()},${b.getEast()}`;
         const q = `[out:json][timeout:30];(${preset.query}(${bbox}););out body geom;`;
-        const res = await fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: enTetesOSM({ 'Content-Type': 'application/x-www-form-urlencoded' }), body: 'data=' + encodeURIComponent(q) });
+        const res = await avecReprises(
+            () => fetch('https://overpass-api.de/api/interpreter', { method: 'POST', headers: enTetesOSM({ 'Content-Type': 'application/x-www-form-urlencoded' }), body: 'data=' + encodeURIComponent(q) }),
+            { surReprise: (n) => showLoading('OpenStreetMap est occupé, nouvel essai (' + (n + 1) + '/3)…') });
         if (!res.ok) throw new Error(messageRefusOsm(res.status));
         const data = await res.json();
         const geojson = osmToGeoJSON(data.elements || []);
