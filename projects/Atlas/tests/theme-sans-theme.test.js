@@ -38,3 +38,9 @@ test('les raisons rendues par le lecteur sont toutes connues de l interface', ()
   for (const [voulu, obtenu] of Object.entries(attendues)) assert.equal(obtenu, voulu);
   assert.equal(themeDuDocument(null).raison, 'aucun-actif');
 });
+
+test('un document qui dit quelque chose d illisible n applique rien et l instance Grist ne le remplace pas ; elle ne prend le relais que sans thème de document', () => {
+  const doc = corps('chargerThemeDocument');
+  assert.match(doc, /if \(!theme\.charte && theme\.raison !== 'aucun-actif'\) documentADit = true;/);
+  assert.match(doc, /if \(!documentAUnTheme && !documentADit\) \{ brancherThemeInstance\(\); await appliquerThemeInstance\(\); \}/);
+});
