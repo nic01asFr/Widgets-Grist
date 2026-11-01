@@ -311,7 +311,7 @@
         /* Une pastille a cote du nom du projet : calme (rouge doux) hors reseau ou en attente, pleine quand il faut verifier. */
         .synchro-pastille {
             display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; margin-left: 4px;
-            border-radius: 13px; border: 1px solid rgba(196, 69, 54, 0.28); background: var(--accent-soft); color: var(--accent);
+            border-radius: 13px; border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); background: var(--accent-soft); color: var(--accent);
             font: 600 11.5px/1 var(--sans); cursor: pointer; white-space: nowrap; flex: 0 0 auto;
         }
         .synchro-pastille[hidden], #hote-synchro[hidden] { display: none; }
@@ -319,7 +319,7 @@
         .synchro-pastille:focus-visible, #hote-synchro:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
         .synchro-pastille.etat-alerte { background: var(--accent); border-color: var(--accent); color: #fff; }
         /* Sur la carte (barre retiree) : meme signal, en rond. */
-        #hote-synchro { background: var(--accent-soft); color: var(--accent); border-color: rgba(196, 69, 54, 0.35); }
+        #hote-synchro { background: var(--accent-soft); color: var(--accent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
         #hote-synchro.etat-alerte { background: var(--accent); color: #fff; border-color: var(--accent); }
         .panneau-synchro { width: min(360px, calc(100vw - 24px)); padding: 10px 12px; }
         .panneau-synchro .dock-slot-data { padding: 0; }
@@ -574,19 +574,19 @@
         .dock-epingle .dock-fab:hover { border-color: var(--hairline-strong); }
         .map-controls-dock .dock-fab.active,
         .dock-epingle .dock-fab.active {
-            border-color: rgba(196,69,54,0.4);
-            box-shadow: 0 3px 10px rgba(196,69,54,0.16);
+            border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+            box-shadow: 0 3px 10px color-mix(in srgb, var(--accent) 16%, transparent);
             transform: translateY(-1px);
         }
         .map-controls-dock .dock-fab.alerte,
         .dock-epingle .dock-fab.alerte {
-            border-color: rgba(196,69,54,0.85);
-            box-shadow: 0 0 0 3px rgba(196,69,54,0.28);
+            border-color: color-mix(in srgb, var(--accent) 85%, transparent);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
         }
         .trajet-poignee {
             min-width: 22px; height: 22px; padding: 0 5px;
             border-radius: 11px;
-            background: #C44536; border: 2px solid #fff;
+            background: var(--accent); border: 2px solid var(--surface);
             box-shadow: 0 1px 4px rgba(0,0,0,.35);
             cursor: grab; box-sizing: border-box;
             color: #fff; font: 700 11px/18px system-ui, sans-serif;
@@ -596,7 +596,7 @@
         .trajet-poignee:active { cursor: grabbing; }
         .trajet-sens {
             width: 0; height: 0;
-            border-left: 7px solid #C44536;
+            border-left: 7px solid var(--accent);
             border-top: 5px solid transparent;
             border-bottom: 5px solid transparent;
             filter: drop-shadow(0 0 1px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.35));
@@ -666,12 +666,12 @@
         }
         .dock-slot-tag {
             font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase;
-            color: var(--accent); background: rgba(196,69,54,0.08);
-            border: 1px solid rgba(196,69,54,0.2);
+            color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent);
+            border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
             border-radius: 999px; padding: 2px 7px; flex-shrink: 0;
         }
         .dock-slot-body {
-            background: rgba(244,239,227,0.52);
+            background: color-mix(in srgb, var(--bg) 52%, transparent);
             border: 1px solid var(--hairline);
             border-radius: 10px;
             padding: 8px 10px;
@@ -693,7 +693,7 @@
         .dock-slot-synchro .synchro-ligne { padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12px; line-height: 1.4; }
         .dock-slot-synchro .synchro-ligne:first-of-type { border-top: none; }
         .dock-slot-synchro .synchro-etat { font-size: 10px; letter-spacing: .05em; text-transform: uppercase; padding: 1px 7px; border-radius: 999px; background: rgba(0,0,0,.06); margin-right: 4px; }
-        .dock-slot-synchro .etat-refusee .synchro-etat, .dock-slot-synchro .etat-incertaine .synchro-etat { background: rgba(196,69,54,.12); color: var(--accent); }
+        .dock-slot-synchro .etat-refusee .synchro-etat, .dock-slot-synchro .etat-incertaine .synchro-etat { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
         .dock-slot-synchro .synchro-raison { font-size: 11px; color: var(--muted); margin-top: 3px; }
         .dock-slot-data .releve-aide { margin: 0 0 6px; font-size: 11.5px; line-height: 1.4; color: var(--muted); }
         .dock-slot-data .releve-couche { padding: 8px 0; border-top: 1px solid var(--hairline); }
@@ -715,7 +715,7 @@
             border: 1px solid var(--hairline); background: transparent; color: var(--muted);
             font: inherit; font-size: 12px; cursor: pointer;
         }
-        #insp-body .liste-tri button.on { color: var(--ink); border-color: var(--accent); background: rgba(196,69,54,0.08); }
+        #insp-body .liste-tri button.on { color: var(--ink); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
         #insp-body .liste-lignes { display: flex; flex-direction: column; }
         #insp-body .liste-ligne {
             display: flex; align-items: center; gap: 10px; min-height: 52px;
@@ -773,7 +773,7 @@
         .dock-chip:hover { border-color: var(--hairline-strong); }
         .dock-chip.active {
             border-color: var(--accent);
-            background: rgba(196, 69, 54, 0.08); color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--accent);
         }
         .dock-collapse {
             flex-shrink: 0;
@@ -872,7 +872,7 @@
         .dock-ligne-outils { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px; font-size: 11px; color: var(--muted); }
         .dock-outils { display: flex; gap: 2px; }
         .dock-outils .ctl-mini { border: none; background: none; padding: 3px 7px; border-radius: 6px; color: var(--accent); font: 600 11.5px/1 var(--sans); cursor: pointer; }
-        .dock-outils .ctl-mini:hover { background: rgba(196,69,54,0.08); }
+        .dock-outils .ctl-mini:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
         .dock-slot-title .info-i { margin-left: 6px; }
         /* Téléphone : les fonds se reconnaissent à leur pastille ; seul le fond choisi garde son nom. */
         @media (max-width: 480px) {
@@ -958,8 +958,8 @@
         }
         .sel-btn:hover { background: var(--hairline); }
         .sel-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
-        .sel-btn.danger { background: rgba(196,69,54,0.12); border-color: rgba(196,69,54,0.35); color: var(--accent); }
-        .sel-btn.danger:hover { background: rgba(196,69,54,0.22); }
+        .sel-btn.danger { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--accent); }
+        .sel-btn.danger:hover { background: color-mix(in srgb, var(--accent) 22%, transparent); }
         .sel-count { font-family: var(--mono); font-size: 11px; opacity: 0.85; }
         /* La barre de sélection se compacte selon la largeur de la CARTE, pas de la fenêtre : rail, module et fiche la rétrécissent, et la barre
            (chaque libellé sur une ligne) débordait de sa capsule. Du moins utile au plus utile : « Désélectionner », puis « Tout », puis le
@@ -975,7 +975,7 @@
         /* Selection box (shift-drag) */
         .selection-box {
             position: absolute; border: 2px dashed var(--accent);
-            background: rgba(196,69,54,0.12); pointer-events: none; z-index: 9;
+            background: color-mix(in srgb, var(--accent) 12%, transparent); pointer-events: none; z-index: 9;
         }
         .map-frame.select-mode #map canvas { cursor: crosshair; }
 
@@ -1052,7 +1052,7 @@
             border: 1px solid var(--hairline-strong); border-radius: 8px;
             color: var(--ink); font-size: 13px; font-family: inherit; transition: var(--t-fast);
         }
-        .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(196,69,54,0.12); }
+        .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent); }
         select.input { cursor: pointer; }
 
         .btn {
@@ -1123,7 +1123,7 @@
         /* Palette */
         .palette-list { display: flex; flex-direction: column; gap: 6px; }
         .palette-item { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 7px; background: transparent; border: 1px solid transparent; cursor: pointer; }
-        .palette-item.active { background: var(--accent-soft); border-color: rgba(196,69,54,0.2); }
+        .palette-item.active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 20%, transparent); }
         .palette-strip { display: flex; height: 16px; border-radius: 3px; overflow: hidden; width: 100px; flex-shrink: 0; }
         .palette-strip > span { flex: 1; }
         .palette-item .pname { font-size: 12px; color: var(--text); }
@@ -1215,7 +1215,7 @@
             cursor: pointer; border: 1px solid transparent; transition: var(--t-fast);
         }
         .layer-item:hover { background: var(--surface-muted); }
-        .layer-item.active { background: var(--accent-soft); border-color: rgba(196,69,54,0.2); }
+        .layer-item.active { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 20%, transparent); }
         .layer-vis { font-size: 14px; cursor: pointer; color: var(--muted); flex-shrink: 0; line-height: 1; }
         .layer-vis.on { color: var(--text); }
         .layer-swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
@@ -1230,7 +1230,7 @@
         .badge-copie { background: var(--muted); color: white; padding: 1px 4px; border-radius: 3px; font-size: 8.5px; }
         .layer-del { background: transparent; border: none; cursor: pointer; opacity: 0.3; font-size: 13px; padding: 2px; border-radius: 4px; }
         .layer-item:hover .layer-del { opacity: 0.7; }
-        .layer-del:hover { opacity: 1; background: rgba(196,69,54,0.15); }
+        .layer-del:hover { opacity: 1; background: color-mix(in srgb, var(--accent) 15%, transparent); }
         .layer-act { background: transparent; border: none; cursor: pointer; opacity: 0.4; font-size: 13px; padding: 2px; border-radius: 4px; transition: var(--t-fast); flex-shrink: 0; }
         .layer-item:hover .layer-act { opacity: 0.85; }
         .layer-act:hover { opacity: 1; background: var(--surface-muted); }
@@ -1308,7 +1308,7 @@
         .rot-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 6px; height: 6px; border-radius: 3px; background: var(--ink); }
 
         /* Loading */
-        .loading { position: absolute; inset: 0; background: rgba(244,239,227,0.9); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 100; }
+        .loading { position: absolute; inset: 0; background: color-mix(in srgb, var(--bg) 90%, transparent); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 100; }
         .loading.show { display: flex; }
         .spinner { width: 38px; height: 38px; border: 3px solid var(--hairline); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -1353,7 +1353,7 @@
             display: inline-flex; align-items: center;
             font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
             text-transform: uppercase; padding: 3px 8px; border-radius: 6px;
-            background: rgba(196, 69, 54, 0.12); color: var(--accent);
+            background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent);
             margin-left: 8px;
         }
         .view-mode-badge[hidden] { display: none !important; }
@@ -1523,9 +1523,9 @@
         #story-present {
             position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
             z-index: 1000; width: 88%; max-width: 520px; padding: 12px 16px;
-            background: rgba(244,239,227,0.96); color: #1F1B14; border-radius: 12px;
+            background: color-mix(in srgb, var(--bg) 96%, transparent); color: var(--ink); border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0,0,0,0.25);
-            font-family: 'Hanken Grotesk', sans-serif;
+            font-family: var(--sans);
         }
         body:not(.mobile-layout) .legend {
             bottom: var(--etage-bas); left: var(--etage-marge); width: var(--etage-legende);
@@ -1590,10 +1590,10 @@
         body.view-mode .inspector { display: none !important; }
         body.view-mode #mobile-nav { display: none !important; }
         .legend-row.legend-clickable { cursor: pointer; border-radius: 6px; margin: 0 -4px; padding: 3px 4px; }
-        .legend-row.legend-clickable:hover { background: rgba(196, 69, 54, 0.08); }
+        .legend-row.legend-clickable:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
         .legend-row.legend-clickable.legend-focused {
-            background: rgba(196, 69, 54, 0.14);
-            outline: 1px solid rgba(196, 69, 54, 0.35);
+            background: color-mix(in srgb, var(--accent) 14%, transparent);
+            outline: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
         }
         /* L'indication dit que les lignes de la légende ciblent : vraie dans toutes les postures, tant qu'il y a des lignes. */
         .legend:has(.legend-clickable) .legend-head .t::after {

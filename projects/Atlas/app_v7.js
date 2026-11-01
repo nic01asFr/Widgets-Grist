@@ -4996,7 +4996,7 @@ function assurerCoucheTrajet() {
             id: 'atlas-trajet-line',
             type: 'line',
             source: 'atlas-trajet',
-            paint: { 'line-color': '#C44536', 'line-width': 3, 'line-opacity': 0.92 },
+            paint: { 'line-color': accentCourant(), 'line-width': 3, 'line-opacity': 0.92 },
         });
     }
     releverLigneTrajet();
@@ -8097,7 +8097,7 @@ function renderStoryPresentation() {
     const ambiance = storyAmbianceLabel(s.state);
     const trace = traceActuelle();
     const points = trace ? STATE.story.map((_, i) =>
-        `<button type="button" onclick="A.storyGo(${i})" aria-label="Étape ${i + 1}" style="width:8px;height:8px;border-radius:50%;border:0;padding:0;background:${i === _storyIdx ? '#C44536' : '#d9d3cb'}"></button>`).join('') : '';
+        `<button type="button" onclick="A.storyGo(${i})" aria-label="Étape ${i + 1}" style="width:8px;height:8px;border-radius:50%;border:0;padding:0;background:${i === _storyIdx ? 'var(--accent, #C44536)' : '#d9d3cb'}"></button>`).join('') : '';
     const formulaires = (s.state?.saisies || []).map((x) => x.titre).filter(Boolean);
     const suiviBtn = trace && localisationDisponible()
         ? (_trajetSuivi && !_trajetPause
@@ -10392,7 +10392,13 @@ let _derniereCreation = null;
 /** La dernière forme modifiée, avec ses cellules d'origine, tant que l'objet reste sélectionné. */
 let _derniereModification = null;
 const SAISIE_SOURCE = 'atlas-saisie';
-const COULEUR_TRACE = '#C44536';
+// La couleur d'accent COURANTE : le jeton --accent que le thème du document ou de l'hôte redéfinit (la carte ne lit pas le CSS : ses couleurs sont lues ici, au moment de dessiner).
+const ACCENT_PAR_DEFAUT = '#C44536';
+function accentCourant() {
+    try { const v = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(); return /^#[0-9a-f]{6}$/i.test(v) ? v : ACCENT_PAR_DEFAUT; } catch (e) { return ACCENT_PAR_DEFAUT; }
+}
+const accentRgba = (a) => { const c = accentCourant(); return 'rgba(' + parseInt(c.slice(1, 3), 16) + ',' + parseInt(c.slice(3, 5), 16) + ',' + parseInt(c.slice(5, 7), 16) + ',' + a + ')'; };
+const couleurTrace = accentCourant;
 
 function dessinerSaisie() {
     if (!map) return;
@@ -10404,7 +10410,7 @@ function dessinerSaisie() {
     if (!map.getLayer(SAISIE_SOURCE)) {
         map.addLayer({
             id: SAISIE_SOURCE, type: 'circle', source: SAISIE_SOURCE,
-            paint: { 'circle-radius': 8, 'circle-color': COULEUR_TRACE, 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 },
+            paint: { 'circle-radius': 8, 'circle-color': couleurTrace(), 'circle-stroke-color': '#FFFFFF', 'circle-stroke-width': 3 },
         });
     } else {
         map.moveLayer(SAISIE_SOURCE);
@@ -10475,9 +10481,9 @@ async function demarrerTrace(s, layer) {
         showCoordinatePoints: true,
     };
     const poignees = {
-        closingPointColor: '#FFFFFF', closingPointOutlineColor: COULEUR_TRACE, closingPointWidth: 6, closingPointOutlineWidth: 2,
+        closingPointColor: '#FFFFFF', closingPointOutlineColor: couleurTrace(), closingPointWidth: 6, closingPointOutlineWidth: 2,
         snappingPointColor: '#1F6FEB', snappingPointOutlineColor: '#FFFFFF', snappingPointWidth: 6, snappingPointOutlineWidth: 2,
-        coordinatePointColor: COULEUR_TRACE, coordinatePointOutlineColor: '#FFFFFF', coordinatePointWidth: 4, coordinatePointOutlineWidth: 1,
+        coordinatePointColor: couleurTrace(), coordinatePointOutlineColor: '#FFFFFF', coordinatePointWidth: 4, coordinatePointOutlineWidth: 1,
     };
     const mode = famille === 'Polygon'
         ? new lib.TerraDrawPolygonMode({
@@ -10491,11 +10497,11 @@ async function demarrerTrace(s, layer) {
                 if (!r.valid) signalerRecoupe();
                 return r;
             },
-            styles: { fillColor: COULEUR_TRACE, fillOpacity: 0.18, outlineColor: COULEUR_TRACE, outlineWidth: 3, ...poignees },
+            styles: { fillColor: couleurTrace(), fillOpacity: 0.18, outlineColor: couleurTrace(), outlineWidth: 3, ...poignees },
         })
         : new lib.TerraDrawLineStringMode({
             ...commun,
-            styles: { lineStringColor: COULEUR_TRACE, lineStringWidth: 3, ...poignees },
+            styles: { lineStringColor: couleurTrace(), lineStringWidth: 3, ...poignees },
         });
     // Modifier une forme passe par le mode sélection de terra-draw : sommets à
     // glisser, points milieux pour en insérer, clic droit pour en retirer,
@@ -10523,12 +10529,12 @@ async function demarrerTrace(s, layer) {
                 },
             },
             styles: {
-                selectedLineStringColor: COULEUR_TRACE, selectedLineStringWidth: 3,
-                selectedPolygonColor: COULEUR_TRACE, selectedPolygonFillOpacity: 0.18,
-                selectedPolygonOutlineColor: COULEUR_TRACE, selectedPolygonOutlineWidth: 3,
-                selectionPointColor: '#FFFFFF', selectionPointOutlineColor: COULEUR_TRACE,
+                selectedLineStringColor: couleurTrace(), selectedLineStringWidth: 3,
+                selectedPolygonColor: couleurTrace(), selectedPolygonFillOpacity: 0.18,
+                selectedPolygonOutlineColor: couleurTrace(), selectedPolygonOutlineWidth: 3,
+                selectionPointColor: '#FFFFFF', selectionPointOutlineColor: couleurTrace(),
                 selectionPointWidth: 6, selectionPointOutlineWidth: 2,
-                midPointColor: COULEUR_TRACE, midPointOutlineColor: '#FFFFFF', midPointWidth: 4, midPointOutlineWidth: 1,
+                midPointColor: couleurTrace(), midPointOutlineColor: '#FFFFFF', midPointWidth: 4, midPointOutlineWidth: 1,
             },
         });
         modes.push(selection);
@@ -12152,16 +12158,16 @@ function afterSelectionChange() {
 // plus épais, dessiné par-dessus. Tous au même halo, on ne savait pas lequel
 // on était en train de modifier.
 const EST_COURANT = ['==', ['get', '_courant'], true];
-const HALO_SELECTION = [
+const haloSelection = () => [
     { id: 'sel-hl-fill', type: 'fill', types: ['Polygon', 'MultiPolygon'],
-      paint: { 'fill-color': '#C44536', 'fill-opacity': ['case', EST_COURANT, 0.32, 0.08] } },
+      paint: { 'fill-color': accentCourant(), 'fill-opacity': ['case', EST_COURANT, 0.32, 0.08] } },
     { id: 'sel-hl-line', type: 'line', types: ['Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'],
-      paint: { 'line-color': '#C44536', 'line-width': ['case', EST_COURANT, 4, 1.5],
+      paint: { 'line-color': accentCourant(), 'line-width': ['case', EST_COURANT, 4, 1.5],
                'line-opacity': ['case', EST_COURANT, 1, 0.55] } },
     { id: 'sel-hl-ring', type: 'circle', types: ['Point', 'MultiPoint'],
       paint: { 'circle-radius': ['case', EST_COURANT, 18, 11],
-               'circle-color': ['case', EST_COURANT, 'rgba(196,69,54,0.22)', 'rgba(196,69,54,0.06)'],
-               'circle-stroke-color': '#C44536', 'circle-stroke-width': ['case', EST_COURANT, 4, 1.5],
+               'circle-color': ['case', EST_COURANT, accentRgba(0.22), accentRgba(0.06)],
+               'circle-stroke-color': accentCourant(), 'circle-stroke-width': ['case', EST_COURANT, 4, 1.5],
                'circle-stroke-opacity': ['case', EST_COURANT, 1, 0.55] } },
 ];
 
@@ -12177,7 +12183,7 @@ function updateHighlight() {
     const data = { type: 'FeatureCollection', features };
     if (!map.getSource('sel-hl')) map.addSource('sel-hl', optionsSourceGeojson(data));
     else map.getSource('sel-hl').setData(data);
-    for (const h of HALO_SELECTION) {
+    for (const h of haloSelection()) {
         if (map.getLayer(h.id)) continue;
         map.addLayer({
             id: h.id, type: h.type, source: 'sel-hl',
@@ -12187,7 +12193,7 @@ function updateHighlight() {
     }
 }
 function clearHighlight() {
-    for (const h of HALO_SELECTION) { if (map.getLayer(h.id)) map.removeLayer(h.id); }
+    for (const h of haloSelection()) { if (map.getLayer(h.id)) map.removeLayer(h.id); }
     if (map.getSource('sel-hl')) map.removeSource('sel-hl');
 }
 /**
@@ -12751,6 +12757,7 @@ async function chargerThemeDocument() {
         if (!theme.charte) return;
         const { variables, notes } = TD.habillageApplication(theme);
         poserHabillageApplication(variables, AP.VARIABLES);
+        try { if (typeof map !== 'undefined' && map && map.getLayer && map.getLayer('atlas-trajet-line')) map.setPaintProperty('atlas-trajet-line', 'line-color', accentCourant()); } catch (_) { /* le trajet prendra la couleur au prochain dessin */ }
         if (notes.length) console.info('[Atlas] thème du document, non suivi :', notes.join(', '));
     } catch (e) {
         console.warn('[Atlas] thème du document', e && e.message);
@@ -14345,7 +14352,7 @@ async function loadLayersFromGrist({ monter = true, dejaLiees = null, dejaNommee
             if (!binding && dejaNommees?.has(rec.Name?.[i])) continue;
             const layer = {
                 id: 'layer-grist-' + ids[i], gristId: ids[i],
-                name: rec.Name?.[i] || 'Sans nom', color: rec.Color?.[i] || '#C44536',
+                name: rec.Name?.[i] || 'Sans nom', color: rec.Color?.[i] || accentCourant(),
                 visible: parseGristBool(rec.Visible?.[i], true), geometryType: rec.GeomType?.[i] || 'Point',
                 source: 'grist', geojson, style, _modelCat: 'furniture',
                 controls: ctrls || [],
