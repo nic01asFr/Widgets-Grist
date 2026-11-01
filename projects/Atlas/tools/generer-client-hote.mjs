@@ -23,7 +23,7 @@ const unix = (texte) => String(texte).split(String.fromCharCode(13, 10)).join(St
 const empreinte = (texte) => crypto.createHash('sha256').update(texte).digest('hex').slice(0, 16);
 
 /** Ce que le client peut demander au pont : tout autre nom fait échouer la génération (le générateur est à compléter). */
-const FOURNI = ['COMMANDES', 'COMMANDES_0_3', 'COMMANDES_0_4', 'COMMANDES_0_5', 'COMMANDES_0_6', 'VERSIONS_ACCEPTEES', 'SOURCE_RUNTIME', 'SOURCE_HOTE', 'versionsCompatibles', 'estCommande', 'versionDeCommande', 'versionAuMoins'];
+const FOURNI = ['COMMANDES', 'COMMANDES_0_3', 'COMMANDES_0_4', 'COMMANDES_0_5', 'COMMANDES_0_6', 'COMMANDES_0_7', 'VERSIONS_ACCEPTEES', 'SOURCE_RUNTIME', 'SOURCE_HOTE', 'versionsCompatibles', 'estCommande', 'versionDeCommande', 'versionAuMoins'];
 
 /** @returns {string} le texte du fichier autonome */
 export function construireClientHote() {
@@ -48,6 +48,7 @@ export function construireClientHote() {
     `export const COMMANDES_0_4 = Object.freeze(${JSON.stringify(pont.COMMANDES_0_4)});`,
     `export const COMMANDES_0_5 = Object.freeze(${JSON.stringify(pont.COMMANDES_0_5)});`,
     `export const COMMANDES_0_6 = Object.freeze(${JSON.stringify(pont.COMMANDES_0_6)});`,
+    `export const COMMANDES_0_7 = Object.freeze(${JSON.stringify(pont.COMMANDES_0_7)});`,
   ].join('\n');
   const fonctions = [
     `/** Majeure et mineure égales (0.x : toute évolution de mineure peut casser). */`,

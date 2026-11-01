@@ -63,7 +63,7 @@ test('élément : connexion, setScene, événements (gestes seulement par défau
   const cadre = el.enfants[0]; assert.equal(cadre.title, 'Carte'); assert.equal(el.client.connecte, false);
   assert.match(cadre.src, /^https:\/\/atlas\.test\/index\.html\?bi=1&navbar=false&mode=view&hote=https%3A%2F%2Fhote\.test$/);
   liaison.annoncer();
-  const info = await el.pret; assert.equal(info.version, '0.6'); assert.equal(vus[0][0], 'atlas-bi-pret');
+  const info = await el.pret; assert.equal(info.version, '0.7'); assert.equal(vus[0][0], 'atlas-bi-pret');
   assert.deepEqual(await el.setScene(MANIFESTE, DONNEES), { sites: 3 });
   await el.setFilter('f-type', ['x']);
   rt._interne.emettre('select', { layer: 'sites', featureId: 2 }, 'utilisateur');

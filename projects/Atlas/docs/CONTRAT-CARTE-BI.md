@@ -1,4 +1,4 @@
-# Composant carte BI : contrat 0.6
+# Composant carte BI : contrat 0.7
 
 Atlas peut être embarqué dans une application externe (« l'hôte ») comme **composant de carte** : l'hôte envoie des commandes, la carte renvoie des événements. Ce document fixe le **contrat** (version `0.3`). Le guide du développeur de l'hôte est `EXPLOITATION-EXTERNE-BI.md`.
 
@@ -189,6 +189,17 @@ Ajouts **additifs** pour une page qui pose sa propre 3D au-dessus d'une carte vu
 - **Mesuré** (navigateur, trois couches : deux casques GLB de 3,4 Mo avec textures, un bloc de 18 m avec cour, un MultiPolygone) : positions exactes (écart sous 1 % de la distance : mercator local), azimuts et échelles de l'écran conservés, GLB rechargé et rendu par un autre three.js. Bâti d'un quartier du Vieux-Port (66 grosses entités, 98 000 sommets) : 3 Mo.
 - **Pas fait** : le relief, l'USDZ (iPhone : repli caméra et QR chez l'hôte), les textures du fond, l'éclairage. L'exporteur (`GLTFExporter` de three.js r160, MIT, 78 Ko) est chargé à la demande.
 
+## 6 septies. Contrat 0.7 : le soleil de la scène [testé, navigateur]
+
+Pour une page dont la 3D (réalité augmentée, lecteur de modèle) doit rester éclairée comme la carte. Trois ajouts, tous additifs ; **profil complet seulement** (la lumière et les ombres sont celles de l'application ; la carte nue répond `capacite_absente`).
+
+- **`setSun({ date?, actif? })`** (capacité `socle`, exige la 0.7), l'un des deux au moins. `date` : un ISO 8601 **avec son fuseau** (`2026-06-21T10:30:00Z`) ou des millisecondes ; une date sans fuseau est refusée (elle donnerait deux soleils selon l'hôte), comme une date hors 1900-2199. Atlas règle le jour et l'heure **du site** (le fuseau de la scène) à la minute. `actif` : l'interrupteur des **ombres portées** des modèles 3D ; la lumière de la carte (faces du bâti, ciel, nuit) suit toujours la date. Rend la forme de `getSun`.
+- **`getSun()`** rend `{ date, actif, azimut, hauteur, lever, coucher }` : `date` en ISO UTC, `azimut` en degrés **depuis le nord, dans le sens horaire** (est = 90, 0 à 360), `hauteur` en degrés au-dessus de l'horizon (négative la nuit), `lever` et `coucher` du jour de la scène en ISO UTC (`null` sous les hautes latitudes). L'azimut et la hauteur sont ceux qui servent à éclairer la carte (au centre de la vue) ; le lever et le coucher sont ceux de l'ancre de la scène, comme l'éclairage public.
+- **Événement `sun`** : même forme que `getSun`, à chaque changement de date, d'heure ou d'ombres ; `origine` vaut `utilisateur` pour un geste dans Atlas (curseur d'heure, date, préréglages), `api` pour l'effet de `setSun` (l'hôte ignore ses propres échos). Un même instant ne produit pas deux événements ; l'ouverture de la scène n'en produit pas.
+- **`exportScene3D`** rend en plus `soleil: { date, azimut, hauteur }` : le soleil de la carte à cet instant, de quoi poser une lumière directionnelle sur le GLB. Il est toujours présent (la carte a toujours un soleil) ; `actif` ne concerne que les ombres.
+- **`setViewMode(mode, { soleil })`** : `soleil: true` montre le dock soleil d'Atlas en mode intégré, `false` le masque (l'hôte le garde alors pour lui) ; sans l'option, le dock reste comme il est. Le retour porte `dockSoleil`. Ce n'est pas une préférence de la scène : rien n'est écrit dans le document.
+- **Ce que la carte montre du soleil** [mesuré dans Chrome] : une lumière directionnelle sur les faces du bâti (MapLibre : `position` suit l'azimut et la hauteur, intensité 0,55), le ciel et la teinte de nuit, l'éclairage public. **Aucune ombre portée du bâti** (limite de MapLibre) ; les **modèles 3D** d'Atlas portent leur ombre (au zoom 14 et plus, hors relief 3D, soleil à plus de 3° au-dessus de l'horizon) quand `actif` est vrai.
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
@@ -313,5 +324,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.39.0 | 0.5 -> 0.6 | contrat 0.6, additif : `exportScene3D(options)` (profil complet), la scène 3D en un GLB ; `VERSION_CLIENT` 4. Une commande 0.2 à 0.5 reste servie à un hôte resté dans sa version. |
 | 1.40.0 | 0.6 | `exportScene3D` : option `sol` (aplat, dalle, fond de carte à plat), luminaires du catalogue exportés. Contrat et client inchangés. |
 | 1.41.0 | 0.6 | `exportScene3D` : option `relief`, `sol.format`, bâti et surfaces rognés à l'emprise, attribution du fond décodée avec sa licence. Contrat et client inchangés. |
+| 1.42.0 | 0.6 -> 0.7 | contrat 0.7, additif : `setSun`, `getSun`, événement `sun`, champ `soleil` de `exportScene3D`, option `soleil` de `setViewMode` ; `VERSION_CLIENT` 5. Une commande 0.2 à 0.6 reste servie. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.
