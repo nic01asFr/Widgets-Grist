@@ -1037,7 +1037,11 @@ const TF = (function () {
     /* ----- En-tete de la fiche de tache ---------------------------------------
      * Le titre editable (#taskTitle) EST l'en-tete ; la navigation "n/m" entre les
      * taches est integree a cote (fleches + compteur), puis la fermeture. Le
-     * handler oninput de #taskTitle est celui de chaque widget (updateField).
+     * handler oninput de #taskTitle est celui de chaque widget (updateField) :
+     * oninput (noSave=true) pour l'affichage immediat sans sauver a chaque frappe ;
+     * onchange (noSave par defaut = false) pour sauver une fois a la perte du focus
+     * (bug corrige le 01/11/2026 : sans onchange, un titre seul jamais touche par
+     * un autre champ n'etait jamais envoye a Grist — signale sur le forum).
      * o = { title, placeholder, index, total, isNew, back, dotColor, dotTitle } */
     function panelHeaderHtml(o) {
         o = o || {};
@@ -1056,7 +1060,7 @@ const TF = (function () {
             : '';
         const dot = o.dotColor ? '<span class="panel-dot" style="background:' + esc(o.dotColor) + '" title="' + esc(o.dotTitle || '') + '"></span>' : '';
         return back + dot +
-            '<input type="text" class="panel-title-edit" id="taskTitle" placeholder="' + esc(o.placeholder) + '" value="' + esc(o.title) + '" oninput="updateField(\'titre\', this.value, true)" aria-label="Titre">' +
+            '<input type="text" class="panel-title-edit" id="taskTitle" placeholder="' + esc(o.placeholder) + '" value="' + esc(o.title) + '" oninput="updateField(\'titre\', this.value, true)" onchange="updateField(\'titre\', this.value)" aria-label="Titre">' +
             nav +
             '<button type="button" class="panel-close" onclick="confirmClosePanel()" title="Fermer" aria-label="Fermer">×</button>';
     }
