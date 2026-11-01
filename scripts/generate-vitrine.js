@@ -299,7 +299,7 @@ code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size:
 }
 
 /** Ouverture et fermeture d'un document — un seul endroit ou elles vivent. */
-function page({ titre, description, accent, peau, corps, css = '', meta = '', ld = '' }) {
+function page({ titre, description, accent, peau, corps, css = '', meta = '', ld = '', scriptEntete = '' }) {
   return `<!doctype html>
 <html lang="fr">
 <head>
@@ -307,7 +307,7 @@ function page({ titre, description, accent, peau, corps, css = '', meta = '', ld
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${echapper(titre)}</title>
 <meta name="description" content="${echapper(description || '')}">${meta}${ld}
-<style>${socle(accent, peau)}${css}</style>
+<style>${socle(accent, peau)}${css}</style>${scriptEntete}
 </head>
 <body>
 ${corps}
@@ -646,7 +646,16 @@ ${cadre({ url: i.demo.url, image: i.image, alt: i.legende, libelle: i.demo.libel
         </figure>`);
   // Qui fait quoi : le rôle (l'auteur, l'agent de terrain, le lecteur) précède le titre, et les fonctions du produit qu'un chapitre
   // met en jeu sont nommées en pastilles, pour qu'on retrouve « où l'on s'en sert » sans relire le texte.
-  const article = (c) => `    <article class="contexte">
+  // Un contexte qui a beaucoup à montrer peut le faire défiler à l'horizontale (`carrousel: true`), comme les parcours : le texte au-dessus,
+  // les diapositives dessous sur toute la largeur. Chaque image porte alors un `titre` (la puce du sommaire), un `alt` (ce que dit l'image
+  // à qui ne la voit pas) et sa `legende` (le texte à côté). Une image sans titre ou sans alt est écartée et dite, comme dans un parcours ;
+  // si plus rien ne reste, le contexte retombe sur ses figures en pile.
+  const diapositives = (c) => (c.carrousel
+    ? (c.images || []).map((i) => ({ image: i.image, titre: i.titre, alt: i.alt || i.legende, legende: '', texte: i.legende }))
+    : []);
+  const article = (c, k) => {
+    const carrousel = diapositives(c).length ? carrouselParcours(`contexte-${k + 1}`, c.titre, diapositives(c), { racine: base, pano: true }) : '';
+    return `    <article class="contexte${carrousel ? ' avec-carrousel' : ''}">
       <div class="dit">
         ${c.role ? `<p class="role">${echapper(c.role)}</p>` : ''}
         <h3>${echapper(c.titre)}</h3>
@@ -656,9 +665,10 @@ ${cadre({ url: i.demo.url, image: i.image, alt: i.legende, libelle: i.demo.libel
         ${(c.utilise || []).length ? `<ul class="utilise">${c.utilise.map((u) => `<li>${echapper(u)}</li>`).join('')}</ul>` : ''}
       </div>
       <div class="montre${c.format === 'mobile' ? ' telephones' : ''}">
-${(c.images || []).map((i) => figure(i, c.format === 'mobile')).join('\n')}
+${carrousel || (c.images || []).map((i) => figure(i, c.format === 'mobile')).join('\n')}
       </div>
     </article>`;
+  };
   return `  <section class="contextes reveler">
     <h2>${echapper(produit.titreContextes || 'Où ça tourne')}</h2>
 ${l.map(article).join('\n')}
@@ -779,6 +789,7 @@ function imageParcours(racine, nom, alt, { differee = true } = {}) {
   return {
     html: `<img src="${echapper(nom)}" alt="${echapper(alt)}"${dim ? ` width="${dim.w}" height="${dim.h}"` : ''}${differee ? ' loading="lazy" decoding="async"' : ''}>`,
     vertical: !!dim && dim.h > dim.w,
+    panoramique: !!dim && dim.w / dim.h > 1.6,
   };
 }
 
@@ -807,7 +818,7 @@ function carrouselParcours(id, libelle, diapos, ctx) {
   const n = valides.length;
   const pistes = valides.map((d, k) => {
     const img = imageParcours(ctx.racine, d.image, d.alt, { differee: k > 0 });
-    return `<div class="diapo${img.vertical ? ' tel' : ''}" role="group" aria-roledescription="diapositive" aria-label="${k + 1} sur ${n}">
+    return `<div class="diapo${img.vertical ? ' tel' : ''}${ctx.pano && img.panoramique ? ' pano' : ''}" role="group" aria-roledescription="diapositive" aria-label="${k + 1} sur ${n}">
         <figure>${img.html}${d.legende ? `<figcaption>${enLigne(d.legende)}</figcaption>` : ''}</figure>
         <div class="texte"><h4>${echapper(d.titre)}</h4>${d.texte ? `<p>${enLigne(d.texte)}</p>` : ''}${(d.etiquettes || []).length ? `<ul class="etiquettes">${d.etiquettes.map((t) => `<li>${echapper(t)}</li>`).join('')}</ul>` : ''}</div>
       </div>`;
@@ -1013,6 +1024,83 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
   .prec { left: .3rem; } .suiv { right: .3rem; } .prec, .suiv { width: 2.9rem; height: 2.9rem; }
 }
+`;
+
+/** Le style d'un contexte qui défile à l'horizontale : ajouté seulement aux pages qui en ont un (le reste de la page ne le paie pas). */
+const CSS_CONTEXTE_CARROUSEL = `
+/* Un contexte qui défile à l'horizontale : le texte au-dessus, les diapositives dessous sur toute la largeur. */
+@media (min-width: 52rem) { .contexte.avec-carrousel { grid-template-columns: minmax(0, 1fr); } }
+.contexte.avec-carrousel .montre { min-width: 0; }
+.contexte.avec-carrousel .dit { max-width: 46rem; }
+.contexte.avec-carrousel .carrousel { margin-top: .4rem; }
+.contexte.avec-carrousel .pistes { align-items: flex-start; }
+/* Une capture large se lit mal dans une colonne : elle prend toute la largeur de la diapositive, le texte dessous. */
+.diapo.pano { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.diapo.pano .texte { max-width: 46rem; }
+`;
+
+/**
+ * Le thème du visiteur sur une page de vitrine (projects/grist_forms/docs/CADRAGE-THEME-VISITEUR.md). Ajouté UNIQUEMENT aux fiches qui le demandent
+ * (`themeVisiteur: true`) : les autres pages ne changent pas d'un octet.
+ *
+ * Il lit la clé du visiteur, que la page « design system » écrit hors de Grist avec les sept variables de la vitrine DÉJÀ calculées pour chaque mode. Il ne croit
+ * pas ce cache : couleurs en #rrggbb strict, texte courant, accent et texte de bouton à 4,5:1, sinon il ne pose RIEN. Il pose les sept variables en style
+ * en ligne sur <html> (aucune règle de plus dans la feuille), suit le mode sombre de la page (même règle que la feuille : préférence du système, sauf
+ * `data-theme="light"`), et réagit aux changements faits dans un autre onglet. Sans clé, ou illisible : il ne fait rien.
+ */
+const JS_VISITEUR = `
+<script>
+(function () {
+  var CLE = 'widgets-grist:theme-visiteur';
+  var NOMS = ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent', '--sur-accent'];
+  var HEX = /^#[0-9a-f]{6}$/;
+  var posees = [];
+  function lum(h) {
+    var c = [1, 3, 5].map(function (i) { var x = parseInt(h.slice(i, i + 2), 16) / 255; return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
+    return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  }
+  function ratio(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  function jeu(j) {
+    if (!j || typeof j !== 'object') return null;
+    var o = {};
+    for (var i = 0; i < NOMS.length; i++) { var v = j[NOMS[i]]; if (typeof v !== 'string' || !HEX.test(v)) return null; o[NOMS[i]] = v; }
+    if (ratio(o['--encre'], o['--papier']) < 4.5 || ratio(o['--plume'], o['--papier']) < 4.5 || ratio(o['--accent'], o['--papier']) < 4.5 || ratio(o['--accent'], o['--surface']) < 4.5 || ratio(o['--sur-accent'], o['--accent']) < 4.5) return null;
+    return o;
+  }
+  function lire() {
+    try {
+      var c = JSON.parse(localStorage.getItem(CLE) || 'null');
+      return c && c.v === 1 && c.vitrine && typeof c.vitrine === 'object' ? c.vitrine : null;
+    } catch (e) { return null; }
+  }
+  function appliquer() {
+    try {
+      var racine = document.documentElement;
+      posees.forEach(function (n) { racine.style.removeProperty(n); });
+      posees = [];
+      // La personne passe avant le thème : contraste forcé ou renforcé, rien n'est posé.
+      if (matchMedia('(forced-colors: active)').matches || matchMedia('(prefers-contrast: more)').matches) return;
+      var v = lire();
+      if (!v) return;
+      var sombre = matchMedia('(prefers-color-scheme: dark)').matches && racine.getAttribute('data-theme') !== 'light';
+      var j = jeu(sombre ? v.sombre : v.clair);
+      if (!j) return;
+      NOMS.forEach(function (n) { racine.style.setProperty(n, j[n]); posees.push(n); });
+    } catch (e) { /* la page garde sa peau */ }
+  }
+  appliquer();
+  try { addEventListener('storage', function (e) { if (e.key === CLE || e.key === null) appliquer(); }); } catch (e) { /* tant pis */ }
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', appliquer); } catch (e) { /* navigateur ancien */ }
+}());
+</` + `script>`;
+
+/**
+ * Le texte des éléments qui ont l'accent pour fond (boutons, numéros de la séquence) : la feuille commune l'écrit en blanc, en dur, ce qui est illisible sur un accent clair
+ * (le sombre d'un thème du visiteur). Ajouté avec le script du visiteur, aux seules pages qui l'activent : sans thème posé, `--sur-accent` n'existe pas et le blanc reste.
+ */
+const CSS_VISITEUR = `
+.bouton:not(.creux), .lancer { color: var(--sur-accent, #fff); }
+.sequence li::before { color: var(--sur-accent, #fff); }
 `;
 
 /** Le carrousel et le bouton « Copier » : sans ce script, la page reste entierement lisible (toutes les diapositives, le code). */
@@ -1553,7 +1641,11 @@ function rendreProjet(p, maintenant, base = '') {
       ...(v.depot ? { codeRepository: v.depot } : {}),
       ...(maj ? { dateModified: maj.slice(0, 10) } : {}),
     }) : '',
-    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '') + (parcours ? CSS_PARCOURS : ''),
+    // Le style des diapositives est celui des parcours : il suit dès qu'un contexte défile à l'horizontale.
+    scriptEntete: v.themeVisiteur === true ? JS_VISITEUR : '',
+    css: CSS_PROJET + (Object.keys(produit).length ? CSS_PRODUIT : '') + (v.themeVisiteur === true ? CSS_VISITEUR : '')
+      + ((parcours || (produit.contextes || []).some((c) => c.carrousel)) ? CSS_PARCOURS : '')
+      + ((produit.contextes || []).some((c) => c.carrousel) ? CSS_CONTEXTE_CARROUSEL : ''),
     corps: `<main>
   <a class="retour" href="../../">← Tous les widgets</a>
   <p class="eyebrow">${echapper((parcours && parcours.eyebrow) || 'Widget Grist')}</p>

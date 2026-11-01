@@ -491,3 +491,143 @@ test('le texte d’une demonstration est echappe, pas injecte', () => {
   assert.ok(!/<img src=x/.test(html), 'le titre doit ressortir echappe');
   assert.match(html, /&lt;img/);
 });
+
+test('un contexte peut défiler à l’horizontale : diapositives, flèches, sommaire, et seulement quand la fiche le demande', () => {
+  const W1 = [W('x', 'https://s.io/r/x/')];
+  const fiche = (extra) => ({ id: 'x', widgets: W1, presentation: { produit: { contextes: [Object.assign({
+    role: 'Pour qui', titre: 'Une identité', texte: 'dit tout', images: [
+      { image: 'a.jpg', titre: 'Premier', alt: 'Une capture', legende: 'Ce qu’on voit en premier' },
+      { image: 'b.jpg', titre: 'Second', legende: 'Ce qu’on voit ensuite' },
+      { image: 'c.jpg', legende: 'Sans titre : écartée' },
+    ] }, extra)] } } });
+
+  const empile = V.rendreProjet(fiche({}), Date.now(), 'https://s.io/r/');
+  assert.ok(!empile.includes('<section class="carrousel"') && !empile.includes('<article class="contexte avec-carrousel">'), 'sans demande, les figures restent en pile');
+  assert.equal((empile.match(/<figure class="large">/g) || []).length, 3);
+
+  const defile = V.rendreProjet(fiche({ carrousel: true }), Date.now(), 'https://s.io/r/');
+  assert.match(defile, /<article class="contexte avec-carrousel">/);
+  assert.match(defile, /<section class="carrousel" aria-roledescription="carrousel" aria-label="Une identité" id="contexte-1">/);
+  assert.equal((defile.match(/class="diapo/g) || []).length, 2, 'une image sans titre n’est pas une diapositive');
+  assert.match(defile, /<h4>Premier<\/h4><p>Ce qu’on voit en premier<\/p>/);
+  assert.match(defile, /alt="Une capture"/);
+  assert.match(defile, /alt="Ce qu’on voit ensuite"/, 'sans alt, la légende en tient lieu');
+  assert.match(defile, /aria-label="Diapositive suivante"/);
+  assert.match(defile, /<ul class="sommaire"[^>]*><li><button type="button" data-n="0" aria-current="true">Premier<\/button><\/li>/);
+  assert.ok(defile.includes("querySelectorAll('.carrousel')"), 'le script du carrousel est embarqué');
+  assert.ok(defile.includes('.diapo { flex: 0 0 88%'), 'et son style');
+  assert.ok(!defile.includes('<figure class="large">'), 'plus de figures en pile pour ce contexte');
+});
+
+test('un contexte en carrousel dont plus rien n’est valide retombe sur ses figures', () => {
+  const html = V.rendreProjet({ id: 'x', widgets: [W('x', 'https://s.io/r/x/')], presentation: { produit: { contextes: [{
+    titre: 'Rien', texte: 't', carrousel: true, images: [{ image: 'a.jpg', legende: 'sans titre' }] }] } } }, Date.now(), 'https://s.io/r/');
+  assert.ok(!html.includes('<section class="carrousel"') && !html.includes('<article class="contexte avec-carrousel">'));
+  assert.match(html, /<figure class="large">/);
+});
+
+/* ---------- le thème du visiteur sur une page de vitrine ---------- */
+
+const vm = require('node:vm');
+const CLE_VISITEUR = 'widgets-grist:theme-visiteur';
+const pageAvec = (extra) => V.rendreProjet({ id: 'x', widgets: [W('x', 'https://s.io/r/x/')], presentation: Object.assign({}, extra) }, Date.now(), 'https://s.io/r/');
+
+test('une page qui ne le demande pas ne change pas d’un octet : rien n’est inséré entre la feuille et la fin de l’en-tête', () => {
+  const html = pageAvec({});
+  assert.ok(html.includes('</style>\n</head>'), 'adjacents, comme avant');
+  assert.ok(!html.includes(CLE_VISITEUR));
+  assert.ok(!pageAvec({ themeVisiteur: false }).includes(CLE_VISITEUR), 'et faux = comme absent');
+  assert.ok(!pageAvec({ themeVisiteur: 'oui' }).includes(CLE_VISITEUR), 'seul le booléen vrai l’active');
+});
+
+test('une fiche qui le demande reçoit le script, dans l’en-tête, après la feuille', () => {
+  const html = pageAvec({ themeVisiteur: true });
+  const iStyle = html.indexOf('</style>');
+  const iScript = html.indexOf(CLE_VISITEUR);
+  const iFin = html.indexOf('</head>');
+  assert.ok(iStyle > -1 && iScript > iStyle && iScript < iFin, 'script d’en-tête, pas de scintillement');
+  for (const n of ['--papier', '--surface', '--encre', '--plume', '--filet', '--accent', '--sur-accent']) assert.ok(html.slice(iScript - 400, iFin).includes("'" + n + "'"), n);
+});
+
+/** Exécute le script de la page dans un faux navigateur et rend ce qu'il a posé sur <html>. */
+function executerVisiteur(contenuStockage, { sombre = false, contraste = false, themeAttr = null } = {}) {
+  const html = pageAvec({ themeVisiteur: true });
+  const brut = html.slice(html.indexOf('</style>')).match(/<script>([\s\S]*?)<\/script>/)[1];
+  const posees = {};
+  const ecouteurs = {};
+  const stock = { [CLE_VISITEUR]: contenuStockage === undefined ? null : contenuStockage };
+  const racine = { getAttribute: (n) => (n === 'data-theme' ? themeAttr : null), style: { setProperty: (k, v) => { posees[k] = v; }, removeProperty: (k) => { delete posees[k]; } } };
+  const fenetre = {
+    document: { documentElement: racine },
+    localStorage: { getItem: (k) => (k in stock ? stock[k] : null) },
+    matchMedia: (q) => ({ matches: /forced-colors|prefers-contrast/.test(q) ? contraste : (/prefers-color-scheme: dark/.test(q) ? sombre : false), addEventListener: () => {} }),
+    addEventListener: (nom, f) => { ecouteurs[nom] = f; }
+  };
+  fenetre.window = fenetre;
+  vm.runInNewContext(brut, Object.assign(fenetre, { JSON, Math, parseInt, RegExp, Object, typeof: undefined }));
+  return { posees, stock, ecouteurs };
+}
+
+const jeuClair = { '--papier': '#fdfaf3', '--surface': '#ffffff', '--encre': '#161616', '--plume': '#5c5c5c', '--filet': '#d0d0d0', '--accent': '#0b6e4f', '--sur-accent': '#ffffff' };
+const jeuSombre = { '--papier': '#161616', '--surface': '#1e1e1e', '--encre': '#f6f6f6', '--plume': '#c0c0c0', '--filet': '#353535', '--accent': '#59b08f', '--sur-accent': '#161616' };
+const cache = (extra) => JSON.stringify(Object.assign({ v: 1, maj: 1, themedef: {}, vitrine: { clair: jeuClair, sombre: jeuSombre } }, extra));
+
+test('le script du visiteur pose les six variables du mode de la page, et seulement elles', () => {
+  assert.deepEqual(executerVisiteur(cache()).posees, jeuClair);
+  assert.deepEqual(executerVisiteur(cache(), { sombre: true }).posees, jeuSombre);
+  assert.deepEqual(executerVisiteur(cache(), { sombre: true, themeAttr: 'light' }).posees, jeuClair, 'data-theme="light" l’emporte, comme dans la feuille');
+});
+
+test('sans clé, ou avec une clé inutilisable, le script ne pose rien', () => {
+  for (const c of [undefined, '', '{pas du json', '[]', '"x"', JSON.stringify({ v: 2, vitrine: { clair: jeuClair } }), JSON.stringify({ v: 1 }), JSON.stringify({ v: 1, vitrine: 'x' })]) {
+    assert.deepEqual(executerVisiteur(c).posees, {}, String(c));
+  }
+});
+
+test('un cache fabriqué est refusé en entier : couleurs non strictes, texte illisible, accent invisible, variable manquante', () => {
+  const casse = (changements) => executerVisiteur(cache({ vitrine: { clair: Object.assign({}, jeuClair, changements), sombre: null } })).posees;
+  assert.deepEqual(casse({ '--encre': '#fdfaf3' }), {}, 'texte sur papier : 1,0:1');
+  assert.deepEqual(casse({ '--plume': '#fcf9f1' }), {}, 'texte secondaire illisible');
+  assert.deepEqual(casse({ '--plume': '#8a8a8a' }), {}, 'texte courant entre 3 et 4,5:1 : refusé (il sert partout)');
+  assert.deepEqual(casse({ '--sur-accent': '#0b6e4f' }), {}, 'texte de bouton illisible sur l’accent');
+  assert.deepEqual(casse({ '--accent': '#9a9a9a' }), {}, 'accent entre 3 et 4,5:1 : refusé');
+  assert.deepEqual(casse({ '--accent': '#fefaf3' }), {}, 'accent invisible');
+  assert.deepEqual(casse({ '--papier': 'red' }), {}, 'pas un #rrggbb');
+  assert.deepEqual(casse({ '--papier': 'url(//x)' }), {});
+  assert.deepEqual(casse({ '--papier': '#FDFAF3' }), {}, 'majuscules refusées : le cache est écrit en minuscules');
+  const sans = Object.assign({}, jeuClair); delete sans['--filet'];
+  assert.deepEqual(executerVisiteur(cache({ vitrine: { clair: sans, sombre: null } })).posees, {}, 'un jeu incomplet n’est jamais appliqué à moitié');
+});
+
+test('pas de jeu pour le mode de la page : la page garde sa peau', () => {
+  assert.deepEqual(executerVisiteur(cache({ vitrine: { clair: jeuClair, sombre: null } }), { sombre: true }).posees, {});
+});
+
+test('la personne passe avant le thème : contraste forcé ou renforcé, rien n’est posé', () => {
+  assert.deepEqual(executerVisiteur(cache(), { contraste: true }).posees, {});
+});
+
+test('un changement fait dans un autre onglet est repris, et un thème retiré rend la page à sa peau', () => {
+  const r = executerVisiteur(cache());
+  assert.deepEqual(r.posees, jeuClair);
+  assert.equal(typeof r.ecouteurs.storage, 'function');
+  r.stock[CLE_VISITEUR] = null;
+  r.ecouteurs.storage({ key: CLE_VISITEUR });
+  assert.deepEqual(r.posees, {}, 'retiré : les variables posées sont ôtées');
+  r.stock[CLE_VISITEUR] = cache({ vitrine: { clair: Object.assign({}, jeuClair, { '--accent': '#7a1fa2' }), sombre: null } });
+  r.ecouteurs.storage({ key: CLE_VISITEUR });
+  assert.equal(r.posees['--accent'], '#7a1fa2');
+  r.stock[CLE_VISITEUR] = cache({ vitrine: { clair: jeuClair, sombre: null } });
+  r.ecouteurs.storage({ key: 'une-autre-cle' });
+  assert.equal(r.posees['--accent'], '#7a1fa2', 'une autre clé ne déclenche rien');
+});
+
+test('le texte des boutons suit --sur-accent, pour les seules pages qui activent le thème du visiteur', () => {
+  const avec = pageAvec({ themeVisiteur: true });
+  assert.ok(avec.includes('.bouton:not(.creux), .lancer { color: var(--sur-accent, #fff); }'));
+  assert.ok(avec.includes('.sequence li::before { color: var(--sur-accent, #fff); }'));
+  // Sans thème posé, --sur-accent n'existe pas : le blanc d'avant reste (repli de var()).
+  assert.ok(avec.indexOf('var(--sur-accent, #fff)') > avec.indexOf('.bouton { display: inline-block'), 'après la règle commune, pour l’emporter');
+  const sans = pageAvec({});
+  assert.ok(!sans.includes('--sur-accent'), 'une page qui ne le demande pas ne change pas d’un octet');
+});

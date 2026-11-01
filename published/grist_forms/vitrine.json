@@ -2,6 +2,7 @@
   "nom": "Form Builder",
   "pitch": "Un formulaire n'est pas une boîte aux lettres : ce qui est répondu atterrit dans vos colonnes, à la seconde près. Composer, mettre en ligne et dépouiller se font dans le même document — et la synthèse relit les réponses avec la définition qui les a produites.",
   "couleur": "#000091",
+  "themeVisiteur": true,
   "tags": [
     "Formulaires",
     "Collecte",
@@ -9,7 +10,9 @@
     "Terrain",
     "Carte",
     "Dessin",
-    "Synthèse"
+    "Synthèse",
+    "Thème",
+    "Design system"
   ],
   "depot": "https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/grist_forms",
   "points": [
@@ -76,6 +79,14 @@
     {
       "titre": "Des réponses qu’on ne montre pas",
       "texte": "l’étape « Mettre en ligne » propose les règles d’accès : on ajoute sans rien lire, sans rien modifier ni supprimer. Elles ne se posent que sur confirmation, sans toucher à une règle existante."
+    },
+    {
+      "titre": "Aux couleurs du document, ou de Grist",
+      "texte": "un formulaire prend le thème que le document porte ; à défaut, celui de Grist, clair ou sombre, avec la couleur des boutons de l’instance. C’est un choix de la personne qui compose : les formulaires déjà en ligne ne changent pas."
+    },
+    {
+      "titre": "Un design system qui s’applique d’un geste",
+      "texte": "une page saisit l’identité d’une organisation, mesure les contrastes, et applique le thème au document après confirmation : le formulaire, le compositeur et les autres widgets qui lisent ce thème le prennent."
     }
   ],
   "encart": {
@@ -94,8 +105,8 @@
         "libelle": "recopie entre la collecte et le dépouillement"
       },
       {
-        "valeur": "15",
-        "libelle": "formes de question, du texte libre au tracé sur carte"
+        "valeur": "29",
+        "libelle": "types de question, du texte libre au tracé sur carte"
       }
     ],
     "titreSequence": "De la question à la synthèse",
@@ -204,6 +215,58 @@
             "legende": "La synthèse sur vingt-cinq réponses : les chiffres de tête, puis ce qui ressort."
           }
         ]
+      },
+      {
+        "role": "Pour qui tient l’identité d’un document",
+        "titre": "Une identité, partout dans le document",
+        "texte": "On saisit l’identité sur une page dédiée : le nom, les couleurs, le mode sombre. Chaque choix est mesuré — le texte doit rester lisible — et l’aperçu montre un vrai formulaire habillé en direct. D’un geste confirmé, le thème est appliqué au document ; les formulaires qui le suivent le prennent à leur prochaine ouverture. Sans thème dans le document, un formulaire prend celui de Grist : clair ou sombre, avec la couleur de l’instance.",
+        "pourquoi": "Un formulaire public doit ressembler à l’organisation qui le publie, sans retoucher chaque formulaire un à un.",
+        "exemple": "une collectivité qui change de charte : on applique le nouveau thème au document, les formulaires suivent.",
+        "utilise": [
+          "Page Design system",
+          "Thème du document",
+          "Thème de Grist, clair et sombre",
+          "Apparence d’un formulaire"
+        ],
+        "images": [
+          {
+            "image": "cas-theme-instance.jpeg",
+            "titre": "Sans rien régler",
+            "alt": "Un formulaire de contact dans Grist, titre, filets de champs et bouton « Envoyer » dans le bleu de l’instance, sur fond clair.",
+            "legende": "Dans Grist, sans thème dans le document : le formulaire prend la couleur des boutons de l’instance."
+          },
+          {
+            "image": "cas-theme-sombre.jpeg",
+            "titre": "En sombre",
+            "alt": "Le même formulaire de contact en thème sombre : fond noir, titre et bouton « Envoyer » en violet clair.",
+            "legende": "Quand la personne passe Grist en sombre, le même formulaire suit, sans rechargement."
+          },
+          {
+            "image": "cas-design-system.jpeg",
+            "titre": "On saisit l’identité",
+            "alt": "La page Design system à l’étape Couleurs : les couleurs saisies à gauche, trois pastilles et un contraste de 6 pour 1 mesuré à droite.",
+            "legende": "La page Design system : les couleurs saisies à gauche, les contrastes mesurés à droite. Ici en démonstration, sans document Grist derrière."
+          },
+          {
+            "image": "cas-activation.jpeg",
+            "titre": "On confirme",
+            "alt": "Le panneau « Appliquer ce thème au document » : le nom du thème, la mention qu’il n’y a pas de thème actif, et un bouton « Créer la table et appliquer le thème ».",
+            "legende": "Avant d’écrire quoi que ce soit, la page dit ce qui va changer — et, si la table du thème n’existe pas, demande la permission de la créer."
+          },
+          {
+            "image": "cas-theme-document.jpeg",
+            "titre": "Le document change",
+            "alt": "Le même formulaire de contact une fois le thème appliqué au document : titre et filets en cuivre, bouton « Envoyer » en vert.",
+            "legende": "Une fois un thème appliqué au document, le même formulaire le prend : ici un vert et un cuivre."
+          },
+          {
+            "image": "cas-theme-compositeur.jpeg",
+            "titre": "L’outil aussi",
+            "alt": "Le compositeur de formulaires, onglets, panneau de pages et réglages dans les mêmes tons vert et cuivre.",
+            "legende": "Le compositeur prend le thème lui aussi (ici un fichier de thème essayé en démonstration)."
+          }
+        ],
+        "carrousel": true
       }
     ],
     "apercu": {
@@ -221,6 +284,10 @@
     }
   },
   "journal": [
+    {
+      "version": "v1.6.0",
+      "texte": "Un formulaire s’habille du thème de Grist, et un document reçoit son thème d’un geste. Dans Grist, un formulaire qui choisit « Celle du document, sinon celle de Grist » prend le thème actif du document ; s’il n’y en a pas, il prend celui de la personne — clair ou sombre, avec la couleur des boutons de l’instance — et le suit quand elle en change, sans recharger. C’est un choix : les formulaires déjà composés ne changent pas, et seuls les formulaires neufs le prennent par défaut. Le compositeur s’habille de la même façon, et l’on peut y essayer un fichier de thème (ThemeDef) le temps d’une session. Une page « Design system » saisit l’identité d’une organisation — nom, couleurs, mode sombre, jusqu’aux formes et aux espacements — vérifie que le texte reste lisible, et montre un vrai formulaire habillé en direct. Un bouton « Appliquer ce thème au document » l’inscrit dans le document : la page dit d’abord ce qui va changer, ne crée la table du thème qu’après une confirmation qui le dit, refuse un thème illisible sans rien écrire, et « Retirer » le désactive sans rien supprimer. Dans le moteur, trois ajouts facultatifs : le groupe répétable (une liste de lignes rangée dans une seule colonne), la question de couleur, et le motif de saisie qui contraint une réponse. Les formulaires déjà publiés ne changent pas : ils ne se mettent à jour qu’à la prochaine remise en ligne."
+    },
     {
       "version": "v1.5.3",
       "texte": "Un formulaire plus clair de bout en bout, relu par un audit d’usage indépendant. À la fin, un écran dit que la réponse est enregistrée, à quelle date et à quelle heure, et propose d’en remplir une autre. Une réponse commencée survit au rechargement de la page, dans l’onglet seulement : rien ne quitte l’appareil, et rien n’est gardé pour les fichiers. Sur la carte, le texte du point (« POINT (…) ») n’est plus montré au public, qui lit « Lieu retenu » ; les coordonnées à la main restent disponibles, repliées. Le compositeur parle à ceux qui composent : les types de saisie portent des noms de métier, une condition se lit comme une phrase (« La question s’affiche si… »), « Mettre en ligne » tient en trois cartes simples, et le canevas suit ce qu’on tape. Reprises de relecture : accessibilité du parcours (étapes, matrices nommées pour un lecteur d’écran, un seul anneau de focus sur une carte de choix), sécurité (injections et déni de service écartés), fiabilité (une condition « non » n’est plus récrite en « et » par l’éditeur, une réponse faite d’espaces ne compte pas comme remplie, une date-heure avec fuseau ne bloque plus l’enregistrement). Les formulaires déjà publiés ne changent pas : ils ne se mettent à jour qu’à la prochaine remise en ligne."
