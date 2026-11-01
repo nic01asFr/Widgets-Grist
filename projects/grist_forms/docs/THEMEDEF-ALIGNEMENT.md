@@ -9,12 +9,12 @@ la grille commune, relève les écarts et dit qui fait quoi. La spécification r
 Du plus fort au plus faible, dans un widget **ouvert dans Grist** :
 
 1. Les préférences de la personne : contraste forcé ou renforcé. Elles l'emportent toujours, rien n'est posé par-dessus.
-2. Un choix explicite fait dans le widget lui-même (essai en cours d'édition, réglage local du widget).
+2. Un choix explicite fait dans le widget lui-même (essai en cours d'édition, réglage local du widget), y compris **« sans thème »** : ses valeurs d'origine, sans document ni instance.
 3. `Theme_document` : le thème actif du document (ThemeDef 1.0, lu par la règle de lecture commune, `resolu` jamais cru).
 4. Le thème de l'instance Grist (mode clair/sombre et couleur d'action), **repli par défaut dans Grist**.
 5. Les valeurs d'origine du widget (le `repli` de chaque `--kit-*`).
 
-Hors Grist (site public) : 1, puis le thème du visiteur (`?vitrine=1`, [CADRAGE-THEME-VISITEUR.md](CADRAGE-THEME-VISITEUR.md)), puis le thème maison
+Hors Grist, un widget ne prend **aucun thème de lui-même** (défaut = sans thème). Sur le site public : 1, puis le thème du visiteur (`?vitrine=1`, [CADRAGE-THEME-VISITEUR.md](CADRAGE-THEME-VISITEUR.md)), puis le thème maison
 ([CADRAGE-THEME-MAISON.md](CADRAGE-THEME-MAISON.md)), puis les valeurs d'origine.
 
 Retirer une couche ne doit jamais laisser le widget illisible : la couche du dessous reste lisible seule.
@@ -67,13 +67,16 @@ Conséquence visible : sur docs.getgrist.com (`#16b378`), un formulaire et une c
 
 **E4. Trois copies du lecteur** (Form Builder, Atlas, kit). Accord déjà pris : copies testées maintenant sur les mêmes vecteurs, noyau pur dans `projects/shared` après publication commune.
 
-## 5. Décisions qui reviennent à l'auteur
+## 5. Décisions de l'auteur (01/11/2026)
 
-- **D-A.** Dans Grist, sans thème de document : le thème de Grist s'applique-t-il **par défaut** à tous les widgets (Atlas le fait déjà, TaskFlow non), ou seulement quand on le choisit ? Par défaut = cohérent, mais change l'aspect des documents existants.
-- **D-B.** Reprise du thème de l'instance : mode + action seulement, ou aussi fond, texte et police (E1).
-- **D-C.** Date et lot de publication communs (Form Builder 1.6.0, Atlas 1.42.0, TaskFlow, appkit), après accord explicite.
+- **D-A : oui.** Dans Grist, sans thème de document, le thème de Grist s'applique **par défaut** à tous les widgets. Conséquence assumée : l'aspect des documents existants peut changer. Ce changement se fait donc avec des garde-fous (voir §6) : il ne casse aucun widget, il reste lisible, et il cède devant un thème de document.
+- **D-A bis : un « sans thème » obligatoire.** Chaque widget offre un choix explicite **sans thème** (ses valeurs d'origine, ni document ni instance), pour le cas qui le demande. C'est aussi **le défaut hors Grist** : en dehors de Grist, un widget ne prend aucun thème de lui-même (le thème du visiteur et le thème maison ne s'ajoutent que sur le site public). Dans Form Builder, c'est le mode `aucune` de `apparence` ; à nommer et prévoir dans Atlas, TaskFlow et appkit (réglage ou paramètre du widget, jamais une absence de réglage).
+- **D-B : oui.** Le thème de l'instance donne aussi le fond, le texte et la police, pas seulement le mode et l'action. Contrat : [THEMEDEF-INSTANCE-GRIST.md](THEMEDEF-INSTANCE-GRIST.md).
+- **D-C : à Form Builder de coordonner** la date et le lot. La publication elle-même (push, release) reste soumise à un accord explicite de l'auteur au moment de publier.
 
-## 6. Procédure
+## 6. Procédure et garde-fous
+
+0. Garde-fous de D-A : (a) un thème de document, ou un choix explicite dans le widget, l'emporte toujours ; (b) un thème de l'instance illisible ou incomplet n'est jamais appliqué à moitié : le widget garde ses valeurs d'origine et le dit ; (c) un test par widget : sans thème d'instance ni de document, rendu identique ; avec un thème d'instance, rendu lisible (22 paires) en clair et en sombre ; (d) les widgets qui ne savent pas suivre le sombre (Atlas, application complète) le disent, ils ne l'inventent pas.
 
 1. Chaque propriétaire corrige sa colonne du §3 avec une preuve (fichier et test), sans toucher aux autres.
 2. Les écarts du §4 sont traités un par un, dans l'ordre E1, E3, E2, par un contrat écrit et des vecteurs communs avant tout code.
