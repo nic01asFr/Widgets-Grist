@@ -42,3 +42,12 @@ for (const [nom, theme] of CAS) {
     if (/^#[0-9a-f]{6}$/i.test(v('--muted') || '') && surfaces.includes('--bg')) assert.ok(contraste(v('--muted'), v('--bg')) >= 4.5, nom + ' : --muted ' + v('--muted') + ' sur le fond = ' + contraste(v('--muted'), v('--bg')).toFixed(2));
   });
 }
+
+test('numerique.gouv, valeurs lues sur la page : le fond et le texte RÉELS de l\'instance sont posés tels quels, en clair comme en sombre, l\'accent aussi', () => {
+  const clair = pose({ appearance: 'light', name: 'numerique.gouv', colors: { 'control-primary-bg': '#3E5DE7', 'page-bg': '#F6F8F9', 'text': '#222631' } });
+  assert.deepEqual([clair.variables['--bg'], clair.variables['--ink'], clair.variables['--accent']], ['#f6f8f9', '#222631', '#3e5de7']);
+  const sombre = pose({ appearance: 'dark', name: 'numerique.gouv', colors: { 'control-primary-bg': '#a2b6ff', 'page-bg': '#222631', 'text': '#EEF1F4' } });
+  assert.deepEqual([sombre.variables['--bg'], sombre.variables['--ink'], sombre.variables['--accent']], ['#222631', '#eef1f4', '#a2b6ff']);
+  assert.equal(sombre.variables['--surface'], '#31353f', 'les surfaces propres d\'Atlas partent du fond réel');
+  for (const v of [clair.variables, sombre.variables]) for (const fg of ['--ink', '--accent']) assert.ok(contraste(v[fg], v['--bg']) >= 4.5 && contraste(v[fg], v['--surface']) >= 4.5, fg);
+});
