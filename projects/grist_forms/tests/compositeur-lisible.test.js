@@ -85,3 +85,42 @@ describe('Compositeur : l\'apparence d\'un formulaire', () => {
     assert.ok(!/themedef[^\n]*https?:/i.test(gen.slice(0, gen.indexOf('x.nom ='))));
   });
 });
+
+describe('Compositeur : l\'outil lui-même prend le thème', () => {
+  const style = BUILDER.slice(BUILDER.indexOf('<style'), BUILDER.indexOf('</style>'));
+
+  it('le thème du document est suivi par défaut, un essai le remplace, la personne passe avant', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function habillerOutil()'), BUILDER.indexOf('function outilSuit('));
+    assert.ok(corps.indexOf('T.personneImpose()') < corps.indexOf('T.appliquer('), 'la préférence de la personne est testée avant de poser quoi que ce soit');
+    assert.ok(corps.indexOf('o.essai') < corps.indexOf('o.suit'), 'un thème essayé prime sur celui du document');
+    assert.ok(corps.includes('T.retirer('), 'le thème d\'avant est retiré');
+  });
+
+  it('il ne s\'écrit jamais dans le document : seul le choix « suivre » est retenu, dans le navigateur', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function etatOutil()'), BUILDER.indexOf('function habillerOutil()'));
+    assert.ok(corps.includes('localStorage'));
+    const gestes = BUILDER.slice(BUILDER.indexOf('function outilSuit('), BUILDER.indexOf('function outilHtml()'));
+    assert.ok(!/docApi|applyUserActions|BulkAddRecord/.test(gestes));
+  });
+
+  it('un thème essayé est lu comme une donnée non fiable (16 Ko, version, graines)', () => {
+    const corps = BUILDER.slice(BUILDER.indexOf('function outilEssayer('), BUILDER.indexOf('function outilHtml()'));
+    assert.ok(corps.includes('16384'));
+    assert.ok(corps.indexOf('lireThemeDef') < corps.indexOf('.essai = lu.themedef'));
+  });
+
+  it('les gestes sont dans le menu et dans App', () => {
+    assert.match(BUILDER, /window\.App = \{[\s\S]*outilSuit, outilEssayer/);
+    assert.ok(BUILDER.includes('outilHtml() +'));
+  });
+
+  it('les couleurs de l\'outil passent par le kit d\'abord, la valeur DSFR d\'origine en repli', () => {
+    assert.ok(!/var\(--(?!kit-)[a-z0-9-]+, var\(--kit-/.test(style), 'une variable DSFR ne doit pas passer avant le thème');
+    assert.ok((style.match(/var\(--kit-[a-z0-9-]+, /g) || []).length > 200);
+    assert.ok(/var\(--kit-action, var\(--blue-france, #000091\)\)/.test(style));
+  });
+
+  it('aucun défaut --kit-* n\'est posé par l\'outil : sans thème, l\'apparence d\'origine est intacte', () => {
+    assert.ok(!/--kit-[a-z-]+\s*:/.test(style));
+  });
+});

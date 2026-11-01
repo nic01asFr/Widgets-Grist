@@ -68,7 +68,7 @@ projects/grist_forms/
 
 ## État — **v1 + phase 2 + audience + les saisies, l'illustration, l'accueil + prérequis du kit** (2026-10-10)
 
-`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1164 tests verts** (dont 49 sur le design system, 45 sur la lecture du thème et l'apparence ; les essais de bout en bout sur un vrai catalogue se lancent avec `DSDEF_DIR`) (31/10/2026 ; les
+`node --test "projects/grist_forms/tests/*.test.js" scripts/schemas.test.js` → **1171 tests verts** (dont 49 sur le design system, 45 sur la lecture du thème et l'apparence ; les essais de bout en bout sur un vrai catalogue se lancent avec `DSDEF_DIR`) (31/10/2026 ; les
 chiffres des notes plus anciennes sont périmés, ne pas les recopier : relancer la commande).
 
 ### Les prérequis du kit d'applications (10/10/2026, jalon 0b, décision D7)

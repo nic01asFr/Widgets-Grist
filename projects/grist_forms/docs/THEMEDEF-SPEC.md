@@ -163,6 +163,8 @@ Le thème du formulaire prime sur celui du document. Il est lu comme une donnée
 rien : le formulaire retombe sur le document, et le compositeur dit pourquoi. Dans la page autonome, un formulaire qui suit le document
 reçoit une **copie** du ThemeDef actif au moment de la génération (jamais une adresse).
 
+**Le compositeur lui-même est un lecteur.** L'outil (pas seulement les formulaires qu'il produit) suit le thème actif du document : toutes ses couleurs passent par `var(--kit-*, valeur d'origine)`, donc sans thème rien ne change. Menu « ⋯ » : « Suivre le thème du document » (retenu dans le navigateur, jamais écrit dans le document) et « Essayer un thème (fichier ThemeDef) » le temps d'une session. Comme tout lecteur, il cède à la préférence de la personne (contraste forcé ou renforcé) et dérive le sombre.
+
 Chaque lecteur est **opt-in par le document** (sans table `Theme_document`, ou sans ligne active, rien ne change) et **ne crée ni n'écrit
 jamais** la table. Les valeurs mesurées de `resolu` s'appliquent quand elles y sont, sans être crues ; sinon les graines en donnent un
 **aperçu** (le compilateur du kit reste seul juge). La personne passe avant le thème : sous `forced-colors` ou `prefers-contrast: more`,
