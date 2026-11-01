@@ -170,3 +170,9 @@ test('attribution : les entités HTML sont décodées, la licence d OpenStreetMa
   assert.equal(E.texteAttribution('a &inconnue; b'), 'a &inconnue; b');
   assert.equal(E.licenceDeAttribution('OpenFreeMap © OpenMapTiles Data from OpenStreetMap'), 'ODbL'); assert.equal(E.licenceDeAttribution('© IGN'), null);
 });
+
+test('sol : le format de la texture (auto, png, jpeg) est vérifié', () => {
+  assert.equal(E.normaliserSol({ mode: 'carte', format: 'jpeg' }).format, 'jpeg');
+  assert.equal(E.normaliserSol('carte').format, undefined);
+  assert.throws(() => E.normaliserSol({ mode: 'carte', format: 'webp' }), /sol\.format/);
+});

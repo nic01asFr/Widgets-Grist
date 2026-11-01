@@ -82,14 +82,15 @@ export function normaliserSol(s) {
   if (s === undefined || s === null || s === false) return null;
   const o = s === true ? { mode: 'uni' } : typeof s === 'string' ? { mode: s } : s;
   if (!o || typeof o !== 'object' || Array.isArray(o)) throw new Error("exportScene3D : sol doit être 'uni', 'carte' ou un objet ({ mode, couleur, epaisseur, marge, resolution })");
-  for (const k of Object.keys(o)) if (!['mode', 'couleur', 'epaisseur', 'marge', 'resolution'].includes(k)) throw new Error('exportScene3D : sol.' + k + ' inconnu (mode, couleur, epaisseur, marge, resolution)');
+  for (const k of Object.keys(o)) if (!['mode', 'couleur', 'epaisseur', 'marge', 'resolution', 'format'].includes(k)) throw new Error('exportScene3D : sol.' + k + ' inconnu (mode, couleur, epaisseur, marge, resolution, format)');
+  if (o.format !== undefined && !['auto', 'png', 'jpeg'].includes(o.format)) throw new Error("exportScene3D : sol.format doit être 'auto', 'png' ou 'jpeg'");
   if (o.mode !== 'uni' && o.mode !== 'carte') throw new Error("exportScene3D : sol.mode doit être 'uni' ou 'carte'");
   if (o.couleur !== undefined && !/^#[0-9a-fA-F]{6}$/.test(String(o.couleur))) throw new Error('exportScene3D : sol.couleur doit s\'écrire #rrggbb');
   const epaisseur = o.epaisseur === undefined ? 0 : o.epaisseur, marge = o.marge === undefined ? 0 : o.marge, resolution = o.resolution === undefined ? SOL_RESOLUTION_DEFAUT : o.resolution;
   if (!fini(epaisseur) || epaisseur < 0 || epaisseur > 50) throw new Error('exportScene3D : sol.epaisseur hors bornes (0 à 50 mètres)');
   if (!fini(marge) || marge < 0 || marge > 1000) throw new Error('exportScene3D : sol.marge hors bornes (0 à 1000 mètres)');
   if (!Number.isInteger(resolution) || resolution < 256 || resolution > 4096) throw new Error('exportScene3D : sol.resolution hors bornes (256 à 4096 pixels)');
-  return { mode: o.mode, couleur: o.couleur ? String(o.couleur).toLowerCase() : null, epaisseur, marge, resolution };
+  return { mode: o.mode, couleur: o.couleur ? String(o.couleur).toLowerCase() : null, epaisseur, marge, resolution, ...(o.format ? { format: o.format } : {}) };
 }
 
 /** Le centre d'une emprise. */

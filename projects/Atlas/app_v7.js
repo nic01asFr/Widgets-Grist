@@ -18715,7 +18715,16 @@ async function exporter3dScene(entree) {
                 const fond = await rendreFondAPlat(emprise, opt.sol.resolution);   // l'emprise du sol (marge comprise) : la texture couvre exactement le plan
                 sol.texture = new THREE.CanvasTexture(fond.canvas);
                 sol.texture.colorSpace = THREE.SRGBColorSpace;
-                sol.texture.userData.mimeType = fond.photo ? 'image/jpeg' : 'image/png';
+                // PNG pour des aplats, JPEG pour une photographie ; en « auto », un fond détaillé (rues, étiquettes) dont le PNG dépasse 400 Ko passe en JPEG, bien plus léger
+                let mime = fond.photo ? 'image/jpeg' : 'image/png';
+                const fmt = opt.sol.format || 'auto';
+                if (fmt === 'png') mime = 'image/png';
+                else if (fmt === 'jpeg') mime = 'image/jpeg';
+                else if (!fond.photo) {
+                    const png = await new Promise((ok) => fond.canvas.toBlob(ok, 'image/png'));
+                    if (png && png.size > 400 * 1024) { mime = 'image/jpeg'; avertissements.push('sol : fond détaillé (PNG de ' + Math.round(png.size / 1024) + ' Ko) écrit en JPEG pour rester léger ; sol.format: \'png\' pour le garder sans perte'); }
+                }
+                sol.texture.userData.mimeType = mime;
                 for (const a of fond.attributions) attributions.push({ source: a, ...(E.licenceDeAttribution(a) ? { licence: E.licenceDeAttribution(a) } : {}) });
                 if (!fond.attributions.length) avertissements.push('sol : le fond de carte ne déclare aucune source à citer, à renseigner avant diffusion');
             } catch (e) { avertissements.push('sol : le fond de carte n\'a pas pu être rendu à plat (' + ((e && e.message) || e) + ') : aplat à la place'); sol.mode = 'uni'; }
