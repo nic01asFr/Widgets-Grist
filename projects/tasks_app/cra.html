@@ -7,16 +7,17 @@
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 <style>
 :root {
-  --primary: #3e5de7; --primary-dark: #2845c1;
-  --bg: #f8fafc; --card-bg: #fff; --text: #1e293b; --text-muted: #64748b;
-  --border: #e2e8f0; --ok: #10b981; --warn: #f59e0b; --over: #ef4444;
+  /* compatible ThemeDef (--kit-*), repli = valeur d'avant */
+  --primary: var(--kit-accent, #3e5de7); --primary-dark: var(--kit-accent-survol, #2845c1);
+  --bg: var(--kit-fond, #f8fafc); --card-bg: var(--kit-surface, #fff); --text: var(--kit-texte, #1e293b); --text-muted: var(--kit-texte-2, #64748b);
+  --border: var(--kit-bord, #e2e8f0); --ok: var(--kit-ok, #10b981); --warn: var(--kit-attention, #f59e0b); --over: var(--kit-alerte, #ef4444);
   --cell: #fff; --cell-fill: #eef2ff;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #6b7cff; --primary-dark: #8b9bff;
-    --bg: #0f1525; --card-bg: #1a2236; --text: #e2e8f0; --text-muted: #94a3b8;
-    --border: #2a3550; --ok: #34d399; --warn: #fbbf24; --over: #f87171;
+    --primary: var(--kit-accent, #6b7cff); --primary-dark: var(--kit-accent-survol, #8b9bff);
+    --bg: var(--kit-fond, #0f1525); --card-bg: var(--kit-surface, #1a2236); --text: var(--kit-texte, #e2e8f0); --text-muted: var(--kit-texte-2, #94a3b8);
+    --border: var(--kit-bord, #2a3550); --ok: var(--kit-ok, #34d399); --warn: var(--kit-attention, #fbbf24); --over: var(--kit-alerte, #f87171);
     --cell: #141b2e; --cell-fill: #232f52;
   }
 }
