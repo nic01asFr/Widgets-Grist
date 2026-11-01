@@ -13,7 +13,7 @@
  * La police d'une instance est une pile système : elle devient la police `systeme` de ThemeDef. Un thème sombre ne retourne pas l'interface d'Atlas (claire seulement) :
  * `application.js` le dit (`fond-sombre-non-suivi`, `encre-non-suivie`) et ne garde que ce qui reste lisible.
  */
-import { contraste } from './couleurs.js';
+import { themeInstance, CLES_INSTANCE } from './theme-instance-contrat.js';
 
 export const VERSION = '1.0.0';
 export const PREFIXE = '--grist-theme-';
@@ -52,31 +52,32 @@ function lire(source, cle) {
 }
 
 /**
+ * La lecture du thème de l'instance est celle du CONTRAT UNIQUE (kit/jetons/themedef, arbitré avec Form Builder et appkit) : `theme-instance-contrat.js`, copie mécanique de la fonction pure du kit,
+ * rejouée sur ses vecteurs (`tests/theme-instance-contrat.test.js`). Ce module n'en garde que le branchement d'Atlas : ce que Grist donne (`onThemeChange`, variables CSS) devient l'entrée du
+ * contrat, et sa sortie devient les graines de la charte d'Atlas.
+ * Politique propre à Atlas (écart connu E7, pas dans le contrat) : Atlas suit le mode de l'hôte et pose lui-même ses surfaces, donc le fond et le texte de l'instance deviennent graines `fond` et
+ * `encre` dans les DEUX modes (le contrat ne les met en graines qu'en clair, parce que son compilateur les refuserait en sombre) ; `application.js` garde ses propres garde-fous de lisibilité.
+ *
  * @param {{ appearance?: string, name?: string, colors?: object }|null|undefined} theme  ce que rend `grist.onThemeChange`
  * @param {(nom: string) => string} [lireVariable]  lecteur de variables CSS, utilisé pour une couleur absente de `colors`
- * @returns {{ themedef: object|null, sombre: boolean, nom: string|null, ecartes: {cle: string, code: string}[] }}
+ * @returns {{ themedef: object|null, sombre: boolean, nom: string|null, pile: string|null, ecartes: {cle: string, code: string}[], refus: string|null }}
  */
 export function themeDeLInstance(theme, lireVariable) {
-  const rien = (ecartes = []) => ({ themedef: null, sombre: false, nom: null, pile: null, ecartes });
+  const rien = (ecartes = [], extra = {}) => ({ themedef: null, sombre: false, nom: null, pile: null, ecartes, refus: null, ...extra });
   if (!theme || typeof theme !== 'object') return rien();
-  const sombre = theme.appearance === 'dark';
-  const graines = {}, ecartes = [];
-  for (const [graine, cle] of Object.entries(CLES)) {
+  const vars = {};
+  for (const cle of CLES_INSTANCE) {
     let brut = lire(theme.colors, cle);
     if ((brut === undefined || brut === '') && typeof lireVariable === 'function') brut = lireVariable(PREFIXE + cle);
-    if (brut === undefined || brut === '') { ecartes.push({ cle, code: 'absent' }); continue; }
-    const h = hexSur(brut);
-    if (h) graines[graine] = h; else ecartes.push({ cle, code: 'couleur-non-reprise' });
+    if (brut !== undefined && brut !== '') vars[cle] = brut;
   }
-  // l'accent : la première variante qui se lit sur le fond que l'application aura réellement (celui du thème s'il est clair, sinon le sien)
-  const fondApplication = graines.fond || FOND_DE_REPLI;   // le fond du thème, clair ou sombre : l'application le suit (application.js)
-  const candidats = CANDIDATS_PRINCIPAL.map((cle) => hexSur(lire(theme.colors, cle) || (typeof lireVariable === 'function' ? lireVariable(PREFIXE + cle) : '') || '')).filter(Boolean);
-  const lisible = candidats.find((c) => (contraste(c, fondApplication) || 0) >= 3);
-  if (lisible) graines.principal = lisible; else if (candidats.length && !graines.principal) graines.principal = candidats[0];
-  if (!graines.principal) return { ...rien(ecartes), sombre };   // sans accent, rien à reprendre : le thème d'origine reste
-  let police = lire(theme.colors, 'font-family');
-  if ((police === undefined || police === '') && typeof lireVariable === 'function') police = lireVariable(PREFIXE + 'font-family');
-  const pile = pileSure(police);
+  const c = themeInstance({ apparence: theme.appearance === 'dark' ? 'sombre' : theme.appearance === 'light' || theme.appearance === undefined ? 'clair' : theme.appearance, vars });
+  const sombre = c.mode === 'sombre';
+  const ecartes = c.notes.map((n) => ({ cle: n.cle, code: n.code }));
+  if (!c.themedef) return rien(ecartes, { sombre, refus: c.refus || null });
+  const graines = { ...c.themedef.graines };
+  if (c.fond) graines.fond = c.fond;
+  if (c.texte) graines.encre = c.texte;
   const nom = typeof theme.name === 'string' && theme.name.trim() ? 'Instance Grist (' + theme.name.trim().slice(0, 30) + ')' : 'Instance Grist';
-  return { themedef: { version: 'themedef-1.0', nom, graines, police: 'systeme' }, sombre, nom, pile, ecartes };
+  return { themedef: { version: 'themedef-1.0', nom, graines, police: 'systeme' }, sombre, nom, pile: c.pile, ecartes, refus: null };
 }

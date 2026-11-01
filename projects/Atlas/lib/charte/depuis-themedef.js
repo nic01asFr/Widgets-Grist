@@ -13,6 +13,7 @@
 import { analyserCouleur } from './couleurs.js';
 import { VERSION_CHARTE, FAMILLES_POLICE } from './schema.js';
 import { charteDepuisKit, NOM_CHARTE } from './depuis-kit.js';
+import { lireThemeDef as lireThemeDefStrict, resoudre as resoudreDocument } from './themedef-lecteur.js';
 
 export const VERSION = '1.0.0';
 export const VERSION_THEMEDEF = 'themedef-1.0';
@@ -70,33 +71,32 @@ export function choisirThemeDefActif(lignes) {
 }
 
 /**
- * Un ThemeDef -> charte d'Atlas, pour le mode demandé. `verifie` vaut toujours false : Atlas applique les valeurs résolues sans les recompiler.
+ * Un ThemeDef -> charte d'Atlas, pour le mode demandé. `verifie` vaut toujours false : Atlas applique les valeurs résolues sans les recompiler. La lecture est celle du lecteur partagé
+ * (`themedef-lecteur.js`, rejoué sur les 142 vecteurs du kit) : un `resolu` incomplet ou qui ne tient pas les 22 paires de contraste est REFUSÉ en entier (`refus`), jamais appliqué à moitié.
  * @param {string|object} brut  le contenu de la colonne `themedef`
  * @param {{mode?: 'clair'|'sombre'}} o
- * @returns {{charte: object|null, notes: string[], ignore: object[], verifie: false, source: 'resolu'|'graines'|null, mode: string|null}}
+ * @returns {{charte: object|null, notes: string[], ignore: object[], verifie: false, source: 'resolu'|'graines'|null, mode: string|null, refus: {code: string, echecs: object[]}|null}}
  */
 export function charteDepuisThemeDef(brut, { mode = 'clair' } = {}) {
-  const lu = lireThemeDef(brut);
-  const rien = (ignore, notes = []) => ({ charte: null, notes, ignore, verifie: false, source: null, mode: null });
-  if (!lu.themedef) return rien(lu.ignore);
-  const doc = lu.themedef, notes = [], ignore = [...lu.ignore];
+  const lu = lireThemeDefStrict(brut);
+  const rien = (ignore, notes = [], refus = null) => ({ charte: null, notes, ignore, verifie: false, source: null, mode: null, refus });
+  if (!lu.ok) return rien([{ chemin: 'themedef', code: lu.erreur, valeur: '' }], [], { code: 'invalide', echecs: [], detail: lu.erreur });
+  const doc = lu.themedef, notes = [], ignore = [];
   const voulu = MODES.includes(mode) ? mode : 'clair';
   const police = doc.police !== undefined ? doc.police : (estObjet(doc.resolu) ? doc.resolu.police : undefined);
   const nom = typeof doc.nom === 'string' && doc.nom.trim() ? doc.nom.trim().slice(0, 60) : NOM_CHARTE;
+  if (voulu === 'sombre' && doc.modes && doc.modes.sombre === 'aucun') return rien(ignore, ['ce thème ne fournit pas de mode sombre'], { code: 'sans-mode-sombre', echecs: [] });
 
-  const modes = estObjet(doc.resolu) && estObjet(doc.resolu.modes) ? doc.resolu.modes : null;
-  if (modes) {
-    let choisi = voulu;
-    if (!estObjet(modes[choisi])) {
-      const autre = MODES.find((m) => estObjet(modes[m]));
-      if (autre) { notes.push('mode ' + voulu + ' absent : valeurs du mode ' + autre); choisi = autre; }
-      else ignore.push({ chemin: 'resolu.modes', code: 'vide', valeur: '' });
-    }
-    if (estObjet(modes[choisi])) {
-      const r = charteDepuisKit({ valeurs: modes[choisi].valeurs, police });
-      ignore.push(...r.ignore); notes.push(...r.notes, 'valeurs résolues du document, non vérifiées (Atlas ne recompile pas)');
-      if (r.charte) return { charte: { ...r.charte, nom }, notes, ignore, verifie: false, source: 'resolu', mode: choisi };
-    }
+  const r = resoudreDocument(doc, voulu);
+  if (r.refus) {
+    for (const e of r.refus.echecs) ignore.push({ chemin: e.paire, code: r.refus.code, valeur: e.mesure + ' pour ' + e.seuil });
+    if (!r.refus.echecs.length) ignore.push({ chemin: r.refus.chemin, code: r.refus.code, valeur: '' });
+    return rien(ignore, ['thème du document refusé : ' + r.refus.code], r.refus);
+  }
+  if (r.source === 'resolu') {
+    const k = charteDepuisKit({ valeurs: r.vars, police });
+    ignore.push(...k.ignore); notes.push(...k.notes, 'valeurs résolues du document, 22 paires de contraste vérifiées, non recompilées (Atlas ne recompile pas)');
+    if (k.charte) return { charte: { ...k.charte, nom }, notes, ignore, verifie: false, source: 'resolu', mode: r.mode, refus: null };
   }
   // sans valeurs résolues : les seules graines du document
   const graines = {};
@@ -112,5 +112,5 @@ export function charteDepuisThemeDef(brut, { mode = 'clair' } = {}) {
   if (typeof police === 'string' && Object.prototype.hasOwnProperty.call(FAMILLES_POLICE, police)) charte.texte = { famille: police };
   else if (police !== undefined) ignore.push({ chemin: 'police', code: 'police-non-listee', valeur: String(police).slice(0, 30) });
   notes.push('pas de valeurs résolues : graines du document seules, le reste est calculé par Atlas');
-  return { charte, notes, ignore, verifie: false, source: 'graines', mode: null };
+  return { charte, notes, ignore, verifie: false, source: 'graines', mode: r.mode, refus: null };
 }

@@ -1,0 +1,70 @@
+/**
+ * « Sans thème » (`?theme=aucun`) et refus dit : le choix explicite l'emporte sur le document et sur l'instance ; un thème refusé est dit à la personne.
+ * node --test projects/Atlas/tests/theme-sans-theme.test.js
+ */
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { themeDuDocument } from '../lib/charte/theme-document.js';
+
+const ICI = path.dirname(fileURLToPath(import.meta.url));
+const app = fs.readFileSync(path.join(ICI, '..', 'app_v7.js'), 'utf8');
+const corps = (nom) => { const i = app.indexOf('async function ' + nom + '('); assert.ok(i > 0, nom); return app.slice(i, i + 3500); };
+
+test('sans thème : ?theme=aucun passe avant le document ET l instance, et efface ce que la mémoire de démarrage avait posé', () => {
+  assert.match(app, /function themeAucunDemande\(\) \{ try \{ return new URLSearchParams\(location\.search\)\.get\('theme'\) === 'aucun'/);
+  const doc = corps('chargerThemeDocument');
+  assert.ok(doc.indexOf('themeAucunDemande()') > 0 && doc.indexOf('themeAucunDemande()') < doc.indexOf('listTables'), 'testé avant de lire la table');
+  assert.match(doc, /poserHabillageApplication\(\{\}, AP\.VARIABLES\)/);
+  assert.match(corps('appliquerThemeInstance'), /themeAucunDemande\(\)/);
+});
+
+test('refus dit : chaque raison de refus a sa phrase, aucune pour « aucun thème » ni « sans mode sombre »', () => {
+  for (const raison of ['contraste-insuffisant', 'resolu-incomplet', 'plusieurs-actifs', 'version-inconnue', 'invalide']) assert.match(app, new RegExp("'" + raison + "': '"), raison);
+  assert.doesNotMatch(app, /RAISONS_THEME_REFUSE = \{[^}]*'(aucun-actif|sans-mode-sombre)'/);
+  assert.match(app, /showToast\('Le thème de ce document n’est pas appliqué : ' \+ dit, 'warning'\)/);
+});
+
+test('les raisons rendues par le lecteur sont toutes connues de l interface', () => {
+  const td = (x) => JSON.stringify({ version: 'themedef-1.0', graines: { principal: '#0b6e4f' }, ...x });
+  const cols = (themedef, extra = {}) => ({ id: [1], cle: ['a'], themedef: [themedef], actif: [true], ...extra });
+  const attendues = {
+    invalide: themeDuDocument(cols('{pas du json')).raison,
+    'version-inconnue': themeDuDocument(cols(td({}), { version: ['themedef-9'] })).raison,
+    'plusieurs-actifs': themeDuDocument({ id: [1, 2], cle: ['a', 'b'], themedef: [td({}), td({})], actif: [true, true] }).raison,
+  };
+  for (const [voulu, obtenu] of Object.entries(attendues)) assert.equal(obtenu, voulu);
+  assert.equal(themeDuDocument(null).raison, 'aucun-actif');
+});
+
+test('un thème de document refusé est dit, jamais appliqué à moitié, et l instance Grist prend le relais (décision de l auteur)', () => {
+  const doc = corps('chargerThemeDocument');
+  assert.doesNotMatch(doc, /documentADit/);
+  assert.match(doc, /if \(!documentAUnTheme\) \{ brancherThemeInstance\(\); await appliquerThemeInstance\(\); \}/);
+  assert.match(doc, /showToast\('Le thème de ce document n’est pas appliqué : '/);
+});
+
+test('contraste : couleurs forcées ou contraste élevé demandé par la personne = aucun thème posé, comme « sans thème », et la page suit la préférence quand elle change', () => {
+  const extrait = (debut) => { const i = app.indexOf(debut); assert.ok(i > 0, debut); return app.slice(i, app.indexOf('\n', i)); };
+  const source = extrait('function preferenceContraste()') + '\n' + extrait('function themeAucunDemande()');
+  const evaluer = (recherche, requetes) => new Function('window', 'location', 'URLSearchParams', source + '; return themeAucunDemande();')(
+    { matchMedia: (q) => ({ matches: requetes.includes(q) }) }, { search: recherche }, URLSearchParams);
+  assert.equal(evaluer('', []), false, 'aucune préférence : le thème s applique');
+  assert.equal(evaluer('?theme=aucun', []), true);
+  assert.equal(evaluer('', ['(forced-colors: active)']), true);
+  assert.equal(evaluer('', ['(prefers-contrast: more)']), true);
+  assert.equal(evaluer('?theme=x', ['(prefers-contrast: less)']), false, 'un contraste réduit ne retire pas le thème');
+  assert.match(corps('chargerThemeDocument'), /suivrePreferenceContraste\(\);/);
+  assert.match(app, /addEventListener\('change', \(\) => \{ void chargerThemeDocument\(\); \}\)/);
+});
+
+test('thème à chaud : l API de plugin n expose pas onThemeChange (mesuré en Grist réel), Atlas observe donc les attributs que Grist pose, et ne suit rien avant d avoir lu la table de thème', () => {
+  const brancher = app.slice(app.indexOf('function brancherThemeInstance()'), app.indexOf('async function appliquerThemeInstance()'));
+  assert.match(brancher, /new MutationObserver\(suivre\)\.observe\(document\.documentElement, \{ attributes: true, attributeFilter: \['data-grist-theme', 'data-grist-appearance'\] \}\)/);
+  assert.match(brancher, /typeof grist\.onThemeChange === 'function'/, 'si elle l expose un jour, elle est préférée');
+  assert.match(brancher, /_themeDocumentLu && !_themeDocumentActif/);
+  assert.doesNotMatch(app, /setAttribute\('data-grist-(theme|appearance)'/, 'Atlas ne pose jamais lui-même ces attributs (sinon, boucle)');
+  assert.match(app, /_themeDocumentLu = true;/);
+});

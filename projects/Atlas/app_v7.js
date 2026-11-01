@@ -23,6 +23,7 @@ import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=2026100
 import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=20260924v';
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
+import { normaliserSetSun, reglageDepuisInstant, etatSoleil, blocSoleilExport, creerSignalSoleil } from './lib/soleil-hote.js?v=20261102a';
 import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
 import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
 import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=20261016a';
@@ -3889,7 +3890,56 @@ function updateLighting() {
     Eclairage.mettreAJourEtats();
     map.triggerRepaint();
     updateSunStrip();
+    signalerSoleilAHote();
 }
+
+/**
+ * Le soleil de la scène pour la page hôte (contrat 0.7, profil complet) : `getSun`, `setSun`, l'événement `sun`.
+ * L'azimut et la hauteur sont ceux de la lumière de la carte (SunCalc au centre de la vue) ; le lever et le coucher sont ceux de l'ancre de la scène (NOAA), comme l'éclairage public.
+ * `actif` est l'interrupteur « Ombres portées » : le soleil règle toujours la lumière de la carte, `actif` dit s'il jette des ombres sur les modèles 3D.
+ */
+const _signalSoleil = creerSignalSoleil();
+let _originSoleil = 'utilisateur';
+function etatSoleilScene() {
+    const { azimuth, altitude } = sunPosition();
+    const fuseau = fuseauScene(STATE.settings);
+    const midi = instantLocal(dateLocaleScene(STATE.settings), 720, fuseau);
+    const cl = coucherLever(midi, Number(STATE.location?.lat), Number(STATE.location?.lng));
+    return etatSoleil({ instantMs: instantScene(STATE.settings), actif: !!STATE.settings.shadows, azimut: azimuth, hauteur: altitude, lever: cl.lever, coucher: cl.coucher });
+}
+function signalerSoleilAHote() {
+    try {
+        if (!_signalSoleil.signaler(instantScene(STATE.settings), !!STATE.settings.shadows) || !_abonneHote) return;
+        _abonneHote('sun', { etat: etatSoleilScene(), origine: _originSoleil });
+    } catch (_) { /* l'hôte ne doit pas casser l'éclairage */ }
+}
+const SoleilHote = {
+    lire: etatSoleilScene,
+    poser(o) {
+        const r = normaliserSetSun(o);
+        if (r.instantMs !== undefined) {
+            const { date, minutes } = reglageDepuisInstant(r.instantMs, fuseauScene(STATE.settings));
+            STATE.settings.date = new Date(date + 'T12:00:00');
+            if (STATE.settings.dateEpinglee) STATE.settings.dateEpinglee = date;
+            STATE.settings.timeOfDay = minutes;
+        }
+        if (r.actif !== undefined && r.actif !== !!STATE.settings.shadows) {
+            STATE.settings.shadows = r.actif;
+            Models3D.scheduleBuild();
+            $('shadow-toggle')?.classList.toggle('on', r.actif);
+        }
+        _originSoleil = 'api';
+        try { updateLighting(); } finally { _originSoleil = 'utilisateur'; }
+        if (STATE.currentModule === 'soleil') renderSoleil();
+        return etatSoleilScene();
+    },
+    dock(montre) {
+        if (STATE.viewerControls) setViewerExposedFn(STATE.viewerControls, 'sun', !!montre);
+        if (typeof refreshControlsDock === 'function') refreshControlsDock();
+        return !!montre;
+    },
+    dockVisible: () => !!getViewerControl(STATE.viewerControls, 'sun')?.exposed,
+};
 
 function updateSunStrip() {
     const { azimuth, altitude, date } = sunPosition();
@@ -12826,11 +12876,18 @@ async function chargerThemeDocument() {
     let documentAUnTheme = false;
     try {
         if (!CONFIG.grist.ready) return;
+        suivrePreferenceContraste();
+        // « Sans thème » (`?theme=aucun`, à mettre dans l'adresse du widget) : les valeurs d'origine d'Atlas, ni le document ni l'instance Grist ; un choix explicite passe avant les deux.
+        if (themeAucunDemande()) { _themeDocumentActif = false; const AP = await import('./lib/charte/application.js?v=20261025a'); poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }   // et on efface ce que la mémoire de démarrage avait déjà posé
         const tables = await grist.docApi.listTables();
         if (tables.includes('Theme_document')) {
             const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
             const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: apparenceGrist() === 'dark' ? 'sombre' : 'clair' });
             if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
+            // Un thème refusé est DIT à la personne (la raison nommée), jamais appliqué à moitié ni en silence ; aucun thème, ou « sans mode sombre », reste sans bruit.
+            const dit = RAISONS_THEME_REFUSE[theme.raison];
+            if (dit && !theme.charte) showToast('Le thème de ce document n’est pas appliqué : ' + dit, 'warning');
+            // Un thème de document refusé n'est jamais appliqué à moitié : l'application prend alors le thème de l'instance Grist (décision de l'auteur, 02/11/2026), et le refus est dit ci-dessus.
             if (theme.charte) {
                 const { variables, notes } = TD.habillageApplication(theme);
                 poserHabillageApplication(variables, AP.VARIABLES);
@@ -12844,6 +12901,7 @@ async function chargerThemeDocument() {
         console.warn('[Atlas] thème du document', e && e.message);
     }
     _themeDocumentActif = documentAUnTheme;
+    _themeDocumentLu = true;   // dès lors, un changement de thème de l'instance est suivi (avant, la table de thème n'est pas encore lue)
     if (!documentAUnTheme) { brancherThemeInstance(); await appliquerThemeInstance(); }
     else void rafraichirFondTheme();
 }
@@ -12852,22 +12910,53 @@ async function chargerThemeDocument() {
  * Sans thème de document, le thème de l'INSTANCE Grist (`grist-plugin-api.js` : `onThemeChange`, et les variables `--grist-theme-*` qu'il pose sur la page) habille l'application
  * par la même chaîne ThemeDef, avec ses garde-fous de contraste (`lib/charte/theme-instance.js`). Un thème de document, quand il existe, passe toujours avant.
  */
-let _themeDocumentActif = false, _themeInstance = null, _themeInstanceBranche = false;
+let _themeDocumentActif = false, _themeDocumentLu = false, _themeInstance = null, _themeInstanceBranche = false;
+/**
+ * Pas de thème de document ni d'instance posé : `?theme=aucun` (le choix explicite « sans thème »), ou une préférence de contraste de la personne (couleurs forcées, contraste élevé),
+ * qui passe avant tout thème (ordre des couches arbitré avec Form Builder et le kit). La page garde alors ses valeurs d'origine ; elle suit la préférence quand elle change.
+ */
+function preferenceContraste() { try { return window.matchMedia('(forced-colors: active)').matches || window.matchMedia('(prefers-contrast: more)').matches; } catch (_) { return false; } }
+function themeAucunDemande() { try { return new URLSearchParams(location.search).get('theme') === 'aucun' || preferenceContraste(); } catch (_) { return false; } }
+let _contrasteSuivi = false;
+function suivrePreferenceContraste() {
+    if (_contrasteSuivi) return;
+    _contrasteSuivi = true;
+    try { for (const q of ['(forced-colors: active)', '(prefers-contrast: more)']) window.matchMedia(q).addEventListener('change', () => { void chargerThemeDocument(); }); } catch (_) { /* un navigateur sans cette requête garde ses valeurs */ }
+}
+const RAISONS_THEME_REFUSE = {
+    'contraste-insuffisant': 'certaines couleurs ne sont pas assez lisibles ensemble',
+    'resolu-incomplet': 'ses couleurs calculées sont incomplètes',
+    'plusieurs-actifs': 'plusieurs thèmes sont actifs dans la table',
+    'version-inconnue': 'sa version n’est pas reconnue',
+    'invalide': 'il est illisible',
+};
+/**
+ * Suit le thème de l'instance à chaud (clair/sombre, autre thème). L'API de plugin de Grist n'expose pas `onThemeChange` (mesuré en Grist réel : `grist.onThemeChange` est `undefined`), mais elle
+ * pose elle-même, à chaque changement, les variables `--grist-theme-*` et les attributs `data-grist-theme` et `data-grist-appearance` sur la page : on observe ces attributs. S'il existait, `onThemeChange`
+ * serait préféré. Le thème de l'instance se relit alors dans les variables de la page (`appliquerThemeInstance`).
+ */
 function brancherThemeInstance() {
-    if (_themeInstanceBranche || typeof grist === 'undefined' || typeof grist.onThemeChange !== 'function') return;
+    if (_themeInstanceBranche || typeof grist === 'undefined') return;
     _themeInstanceBranche = true;
-    try { grist.onThemeChange((t) => { _themeInstance = t; if (!_themeDocumentActif) void appliquerThemeInstance(); }); } catch (e) { console.warn('[Atlas] thème de l\'instance', e && e.message); }
+    const suivre = () => { _themeInstance = null; if (_themeDocumentLu && !_themeDocumentActif) void appliquerThemeInstance(); };
+    try {
+        if (typeof grist.onThemeChange === 'function') grist.onThemeChange((t) => { _themeInstance = t; if (_themeDocumentLu && !_themeDocumentActif) void appliquerThemeInstance(); });
+        else new MutationObserver(suivre).observe(document.documentElement, { attributes: true, attributeFilter: ['data-grist-theme', 'data-grist-appearance'] });
+    } catch (e) { console.warn("[Atlas] thème de l'instance", e && e.message); }
 }
 async function appliquerThemeInstance() {
     try {
-        if (_themeDocumentActif || !CONFIG.grist.ready) return;
+        if (_themeDocumentActif || !CONFIG.grist.ready || themeAucunDemande()) return;
         const [TI, TD, TDoc, AP] = await Promise.all([import('./lib/charte/theme-instance.js?v=20261101a'), import('./lib/charte/depuis-themedef.js?v=20261101a'), import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
         const racine = document.documentElement;
         const lireVariable = (nom) => getComputedStyle(racine).getPropertyValue(nom).trim();
         const theme = _themeInstance || { appearance: apparenceGrist() };
         const t = TI.themeDeLInstance(theme, lireVariable);
         const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: t.sombre ? 'sombre' : 'clair' }) : { charte: null };
-        if (!r.charte) { poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }
+        if (!r.charte) {
+            console.info("[Atlas] thème de l'instance non appliqué (" + (theme.appearance || 'apparence inconnue') + ') :', (t.refus || (r.refus && r.refus.code) || (t.themedef ? 'refusé par la charte' : 'aucune couleur reprenable')), (t.ecartes || []).map((e) => e.cle + ':' + e.code).join(', '));
+            poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return;
+        }
         const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
         // la police de l'instance : sa pile exacte (celle de Grist, ou Marianne puis les polices système chez DINUM), pas seulement la police système de ThemeDef
         if (t.pile) { variables['--sans'] = t.pile; variables['--serif'] = t.pile; }
@@ -18740,6 +18829,8 @@ async function exporter3dScene(entree) {
         glb, octets: glb.byteLength, ancre, bbox, repere: E.REPERE, format: E.FORMAT,
         contenu: { objets: stats.objets, extrusions: stats.extrusions, ...(stats.sol ? { sol: stats.sol } : {}), ...(stats.relief ? { relief: true } : {}) },
         ...(relief && stats.relief ? { relief: { source: relief.source, altitudeAncre: relief.altitudeAncre, exageration: relief.exageration, denivele: [stats.relief.min, stats.relief.max], pas: stats.relief.pas, zoom: relief.zoom } } : {}),
+        // le soleil de la carte à cet instant : de quoi éclairer le fichier comme elle (azimut depuis le nord, hauteur en degrés)
+        soleil: blocSoleilExport(etatSoleilScene()),
         attributions: E.fusionnerAttributions([attributions]), avertissements: [...avertissements, ...dits],
     };
 }
@@ -18770,6 +18861,7 @@ async function demarrerBi() {
                 monterScene: monterSceneHote, monterDalles: monterDallesHote, retirerScene: retirerSceneHote, abonner: (fn) => { _abonneHote = fn; return () => { if (_abonneHote === fn) _abonneHote = null; }; }, visibilite: visibiliteCoucheHote, cadrer: cadrerCouchesHote,
                 outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
                 exporter3d: exporter3dScene,   // la scène 3D en un GLB (contrat 0.6)
+                soleil: SoleilHote,   // le soleil de la scène : getSun, setSun, dock (contrat 0.7)
                 // L'identité de l'hôte sur l'interface de l'application (lib/charte/application.js, chargé à la demande) : ce que `setTheme` a donné devient les jetons
                 // de l'application ; sans charte de l'hôte, ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi, et pourquoi).
                 // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.

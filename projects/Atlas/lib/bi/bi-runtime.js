@@ -576,6 +576,7 @@ export function attacher(map, opts = {}) {
       const options = o && typeof o === 'object' ? o : {};
       const garderCap = options.garderCap === undefined ? true : options.garderCap;
       if (typeof garderCap !== 'boolean') throw new Error('setViewMode : garderCap doit être true ou false');
+      if (options.soleil !== undefined && typeof options.soleil !== 'boolean') throw new Error('setViewMode : soleil doit être true ou false');
       const cap = options.bearing;
       if (cap !== undefined && (typeof cap !== 'number' || !Number.isFinite(cap) || cap < -360 || cap > 360)) throw new Error('setViewMode : bearing hors bornes (-360 à 360)');
       const gestes = (nom, f) => { try { const g = map[nom]; if (g && typeof g[f] === 'function') g[f](); } catch (_) { /* un geste que cette carte n'a pas */ } };
@@ -639,6 +640,12 @@ export function attacher(map, opts = {}) {
      * complet (`lib/bi/canevas.js` la branche) ; la carte nue répond `capacite_absente`.
      */
     async exportScene3D() { throw new Error("capacite_absente : exportScene3D demande le profil complet (`profil=\"complet\"`) : la scène 3D (objets, couches extrudées) est celle de l'application ; la carte nue n'en a pas"); },
+    /**
+     * Le soleil de la scène (contrat 0.7) : sa date et son heure, ses ombres. Il éclaire la carte et les modèles de l'APPLICATION : comme `exportScene3D`, ces deux commandes n'existent
+     * qu'en profil complet (`lib/bi/canevas.js` les branche) ; la carte nue répond `capacite_absente`.
+     */
+    async setSun() { throw new Error("capacite_absente : setSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
+    async getSun() { throw new Error("capacite_absente : getSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {
       const actif = o.actif === undefined ? true : o.actif;
