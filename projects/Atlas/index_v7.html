@@ -401,6 +401,8 @@
         .map-frame { flex: 1; position: relative; background: var(--bg); overflow: hidden; min-width: 0; }
         #map { position: absolute; inset: 0; }
         #map .maplibregl-ctrl-attrib { background: rgba(255,255,255,0.7); font-size: 10px; }
+        html[data-mode="sombre"] #map .maplibregl-ctrl-attrib { background: color-mix(in srgb, var(--surface) 78%, transparent); }
+        html[data-mode="sombre"] #map .maplibregl-ctrl-attrib, html[data-mode="sombre"] #map .maplibregl-ctrl-attrib a { color: var(--text); }
 
         /* Inspector (right) — ouvert / fermé (pas de pastille carte) */
         .inspector {

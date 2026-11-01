@@ -102,3 +102,12 @@ test('profil complet : un manifeste BI éteint la légende de l\'application (ce
   const html = readFileSync(join(ICI, '../index_v7.html'), 'utf8');
   assert.match(html, /body\.scene-bi #legend \{ display: none !important; \}/);
 });
+
+test('fond sombre : la couleur secondaire (aides, notes) se lit sur le fond, celle d origine (vert sombre) est remplacee', () => {
+  const sans = variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal: '#a2b6ff', fond: '#222631' } }));
+  assert.ok(contraste(sans.variables['--accent2'], '#222631') >= 4.5, 'un ton d encre');
+  const sombre = variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal: '#a2b6ff', secondaire: '#2e4e54', fond: '#222631' } }));
+  assert.ok(contraste(sombre.variables['--accent2'], '#222631') >= 4.5, 'une secondaire trop sombre est refusee');
+  const claire = variablesApplication(lecture({ version: 'atlas-charte/0.1', graines: { principal: '#a2b6ff', secondaire: '#cfd8ff', fond: '#222631' } }));
+  assert.equal(claire.variables['--accent2'], '#cfd8ff');
+});

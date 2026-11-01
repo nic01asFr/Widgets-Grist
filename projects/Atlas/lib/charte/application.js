@@ -64,7 +64,11 @@ export function variablesApplication(lecture) {
     if ((contraste(g.principal, fond) || 0) < 3) notes.push('accent-peu-lisible-non-suivi');
     else { variables['--accent'] = g.principal; variables['--accent-soft'] = melanger(fond, g.principal, 0.14); }
   }
-  if (a('secondaire')) variables['--accent2'] = g.secondaire;
+  // la couleur secondaire sert aussi de TEXTE (aides, notes) : en sombre, celle du thème s'il se lit (4,5:1), sinon un ton d'encre ; l'accent2 d'origine (un vert sombre) y serait illisible
+  if (fondSombre) {
+    const ink = variables['--ink'] || '#ececf1';
+    variables['--accent2'] = a('secondaire') && (contraste(g.secondaire, fond) || 0) >= 4.5 ? g.secondaire : melanger(fond, ink, 0.78);
+  } else if (a('secondaire')) variables['--accent2'] = g.secondaire;
   if (hote.texte && typeof hote.texte.famille === 'string' && charte.texte && charte.texte.famille) {
     const pile = pilePolice(charte.texte.famille);
     variables['--sans'] = pile; variables['--serif'] = pile;
