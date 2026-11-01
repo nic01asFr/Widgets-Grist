@@ -239,6 +239,21 @@ small { font-size: 0.875rem; }
 .fr-groupe__champs { display: grid; gap: 0 1rem; grid-template-columns: minmax(0, 1fr); }
 .fr-groupe--2 .fr-groupe__champs { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
 .fr-groupe__champs > * { min-width: 0; }
+
+/* Un groupe répétable : un titre, des lignes sous leur légende, « Ajouter » sous la dernière. */
+.fr-groupe-repete__tete { margin: 0 0 0.5rem; }
+.fr-groupe-repete__titre { margin: 0 0 0.25rem; font-size: 1.25rem; line-height: 1.4; color: var(--kit-texte, var(--grey-200)); }
+.fr-groupe--ligne { padding: 0.75rem 1rem 1rem; margin: 0 0 1rem; border: 1px solid var(--kit-bord, var(--grey-925)); border-radius: var(--radius); background: var(--kit-surface, var(--grey-1000)); }
+.fr-groupe--ligne .fr-groupe__titre { padding: 0 0.25rem; }
+.fr-groupe-repete__retirer { margin-top: 0.5rem; }
+.fr-groupe-repete__actions { margin: 0 0 1.5rem; }
+.fr-groupe-repete__vide { margin: 0 0 1rem; }
+
+/* Une couleur : le code à taper, et le sélecteur du navigateur qui en montre la teinte. */
+.fr-couleur__ligne { display: flex; align-items: center; gap: 0.5rem; }
+.fr-couleur__code { flex: 1 1 8rem; min-width: 0; font-variant-numeric: tabular-nums; }
+.fr-couleur__choix[data-vide] { opacity: 0.4; }
+.fr-couleur__choix { flex: 0 0 var(--cible); width: var(--cible); height: var(--cible); padding: 0.125rem; border: 1px solid var(--kit-bord-champ, var(--kit-bord, var(--grey-900))); border-radius: var(--radius); background: var(--kit-surface, var(--grey-1000)); cursor: pointer; }
 .fr-matrice__ligne {
   display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
   padding: 10px 0; border-top: 1px solid var(--kit-bord, #eee);
