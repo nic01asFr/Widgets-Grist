@@ -28,7 +28,7 @@ Clés lues (mesurées sur docs.getgrist.com, GristLight : 497 variables) : `cont
    (`--grist-theme-bg` en est une) sont écartés et dits dans `notes`. Une valeur écartée ne fait pas échouer le thème : la graine correspondante est dérivée.
 2. **Mode.** `apparence` fait foi. Valeur autre que `clair`/`sombre` : le contrat refuse (`apparence-inconnue`), l'appelant garde ses valeurs d'origine.
 3. **Fond.** `page-bg` s'il est une couleur acceptée, sinon le fond dérivé du mode. Un fond ne se lit jamais comme une image.
-4. **Texte (graine `encre`).** `text` s'il est accepté **et** à 4,5:1 sur le fond ; sinon redressé vers le noir (fond clair) ou le blanc (fond sombre), et dit.
+4. **Texte (graine `encre`).** `text` s'il est accepté **et** à 4,5:1 sur le fond ET sur la surface douce (arbitrage du 01/11/2026 : le compilateur du kit refuse un texte qui ne tient que sur le fond) ; sinon redressé vers le noir (fond clair) ou le blanc (fond sombre) sur les deux, et dit.
 5. **Action (graine `principal`).** On prend la **première couleur de la liste** `control-primary-bg`, `primary-muted`, `primary-dim`, `accent-text`, `control-fg`, `link`, `primary` (**ordre figé**) qui
    tient **4,5:1** sur le fond ET sur la surface. **La surface est la variable `surface` rendue par la dérivation du kit** pour le mode et la graine `fond` (elle ne dépend pas de la couleur
    d'action) ; chaque vecteur donne la surface attendue, pour que chaque lecteur contrôle sa propre dérivation avant le 4,5:1. Si aucune ne tient, `control-primary-bg` est **redressé** à 4,5:1 (vers le noir ou le blanc, selon le fond), et
@@ -37,8 +37,10 @@ Clés lues (mesurées sur docs.getgrist.com, GristLight : 497 variables) : `cont
 6. **Police.** `font-family` n'est reprise que si elle ne contient que des noms de polices (lettres, chiffres, espaces, virgules, guillemets, point, tiret) ; elle devient la
    police `systeme` du ThemeDef. La sortie porte aussi la **`pile`** : la valeur de `font-family` nettoyée (espaces et sauts de ligne réduits à un espace), pour les widgets qui posent la vraie
    pile de Grist (Atlas) ; un widget qui ne sait pas l'utiliser l'ignore. Toute autre forme est écartée et dite. Aucune police n'est téléchargée.
-7. **Sombre.** Le contrat rend le thème sombre tel quel ; c'est le widget qui décide ce qu'il sait afficher. Un widget qui ne suivrait pas le sombre le dit et ne garde que ce qui reste
-   lisible (aucun des quatre widgets actuels n'est dans ce cas : Atlas suit le sombre depuis la 1.37.0).
+7. **Sombre.** Arbitrage du 01/11/2026 : `fond` et `encre` sont des graines du mode CLAIR du ThemeDef, le compilateur refuse donc un ThemeDef complet d'instance sombre. En sombre, le
+   ThemeDef ne porte que `principal` ; **fond, texte et pile sont rendus à part** par le contrat. Un widget ne les superpose aux variables résolues que si les paires de lisibilité
+   tiennent (texte sur fond, action sur fond et surface, texte d'action sur action) ; sinon il garde l'action seule et le dit. C'est la règle 8 lue par couche. Un widget qui ne suivrait
+   pas le sombre le dit (aucun des quatre widgets actuels n'est dans ce cas : Atlas suit le sombre depuis la 1.37.0).
 8. **Garde-fou final.** Le ThemeDef produit passe par le lecteur (22 paires). S'il échoue, le widget garde ses valeurs d'origine et dit la raison ; il n'applique jamais un thème à moitié.
 9. **Source.** Le thème porte `source: 'instance'`, et n'est jamais écrit dans `Theme_document` (seul le geste d'activation écrit).
 10. **Priorité.** Toujours en dessous du thème du document et d'un choix explicite du widget (y compris « sans thème »).
