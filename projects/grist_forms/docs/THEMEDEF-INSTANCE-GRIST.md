@@ -51,8 +51,8 @@ Chaque vecteur = une entrée, la sortie attendue (graines, mode, notes, refus), 
 |---|--------|---------|
 | V1 | GristLight, mesuré en réel sur docs.getgrist.com (control-primary-bg #16b378, primary-muted #009058, primary-dim #007548, link et control-fg #16b378, page-bg #f7f7f7, text #262633) | action = première candidate à 4,5:1 (ou redressée), fond `page-bg`, texte `text` |
 | V2 | GristDark (source : grist-core `GristDark.ts` + `Base.ts`, relevé par Atlas-BI : control-primary-bg #157a54, primary #17b378, primary-muted #1da270, link et control-fg #17b378, page-bg #262633, text #efefef) | mode sombre, première candidate d'action à 4,5:1 sur le fond et la surface dérivée, texte clair |
-| V3 | Instance à palette propre (numerique.gouv, control-primary-bg #3E5DE7 ; **autres valeurs à mesurer en réel**), clair | action de l'instance (redressée si besoin), notes dites |
-| V4 | Idem, sombre | idem |
+| V3 | Instance à palette propre, **mesurée en réel le 01/11/2026 sur un document Grist de l'instance numerique.gouv** (data-grist-appearance=light, data-grist-theme=GristLight) : control-primary-bg #3E5DE7, primary-muted #2845C1, primary-dim #223E9E, accent-text/control-fg/link/primary #3E5DE7, control-primary-fg #EDF0FF, page-bg #F6F8F9, widget-bg #ffffff, text #222631, bg = **image** (`url("img/gplaypattern.png")`), font-family `Marianne,-apple-system,BlinkMacSystemFont,Liberation Sans, Helvetica,Arial,sans-serif,…` (commence par une police NOMMÉE, avec espace et saut de ligne) ; clair | action de l'instance (redressée si besoin), notes dites |
+| V4 | Idem, sombre (**non mesuré** : demande de changer le thème du compte ; à relever avec l'accord de la personne, sinon dérivé de GristDark avec l'accent de l'instance) | idem |
 | V5 | `page-bg` en image | fond dérivé, valeur écartée dite |
 | V6 | `control-primary-bg` en `rgba(...)` | candidate suivante, valeur écartée dite |
 | V7 | Aucune candidate d'action lisible | `control-primary-bg` redressé, dit |
