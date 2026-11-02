@@ -93,7 +93,8 @@ test('la fermeture de entree.js ne contient AUCUN module de l\'application', () 
   assert.ok(!f.includes('app_v7.js'));
   // 51 depuis le contrat 0.4 : lib/bi/batiments.js (commande getBuildings), importé À LA DEMANDE : il n'est téléchargé que si l'hôte appelle la commande
   // 52 depuis le contrat 0.5 : lib/bi/features.js (commande getFeatures), importé à la demande de la même façon
-  assert.ok(f.length >= 38 && f.length <= 52, 'taille de la fermeture : ' + f.length);
+  // 53 depuis la 1.43 : lib/bi/ui/feuille.js (feuilles de style construites, que la bulle, la zone, la légende et le temps posent sans style en ligne)
+  assert.ok(f.length >= 38 && f.length <= 53, 'taille de la fermeture : ' + f.length);
 });
 
 test('la page maigre est promue (bi.html) sous le même numéro de version que l\'application', () => {
