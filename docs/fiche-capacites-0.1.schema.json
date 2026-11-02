@@ -45,33 +45,74 @@
     },
     "verbes": {
       "type": "object",
-      "propertyNames": {
-        "enum": [
-          "presenter",
-          "configurer",
-          "creer",
-          "editer",
-          "structurer",
-          "personnaliser",
-          "publier",
-          "exploiter",
-          "recolter",
-          "traiter"
-        ]
-      },
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "pattern": "^[a-z]+_[a-z0-9_]+$"
+      "additionalProperties": false,
+      "properties": {
+        "presenter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "uniqueItems": true
+        "configurer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "creer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "editer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "structurer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "personnaliser": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "publier": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exploiter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recolter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "traiter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       }
     },
     "non_couverts": {
       "type": "array",
-      "uniqueItems": true,
       "items": {
+        "type": "string",
         "enum": [
           "presenter",
           "configurer",
@@ -120,18 +161,6 @@
                 "type": "string",
                 "pattern": "^sha256:"
               }
-            },
-            "if": {
-              "properties": {
-                "catalogue": {
-                  "const": false
-                }
-              }
-            },
-            "then": {
-              "required": [
-                "empreinte"
-              ]
             }
           }
         },
@@ -161,18 +190,6 @@
                 "type": "string",
                 "pattern": "^sha256:"
               }
-            },
-            "if": {
-              "properties": {
-                "catalogue": {
-                  "const": false
-                }
-              }
-            },
-            "then": {
-              "required": [
-                "empreinte"
-              ]
             }
           }
         }
@@ -209,5 +226,6 @@
         "type": "string"
       }
     }
-  }
+  },
+  "description": "Fiche lisible par une machine et une personne. Les regles que ce schema ne dit pas (pattern, unicite, empreinte obligatoire hors catalogue, verbe ni couvert ni declare) sont verifiees par scripts/valider-fiche.js."
 }
