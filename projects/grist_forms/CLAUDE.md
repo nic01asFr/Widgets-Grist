@@ -398,6 +398,20 @@ photo posé par QField sur une colonne texte. Enregistrer la fiche sans toucher 
 la photo effaçait donc la donnée. Une valeur illisible est maintenant laissée
 telle quelle.
 
+## Registre de commandes (widgets auto-descriptifs, v1, lecture seule)
+
+`forms-registre/` rend le noyau pur de `shared/` appelable par un nom, une entrée et une sortie (12 commandes `forms_*`). Il ne recalcule rien : chaque commande appelle un module du noyau. Le moteur `runtime/engine.js` (DOM) reste hors registre.
+
+| Fichier | Rôle |
+|---|---|
+| `forms-registre/registre.js` | Les commandes (UMD, modules injectés), `appeler`, `lister`, `fiche()` |
+| `forms-registre/index.js` | Montage pour Node : noyau, validateur de schéma, contrats déclarés avec empreintes mesurées |
+| `forms-registre/cli.js` | `--liste`, `--decrire <commande>`, `<commande> <entree.json \| ->` ; sortie 0 réussi, 1 refus, 2 usage |
+| `forms-registre/fiche-capacites.json` | La fiche (`fiche-capacites-0.1`), GÉNÉRÉE : `node projects/grist_forms/forms-registre/generer-fiche.js` |
+| `tests/forms-registre.test.js` | Descriptions, exemples exécutés, lecture seule, fiche, CLI |
+
+Règles : v1 n'écrit rien (les plans de schéma et de publication sont rendus, pas appliqués) ; une entrée invalide est refusée avec ses écarts, jamais par exception ; les exemples sont écrits à part, sans organisation ni donnée réelle ; ThemeDef et Survey Manifest ne sont pas au catalogue : ils se déclarent `catalogue: false` avec leur empreinte. Après toute modification d'une commande, relancer `generer-fiche.js` (un test refuse un fichier périmé). Prochaines étapes : validateur de fiche et test de parité (appkit), serveur MCP, page WebMCP, vitrine générée.
+
 ## Audience — rappel UX
 
 | UI (Accueil) | Rôle |
