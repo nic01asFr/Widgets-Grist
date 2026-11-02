@@ -1,0 +1,15 @@
+/* La page maigre du composant carte BI (index_bi.html / bi.html). Un FICHIER plutôt qu'un <style> en ligne : la page se charge sous `style-src 'self'`. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; width: 100%; overflow: hidden; background: #F6F6F4; color-scheme: light; }
+    #map { position: absolute; inset: 0; }
+    #map .maplibregl-ctrl-attrib { background: rgba(255,255,255,0.7); font-size: 10px; }
+    /* La page ne garde que la carte et son attribution (obligatoire) : l'hôte porte son habillage, sa légende et ses contrôles. */
+    .maplibregl-ctrl-top-left, .maplibregl-ctrl-top-right, .maplibregl-ctrl-bottom-left { display: none !important; }
+    /* Premier rendu : un voile neutre cache la carte jusqu'à ce que l'hôte ait posé sa scène (lib/bi/voile.js le lève) ; `?voile=0` le retire. */
+    #bi-voile { display: none; }
+    body.voile-bi #bi-voile {
+        display: grid; place-items: center; position: fixed; inset: 0; z-index: 2147483000;
+        background: #F6F6F4; color: #5D5D58;
+        font: 500 14px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) { body.voile-bi #bi-voile { background: #1D1D1B; color: #A9A9A2; } }

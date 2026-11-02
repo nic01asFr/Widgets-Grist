@@ -47,23 +47,37 @@ test('la page de l\'application mène à la page maigre avec TOUS les paramètre
   for (const s of ['', '?bi=0', '?bi=', '?abi=1', '?bi=11', '?navbar=false']) assert.deepEqual(essai(s), [], 'rien pour « ' + s + ' »');
 });
 
-test('le garde d\'amorçage est le même dans les deux pages (hors le test de ?bi=1, inutile dans la page maigre)', () => {
+test('le garde d\'amorçage est le même dans les deux pages (hors le test de ?bi=1, inutile dans la page maigre) : en ligne dans l\'application, en fichier dans la page maigre', () => {
   const garde = (html) => scripts(html).find((s) => s.includes('prevenir') && s.includes('bi-voile'));
-  const normaliser = (s) => s.replace(/var biv = sp\.get\('bi'\); if \(biv !== '1' && biv !== 'true'\) return;/, '').replace(/\/\* cette page est TOUJOURS[^*]*\*\//, '').replace(/\s+/g, ' ');
-  assert.ok(garde(APP) && garde(BI));
-  assert.equal(normaliser(garde(BI)), normaliser(garde(APP)));
+  const fichier = lire('lib/bi/amorcage.js').replace(/^\/\*\*[\s\S]*?\*\/\n/, '');
+  const normaliser = (s) => s.replace(/var biv = sp\.get\('bi'\); if \(biv !== '1' && biv !== 'true'\) return;/, '').replace(/\/\* cette page est TOUJOURS[^*]*\*\//, '').replace(/\s+/g, ' ').trim();
+  assert.ok(garde(APP) && fichier.includes('prevenir'));
+  assert.equal(normaliser(fichier), normaliser(garde(APP)));
+  assert.ok(!garde(BI), 'la page maigre n\'a plus de garde en ligne : il est dans lib/bi/amorcage.js');
+});
+
+test('la page maigre n\'a AUCUN script ni style en ligne : elle se charge sous script-src \'self\' et sans empreinte à recalculer', () => {
+  assert.deepEqual(scripts(BI), [], 'aucun script classique en ligne');
+  assert.deepEqual([...BI.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter((m) => !/\bsrc=/.test(m[1])), [], 'aucun script en ligne, de quelque type que ce soit');
+  assert.ok(!/<style\b/.test(BI), 'aucun <style> en ligne');
+  assert.ok(!/\sstyle="/.test(BI), 'aucun attribut style');
+  for (const f of ['lib/bi/amorcage.js', 'lib/bi/voile-initial.js', 'lib/bi/demarrer.js', 'lib/page-bi.css']) assert.ok(BI.includes('./' + f + '?v='), f + ' est chargé par la page');
+  const ordre = ['amorcage.js', 'maplibre-gl.js', 'page-bi.css', 'voile-initial.js', 'demarrer.js'].map((n) => BI.indexOf(n));
+  assert.ok(ordre.every((x, i) => x > 0 && (i === 0 || x > ordre[i - 1])), 'ordre inchangé : le garde écoute avant MapLibre, la classe du voile est posée avant le premier affichage, le module démarre en dernier');
 });
 
 test('la page maigre ne charge ni l\'application, ni three.js, ni les formulaires, ni l\'API de Grist', () => {
   for (const interdit of ['app_v7', 'app.js', 'three.module', 'importmap', 'grist_forms', 'grist-plugin-api', 'fonts.googleapis', 'formulaire-atlas', 'suncalc']) assert.ok(!BI.includes(interdit), interdit);
-  const modules = [...BI.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
-  assert.equal(modules.length, 1); assert.match(modules[0][1], /from '\.\/lib\/bi\/entree\.js\?v=\d+[a-z]*'/);
+  const modules = [...BI.matchAll(/<script type="module" src="([^"]+)"><\/script>/g)];
+  assert.equal(modules.length, 1); assert.match(modules[0][1], /^\.\/lib\/bi\/demarrer\.js\?v=\d+[a-z]*$/);
+  assert.match(lire('lib/bi/demarrer.js'), /from '\.\/entree\.js\?v=\d+[a-z]*'/);
   assert.ok(BI.length < 12000, 'une page de quelques Ko : ' + BI.length);
   assert.ok(/<body class="mode-bi">/.test(BI) && /id="bi-voile"/.test(BI) && /id="map"/.test(BI));
 });
 
 test('la page maigre garde la règle du voile de la page de l\'application (?voile=0 le retire)', () => {
-  const code = scripts(BI).find((s) => s.includes('voile-bi'));
+  const code = lire('lib/bi/voile-initial.js');
+  assert.ok(code.includes('voile-bi'));
   for (const [search, attendu] of [['', true], ['?bi=1', true], ['?voile=0', false], ['?voile=false', false], ['?voile=non', false], ['?voile=1', true]]) {
     const classes = new Set();
     vm.runInNewContext(code, { URLSearchParams, location: { search }, document: { body: { classList: { add: (c) => classes.add(c) }, setAttribute() {} } } });

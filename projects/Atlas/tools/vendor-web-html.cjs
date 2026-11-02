@@ -23,10 +23,11 @@ function referencesExternes(texte) {
  * Remplace, dans la page, les adresses des CDN par les chemins embarqués.
  * @param {string} html
  * @param {{ reecritures: Array<{de?:string, deDebut?:string, vers:string}> }} manifeste
- * @param {{ dossier?: string }} [o]  dossier relatif de vendor dans la page (par défaut `./vendor/`)
+ * @param {{ dossier?: string, poserDossier?: boolean }} [o]  dossier relatif de vendor dans la page (par défaut `./vendor/`) ; `poserDossier: false` n'ajoute pas le script en ligne
+ *   `window.__ATLAS_VENDOR__` (la page maigre du composant n'en a pas l'usage, et n'a aucun script en ligne : elle se charge sous `script-src 'self'`)
  * @returns {string}
  */
-function reecrireHtml(html, manifeste, { dossier = './vendor/' } = {}) {
+function reecrireHtml(html, manifeste, { dossier = './vendor/', poserDossier = true } = {}) {
   let sortie = String(html);
   for (const r of manifeste.reecritures || []) {
     const motif = r.de || r.deDebut;
@@ -37,7 +38,7 @@ function reecrireHtml(html, manifeste, { dossier = './vendor/' } = {}) {
   sortie = sortie.replace(PRECONNECT_POLICES, '').replace(PRECONNECT_POLICES_BIS, '');
   sortie = sortie.replace(LIEN_POLICES, `<link href="${dossier}polices/polices.css" rel="stylesheet" />`);
   // La page dit où sont les dépendances embarquées (le worker de lecture des MNT en a besoin : il part d'un Blob).
-  if (!sortie.includes('__ATLAS_VENDOR__')) sortie = sortie.replace(/<\/head>/, `    <script>window.__ATLAS_VENDOR__ = "${dossier}";</script>\n</head>`);
+  if (poserDossier && !sortie.includes('__ATLAS_VENDOR__')) sortie = sortie.replace(/<\/head>/, `    <script>window.__ATLAS_VENDOR__ = "${dossier}";</script>\n</head>`);
   return sortie;
 }
 

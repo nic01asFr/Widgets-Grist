@@ -10,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
+import { normaliserOrigine } from '../lib/bi/liaison.js';
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const HTML = fs.readFileSync(path.join(ICI, '..', 'index_v7.html'), 'utf8');
@@ -22,20 +23,21 @@ function script() {
 }
 
 /** Une page simulée : minuteries pilotées à la main, voile, messages envoyés à la fenêtre parente. */
-function page(search, { dansCadre = true, pret = false } = {}) {
+function page(search, { dansCadre = true, pret = false, source = null, meta = null, atlasBi = undefined } = {}) {
   const minuteries = [], messages = [], erreursConsole = [], ecouteurs = {};
   const voile = { textContent: 'Chargement de la carte…' };
   const parent = { postMessage: (m, o) => messages.push({ m, o }) };
   const window = { __biPret: pret };
+  if (atlasBi !== undefined) window.ATLAS_BI = atlasBi;
   window.parent = dansCadre ? parent : window;
   const contexte = {
     window, location: { search, href: 'https://atlas.example/index.html' + search }, URL, URLSearchParams,
-    document: { getElementById: (id) => (id === 'bi-voile' ? voile : null) },
+    document: { getElementById: (id) => (id === 'bi-voile' ? voile : null), querySelector: (sel) => (meta !== null && /atlas-bi-hotes/.test(sel) ? { content: meta } : null) },
     setTimeout: (f, ms) => { minuteries.push({ f, ms }); return minuteries.length; },
     addEventListener: (type, f) => { ecouteurs[type] = f; },
     console: { error: (...a) => erreursConsole.push(a.join(' ')) },
   };
-  vm.runInNewContext(script(), contexte);
+  vm.runInNewContext(source || script(), contexte);
   const attendre = (ms) => minuteries.filter((t) => t.ms === ms).forEach((t) => t.f());
   return { voile, messages, erreursConsole, ecouteurs, window, attendre, minuteries };
 }
@@ -119,4 +121,47 @@ test('<atlas-bi> attend le composant 30 s par défaut, réglable par delai-conne
   assert.match(src, /delaiConnexion = Number\(this\.getAttribute\('delai-connexion'\)\) \|\| 30000/);
   assert.match(src, /observedAttributes\(\) \{ return \[[^\]]*'delai-connexion'/);
   assert.match(src, /creerClient\(\{ delai, delaiConnexion,/);
+});
+
+/* ---- Les origines prévenues : la même règle que celle que le composant écoute (lireHotes / normaliserOrigine, lib/bi/liaison.js) ---- */
+const FICHIER = fs.readFileSync(path.join(ICI, '..', 'lib', 'bi', 'amorcage.js'), 'utf8');
+const GARDES = { 'garde en ligne (index_v7.html)': null, 'garde en fichier (lib/bi/amorcage.js)': FICHIER };
+
+for (const [nom, source] of Object.entries(GARDES)) {
+  const origines = (p) => p.messages.map((x) => x.o).sort();
+  test('[' + nom + '] la configuration de la page (<meta name="atlas-bi-hotes">) fait seule autorité sur ?hote=', () => {
+    const p = page('?bi=1&hote=https%3A%2F%2Furl.example', { source, meta: 'https://conf.example https://conf2.example:8443' });
+    p.attendre(20000);
+    assert.deepEqual(origines(p), ['https://conf.example', 'https://conf2.example:8443']);
+  });
+
+  test('[' + nom + '] window.ATLAS_BI.hotes fait seule autorité sur ?hote=, et se cumule avec la meta', () => {
+    const p = page('?bi=1&hote=https%3A%2F%2Furl.example', { source, atlasBi: { hotes: ['https://a.example'] }, meta: 'https://b.example, https://a.example' });
+    p.attendre(20000);
+    assert.deepEqual(origines(p), ['https://a.example', 'https://b.example'], 'sans doublon');
+  });
+
+  test('[' + nom + '] une configuration sans aucune origine valide laisse la main à ?hote= (comme lireHotes)', () => {
+    const p = page('?bi=1&hote=https%3A%2F%2Furl.example', { source, meta: 'ftp://x.example * https://a.example/chemin', atlasBi: { hotes: 'pas un tableau' } });
+    p.attendre(20000);
+    assert.deepEqual(origines(p), ['https://url.example']);
+  });
+
+  test('[' + nom + '] la règle d’origine est celle de normaliserOrigine : mêmes entrées acceptées, mêmes entrées refusées', () => {
+    const entrees = ['https://a.example', 'http://localhost:8080', 'https://a.example/', 'https://a.example:8443', ' https://a.example ', 'https://a.example/x', 'https://u:p@a.example', 'https://a.example?x=1', 'https://a.example#h',
+      '*', 'https://*.example', 'ftp://a.example', 'javascript:alert(1)', 'null', 'data:text/html,x', 'a.example', ''];
+    for (const v of entrees) {
+      const attendu = normaliserOrigine(v);
+      const p = page('?bi=1&hote=' + encodeURIComponent(v), { source });
+      p.attendre(20000);
+      assert.deepEqual(origines(p), attendu ? [attendu] : [], JSON.stringify(v));
+    }
+  });
+}
+
+test('le garde en fichier garde le comportement de la page maigre : toujours le composant, sans test de ?bi=1', () => {
+  const p = page('?mode=view', { source: FICHIER });
+  assert.equal(p.minuteries.length > 0, true, 'les minuteries sont posées même sans ?bi=1 : cette page est toujours le composant');
+  p.attendre(20000);
+  assert.match(p.voile.textContent, /après 20 s/);
 });

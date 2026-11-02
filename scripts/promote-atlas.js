@@ -56,7 +56,7 @@ pageBi = pageBi.replace('<title>Atlas v7 — Carte</title>', '<title>Atlas — C
 pageBi = normaliserVersions(pageBi);
 if (fs.existsSync(verrouExterne) && fs.existsSync(manifesteExterne)) {
   const vendorHtml = require(path.join(src, 'tools', 'vendor-web-html.cjs'));
-  pageBi = vendorHtml.reecrireHtml(pageBi, JSON.parse(fs.readFileSync(manifesteExterne, 'utf8')));
+  pageBi = vendorHtml.reecrireHtml(pageBi, JSON.parse(fs.readFileSync(manifesteExterne, 'utf8')), { poserDossier: false });   // la page maigre n'a aucun script en ligne
   const resteBi = vendorHtml.resteExterne(pageBi);
   if (resteBi.length) { console.error('Echec : dependances encore en ligne dans bi.html : ' + resteBi.join(', ')); process.exit(1); }
 }

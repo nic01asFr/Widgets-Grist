@@ -51,6 +51,14 @@ test('la page réécrite vise vendor/ pour MapLibre, SunCalc, three.js (et ses e
   assert.equal(html.reecrireHtml(apres, manifeste), apres, 'réécrire deux fois ne change plus rien');
 });
 
+test('la page maigre du composant : réécrite SANS le script en ligne window.__ATLAS_VENDOR__ (poserDossier: false), pour se charger sous script-src \'self\'', () => {
+  const avec = html.reecrireHtml(PAGE, manifeste), sans = html.reecrireHtml(PAGE, manifeste, { poserDossier: false });
+  const ligne = /[ ]{4}<script>window\.__ATLAS_VENDOR__ = "\.\/vendor\/";<\/script>\n/;
+  assert.match(avec, /window\.__ATLAS_VENDOR__/); assert.doesNotMatch(sans, /__ATLAS_VENDOR__/);
+  assert.equal(sans, avec.replace(ligne, ''), 'le reste de la réécriture est identique');
+  assert.deepEqual(html.referencesExternes(sans), [], 'aucun CDN non plus');
+});
+
 test('le fichier du plugin Grist reste en ligne : il appartient à Grist, pas à nous', () => {
   const apres = html.reecrireHtml(PAGE, manifeste);
   assert.match(apres, /https:\/\/docs\.getgrist\.com\/grist-plugin-api\.js/);
