@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "fiche-capacites-0.1",
+  "title": "Fiche de capacites d'un widget (brouillon, non catalogue)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contrat",
+    "widget",
+    "version",
+    "presentation",
+    "verbes",
+    "non_couverts",
+    "contrats"
+  ],
+  "properties": {
+    "contrat": {
+      "const": "fiche-capacites-0.1"
+    },
+    "widget": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+[.][0-9]+[.][0-9]+$"
+    },
+    "presentation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "titre",
+        "resume"
+      ],
+      "properties": {
+        "titre": {
+          "type": "string",
+          "minLength": 1
+        },
+        "resume": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "verbes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "presenter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "configurer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "creer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "editer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "structurer": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "personnaliser": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "publier": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "exploiter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "recolter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "traiter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "non_couverts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "presenter",
+          "configurer",
+          "creer",
+          "editer",
+          "structurer",
+          "personnaliser",
+          "publier",
+          "exploiter",
+          "recolter",
+          "traiter"
+        ]
+      }
+    },
+    "contrats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "produit",
+        "lit"
+      ],
+      "properties": {
+        "produit": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "nom",
+              "version",
+              "catalogue"
+            ],
+            "properties": {
+              "nom": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "catalogue": {
+                "type": "boolean"
+              },
+              "empreinte": {
+                "type": "string",
+                "pattern": "^sha256:"
+              }
+            }
+          }
+        },
+        "lit": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "nom",
+              "version",
+              "catalogue"
+            ],
+            "properties": {
+              "nom": {
+                "type": "string",
+                "minLength": 1
+              },
+              "version": {
+                "type": "string",
+                "minLength": 1
+              },
+              "catalogue": {
+                "type": "boolean"
+              },
+              "empreinte": {
+                "type": "string",
+                "pattern": "^sha256:"
+              }
+            }
+          }
+        }
+      }
+    },
+    "prerequis": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "acces_grist": {
+          "enum": [
+            "none",
+            "read table",
+            "full"
+          ]
+        },
+        "tables": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "limites": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exemples": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "description": "Fiche lisible par une machine et une personne. Les regles que ce schema ne dit pas (pattern, unicite, empreinte obligatoire hors catalogue, verbe ni couvert ni declare) sont verifiees par scripts/valider-fiche.js."
+}

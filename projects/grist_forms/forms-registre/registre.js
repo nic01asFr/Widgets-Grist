@@ -113,7 +113,7 @@
       {
         nom: 'forms_verifier_format',
         verbe: 'structurer',
-        description: 'Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`).',
+        description: 'Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`.',
         entree: { type: 'object', required: ['format', 'valeur'], properties: { format: TEXTE, valeur: {} } },
         sortie: { type: 'object', required: ['connu', 'valide', 'normalise', 'message_si_invalide'] },
         nature: 'pure',

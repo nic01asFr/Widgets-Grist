@@ -14,6 +14,10 @@ const { monter } = require('../forms-registre/index.js');
 const { contenu, CHEMIN } = require('../forms-registre/generer-fiche.js');
 const { main } = require('../forms-registre/cli.js');
 const Registre = require('../forms-registre/registre.js');
+const { validerFiche } = require('../../../scripts/valider-fiche.js');
+const { verifierParite } = require('../../../scripts/parite-interfaces.js');
+const { spawnSync } = require('node:child_process');
+const os = require('node:os');
 
 const registre = monter();
 const fiche = registre.fiche();
@@ -106,15 +110,8 @@ describe('Registre Form Builder : les commandes', () => {
 });
 
 describe('Registre Form Builder : la fiche de capacités', () => {
-  it('respecte le contrat fiche-capacites-0.1 (forme et règles de la spécification)', () => {
-    assert.equal(fiche.contrat, 'fiche-capacites-0.1');
-    assert.match(fiche.widget, /^[a-z][a-z0-9-]*$/);
-    assert.match(fiche.version, /^[0-9]+\.[0-9]+\.[0-9]+$/);
-    assert.ok(fiche.presentation.titre && fiche.presentation.resume);
-    for (const [verbe, noms] of Object.entries(fiche.verbes)) {
-      assert.ok(Registre.VERBES.includes(verbe), verbe);
-      for (const n of noms) assert.match(n, /^[a-z]+_[a-z0-9_]+$/);
-    }
+  it('respecte le contrat fiche-capacites-0.1 et ses règles (validateur commun du dépôt)', () => {
+    assert.deepEqual(validerFiche(fiche, { catalogue: CATALOGUE.contrats }), []);
   });
 
   it('un verbe sans commande est listé dans non_couverts : aucun silence, aucun recouvrement', () => {
@@ -200,5 +197,33 @@ describe('Registre Form Builder : le CLI', () => {
     assert.equal(main(['forms_verifier_format', f], out, flux()), 0);
     assert.deepEqual(JSON.parse(out.texte), registre.appeler('forms_verifier_format', { format: 'codePostal', valeur: '13001' }).sortie);
     fs.rmSync(f);
+  });
+});
+
+describe('Registre Form Builder : parité registre / fiche / CLI', () => {
+  const CLI = path.join(DOSSIER, 'cli.js');
+  const lancer = (args) => spawnSync(process.execPath, [CLI, ...args], { encoding: 'utf8' });
+
+  it('le CLI lancé comme processus dit la même chose que le registre', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'forms-parite-'));
+    try {
+      const adaptateur = {
+        registre,
+        fiche,
+        listeCli: () => lancer(['--liste']).stdout.split(/\r?\n/).filter(Boolean).map((l) => l.trim().split(/\s+/).pop()),
+        cli: (nom, entree) => {
+          const f = path.join(dir, 'entree.json');
+          fs.writeFileSync(f, JSON.stringify(entree));
+          const r = lancer([nom, f]);
+          const texte = r.status === 0 ? r.stdout : r.stderr;
+          let sortie = null;
+          try { sortie = JSON.parse(texte); } catch (e) { /* une sortie illisible fera échouer la parité */ }
+          return { code: r.status, sortie };
+        }
+      };
+      assert.deepEqual(verifierParite(adaptateur), []);
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
