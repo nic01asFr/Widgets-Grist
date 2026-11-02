@@ -18,6 +18,11 @@ const SOURCE = path.join(RACINE, 'published', 'atlas');
 /** Ce qui ne part pas : la vitrine, ses images, les démonstrations. */
 const EXCLUS = [/^demos\//, /^vitrine\.json$/, /\.(jpg|jpeg|png|webp)$/i, /^essai/];
 const CLIENT = 'lib/bi/client-hote.js';
+/**
+ * Fichiers du dépôt qui voyagent avec le paquet sans être dans `published/atlas/` : la licence d'Atlas (MIT impose que l'avis accompagne chaque copie ;
+ * `vendor/LICENCES.txt` ne couvre que les dépendances). Chemin dans le paquet -> chemin depuis la racine du dépôt.
+ */
+const EXTRAS = { LICENSE: 'LICENSE' };
 
 const sha = (algo, octets, base64 = false) => crypto.createHash(algo).update(octets).digest(base64 ? 'base64' : 'hex');
 
@@ -29,8 +34,14 @@ function lister(dossier, base = dossier) {
 }
 
 /** Les fichiers du paquet (chemins relatifs, triés). */
-function fichiersDuPaquet(source = SOURCE) {
-  return lister(source).filter((f) => !EXCLUS.some((re) => re.test(f)));
+function fichiersDuPaquet(source = SOURCE, racine = RACINE) {
+  const extras = Object.keys(EXTRAS).filter((f) => fs.existsSync(path.join(racine, EXTRAS[f])));
+  return [...lister(source).filter((f) => !EXCLUS.some((re) => re.test(f))), ...extras].sort();
+}
+
+/** Le contenu d'un fichier du paquet : un extra vient de la racine du dépôt, tout le reste de `source`. */
+function lireFichier(chemin, source = SOURCE, racine = RACINE) {
+  return fs.readFileSync(EXTRAS[chemin] && !fs.existsSync(path.join(source, chemin)) ? path.join(racine, EXTRAS[chemin]) : path.join(source, chemin));
 }
 
 /** Le contrat du composant, lu dans son document (`| Contrat du composant carte BI | 0.3 ... |`). */
@@ -43,7 +54,7 @@ function versionContrat(racine = RACINE) {
 /** `PAQUET.json` : le contenu, pour une version et un commit donnés. */
 function construireManifeste({ source = SOURCE, racine = RACINE, commit = null, genere = new Date().toISOString() } = {}) {
   const pkg = JSON.parse(fs.readFileSync(path.join(source, 'package.json'), 'utf8'));
-  const fichiers = fichiersDuPaquet(source).map((f) => { const o = fs.readFileSync(path.join(source, f)); return { chemin: f, octets: o.length, sha256: sha('sha256', o) }; });
+  const fichiers = fichiersDuPaquet(source, racine).map((f) => { const o = lireFichier(f, source, racine); return { chemin: f, octets: o.length, sha256: sha('sha256', o) }; });
   const client = fs.readFileSync(path.join(source, CLIENT));
   const entree = /VERSION_CLIENT\s*=\s*(\d+)/.exec(client.toString('utf8'));
   return {
@@ -68,7 +79,7 @@ function ecrire({ sortie, source = SOURCE, racine = RACINE, commit = null } = {}
   const manifeste = construireManifeste({ source, racine, commit });
   const dossier = path.join(sortie, `atlas-web-${manifeste.version}`);
   fs.rmSync(dossier, { recursive: true, force: true });
-  for (const f of manifeste.fichiers.map((x) => x.chemin)) { fs.mkdirSync(path.dirname(path.join(dossier, f)), { recursive: true }); fs.copyFileSync(path.join(source, f), path.join(dossier, f)); }
+  for (const f of manifeste.fichiers.map((x) => x.chemin)) { fs.mkdirSync(path.dirname(path.join(dossier, f)), { recursive: true }); fs.writeFileSync(path.join(dossier, f), lireFichier(f, source, racine)); }
   fs.writeFileSync(path.join(dossier, 'PAQUET.json'), JSON.stringify(manifeste, null, 2) + '\n');
   const journal = notesDeVersion(manifeste.version, racine);
   const notes = [
@@ -90,4 +101,4 @@ if (require.main === module) {
   console.log(`paquet ${manifeste.version} : ${manifeste.fichiers.length} fichiers, ${(manifeste.fichiers.reduce((n, f) => n + f.octets, 0) / 1048576).toFixed(1)} Mo -> ${dossier}`);
 }
 
-module.exports = { fichiersDuPaquet, construireManifeste, notesDeVersion, versionContrat, ecrire, EXCLUS };
+module.exports = { fichiersDuPaquet, lireFichier, construireManifeste, notesDeVersion, versionContrat, ecrire, EXCLUS, EXTRAS };
