@@ -1,5 +1,7 @@
 # Paquet hors ligne : artefact `donnees`
 
+> **Deux paquets, deux contenus.** Celui-ci est un dossier de **données** (contours et populations des unités administratives). Le *paquet web* (`atlas-web-v<version>`, voir `EXPLOITATION-EXTERNE-BI.md` § 2) contient le **code** du composant : les deux se copient séparément, et l'un ne remplace pas l'autre.
+
 Un **dossier ordinaire** (sans git ni npm) que l'application hôte copie tel quel : contours et populations des unités administratives pour le composant carte BI, utilisables sans réseau. Il est produit par un outil rejouable ; **on ne versionne pas les départements** (20 Mo pour la France entière) : on versionne le manifeste, le client et le vérificateur, et on régénère les fichiers utiles.
 
 ## Construire

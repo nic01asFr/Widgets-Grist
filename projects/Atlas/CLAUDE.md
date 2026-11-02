@@ -18,7 +18,7 @@ Atlas/
 │   └── reseau/            # réseau routier IGN : client WFS BD TOPO, graphe, calage, itinéraire IGN, filiation (bibliothèques, pas encore branchées)
 ├── docs/                  # cadrages (CADRAGE-*.md), BINDING-*, CARTE-DES-EXPOSITIONS, BILAN-*, études-*
 ├── tests/                 # node --test (88 fichiers, 1241 tests au 02/10/2026)
-├── tools/                 # verifier-imports.mjs, verifier-references.mjs, livrable-autoportant.mjs, mesurer-calage.mjs
+├── tools/                 # verifier-imports.mjs, verifier-references.mjs, mesurer-calage.mjs, controle-copie.mjs (contrôle d'une copie du paquet web ; il part AVEC le paquet « carte seule »), generer-client-hote.mjs, vendoriser-web.mjs, construire-paquet.mjs (paquet de DONNÉES hors ligne, à ne pas confondre avec le paquet web de scripts/paquet-atlas.js) ; l'outil de livrable en fichier seul n'est pas versionné et ne fonctionne plus depuis la 1.28
 └── CLAUDE.md
 ```
 
