@@ -407,10 +407,11 @@ telle quelle.
 | `forms-registre/registre.js` | Les commandes (UMD, modules injectés), `appeler`, `lister`, `fiche()` |
 | `forms-registre/index.js` | Montage pour Node : noyau, validateur de schéma, contrats déclarés avec empreintes mesurées |
 | `forms-registre/cli.js` | `--liste`, `--decrire <commande>`, `<commande> <entree.json \| ->` ; sortie 0 réussi, 1 refus, 2 usage |
+| `forms-registre/mcp.js` | Serveur MCP (stdio, JSON-RPC, sans dépendance) : mêmes commandes que le registre ; une commande qui écrit n'est ni listée ni appelable sans `--autoriser-ecriture` |
 | `forms-registre/fiche-capacites.json` | La fiche (`fiche-capacites-0.1`), GÉNÉRÉE : `node projects/grist_forms/forms-registre/generer-fiche.js` |
 | `tests/forms-registre.test.js` | Descriptions, exemples exécutés, lecture seule, fiche, CLI |
 
-Règles : v1 n'écrit rien (les plans de schéma et de publication sont rendus, pas appliqués) ; une entrée invalide est refusée avec ses écarts, jamais par exception ; les exemples sont écrits à part, sans organisation ni donnée réelle ; ThemeDef et Survey Manifest ne sont pas au catalogue : ils se déclarent `catalogue: false` avec leur empreinte. Après toute modification d'une commande, relancer `generer-fiche.js` (un test refuse un fichier périmé). Prochaines étapes : validateur de fiche et test de parité (appkit), serveur MCP, page WebMCP, vitrine générée.
+Règles : v1 n'écrit rien (les plans de schéma et de publication sont rendus, pas appliqués) ; une entrée invalide est refusée avec ses écarts, jamais par exception ; les exemples sont écrits à part, sans organisation ni donnée réelle ; ThemeDef et Survey Manifest ne sont pas au catalogue : ils se déclarent `catalogue: false` avec leur empreinte. Après toute modification d'une commande, relancer `generer-fiche.js` (un test refuse un fichier périmé). La fiche est contrôlée par `scripts/valider-fiche.js` et la parité registre / fiche / CLI par `scripts/parite-interfaces.js` (fournis par appkit). Prochaines étapes : page WebMCP, vitrine générée. Le serveur MCP est un paquet à part : jamais déployé sans accord.
 
 ## Audience — rappel UX
 
