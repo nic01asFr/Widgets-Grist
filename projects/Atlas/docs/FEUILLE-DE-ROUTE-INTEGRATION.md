@@ -31,6 +31,25 @@ Branche locale `atlas/integration-chez-soi`, un commit par tâche, **rien publi�
 
 **Écarts avec ce document, à connaître** : la 1.4 n'a pas été faite par des fichiers CSS mais par des feuilles construites (même effet, sans requête de plus, repli sur `<style>` pour un navigateur ancien) ; l'outil de contrôle part dans le paquet carte seule (pas seulement dans le dépôt) pour qu'un hôte puisse le lancer chez lui.
 
+## 0 bis. Essais de cadrage (02/11/2026)
+
+Dix essais mesurés (Chrome, copie « carte seule » promue et servie en local) pour fermer ce qui restait ouvert. Les captures et pages d'essai ne sont pas versionnées.
+
+| # | Essai | Résultat | Conséquence pour la feuille de route |
+|---|---|---|---|
+| E1 | Service worker réel qui précache `PRECACHE.json`, coupure de toute requête externe | la carte démarre sans réseau (page, scripts, scène, cadrage ; connexion 0,3 s) ; l'émulation « hors ligne » de Chrome **ne coupe pas les workers de MapLibre** | la liste de précache est exacte ; piège d'essai documenté |
+| E2 | Même essai avec **des étiquettes**, polices externes refusées | **les points disparaissent avec leurs étiquettes** (carte blanche), sans erreur ni événement vers l'hôte | **défaut de fond** : 3.1 passe de confort à correctif (voir 3.1 et 3.1b) |
+| E3 | Prototype : Noto Sans Regular embarqué (3 plages, 238 Ko), même scène, politique n'autorisant **que `'self'`** | 12 points et leurs étiquettes affichés, accents compris (Évreux, Cœur, Saint-Étienne, L’Haÿ…), 3 requêtes locales | 3.1 faisable : adresse absolue construite depuis le module |
+| E4 | Retrait de la couche d'étiquettes puis rechargement de la source, polices toujours refusées | **les points ne reviennent pas** | le correctif de résilience n'est pas trivial : à concevoir (3.1b) |
+| E5 | Plages de caractères des noms des données embarquées (473 noms) | tout tient dans 0-255 (76 Ko) ; 256-511 (œ) et 8192-8447 (’) pour du texte hôte | taille à embarquer : 76 Ko minimum, 238 Ko pour le français courant |
+| E6 | Copie sur la **même origine** que l'hôte, fichier compromis, sous la CSP stricte | il lit le titre de l'hôte, écrit son stockage, modifie son DOM, accède à ses cookies | recommandation d'origine dédiée confirmée (mesurée en attaque) |
+| E7 | Même fichier, copie servie par **une autre origine** | les quatre accès échouent (`SecurityError`) | idem |
+| E8 | Navigateur sans feuilles construites (simulé : `replaceSync` retiré) | l'interface fonctionne ; sous `style-src 'self'` stricte elle n'est pas stylée (3 violations) ; avec les empreintes des 4 feuilles, elle l'est, sans `'unsafe-inline'` | tâche 1.7 : empreintes des feuilles dans `CSP.txt` |
+| E9 | Démarrage sur réseau bridé (copie de 2 Mo) | **16 s** à « Fast 3G », **55 s** à « Slow 3G » ; l'avertissement de 20 s arrive, puis la connexion aboutit | délai par défaut à relever bien au-dessus de 45 s (lot 2) |
+| E10 | **Usage complet de l'hôte de référence** avec le client version 1 et avec le client version 5, sous la CSP stricte : `connecter`, `setTheme`, `setFond('plan')`, `setScene` (bulles à actions, liste liée, légende cible), `fitTo`, `flyTo`, `batch`, `setLayerVisibility`, `select`, `deconnecter` ; événements `ready`, `camera`, `classe`, `action` | tout réussit et les deux clients se comportent à l'identique | compatibilité d'un ancien client mesurée pour l'usage réel |
+
+**Non testable ici** : Firefox et Safari (non installés). Le repli sans feuilles construites est simulé dans Chrome.
+
 ## 1. Ce que les vérifications ont établi
 
 | # | Constat | Preuve | Conséquence |
@@ -85,6 +104,7 @@ Version visée : 1.43.0, avec un paquet figé `atlas-web-v1.43.0` (étiquette po
 | 1.4 Feuilles de style | les quatre feuilles créées à l'exécution (V9) passent en fichiers CSS ou en CSSOM | essai avec `style-src 'self'` sans violation ; rendu visuel identique (captures avant/après) |
 | 1.5 Outil de contrôle d'une copie | `tools/controle-copie.mjs` tiré du banc d'essai : empreintes, démarrage, `ping`, `setScene`, violations CSP, fichiers manquants | rejoue le scénario complet sur un dossier donné |
 | 1.6 Compatibilité | table paquet, contrat, `VERSION_CLIENT`, MapLibre ; règle « un paquet par version de contrat » (et un workflow qui le rappelle) | table dans le guide, vérifiée par test contre `PAQUET.json` |
+| 1.7 Empreintes des feuilles dans `CSP.txt` | **à faire** (essai E8) : le générateur ajoute à `style-src` les SHA-256 des quatre feuilles (constantes de `zone`, `legende`, `temps`, `bulle`), pour les navigateurs sans feuilles construites | essai navigateur avec `replaceSync` retiré : interface stylée, zéro violation |
 
 Dépend de : accord de Nicolas pour coder et pour l'étiquette. Aucun avis aux hôtes n'est requis pour le contrat ; un message d'information suffit (la page `bi.html` change).
 
@@ -103,7 +123,8 @@ Dépend de : accord de Nicolas pour coder et pour l'étiquette. Aucun avis aux h
 
 | Tâche | Question à trancher | Piste |
 |---|---|---|
-| 3.1 Polices du fond « aucun » | le texte hors ligne est-il nécessaire ? | polices embarquées dans le paquet, ou option pour lever la dépendance à `demotiles.maplibre.org` |
+| 3.1 Polices du fond « aucun » et du fond de repli | **à faire avant la 1.43.0** (essais E2, E3, E5) | Noto Sans Regular embarqué (76 Ko pour les noms des données embarquées, 238 Ko pour le français courant), copié depuis le service de fonds par `tools/vendoriser-web.mjs` (verrou SHA-384), avec le texte de la licence SIL OFL 1.1 ; adresse absolue construite depuis le module ; `PRECACHE.json`, `CSP.txt` et guide mis à jour |
+| 3.1b Une couche ne disparaît pas quand une police manque | **à concevoir** (essais E2, E4) | vérifier la police avant d'ajouter les étiquettes et n'ajouter celles-ci que si elle répond ; une police personnalisée de charte (`policeSymboles`) non embarquée a le même effet |
 | 3.2 Style de carte du client | un client veut-il son propre style ou ses propres tuiles ? | `setFond` avec une adresse de style (candidat de contrat 0.8, additif) |
 | 3.3 Production | le service de fonds par défaut est sans engagement (V15) | guide « héberger ses tuiles » ; auto-hébergement documenté |
 
