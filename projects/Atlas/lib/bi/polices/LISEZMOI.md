@@ -16,7 +16,8 @@ Les étiquettes que le composant ajoute à la carte (`visuel.etiquette`, marqueu
 
 ## Limites
 
-- **Une seule police, un seul style** (Regular), **latin seulement**. Un texte en arabe, en cyrillique, en grec ou en caractères chinois, ou une police personnalisée demandée par une charte (`policeSymboles`), demande des fichiers que cette copie n'a pas : la couche concernée n'est alors pas dessinée. Un hôte qui en a besoin doit fournir ses propres glyphes (voir la feuille de route, lot 3).
+- **Une seule police, un seul style** (Regular), **latin seulement**. Un texte qui sort des trois plages (l'ʻokina des noms polynésiens, le grec, le cyrillique, l'arabe, les caractères chinois…) demande des fichiers que cette copie n'a pas. Le composant le **détecte avant d'ajouter le texte** (il vérifie les plages que les valeurs affichées exigent), monte la couche **sans étiquettes** et le dit (`_avertissements` de `setScene`, événement `error` code `police`, niveau `avertissement`) : sans cette précaution, MapLibre ne dessinerait pas la couche du tout (mesuré). Pour afficher ce texte, il faut fournir ses propres glyphes (voir la feuille de route, lot 3).
+- **La charte de l'hôte ne fixe pas la police de la carte** : `policeSymboles` y est ignorée. Seuls interviennent la police d'étiquettes du fond de plan s'il en a une (fond par défaut, Plan IGN) et, sinon, Noto Sans Regular.
 - Les fonds qui apportent leurs propres polices (fond par défaut OpenFreeMap, plan IGN) ne passent pas par ce dossier.
 
 ## Licence et origine

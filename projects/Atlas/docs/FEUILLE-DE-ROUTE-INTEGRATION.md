@@ -24,7 +24,7 @@ Branche locale `atlas/integration-chez-soi`, un commit par tâche, **rien publi�
 | 1.7 Empreintes des feuilles d'interface dans `CSP.txt` | **fait** et mesuré avec le vrai `CSP.txt` (repli simulé : interface stylée, zéro violation) | `581169fb` |
 | 3.1 Polices de carte embarquées (Noto Sans Regular, 3 plages, 238 Ko, licences jointes, verrou SHA-384) | **fait** : sans aucun hôte externe autorisé, texte compris, les points sont dessinés | `35b74acd` |
 | Outil de contrôle : étape « rendu » (points réellement dessinés) et `--base-aucune` | **fait** ; témoin négatif : sans les polices, l'outil échoue sur « aucun point dessiné » | `f798fa02` |
-| 3.1b Une couche ne disparaît pas quand une police manque (police personnalisée, alphabet non latin) | **à concevoir** | n/a |
+| 3.1b Une couche ne disparaît pas quand une police manque (alphabet non latin, serveur de glyphes inaccessible) | **fait** : vérification des plages exigées par les textes AVANT d'ajouter les étiquettes ; couche montée sans texte, avertissement et événement `error` code `police` | voir l'historique de la branche |
 | Étiquette du paquet, version, journal, vitrine | **à faire, avec l'accord de Nicolas** | n/a |
 | Lots 2 à 7 | non commencés | n/a |
 
@@ -128,7 +128,7 @@ Dépend de : accord de Nicolas pour coder et pour l'étiquette. Aucun avis aux h
 | Tâche | Question à trancher | Piste |
 |---|---|---|
 | 3.1 Polices du fond « aucun » et du fond de repli | **fait** (voir l'avancement) ; réalisé avec des fichiers dans le dépôt (`lib/bi/polices/`) plutôt que par le vendoriseur : pas de téléchargement à la publication, et ça marche en développement (essais E2, E3, E5) | Noto Sans Regular embarqué (76 Ko pour les noms des données embarquées, 238 Ko pour le français courant), copié depuis le service de fonds par `tools/vendoriser-web.mjs` (verrou SHA-384), avec le texte de la licence SIL OFL 1.1 ; adresse absolue construite depuis le module ; `PRECACHE.json`, `CSP.txt` et guide mis à jour |
-| 3.1b Une couche ne disparaît pas quand une police manque | **à concevoir** (essais E2, E4) | vérifier la police avant d'ajouter les étiquettes et n'ajouter celles-ci que si elle répond ; une police personnalisée de charte (`policeSymboles`) non embarquée a le même effet |
+| 3.1b Une couche ne disparaît pas quand une police manque | **fait** (essais E2, E4) | `lib/bi/police.js`, branché dans `setScene` avant le montage. Les plages de caractères exigées par les textes affichés sont vérifiées auprès du fournisseur de glyphes ; si l'une manque, la couche est montée sans étiquettes, avec un avertissement et l'événement `error` code `police`. **Correction de mon analyse** : la charte de l'hôte ne fixe PAS la police de la carte (`policeSymboles` y est ignorée) ; les vraies causes sont un serveur de glyphes inaccessible et les caractères hors des plages embarquées |
 | 3.2 Style de carte du client | un client veut-il son propre style ou ses propres tuiles ? | `setFond` avec une adresse de style (candidat de contrat 0.8, additif) |
 | 3.3 Production | le service de fonds par défaut est sans engagement (V15) | guide « héberger ses tuiles » ; auto-hébergement documenté |
 
