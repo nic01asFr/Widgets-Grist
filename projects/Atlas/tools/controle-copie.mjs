@@ -5,7 +5,7 @@
 //   node controle-copie.mjs <dossier>                        contrôles sur les fichiers (sans navigateur)
 //   node controle-copie.mjs <dossier> --navigateur           + démarre un navigateur sans fenêtre (Chrome ou Edge) et rejoue un scénario complet
 //   node controle-copie.mjs <dossier> --serveur [--port N]   + sert la copie et une page de contrôle, à ouvrir soi-même dans un navigateur
-//   options : --chrome <chemin>  --delai <secondes, 90>  --json  --sans-csp
+//   options : --chrome <chemin>  --delai <secondes, 90>  --json  --sans-csp  --base-aucune (carte sans fond, aucun hôte externe autorisé : texte compris)
 //
 // Fichier AUTONOME : aucun module à installer, aucune importation du dépôt ; il accompagne le paquet « carte seule » pour qu'un hôte puisse le lancer dans sa copie.
 // Code de sortie : 0 si tout est conforme, 1 s'il y a au moins un ÉCHEC (un AVERTISSEMENT ne fait pas échouer).
@@ -72,6 +72,14 @@ export function blocsEnLigne(html) {
 export function politiqueDe(texteCsp) {
   const l = String(texteCsp).split('\n').find((x) => x.startsWith('Content-Security-Policy:'));
   return l ? l.slice('Content-Security-Policy:'.length).trim() : null;
+}
+
+/** La même politique, sans aucun hôte externe dans img-src, connect-src ni font-src : prouve qu'une copie fonctionne sans rien demander à personne d'autre. */
+export function sansHotesExternes(politique) {
+  return String(politique).split(';').map((d) => d.trim()).filter(Boolean).map((d) => {
+    const [nom, ...sources] = d.split(/\s+/);
+    return ['img-src', 'connect-src', 'font-src'].includes(nom) ? [nom, ...sources.filter((x) => !/^https?:/.test(x))].join(' ') : d;
+  }).join('; ');
 }
 
 const directive = (politique, nom) => (politique.split(';').map((d) => d.trim()).find((d) => d === nom || d.startsWith(nom + ' ')) || '');
@@ -163,6 +171,7 @@ import { creerClient, transportFenetre } from '/lib/bi/client-hote.js';
 const delaiConnexion = Number(new URLSearchParams(location.search).get('delai') || 60) * 1000;
 const composant = new URL('/bi.html', location.origin);
 composant.searchParams.append('hote', location.origin);
+if (new URLSearchParams(location.search).get('base')) composant.searchParams.set('base', new URLSearchParams(location.search).get('base'));
 const cadre = document.getElementById('cadre');
 const res = { etapes: [], evenements: [] };
 const client = creerClient({ delai: 20000, delaiConnexion, transport: transportFenetre({ fenetre: window, cadre, origineComposant: composant.origin }) });
@@ -188,6 +197,15 @@ if (await etape('connexion', async () => { const i = await client.connecter(); r
   await etape('geometries', async () => { const r = await client.getFeatures('sites'); return Array.isArray(r) ? r.length : Object.keys(r || {}).length; });
   await etape('camera', async () => !!(await client.getCamera()));
   await new Promise((r) => setTimeout(r, 2500));
+  // Les étapes ci-dessus réussissent même quand la carte reste BLANCHE (mesuré : polices de carte inaccessibles = la couche entière n'est plus dessinée, sans erreur) :
+  // on vérifie donc que les points sont réellement rendus, par la poignée de mise au point de la carte (même origine).
+  await etape('rendu', async () => {
+    const carte = cadre.contentWindow.__atlasMap;
+    if (!carte || typeof carte.queryRenderedFeatures !== 'function') return 'non vérifié (poignée de la carte absente)';
+    const n = carte.queryRenderedFeatures({ layers: ['bi-pts-sites'] }).length;
+    if (!n) throw new Error('aucun point dessiné : la couche est invisible (police de carte, style ou tuile en échec)');
+    return n + ' points dessinés';
+  });
 }
 res.duree = Math.round(performance.now() - t0);
 document.getElementById('res').textContent = JSON.stringify(res, null, 1);
@@ -228,14 +246,15 @@ function trouverNavigateur(demande) {
 }
 
 /** Rejoue le scénario dans un navigateur. @returns {Promise<{ verdicts: object[], resultat: object|null }>} */
-export async function controlerNavigateur(dossier, { port = 0, navigateur = true, chrome = null, delai = 90, sansCsp = false, journal = () => {} } = {}) {
+export async function controlerNavigateur(dossier, { port = 0, navigateur = true, chrome = null, delai = 90, sansCsp = false, baseAucune = false, journal = () => {} } = {}) {
   const verdicts = [];
   const dire = (id, niveau, texte) => verdicts.push({ id, niveau, texte });
   const cspTxt = path.join(dossier, 'CSP.txt');
-  const politique = !sansCsp && fs.existsSync(cspTxt) ? politiqueDe(fs.readFileSync(cspTxt, 'utf8')) : null;
+  const politiqueTxt = !sansCsp && fs.existsSync(cspTxt) ? politiqueDe(fs.readFileSync(cspTxt, 'utf8')) : null;
+  const politique = politiqueTxt && baseAucune ? sansHotesExternes(politiqueTxt) : politiqueTxt;
   const { serveur, etat, pret } = creerServeur(dossier, { politique, sansCsp });
   await new Promise((r) => serveur.listen(port, '127.0.0.1', r));
-  const adresse = 'http://127.0.0.1:' + serveur.address().port + '/controle.html?delai=60';
+  const adresse = 'http://127.0.0.1:' + serveur.address().port + '/controle.html?delai=60' + (baseAucune ? '&base=aucune' : '');
   let processus = null;
   const profil = fs.mkdtempSync(path.join(os.tmpdir(), 'controle-atlas-'));
   try {
@@ -254,7 +273,7 @@ export async function controlerNavigateur(dossier, { port = 0, navigateur = true
       if (fatales.length) dire('evenement-error', 'echec', 'l\'hôte a reçu un événement error fatal : ' + fatales.map((e) => e.charge.code + ' ' + e.charge.message).join(' ; '));
     }
     await new Promise((r) => setTimeout(r, 500));
-    if (politique) dire('csp-violations', etat.violations.length ? 'echec' : 'ok', etat.violations.length ? `${etat.violations.length} violation(s) de la politique de CSP.txt : ${etat.violations.slice(0, 4).map((v) => v.directive + ' ' + v.bloque).join(' ; ')}` : 'aucune violation de la politique de CSP.txt');
+    if (politique) dire('csp-violations', etat.violations.length ? 'echec' : 'ok', etat.violations.length ? `${etat.violations.length} violation(s) de la politique${baseAucune ? ' sans hôte externe' : ' de CSP.txt'} : ${etat.violations.slice(0, 4).map((v) => v.directive + ' ' + v.bloque).join(' ; ')}` : baseAucune ? 'aucune violation, aucun hôte externe autorisé (base=aucune, texte compris)' : 'aucune violation de la politique de CSP.txt');
     else dire('csp-violations', 'avertissement', 'politique non appliquée (pas de CSP.txt, ou --sans-csp)');
     dire('introuvables', etat.introuvables.length ? 'echec' : 'ok', etat.introuvables.length ? `${etat.introuvables.length} fichier(s) réclamé(s) mais absent(s) : ${[...new Set(etat.introuvables)].slice(0, 5).join(', ')}` : 'aucun fichier réclamé et absent');
     return { verdicts, resultat };
@@ -272,7 +291,7 @@ const MARQUES = { ok: 'OK            ', echec: 'ÉCHEC         ', avertissement:
 async function principal(argv) {
   const arg = (nom, defaut = null) => { const i = argv.indexOf(nom); return i >= 0 ? argv[i + 1] : defaut; };
   const dossier = argv.find((a) => !a.startsWith('--') && argv[argv.indexOf(a) - 1] !== '--port' && argv[argv.indexOf(a) - 1] !== '--chrome' && argv[argv.indexOf(a) - 1] !== '--delai');
-  if (!dossier || argv.includes('--aide')) { console.log('usage : node controle-copie.mjs <dossier> [--navigateur | --serveur [--port N]] [--chrome <chemin>] [--delai <s>] [--sans-csp] [--json]'); return dossier ? 0 : 2; }
+  if (!dossier || argv.includes('--aide')) { console.log('usage : node controle-copie.mjs <dossier> [--navigateur | --serveur [--port N]] [--chrome <chemin>] [--delai <s>] [--sans-csp] [--base-aucune] [--json]'); return dossier ? 0 : 2; }
   const racine = path.resolve(dossier);
   if (!fs.existsSync(racine)) { console.error('dossier introuvable : ' + racine); return 2; }
   const verdicts = [];
@@ -280,7 +299,7 @@ async function principal(argv) {
   verdicts.push(...v1);
   const bavard = !argv.includes('--json');
   if ((argv.includes('--navigateur') || argv.includes('--serveur')) && manifeste && v1.every((v) => v.id !== 'page' || v.niveau !== 'echec')) {
-    const r = await controlerNavigateur(racine, { port: Number(arg('--port', 0)), navigateur: argv.includes('--navigateur'), chrome: arg('--chrome'), delai: Number(arg('--delai', 90)), sansCsp: argv.includes('--sans-csp'), journal: (t) => bavard && console.log('· ' + t) });
+    const r = await controlerNavigateur(racine, { port: Number(arg('--port', 0)), navigateur: argv.includes('--navigateur'), chrome: arg('--chrome'), delai: Number(arg('--delai', 90)), sansCsp: argv.includes('--sans-csp'), baseAucune: argv.includes('--base-aucune'), journal: (t) => bavard && console.log('· ' + t) });
     verdicts.push(...r.verdicts);
   }
   const echecs = verdicts.filter((v) => v.niveau === 'echec').length, avertissements = verdicts.filter((v) => v.niveau === 'avertissement').length;

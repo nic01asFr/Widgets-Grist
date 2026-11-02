@@ -13,7 +13,7 @@ import http from 'node:http';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { controlerFichiers, controlerNavigateur, creerServeur, blocsEnLigne, politiqueDe, fermeture } from '../tools/controle-copie.mjs';
+import { controlerFichiers, controlerNavigateur, creerServeur, blocsEnLigne, politiqueDe, fermeture, sansHotesExternes } from '../tools/controle-copie.mjs';
 
 const require = createRequire(import.meta.url);
 const ICI = path.dirname(fileURLToPath(import.meta.url));
@@ -210,5 +210,28 @@ test('SCÉNARIO COMPLET dans un navigateur sans fenêtre (ATLAS_TEST_NAVIGATEUR=
     const echecs = r.verdicts.filter((v) => v.niveau === 'echec');
     assert.deepEqual(echecs, [], JSON.stringify(echecs));
     for (const e of ['connexion', 'scene', 'legende', 'temps', 'couche-administrative', 'geometries', 'camera']) assert.ok(r.verdicts.some((v) => v.id === 'etape-' + e && v.niveau === 'ok'), e);
+  } finally { nettoyer(); }
+});
+
+test('sansHotesExternes : la même politique, sans aucun hôte externe dans img-src, connect-src et font-src, le reste intact', () => {
+  const p = "default-src 'none'; script-src 'self'; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org https://data.geopf.fr; font-src 'self' data:; frame-ancestors 'self'";
+  assert.equal(sansHotesExternes(p), "default-src 'none'; script-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self' data:; frame-ancestors 'self'");
+  assert.equal(sansHotesExternes(sansHotesExternes(p)), sansHotesExternes(p), 'idempotente');
+});
+
+test('la page de contrôle vérifie que les points sont DESSINÉS (une carte blanche réussit toutes les autres étapes) et sait demander base=aucune', () => {
+  const source = fs.readFileSync(OUTIL, 'utf8');
+  assert.match(source, /etape\('rendu'/); assert.match(source, /queryRenderedFeatures/); assert.match(source, /aucun point dessiné/);
+  assert.match(source, /--base-aucune/); assert.match(source, /&base=aucune/);
+});
+
+const POLICES_PUBLIEES = fs.existsSync(path.join(ICI, '..', '..', '..', 'published', 'atlas', 'lib', 'bi', 'polices'));
+test('SANS AUCUN HÔTE EXTERNE (base=aucune, texte compris) dans un navigateur sans fenêtre : les points sont dessinés (ATLAS_TEST_NAVIGATEUR=1, polices promues)', { skip: process.env.ATLAS_TEST_NAVIGATEUR !== '1' || !POLICES_PUBLIEES }, async () => {
+  const { dossier, nettoyer } = paquet();
+  try {
+    const r = await controlerNavigateur(dossier, { navigateur: true, delai: 90, baseAucune: true });
+    const echecs = r.verdicts.filter((v) => v.niveau === 'echec'); assert.deepEqual(echecs, [], JSON.stringify(echecs));
+    assert.ok(r.verdicts.some((v) => v.id === 'etape-rendu' && v.niveau === 'ok'), 'rendu des points');
+    assert.ok(r.verdicts.some((v) => v.id === 'csp-violations' && /aucun hôte externe autorisé/.test(v.texte)));
   } finally { nettoyer(); }
 });
