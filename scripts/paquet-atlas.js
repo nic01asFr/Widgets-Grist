@@ -80,6 +80,25 @@ function fichiersGeneres({ source = SOURCE, racine = RACINE, profil = 'complet' 
   };
 }
 
+/**
+ * Les bibliothèques tierces que le paquet emporte, avec leur version et l'empreinte SHA-384 de chaque fichier (lues dans `vendor/verrou-externe.json`) : un hôte qui a déjà sa
+ * propre copie de MapLibre voit tout de suite s'il peut la servir à la place (même version, mêmes empreintes) sans toucher aux fichiers du paquet.
+ */
+function dependancesDuPaquet(source, fichiers) {
+  const verrou = path.join(source, 'vendor', 'verrou-externe.json');
+  if (!fs.existsSync(verrou)) return {};
+  const entrees = JSON.parse(fs.readFileSync(verrou, 'utf8')).fichiers || {};
+  const sortie = {};
+  for (const [chemin, e] of Object.entries(entrees).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) {
+    if (!fichiers.includes('vendor/' + chemin)) continue;
+    const lib = chemin.split('/')[0];
+    const version = /@(\d+\.\d+\.\d+)/.exec(e.origine || '');
+    const cible = sortie[lib] || (sortie[lib] = { version: version ? version[1] : null, fichiers: [] });
+    cible.fichiers.push({ chemin: 'vendor/' + chemin, octets: e.taille, integrite: e.integrite });
+  }
+  return sortie;
+}
+
 /** `PAQUET.json` : le contenu, pour une version, un profil et un commit donnés. */
 function construireManifeste({ source = SOURCE, racine = RACINE, commit = null, genere = new Date().toISOString(), profil = 'complet' } = {}) {
   verifierProfil(profil);
@@ -92,6 +111,7 @@ function construireManifeste({ source = SOURCE, racine = RACINE, commit = null, 
   return {
     nom: profil === 'bi' ? 'atlas-web-bi' : 'atlas-web', profil, version: pkg.version, contrat: versionContrat(racine), commit, genere,
     client: { fichier: CLIENT, versionClient: entree ? Number(entree[1]) : null, empreinte: 'sha384-' + sha('sha384', client, true), octets: client.length },
+    dependances: dependancesDuPaquet(source, fichiers.map((x) => x.chemin)),
     fichiers,
     note: profil === 'bi'
       ? 'Paquet web d\'Atlas, carte seule : la page maigre du composant (bi.html), l\'élément <atlas-bi>, MapLibre, les contours de repli et le client des hôtes, sans CDN. CSP.txt : la politique recommandée ; PRECACHE.json : les fichiers de la page. Vérifier une copie : SHA-256 de chaque fichier ci-dessus.'

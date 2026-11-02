@@ -123,6 +123,24 @@ test('le manifeste du profil carte seule se nomme, liste les fichiers générés
   assert.equal(construireManifeste({ commit: 'abc1234', genere: '2026-11-02T00:00:00.000Z' }).profil, 'complet');
 });
 
+test('PAQUET.json dit les bibliothèques tierces emportées, avec leur version et l’empreinte SHA-384 de chaque fichier : un hôte qui a sa propre copie de MapLibre voit s’il peut la servir à la place', () => {
+  const m = construireManifeste({ profil: 'bi', commit: 'abc1234', genere: '2026-11-02T00:00:00.000Z' });
+  assert.deepEqual(Object.keys(m.dependances), ['maplibre-gl'], 'la carte seule n\'emporte que MapLibre');
+  const ml = m.dependances['maplibre-gl'];
+  assert.match(ml.version, /^\d+\.\d+\.\d+$/);
+  const verrou = JSON.parse(fs.readFileSync(path.join(SOURCE, 'vendor', 'verrou-externe.json'), 'utf8')).fichiers;
+  assert.ok(verrou['maplibre-gl/maplibre-gl.js'].origine.includes('maplibre-gl@' + ml.version));
+  for (const f of ml.fichiers) {
+    const octets = fs.readFileSync(path.join(SOURCE, f.chemin));
+    assert.equal(f.integrite, 'sha384-' + crypto.createHash('sha384').update(octets).digest('base64'), f.chemin);
+    assert.equal(f.octets, octets.length, f.chemin);
+  }
+  assert.deepEqual(ml.fichiers.map((f) => f.chemin), ['vendor/maplibre-gl/maplibre-gl.css', 'vendor/maplibre-gl/maplibre-gl.js']);
+  const complet = construireManifeste({ commit: 'abc1234', genere: '2026-11-02T00:00:00.000Z' });
+  assert.ok(Object.keys(complet.dependances).length > 3 && complet.dependances['maplibre-gl'] && complet.dependances.three, 'le paquet complet porte aussi three.js et les autres');
+  assert.deepEqual(complet.dependances['maplibre-gl'], ml, 'même MapLibre dans les deux profils');
+});
+
 test('un profil inconnu est refusé', () => {
   assert.throws(() => fichiersDuPaquet(SOURCE, RACINE, 'mini'), /profil inconnu/);
   assert.throws(() => construireManifeste({ profil: 'mini' }), /profil inconnu/);
