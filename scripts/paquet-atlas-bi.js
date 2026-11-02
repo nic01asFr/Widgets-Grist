@@ -19,8 +19,8 @@ const crypto = require('crypto');
 const ENTREES = ['bi.html', 'lib/bi/atlas-bi-element.js'];
 /** La page seule : ce qu'un service worker précache pour que la carte démarre sans réseau. */
 const ENTREES_PAGE = ['bi.html'];
-/** Dossiers lus à l'exécution par adresse relative, donc invisibles aux imports : contours de repli, MapLibre. */
-const DOSSIERS = ['lib/bi/donnees', 'vendor/maplibre-gl'];
+/** Dossiers lus à l'exécution par adresse relative, donc invisibles aux imports : contours de repli, polices de carte (glyphes), MapLibre. */
+const DOSSIERS = ['lib/bi/donnees', 'lib/bi/polices', 'vendor/maplibre-gl'];
 /** Fichiers ajoutés sans être importés : le client de l'hôte (copié chez lui), le descriptif du paquet, les licences des dépendances. */
 const FIXES = ['lib/bi/client-hote.js', 'package.json', 'vendor/LICENCES.txt'];
 
@@ -128,8 +128,9 @@ function texteCsp({ version, html, feuillesConstruites = true }) {
     "# - frame-ancestors 'self' : à remplacer par l'origine de votre application hôte si elle diffère de celle qui sert cette page (ex. https://app.exemple).",
     '# - Le fond de carte par défaut (tiles.openfreemap.org) est un service libre, sans engagement de service.',
     '# - Fonds IGN (setFond plan-ign ou photo) : ajouter https://data.geopf.fr à img-src et connect-src.',
-    '# - base="aucune" : aucun service tiers au démarrage ; une couche qui affiche du texte (étiquettes) demande ses polices à https://demotiles.maplibre.org',
-    '#   (à ajouter à connect-src), sinon la couche concernée n\'est pas dessinée (mesuré : points et étiquettes disparaissent, sans erreur).',
+    '# - base="aucune" : aucun service tiers, texte compris : les polices de la carte (Noto Sans Regular, latin) sont dans le paquet (lib/bi/polices).',
+    '#   Une police personnalisée de charte (policeSymboles) ou un alphabet non latin demande des glyphes que le paquet n\'a pas : la couche concernée n\'est alors pas dessinée',
+    '#   (mesuré : points et étiquettes disparaissent, sans erreur). Il faut alors fournir ses propres glyphes.',
     scripts.length ? `# - bi.html porte ${scripts.length} script(s) en ligne : leurs empreintes sont dans script-src et changent avec le fichier.` : "# - bi.html n'a aucun script en ligne : script-src 'self' suffit, sans empreinte à recalculer.",
     styles.length && feuillesConstruites ? `# - bi.html porte ${styles.length} style(s) en ligne : leurs empreintes sont dans style-src et changent avec le fichier.` : '',
     feuillesConstruites ? "# - Les feuilles de l'interface sont construites (adoptedStyleSheets) : style-src 'self' suffit." : "# - Cette version crée des <style> en ligne pour son interface : style-src porte 'unsafe-inline' (sans empreinte : le navigateur l'ignorerait).",

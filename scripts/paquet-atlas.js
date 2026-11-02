@@ -139,7 +139,7 @@ function texteNotes(manifestes, journal) {
     ...archives, '',
     `- Contrat du composant : ${m.contrat} ; client des hôtes : \`${m.client.fichier}\`, version ${m.client.versionClient}, empreinte \`${m.client.empreinte}\`.`,
     `- Vérification : \`PAQUET.json\` donne l'empreinte SHA-256 de chaque fichier ; \`SHA256SUMS\` celle des archives. \`LICENSE\` (MIT) accompagne chaque copie.`,
-    "- Servir le dossier tel quel (http ou https) ; l'hôte déclare son origine par `hote=`. MapLibre, three.js et les polices sont dans le paquet (aucun CDN) ; le fond de carte (OpenFreeMap, IGN) reste un service tiers. `base=\"aucune\"` n'en demande aucun au démarrage, mais une couche qui affiche du texte demande ses polices à demotiles.maplibre.org ; l'application, en widget Grist, charge en plus l'API de plugin de Grist.",
+    "- Servir le dossier tel quel (http ou https) ; l'hôte déclare son origine par `hote=`. MapLibre, three.js et les polices sont dans le paquet (aucun CDN) ; le fond de carte (OpenFreeMap, IGN) reste un service tiers. `base=\"aucune\"` n'en demande aucun, texte compris (les polices de la carte, Noto Sans Regular en latin, sont dans le paquet : `lib/bi/polices`, licences jointes) ; l'application, en widget Grist, charge en plus l'API de plugin de Grist.",
     ...(manifestes.some((x) => x.profil === 'bi') ? ["- Carte seule : `CSP.txt` donne la politique de sécurité de contenu recommandée pour `bi.html` (en-tête HTTP), `PRECACHE.json` les fichiers de la page pour un service worker."] : []), '',
     journal ? '## Ce que contient cette version\n\n' + journal.replace(/^## [^\n]*\n+/, '') : '',
   ].join('\n');

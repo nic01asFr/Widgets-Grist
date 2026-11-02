@@ -61,7 +61,9 @@ test('les niveaux de l\'événement error décrits par le guide sont ceux du gar
 
 test('le guide donne les hôtes externes des fonds, tels que le code les déclare', () => {
   const fonds = lire('lib/fonds-base.js') + lire('lib/bi/fond.js');
-  for (const hote of ['tiles.openfreemap.org', 'data.geopf.fr', 'demotiles.maplibre.org']) { assert.ok(fonds.includes(hote), 'le code déclare ' + hote); assert.ok(SECTION.includes(hote), 'le guide cite ' + hote); }
+  for (const hote of ['tiles.openfreemap.org', 'data.geopf.fr']) { assert.ok(fonds.includes(hote), 'le code déclare ' + hote); assert.ok(SECTION.includes(hote), 'le guide cite ' + hote); }
+  assert.ok(!fonds.includes('demotiles.maplibre.org'), 'le code n’appelle plus de serveur de démonstration pour les polices');
+  assert.match(SECTION, /polices de la carte \(Noto Sans Regular, latin[^)]*\) sont \*\*dans la copie\*\*/, 'le guide dit que les polices sont dans la copie');
 });
 
 test('le paquet hors ligne (données) renvoie au paquet web (code), et inversement : deux paquets, deux contenus', () => {

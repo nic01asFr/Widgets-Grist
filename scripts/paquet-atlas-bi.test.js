@@ -103,7 +103,8 @@ test('CSP.txt : un en-tête HTTP prêt à copier, avec les notes qui servent à 
   const t = bi.texteCsp({ version: '9.9.9', html: '', feuillesConstruites: true });
   assert.match(t, /^# Politique de sécurité de contenu recommandée pour bi\.html \(Atlas 9\.9\.9/);
   assert.match(t, /\nContent-Security-Policy: default-src 'none'; .*frame-ancestors 'self'.*\n$/);
-  for (const note of ['EN-TÊTE HTTP', 'data.geopf.fr', 'demotiles.maplibre.org', "n'a aucun script en ligne"]) assert.ok(t.includes(note), note);
+  for (const note of ['EN-TÊTE HTTP', 'data.geopf.fr', 'lib/bi/polices', "n'a aucun script en ligne"]) assert.ok(t.includes(note), note);
+  assert.ok(!t.includes('demotiles.maplibre.org'), 'plus de serveur de démonstration à autoriser');
 });
 
 test('PRECACHE.json : les fichiers de la page maigre, sans l\'élément de l\'hôte ni le client, et la consigne d\'ignorer la query', () => {
@@ -166,7 +167,8 @@ test('ecrireTous : les deux profils côte à côte et des notes communes qui nom
     const ecrits = ecrireTous({ sortie, commit: 'abc1234' });
     assert.deepEqual(ecrits.map((x) => path.basename(x.dossier)).sort(), ['atlas-web-' + ecrits[0].manifeste.version, 'atlas-web-bi-' + ecrits[0].manifeste.version].sort());
     const v = ecrits[0].manifeste.version, notes = fs.readFileSync(path.join(sortie, 'NOTES.md'), 'utf8');
-    for (const attendu of ['atlas-web-' + v + '.zip', 'atlas-web-bi-' + v + '.zip', 'LICENSE', 'demotiles.maplibre.org', 'CSP.txt']) assert.ok(notes.includes(attendu), attendu);
+    for (const attendu of ['atlas-web-' + v + '.zip', 'atlas-web-bi-' + v + '.zip', 'LICENSE', 'lib/bi/polices', 'CSP.txt']) assert.ok(notes.includes(attendu), attendu);
+    assert.ok(!notes.includes('demotiles.maplibre.org'));
   } finally { fs.rmSync(sortie, { recursive: true, force: true }); }
 });
 

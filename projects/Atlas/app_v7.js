@@ -271,7 +271,7 @@ import {
 import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=20261002f';
 import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=20261002f';
 import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=20261010b';
-import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE } from './lib/fonds-base.js?v=20261016a';
+import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE, GLYPHES_EMBARQUES } from './lib/fonds-base.js?v=20261016a';
 import { ecrireCache } from './lib/demarrage-cache.js?v=20261102a';
 
 // Le style de base est demandé dès le chargement du module (pendant que l'API de plugin et le document se chargent) : la carte est créée déjà peinte aux couleurs du thème, sans
@@ -312,7 +312,7 @@ const IGN_ZOOM_MAX = 19;
  * il refuse.
  */
 function ignRasterStyle(tiles) {
-    return { version: 8, glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    return { version: 8, glyphs: GLYPHES_EMBARQUES,
         sources: { 'ign': { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom: IGN_ZOOM_MAX, attribution: '© IGN / Géoplateforme' } },
         layers: [{ id: 'ign-base', type: 'raster', source: 'ign' }] };
 }
