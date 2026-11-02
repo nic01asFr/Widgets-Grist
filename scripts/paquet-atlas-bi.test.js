@@ -142,6 +142,49 @@ test('PAQUET.json dit les bibliothèques tierces emportées, avec leur version e
   assert.deepEqual(complet.dependances['maplibre-gl'], ml, 'même MapLibre dans les deux profils');
 });
 
+test('les textes des feuilles d’interface extraits par analyse sont EXACTEMENT les valeurs des constantes FEUILLE des modules (donc l’empreinte que le navigateur calcule)', async () => {
+  const { pathToFileURL } = require('url');
+  const racine = path.join(RACINE, 'projects', 'Atlas');
+  const valeurs = [];
+  for (const f of bi.FEUILLES) valeurs.push((await import(pathToFileURL(path.join(racine, f)).href)).FEUILLE);
+  assert.deepEqual(bi.textesDesFeuilles(racine), valeurs);
+  assert.equal(valeurs.length, 4);
+});
+
+test('CSP.txt : les empreintes des feuilles d’interface entrent dans style-src pour les navigateurs sans feuilles construites, sans unsafe-inline', () => {
+  const feuilles = ['.a { color: red; }', '.b { top: 0; }'];
+  const empreinte = (t) => "'sha256-" + crypto.createHash('sha256').update(t, 'utf8').digest('base64') + "'";
+  const p = bi.politiqueCsp('<html></html>', { feuillesConstruites: true, feuilles });
+  const style = p.split('; ').find((d) => d.startsWith('style-src'));
+  assert.equal(style, "style-src 'self' " + feuilles.map(empreinte).join(' '));
+  assert.ok(!p.includes('unsafe-inline'));
+  assert.equal(bi.politiqueCsp('<html></html>', { feuillesConstruites: true }).split('; ').find((d) => d.startsWith('style-src')), "style-src 'self'", 'sans feuilles données : inchangé');
+  assert.equal(bi.politiqueCsp('', { feuillesConstruites: true, feuilles: [feuilles[0], feuilles[0]] }).split("'sha256-").length, 2, 'une empreinte identique n’est écrite qu’une fois');
+  assert.match(bi.texteCsp({ version: '9.9.9', html: '', feuillesConstruites: true, feuilles }), /Safari avant 16\.4, Firefox avant 101\), style-src porte aussi les empreintes des 2 feuilles/);
+  assert.ok(!/Safari avant 16/.test(bi.texteCsp({ version: '9.9.9', html: '', feuillesConstruites: true })), 'pas de phrase sans empreintes');
+});
+
+test('feuilles d’interface : un module absent (version ancienne) est ignoré ; une constante absente ou interpolée est refusée, jamais devinée', () => {
+  const source = sourceFactice({ 'lib/bi/ui/zone.js': 'export const FEUILLE = `.z { top: 0; }`;', 'lib/bi/ui/legende.js': 'export const FEUILLE = `.l {\n  left: 0;\n}`;' });
+  try { assert.deepEqual(bi.textesDesFeuilles(source), ['.z { top: 0; }', '.l {\n  left: 0;\n}'], 'temps et bulle absents : ignorés'); } finally { fs.rmSync(source, { recursive: true, force: true }); }
+  const sans = sourceFactice({ 'lib/bi/ui/zone.js': 'const AUTRE = 1;' });
+  try { assert.throws(() => bi.textesDesFeuilles(sans), /constante FEUILLE introuvable/); } finally { fs.rmSync(sans, { recursive: true, force: true }); }
+  const interpole = sourceFactice({ 'lib/bi/ui/zone.js': 'const X = "1px"; export const FEUILLE = `.z { top: ${X}; }`;' });
+  try { assert.throws(() => bi.textesDesFeuilles(interpole), /interpolée/); } finally { fs.rmSync(interpole, { recursive: true, force: true }); }
+});
+
+test('fichiersGeneres : sur une version qui construit ses feuilles, CSP.txt porte leurs empreintes ; sur une version ancienne, unsafe-inline seul', () => {
+  const base = { 'package.json': '{"version":"9.9.9"}', 'bi.html': '<html><script src="./lib/bi/demarrer.js"></script></html>', 'lib/bi/demarrer.js': '', 'lib/bi/atlas-bi-element.js': '' };
+  const neuve = sourceFactice({ ...base, 'lib/bi/ui/feuille.js': '', 'lib/bi/ui/zone.js': 'export const FEUILLE = `.z { top: 0; }`;' });
+  const ancienne = sourceFactice(base);
+  try {
+    const { fichiersGeneres } = require('./paquet-atlas.js');
+    const csp = (source) => fichiersGeneres({ source, racine: RACINE, profil: 'bi' })['CSP.txt'];
+    assert.match(csp(neuve), /style-src 'self' 'sha256-[A-Za-z0-9+/]+=*'; /); assert.ok(!/unsafe-inline/.test(csp(neuve).split('\n').find((l) => l.startsWith('Content-Security-Policy'))));
+    assert.match(csp(ancienne), /style-src 'self' 'unsafe-inline'; /);
+  } finally { fs.rmSync(neuve, { recursive: true, force: true }); fs.rmSync(ancienne, { recursive: true, force: true }); }
+});
+
 test('un profil inconnu est refusé', () => {
   assert.throws(() => fichiersDuPaquet(SOURCE, RACINE, 'mini'), /profil inconnu/);
   assert.throws(() => construireManifeste({ profil: 'mini' }), /profil inconnu/);

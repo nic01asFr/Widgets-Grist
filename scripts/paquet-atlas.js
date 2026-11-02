@@ -74,8 +74,9 @@ function fichiersGeneres({ source = SOURCE, racine = RACINE, profil = 'complet' 
   if (profil !== 'bi') return {};
   const pkg = JSON.parse(fs.readFileSync(path.join(source, 'package.json'), 'utf8'));
   const html = fs.readFileSync(path.join(source, 'bi.html'), 'utf8');
+  const feuillesConstruites = fs.existsSync(path.join(source, 'lib', 'bi', 'ui', 'feuille.js'));
   return {
-    'CSP.txt': bi.texteCsp({ version: pkg.version, html, feuillesConstruites: fs.existsSync(path.join(source, 'lib', 'bi', 'ui', 'feuille.js')) }),
+    'CSP.txt': bi.texteCsp({ version: pkg.version, html, feuillesConstruites, feuilles: feuillesConstruites ? bi.textesDesFeuilles(source) : [] }),
     'PRECACHE.json': JSON.stringify(bi.listePrecache({ version: pkg.version, contrat: versionContrat(racine), source }), null, 2) + '\n',
   };
 }

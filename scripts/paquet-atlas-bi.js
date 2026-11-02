@@ -14,6 +14,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const vm = require('vm');
 
 /** Les points de départ : la page maigre du composant (iframe) et l'élément web de l'hôte (page parente). */
 const ENTREES = ['bi.html', 'lib/bi/atlas-bi-element.js'];
@@ -23,6 +24,9 @@ const ENTREES_PAGE = ['bi.html'];
 const DOSSIERS = ['lib/bi/donnees', 'lib/bi/polices', 'vendor/maplibre-gl'];
 /** Fichiers ajoutés sans être importés : le client de l'hôte (copié chez lui), le descriptif du paquet, les licences des dépendances. */
 const FIXES = ['lib/bi/client-hote.js', 'package.json', 'vendor/LICENCES.txt'];
+
+/** Les modules dont l'interface crée une feuille de style à l'exécution (constante `FEUILLE`) : leurs empreintes entrent dans la politique pour les navigateurs sans feuilles construites. */
+const FEUILLES = ['lib/bi/ui/zone.js', 'lib/bi/ui/legende.js', 'lib/bi/ui/temps.js', 'lib/bi/bulle.js'];
 
 const REFERENCE_HTML = /(?:src|href)="(\.{1,2}\/[^"#]+)"/g;
 const REFERENCE_JS = /(?:from\s*|import\s*\(\s*|import\s+)['"](\.{1,2}\/[^'"]+)['"]/g;
@@ -82,6 +86,23 @@ function fichiersProfilBi(source) {
   return [...ensemble].sort();
 }
 
+/**
+ * Les textes EXACTS des feuilles de style que l'interface pose (valeur de `export const FEUILLE = \`…\`;`, échappements compris) : un navigateur qui ne sait pas construire de
+ * feuille retombe sur un `<style>` dont le texte est ce contenu, et sa politique n'en admet que l'empreinte. Un gabarit interpolé (`${…}`) n'a pas de valeur calculable par analyse : refusé.
+ */
+function textesDesFeuilles(source) {
+  const textes = [];
+  for (const f of FEUILLES) {
+    const p = path.join(source, f);
+    if (!fs.existsSync(p)) continue;
+    const m = /export const FEUILLE = (`[^`]*`);/.exec(fs.readFileSync(p, 'utf8'));
+    if (!m) throw new Error(f + ' : constante FEUILLE introuvable');
+    if (m[1].includes('${')) throw new Error(f + ' : FEUILLE interpolée, son empreinte ne se calcule pas par analyse');
+    textes.push(vm.runInNewContext(m[1]));
+  }
+  return textes;
+}
+
 const empreinteCsp = (texte) => "'sha256-" + crypto.createHash('sha256').update(texte, 'utf8').digest('base64') + "'";
 
 /** Les blocs en ligne d'une page : leurs empreintes entrent dans la politique, si bien qu'un script ou un style ajouté plus tard ne casse pas la page en silence. */
@@ -94,17 +115,17 @@ function blocsEnLigne(html) {
 /**
  * La politique de sécurité de contenu recommandée pour `bi.html` de CE paquet.
  * @param {string} html  le texte de bi.html
- * @param {{ feuillesConstruites?: boolean }} [o]  vrai quand les modules d'interface posent leurs feuilles par `adoptedStyleSheets` (lib/bi/ui/feuille.js) : `style-src 'self'`
+ * @param {{ feuillesConstruites?: boolean, feuilles?: string[] }} [o]  `feuilles` : les textes des feuilles d'interface (voir `textesDesFeuilles`), dont l'empreinte entre dans `style-src` pour les navigateurs sans feuilles construites ; vrai quand les modules d'interface posent leurs feuilles par `adoptedStyleSheets` (lib/bi/ui/feuille.js) : `style-src 'self'`
  *   suffit alors ; sinon ils créent des `<style>` en ligne et `'unsafe-inline'` est ajouté aux styles.
  */
-function politiqueCsp(html, { feuillesConstruites = true } = {}) {
+function politiqueCsp(html, { feuillesConstruites = true, feuilles = [] } = {}) {
   const { scripts, styles } = blocsEnLigne(html);
   return [
     "default-src 'none'",
     ["script-src 'self'", ...scripts.map(empreinteCsp)].join(' '),
     // Dès qu'une empreinte figure dans une liste de sources, le navigateur IGNORE 'unsafe-inline' (CSP niveau 3) : sans feuilles construites, 'unsafe-inline' tient donc
     // SEUL lieu des empreintes des styles (mesuré dans Chrome : l'association des deux laissait passer des violations).
-    (feuillesConstruites ? ["style-src 'self'", ...styles.map(empreinteCsp)] : ["style-src 'self'", "'unsafe-inline'"]).join(' '),
+    (feuillesConstruites ? ["style-src 'self'", ...new Set([...styles, ...feuilles].map(empreinteCsp))] : ["style-src 'self'", "'unsafe-inline'"]).join(' '),
     "img-src 'self' data: blob: https://tiles.openfreemap.org",
     "connect-src 'self' https://tiles.openfreemap.org",
     "font-src 'self' data:",
@@ -118,7 +139,7 @@ function politiqueCsp(html, { feuillesConstruites = true } = {}) {
 }
 
 /** `CSP.txt` : la politique, en en-tête HTTP prêt à copier, et ce qu'il faut savoir pour l'adapter. */
-function texteCsp({ version, html, feuillesConstruites = true }) {
+function texteCsp({ version, html, feuillesConstruites = true, feuilles = [] }) {
   const { scripts, styles } = blocsEnLigne(html);
   return [
     `# Politique de sécurité de contenu recommandée pour bi.html (Atlas ${version}, profil carte seule).`,
@@ -133,8 +154,8 @@ function texteCsp({ version, html, feuillesConstruites = true }) {
     '#   (mesuré : points et étiquettes disparaissent, sans erreur). Il faut alors fournir ses propres glyphes.',
     scripts.length ? `# - bi.html porte ${scripts.length} script(s) en ligne : leurs empreintes sont dans script-src et changent avec le fichier.` : "# - bi.html n'a aucun script en ligne : script-src 'self' suffit, sans empreinte à recalculer.",
     styles.length && feuillesConstruites ? `# - bi.html porte ${styles.length} style(s) en ligne : leurs empreintes sont dans style-src et changent avec le fichier.` : '',
-    feuillesConstruites ? "# - Les feuilles de l'interface sont construites (adoptedStyleSheets) : style-src 'self' suffit." : "# - Cette version crée des <style> en ligne pour son interface : style-src porte 'unsafe-inline' (sans empreinte : le navigateur l'ignorerait).",
-    'Content-Security-Policy: ' + politiqueCsp(html, { feuillesConstruites }),
+    feuillesConstruites ? "# - Les feuilles de l'interface sont construites (adoptedStyleSheets) : style-src 'self' suffit." + (feuilles.length ? ` Pour les navigateurs qui ne savent pas les construire (Safari avant 16.4, Firefox avant 101), style-src porte aussi les empreintes des ${feuilles.length} feuilles d'interface : elles y sont stylées sans 'unsafe-inline' et changent avec le code des feuilles.` : '') : "# - Cette version crée des <style> en ligne pour son interface : style-src porte 'unsafe-inline' (sans empreinte : le navigateur l'ignorerait).",
+    'Content-Security-Policy: ' + politiqueCsp(html, { feuillesConstruites, feuilles }),
   ].filter((l) => l !== '').join('\n') + '\n';
 }
 
@@ -148,4 +169,4 @@ function listePrecache({ version, contrat, source }) {
   };
 }
 
-module.exports = { ENTREES, ENTREES_PAGE, DOSSIERS, FIXES, fermeture, fichiersDePage, fichiersProfilBi, blocsEnLigne, politiqueCsp, texteCsp, listePrecache, empreinteCsp };
+module.exports = { FEUILLES, textesDesFeuilles, ENTREES, ENTREES_PAGE, DOSSIERS, FIXES, fermeture, fichiersDePage, fichiersProfilBi, blocsEnLigne, politiqueCsp, texteCsp, listePrecache, empreinteCsp };
