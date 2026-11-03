@@ -1196,7 +1196,116 @@ ${corps}
 
 /** Les annexes declarees par la fiche d'un projet, celles qui ont de quoi etre rendues (un identifiant et un titre). */
 function annexesDe(p) {
-  return ((p.presentation.produit || {}).annexes || []).filter((a) => a && a.id && a.titre && /^[a-z0-9-]+$/.test(a.id));
+  const declarees = ((p.presentation.produit || {}).annexes || []).filter((a) => a && a.id && a.titre && /^[a-z0-9-]+$/.test(a.id));
+  return p.agents ? [...declarees, annexeAgents(p.agents)] : declarees;
+}
+
+/* ------------------------------------------------------------------ */
+/* « Pour un agent » : la page deduite de la fiche de capacites        */
+/* ------------------------------------------------------------------ */
+
+/** Les verbes du cycle de vie, dans l'ordre ou la page les presente, avec leur libelle. */
+const VERBES_AGENT = [
+  ['presenter', 'Présenter'], ['configurer', 'Configurer'], ['creer', 'Créer'], ['editer', 'Modifier'], ['structurer', 'Structurer'],
+  ['personnaliser', 'Personnaliser'], ['publier', 'Publier'], ['exploiter', 'Exploiter'], ['recolter', 'Récolter'], ['traiter', 'Traiter']
+];
+
+/**
+ * Un widget auto-descriptif publie DEUX fichiers generes a la racine de son dossier : `fiche-capacites.json` (ce qu'il sait faire, par verbe) et
+ * `commandes.json` (chaque commande, avec ses schemas et ses exemples). La page « Pour un agent » en est deduite ; rien ne s'ecrit a la main.
+ *
+ * Sans ces fichiers, aucune page ne s'ajoute et rien ne change. Avec l'un sans l'autre, ou avec deux fichiers qui divergent (autre version, autres
+ * commandes, autres verbes), la generation s'arrete : une page qui contredirait la fiche serait pire que pas de page.
+ */
+function agentsDe(projet, racine = PUBLIE) {
+  const dossier = path.join(racine, projet.id);
+  const chFiche = path.join(dossier, 'fiche-capacites.json');
+  const chCommandes = path.join(dossier, 'commandes.json');
+  const aFiche = fs.existsSync(chFiche);
+  const aCommandes = fs.existsSync(chCommandes);
+  if (!aFiche && !aCommandes) return null;
+  const quoi = `${projet.id} : page « Pour un agent » refusée`;
+  if (aFiche !== aCommandes) throw new Error(`${quoi} — ${aFiche ? 'commandes.json' : 'fiche-capacites.json'} manque, les deux vont ensemble`);
+  let fiche;
+  let commandes;
+  try { fiche = JSON.parse(fs.readFileSync(chFiche, 'utf8')); } catch (e) { throw new Error(`${quoi} — fiche-capacites.json illisible : ${e.message}`); }
+  try { commandes = JSON.parse(fs.readFileSync(chCommandes, 'utf8')); } catch (e) { throw new Error(`${quoi} — commandes.json illisible : ${e.message}`); }
+  if (fiche.contrat !== 'fiche-capacites-0.1') throw new Error(`${quoi} — contrat de la fiche inconnu : ${fiche.contrat}`);
+  if (commandes.contrat !== 'commandes-0.1') throw new Error(`${quoi} — contrat des commandes inconnu : ${commandes.contrat}`);
+  if (commandes.widget !== fiche.widget || commandes.version !== fiche.version) {
+    throw new Error(`${quoi} — la fiche (${fiche.widget} ${fiche.version}) et les commandes (${commandes.widget} ${commandes.version}) ne sont pas de la même version`);
+  }
+  const depuisFiche = Object.entries(fiche.verbes || {}).flatMap(([verbe, noms]) => noms.map((n) => `${n}:${verbe}`)).sort();
+  const depuisCommandes = (commandes.commandes || []).map((c) => `${c.nom}:${c.verbe}`).sort();
+  if (JSON.stringify(depuisFiche) !== JSON.stringify(depuisCommandes)) {
+    const ecarts = [...depuisFiche.filter((x) => !depuisCommandes.includes(x)), ...depuisCommandes.filter((x) => !depuisFiche.includes(x))];
+    throw new Error(`${quoi} — la fiche et les commandes divergent : ${ecarts.join(', ')}`);
+  }
+  return { fiche, commandes: commandes.commandes };
+}
+
+const LIMITE_JSON = 1400;
+
+/** Un JSON montre a une personne : indente, et coupe (en le disant) s'il est trop long pour une page. */
+function jsonMontre(valeur) {
+  const s = JSON.stringify(valeur, null, 2);
+  return s.length > LIMITE_JSON ? s.slice(0, LIMITE_JSON).replace(/\n[^\n]*$/, '') + '\n… (la suite est omise ici)' : s;
+}
+
+function contratEnClair(c) {
+  return `${c.nom} ${c.version} — ${c.catalogue ? 'au catalogue des contrats du dépôt' : `hors catalogue, empreinte ${c.empreinte}`}`;
+}
+
+/** L'annexe « Pour un agent » : meme forme qu'une annexe declaree, pour passer par le meme rendu. */
+function annexeAgents({ fiche, commandes }) {
+  const parVerbe = new Map(VERBES_AGENT.map(([id]) => [id, []]));
+  for (const c of commandes) (parVerbe.get(c.verbe) || []).push(c);
+  const libelle = new Map(VERBES_AGENT);
+  const lignes = [];
+  for (const [id] of VERBES_AGENT) for (const c of parVerbe.get(id)) lignes.push(['`' + c.nom + '`', libelle.get(id), c.description]);
+
+  const blocs = [];
+  blocs.push({
+    titre: 'Ce qu’un agent peut faire',
+    paragraphes: ['Chaque commande reçoit une entrée au format JSON et rend une sortie au format JSON. Les commandes ci-dessous sont celles que ce widget propose aujourd’hui.'],
+    tableau: { colonnes: ['Commande', 'Verbe', 'Ce qu’elle fait'], lignes }
+  });
+  if ((fiche.non_couverts || []).length) {
+    blocs.push({
+      titre: 'Ce qui n’est pas encore couvert',
+      paragraphes: ['Ces verbes n’ont aucune commande : un agent ne peut pas encore les accomplir par ce moyen.'],
+      liste: fiche.non_couverts.map((v) => libelle.get(v) || v)
+    });
+  }
+  const lit = (fiche.contrats && fiche.contrats.lit) || [];
+  const produit = (fiche.contrats && fiche.contrats.produit) || [];
+  if (lit.length || produit.length) {
+    blocs.push({
+      titre: 'Ce que les commandes lisent et produisent',
+      paragraphes: ['Un contrat est un format partagé : ce que l’un écrit, l’autre le lit sans avoir à le connaître.'],
+      liste: [...produit.map((c) => `Produit : ${contratEnClair(c)}`), ...lit.map((c) => `Lu : ${contratEnClair(c)}`)]
+    });
+  }
+  for (const c of commandes) {
+    const exemple = (c.exemples || [])[0];
+    blocs.push({
+      titre: c.nom,
+      paragraphes: [
+        c.description,
+        c.ecrit === 'rien' ? 'N’écrit rien.' : `Écrit : ${c.ecrit}.`,
+        ...(c.nature === 'exige-la-page' ? ['Ne s’exécute que dans une page.'] : [])
+      ],
+      ...(exemple ? { code: { titre: `Exemple : ${exemple.titre}`, langage: 'json', source: `// entrée\n${jsonMontre(exemple.entree)}\n\n// sortie\n${jsonMontre(exemple.sortie)}` } } : {})
+    });
+  }
+  if ((fiche.limites || []).length) blocs.push({ titre: 'Limites', liste: fiche.limites });
+
+  return {
+    id: 'agents',
+    titre: 'Pour un agent',
+    chapeau: `${fiche.presentation.resume} Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version ${fiche.version}).`,
+    blocs
+  };
 }
 
 /** Le style des blocs produit, et les revelations au defilement. */
@@ -1660,7 +1769,7 @@ function rendreProjet(p, maintenant, base = '') {
   </div>
   <div class="boutons">
     ${boutonsParcours(parcours, principal)}
-    ${v.depot ? `<a class="bouton creux" href="${echapper(v.depot)}" target="_blank" rel="noopener">Le code</a>` : ''}
+    ${v.depot ? `<a class="bouton creux" href="${echapper(v.depot)}" target="_blank" rel="noopener">Le code</a>` : ''}${p.agents ? '<a class="bouton creux" href="agents/">Pour un agent</a>' : ''}
     ${v.forum ? `<a class="bouton creux" href="${echapper(v.forum.url)}" target="_blank" rel="noopener"
        title="${echapper(v.forum.titre || '')}">En discuter</a>` : ''}
   </div>
@@ -1719,7 +1828,7 @@ function generer(maintenant = Date.now()) {
   const brut = JSON.parse(fs.readFileSync(MANIFESTE, 'utf8'));
   const widgets = Array.isArray(brut) ? brut : (brut.widgets || []);
   const projets = grouper(widgets);
-  for (const p of projets) p.presentation = presentation(p);
+  for (const p of projets) { p.presentation = presentation(p); p.agents = agentsDe(p); }
 
   const base = baseDe(widgets);
   const faits = [ecrire(path.join(PUBLIE, 'index.html'), rendreAccueil(projets, maintenant, base))];
@@ -1739,4 +1848,4 @@ if (require.main === module) {
   if (sans.length) console.log(`\nSans vitrine.json (presentation minimale) : ${sans.join(', ')}`);
 }
 
-module.exports = { projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreAnnexe, annexesDe, rendreSitemap, baseDe, sectionDemo, dimensionsImage };
+module.exports = { agentsDe, annexeAgents, projetDe, grouper, depuis, majProjet, estRecent, generer, rendreAccueil, rendreProjet, rendreAnnexe, annexesDe, rendreSitemap, baseDe, sectionDemo, dimensionsImage };

@@ -11,7 +11,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { monter } = require('../forms-registre/index.js');
-const { contenu, CHEMIN } = require('../forms-registre/generer-fiche.js');
+const { contenu, CHEMIN, contenuCommandes, CHEMIN_COMMANDES } = require('../forms-registre/generer-fiche.js');
 const { main } = require('../forms-registre/cli.js');
 const Registre = require('../forms-registre/registre.js');
 const { validerFiche } = require('../../../scripts/valider-fiche.js');
@@ -150,6 +150,21 @@ describe('Registre Form Builder : la fiche de capacités', () => {
 
   it('le fichier versionné est ce que le registre rend (relancer generer-fiche.js sinon)', () => {
     assert.equal(fs.readFileSync(CHEMIN, 'utf8'), contenu());
+  });
+
+  it('commandes.json est ce que le registre rend, avec son identité (relancer generer-fiche.js sinon)', () => {
+    assert.equal(fs.readFileSync(CHEMIN_COMMANDES, 'utf8'), contenuCommandes());
+    const c = JSON.parse(fs.readFileSync(CHEMIN_COMMANDES, 'utf8'));
+    assert.equal(c.contrat, 'commandes-0.1');
+    assert.equal(c.widget, fiche.widget);
+    assert.equal(c.version, fiche.version);
+  });
+
+  it('commandes.json et la fiche disent la même chose : mêmes noms, mêmes verbes, aucun écart', () => {
+    const c = JSON.parse(fs.readFileSync(CHEMIN_COMMANDES, 'utf8'));
+    const depuisFiche = Object.entries(fiche.verbes).flatMap(([verbe, noms]) => noms.map((n) => n + ':' + verbe)).sort();
+    const depuisCommandes = c.commandes.map((k) => k.nom + ':' + k.verbe).sort();
+    assert.deepEqual(depuisCommandes, depuisFiche);
   });
 
   it('la fiche et les exemples ne contiennent ni jeton ni clé', () => {
