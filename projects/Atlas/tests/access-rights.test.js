@@ -135,7 +135,7 @@ describe('initiales affichees', () => {
   it('initiales — nom compose, nom pointe, repli sur l\'email', () => {
     assert.equal(initialsFrom('Quentin Leroy', null), 'QL');
     assert.equal(initialsFrom('nicolas.laval', null), 'NL');
-    assert.equal(initialsFrom(null, 'marie.dupont@cerema.fr'), 'MD');
+    assert.equal(initialsFrom(null, 'marie.dupont@exemple.fr'), 'MD');
     assert.equal(initialsFrom('Cher', null), 'C');
     assert.equal(initialsFrom(null, null), null);
   });

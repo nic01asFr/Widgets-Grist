@@ -22,7 +22,7 @@
   ],
   "parametric": {
     "schema": "atlas-objets/0.1",
-    "catalog_id": "cerema.vegetation.essai",
+    "catalog_id": "exemple.vegetation.essai",
     "version": "0.1.0",
     "generated_at": "2026-09-19T01:19:42+00:00",
     "shaders": {
@@ -245,14 +245,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -336,14 +336,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -427,14 +427,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -518,14 +518,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -609,14 +609,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -700,14 +700,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -791,14 +791,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -882,14 +882,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -973,14 +973,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1064,14 +1064,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1155,14 +1155,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1246,14 +1246,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1337,14 +1337,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1428,14 +1428,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1519,14 +1519,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1610,14 +1610,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1701,14 +1701,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1792,14 +1792,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1883,14 +1883,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -1974,14 +1974,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -2065,14 +2065,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -2156,14 +2156,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -2247,14 +2247,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },
@@ -2338,14 +2338,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME a licence non verifiee : usage interne Cerema."
+          "notice": "Profils SESAME a licence non verifiee : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "176",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },

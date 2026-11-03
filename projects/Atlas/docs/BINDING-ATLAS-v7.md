@@ -1,7 +1,7 @@
 # Binding Atlas v7 — Scene Manifest V0.2.2
 
 > StyleDeclarative + ControlDeclarative + Récit  
-> Aligné offre de service Cerema (interop `interactive_map`, qgis-sspcloud)
+> Aligné sur l'offre de service de l'organisation (interop `interactive_map`, qgis-sspcloud)
 
 **Statut** : implémenté dans `index_v7.html` / `app_v7.js` — **publié** sous `published/atlas/` (2026-07-30).  
 **Spec complète** : `../qgis2grist/docs/SCENE-MANIFEST-v0.2.2.md`

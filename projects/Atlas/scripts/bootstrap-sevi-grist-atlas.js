@@ -231,7 +231,7 @@ function qgisWidgetConfig() {
   return {
     version: 3,
     meta: {
-      classification: 'cerema_internal',
+      classification: 'interne',
       imported_at: new Date().toISOString(),
       source_file: 'bootstrap-atlas-sevi',
       title: manifest.title,

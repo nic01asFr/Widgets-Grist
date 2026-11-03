@@ -1,6 +1,6 @@
 {
   "version": "0.2.2",
-  "classification": "cerema_internal",
+  "classification": "interne",
   "title": "CRESO / SEVI — Risque côtier INTERREG",
   "subtitle": "Grille Sardaigne 200 m · BD TOPO · Sites d'étude",
   "layers": [
@@ -156,7 +156,7 @@
     "imported_at": "2026-07-30T12:00:00.000Z",
     "source_file": "bootstrap-atlas-sevi",
     "widget": "atlas-bootstrap",
-    "classification": "cerema_internal",
+    "classification": "interne",
     "project": "CRESO / OSIRISC / SEVI",
     "description": "Configuration Atlas optimale — sans passage QGIS pour la collègue"
   }

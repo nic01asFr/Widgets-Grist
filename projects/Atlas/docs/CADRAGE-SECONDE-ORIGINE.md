@@ -107,7 +107,7 @@ L'amont distingue désormais (qgis-sspcloud@b5566b5) :
 | `externe` | `wms` · `wmts` · `xyz` · `wfs` | **lire directement** — rien n'est copié |
 | `atelier` | base, fichier local | **rien** — doit être matérialisé avant publication |
 
-Ce n'est pas une précaution mais une nécessité physique : `postgres-cerema-postgresql`
+Ce n'est pas une précaution mais une nécessité physique : le serveur PostgreSQL de l'organisation
 est un service **ClusterIP sans IP externe**. QGIS s'y connecte parce qu'il tourne
 dans le cluster ; un navigateur ne le peut pas, même avec des identifiants.
 

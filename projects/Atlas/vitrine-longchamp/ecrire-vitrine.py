@@ -129,7 +129,7 @@ pr['demonstration'] = {
     'alt': 'Le Palais Longchamp de nuit, sur l’orthophotographie de l’IGN : les luminaires allumés laissent des halos sur le parc et les rues',
     'libelle': 'Ouvrir la démonstration',
     'mention': 'Positions des points lumineux : Ville de Marseille, Éclairage 2023 (Licence Ouverte 2.0). Maquette : IGN et Panoramax (Licence Ouverte 2.0), '
-               'fabriquée par pix2hdr (Cerema) ; la fontaine, adaptée d’une photographie de Wikimedia Commons, est livrée seule sous CC BY-SA 4.0. '
+               'fabriquée par pix2hdr ; la fontaine, adaptée d’une photographie de Wikimedia Commons, est livrée seule sous CC BY-SA 4.0. '
                'Les caractéristiques des luminaires, les pièges, les relevés et les comptages sont fictifs : ils servent à montrer l’outil, pas à conclure.',
 }
 pr['apercu'] = {'mention': 'L’aperçu est Atlas seul (`vitrine=1`), sans document. La démonstration ci-dessous est une scène réelle, publiée hors Grist.'}

@@ -1,4 +1,4 @@
-# Atlas v7 — Validation binding (offre Cerema)
+# Atlas v7 — Validation binding (offre de l'organisation)
 
 Interop **qgis2grist → Scene Manifest → Atlas** (style + contrôles + récit).
 

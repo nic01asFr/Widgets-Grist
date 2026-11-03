@@ -54,7 +54,7 @@ test('un document illisible est ecarte, sans lever', async () => {
 
 test('les documents sont mis a plat depuis les organisations', async () => {
   const s = serveur({
-    orgs: [{ id: 1, name: 'Cerema' }, { id: 2, name: 'Perso' }],
+    orgs: [{ id: 1, name: 'Organisation A' }, { id: 2, name: 'Perso' }],
     espaces: {
       1: [{ name: 'Etudes', docs: [{ id: 'a', name: 'Marseille', updatedAt: '2026-08-01' }] }],
       2: [{ name: 'Bac', docs: [{ id: 'b', name: 'Essai', updatedAt: '2026-08-10' }] }],
@@ -62,12 +62,12 @@ test('les documents sont mis a plat depuis les organisations', async () => {
   });
   const docs = await listerTousDocs('https://x.fr', 'K', s.fetchFn);
   assert.equal(docs.length, 2);
-  assert.deepEqual(docs.map((d) => [d.id, d.org, d.espace]), [['a', 'Cerema', 'Etudes'], ['b', 'Perso', 'Bac']]);
+  assert.deepEqual(docs.map((d) => [d.id, d.org, d.espace]), [['a', 'Organisation A', 'Etudes'], ['b', 'Perso', 'Bac']]);
 });
 
 test('une organisation illisible n interrompt pas les autres', async () => {
   const s = serveur({
-    orgs: [{ id: 9, name: 'Interdite' }, { id: 1, name: 'Cerema' }],
+    orgs: [{ id: 9, name: 'Interdite' }, { id: 1, name: 'Organisation A' }],
     espaces: { 1: [{ name: 'E', docs: [{ id: 'a', name: 'A' }] }] },   // 9 absent → 404
   });
   const docs = await listerTousDocs('https://x.fr', 'K', s.fetchFn);

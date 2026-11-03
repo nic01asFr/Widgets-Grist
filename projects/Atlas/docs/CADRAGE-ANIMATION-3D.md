@@ -120,7 +120,7 @@ Animer hors three.js (sprite billboard vidéo, Lottie 2D).
 
 **Pour** : rapide pour marketing.
 **Contre** : casse l’intégration relief / ombres / soleil Atlas ; hors contrat
-interop Cerema.
+interop avec l'offre de l'organisation.
 
 ---
 
@@ -173,7 +173,7 @@ Avant spec / plan :
 
 1. Valider le périmètre **V1 = acteurs de récit seulement** ?
 2. Asset : GLB libre fourni (ex. Kenney / Ready Player) ou placeholder catalogue ?
-3. Extension manifeste `actors` Atlas-only OK (hors gel Cerema 0.2.2) ?
+3. Extension manifeste `actors` Atlas-only OK (hors gel du manifeste 0.2.2) ?
 
 ---
 
