@@ -18,6 +18,8 @@ Le dépôt fait la même chose à l'échelle d'une **application Grist complète
 | Page WebMCP | agents du navigateur, consultation sans service | les mêmes commandes dans une page statique, plus `llms.txt` |
 | Vitrine | une personne | présentation, exemples, captures, pas à pas |
 
+Chacune est un **produit du dépôt** : généré, versionné avec le widget, gardé contre la péremption par un test, promu à la publication. Le skill n'est pas une note à part : c'est un `SKILL.md` GÉNÉRÉ depuis la fiche et la liste des commandes (comme `llms.txt` et la vitrine), à partir d'un gabarit commun du dépôt pour les règles d'écriture et les interdits.
+
 Les cinq lisent la même source : **un noyau pur** (sans DOM, sans `grist.*`) et **un registre de commandes**. La vitrine est GÉNÉRÉE depuis la fiche de capacités (§4), jamais l'inverse : une seule source de texte.
 
 ## 3. Le registre de commandes
@@ -60,13 +62,14 @@ Fiche lisible par une machine et par une personne, schéma versionné COMMUN à 
       { "nom": "ThemeDef", "version": "1.0", "catalogue": false, "empreinte": "sha256:…" }
     ]
   },
+  "interfaces": { "skill": true, "cli": true, "mcp": true, "webmcp": true, "vitrine": true },
   "prerequis": { "acces_grist": "full", "tables": ["…"] },
   "limites": ["…"],
   "exemples": ["…"]
 }
 ```
 
-Un verbe sans commande est listé dans `non_couverts` : il n'est pas passé sous silence.
+`interfaces` (facultatif en 0.1) dit lesquelles des cinq le widget fournit réellement ; une interface à `false` est dite, pas passée sous silence. Un verbe sans commande est listé dans `non_couverts` : il n'est pas passé sous silence.
 
 Le mot `capacites` reste libre pour les widgets qui l'emploient déjà autrement (Atlas : les briques chargées, renvoyées par `ping()` et refusées par `capacite_absente`) ; la fiche porte donc le nom `fiche-capacites`. Un contrat non encore au catalogue se déclare avec `catalogue: false` et son `empreinte`.
 
@@ -90,7 +93,7 @@ Tous les widgets utilisent, quand ils en ont besoin, les contrats du dépôt : T
 
 ## 7. Parité et garde-fous
 
-- Un test de parité par widget : le registre, le CLI, le serveur MCP et la page WebMCP exposent les mêmes commandes avec les mêmes schémas (dans la limite de la `nature`).
+- Un test de parité par widget (le skill généré cite exactement les commandes du registre et seulement les interfaces déclarées dans la fiche ; un `SKILL.md` périmé est refusé) : le registre, le CLI, le serveur MCP et la page WebMCP exposent les mêmes commandes avec les mêmes schémas (dans la limite de la `nature`).
 - Aucun jeton Grist ni clé dans un fichier versionné ; le MCP reçoit ses accès à l'exécution.
 - Les exemples ne nomment aucune organisation ni donnée réelle ; ils sont écrits à part, pas tirés des fixtures de tests.
 - Une fiche qui référence un contrat porté par un hôte (ex. contrat carte BI) cite sa version et celle du client ; un changement de l'un est annoncé aux hôtes avant publication, par leur canal habituel.
@@ -106,7 +109,7 @@ Tous les widgets utilisent, quand ils en ont besoin, les contrats du dépôt : T
 
 ## 9. Mise en œuvre
 
-Un widget à la fois, en lecture seule d'abord : isoler le noyau pur, écrire le registre et la fiche, brancher le CLI, puis le MCP, puis la page WebMCP, puis générer la vitrine. Pilote proposé : Form Builder. Ordre de départ : après la publication commune des trois widgets et accord explicite de Nicolas.
+Un widget à la fois, en lecture seule d'abord : isoler le noyau pur, écrire le registre et la fiche, brancher le CLI, puis le MCP, puis la page WebMCP, puis générer la vitrine et le skill (générateur commun, gabarit commun). Pilote proposé : Form Builder. Ordre de départ : après la publication commune des trois widgets et accord explicite de Nicolas.
 
 ## 10. Risques et réserves
 

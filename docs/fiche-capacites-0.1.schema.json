@@ -225,6 +225,27 @@
       "items": {
         "type": "string"
       }
+    },
+    "interfaces": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "skill": {
+          "type": "boolean"
+        },
+        "cli": {
+          "type": "boolean"
+        },
+        "mcp": {
+          "type": "boolean"
+        },
+        "webmcp": {
+          "type": "boolean"
+        },
+        "vitrine": {
+          "type": "boolean"
+        }
+      }
     }
   },
   "description": "Fiche lisible par une machine et une personne. Les regles que ce schema ne dit pas (pattern, unicite, empreinte obligatoire hors catalogue, verbe ni couvert ni declare) sont verifiees par scripts/valider-fiche.js."
