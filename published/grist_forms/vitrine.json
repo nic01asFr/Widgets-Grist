@@ -285,6 +285,10 @@
   },
   "journal": [
     {
+      "version": "v1.6.1",
+      "texte": "Une page hors de Grist qui contourne le formulaire ne peut plus faire passer une note hors échelle pour une réponse en règle. Sur une échelle de 1 à 5, un 9, ou l’absence de réponse que Grist écrit alors 0, est maintenant marqué non conforme dans la colonne « Conforme ». Pour un document déjà préparé, il suffit de relancer « Préparer la table » pour mettre à jour la formule."
+    },
+    {
       "version": "v1.6.0",
       "texte": "Un formulaire s’habille du thème de Grist, et un document reçoit son thème d’un geste. Dans Grist, un formulaire qui choisit « Celle du document, sinon celle de Grist » prend le thème actif du document ; s’il n’y en a pas, il prend celui de la personne — clair ou sombre, avec la couleur des boutons de l’instance — et le suit quand elle en change, sans recharger. C’est un choix : les formulaires déjà composés ne changent pas, et seuls les formulaires neufs le prennent par défaut. Le compositeur s’habille de la même façon, et l’on peut y essayer un fichier de thème (ThemeDef) le temps d’une session. Une page « Design system » saisit l’identité d’une organisation — nom, couleurs, mode sombre, jusqu’aux formes et aux espacements — vérifie que le texte reste lisible, et montre un vrai formulaire habillé en direct. Un bouton « Appliquer ce thème au document » l’inscrit dans le document : la page dit d’abord ce qui va changer, ne crée la table du thème qu’après une confirmation qui le dit, refuse un thème illisible sans rien écrire, et « Retirer » le désactive sans rien supprimer. Dans le moteur, trois ajouts facultatifs : le groupe répétable (une liste de lignes rangée dans une seule colonne), la question de couleur, et le motif de saisie qui contraint une réponse. Les formulaires déjà publiés ne changent pas : ils ne se mettent à jour qu’à la prochaine remise en ligne."
     },

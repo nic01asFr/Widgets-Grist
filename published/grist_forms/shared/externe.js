@@ -102,6 +102,24 @@
     return '$' + nom + ' ' + op + ' ' + v;
   }
 
+  /**
+   * Les bornes d'une question numérique : celles que le formulaire déclare, sinon, pour une échelle, celles que le moteur affiche (de 1 à 5 par
+   * défaut, ou l'échelle nommée du formulaire). Sans cela, un client qui écrit directement dans la table pouvait mettre 9 sur une échelle de 1 à 5
+   * sans que rien ne le dise.
+   */
+  function bornesNumeriques(formDef, field) {
+    var o = field.options || {};
+    var min = typeof o.min === 'number' ? o.min : null;
+    var max = typeof o.max === 'number' ? o.max : null;
+    if ((field.kind === 'echelle' || field.widget === 'echelle') && min === null && max === null) {
+      var e = (formDef && formDef.echelles && formDef.echelles[o.echelle]) || {};
+      min = Number.isFinite(e.min) ? e.min : 1;
+      var haut = Number.isFinite(e.max) ? e.max : 5;
+      max = haut > min ? Math.min(haut, min + 50) : min + 4;
+    }
+    return { min: min, max: max };
+  }
+
   /** Les règles d'une question, en lignes de Python (sans l'indentation de la condition). */
   function reglesDeQuestion(formDef, field, out) {
     var col = '$' + field.colId;
@@ -115,7 +133,11 @@
     // Une référence vide est fausse pour Grist ; une référence inventée est « vraie »
     // sans identifiant (mesuré) : « absente » et « inconnue » ne se confondent pas.
     else if (base === 'Ref') vide = 'not ' + col;
-    else if (base === 'Int' || base === 'Numeric') vide = col + ' is None';
+    else if (base === 'Int' || base === 'Numeric') {
+      // Une colonne numérique absente d'un envoi vaut 0 : sous un minimum positif, 0 veut dire « pas répondu » et ne se confond pas avec une réponse.
+      var bornesVide = bornesNumeriques(formDef, field);
+      vide = bornesVide.min !== null && bornesVide.min > 0 ? col + ' in (None, 0)' : col + ' is None';
+    }
     else if (base === 'Bool') vide = null;
     else vide = 'not ' + col;
 
@@ -152,13 +174,14 @@
         out.push('  m.append(' + py(lib + ' : élément inconnu') + ')');
       }
     }
-    if ((base === 'Int' || base === 'Numeric') && (typeof o.min === 'number' || typeof o.max === 'number')) {
+    var limites = (base === 'Int' || base === 'Numeric') ? bornesNumeriques(formDef, field) : { min: null, max: null };
+    if (limites.min !== null || limites.max !== null) {
       var bornes = [];
-      if (typeof o.min === 'number') bornes.push(py(o.min) + ' <= ' + col);
-      if (typeof o.max === 'number') bornes.push(col + ' <= ' + py(o.max));
+      if (limites.min !== null) bornes.push(py(limites.min) + ' <= ' + col);
+      if (limites.max !== null) bornes.push(col + ' <= ' + py(limites.max));
       // Une colonne numérique absente d'un envoi vaut 0 : sous un minimum
       // positif, 0 veut dire « pas répondu », pas « hors bornes ».
-      var exclut = typeof o.min === 'number' && o.min > 0 ? col + ' not in (None, 0) and ' : col + ' is not None and ';
+      var exclut = limites.min !== null && limites.min > 0 ? col + ' not in (None, 0) and ' : col + ' is not None and ';
       out.push('if ' + exclut + 'not (' + bornes.join(' and ') + '):');
       out.push('  m.append(' + py(lib + ' : hors des bornes') + ')');
     }
