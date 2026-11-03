@@ -297,3 +297,46 @@ describe('Externe — une question de lieu', { skip: !pythonDisponible() && 'Pyt
     assert.ok(!/illisible/.test(m[4]), 'un lieu absent n’est pas un lieu illisible');
   });
 });
+
+describe('Externe — une échelle garde ses bornes même quand le client contourne la page', { skip: !pythonDisponible() && 'Python indisponible' }, () => {
+  const def = (extra) => ({
+    id: 'avis', title: 'Avis', tableId: 'Avis', composeMode: 'ensureSchema',
+    sections: [{ label: 'Avis', fields: [
+      Object.assign({ colId: 'Note', label: 'Satisfaction', type: 'Int', widget: 'echelle', kind: 'echelle', required: true, options: { echelle: 'satisfaction' } }, extra || {})
+    ] }]
+  });
+  const juge = (d, lignes) => motifsPython(Externe.formuleMotifs(d, 'Avis').formule, lignes.map((l) => Object.assign({ Recu: 'R', Premier: true }, l)));
+
+  it('une note hors de 1 à 5, ou jamais envoyée (Grist écrit alors 0), n’est pas conforme', () => {
+    const m = juge(def(), [{ Note: 5 }, { Note: 1 }, { Note: 9 }, { Note: 0 }, { Note: null }, { Note: -2 }]);
+    assert.equal(m[0], '');
+    assert.equal(m[1], '');
+    assert.match(m[2], /Satisfaction : hors des bornes/);
+    assert.match(m[3], /Satisfaction : réponse absente/);
+    assert.match(m[4], /Satisfaction : réponse absente/);
+    assert.match(m[5], /Satisfaction : hors des bornes/);
+  });
+
+  it('l’échelle nommée du formulaire donne ses propres bornes (de 0 à 10 : 0 est une réponse)', () => {
+    const d = def({ options: { echelle: 'nps' } });
+    d.echelles = { nps: { min: 0, max: 10 } };
+    const m = juge(d, [{ Note: 0 }, { Note: 10 }, { Note: 11 }]);
+    assert.equal(m[0], '', '0 est une vraie réponse sur une échelle qui commence à 0');
+    assert.equal(m[1], '');
+    assert.match(m[2], /hors des bornes/);
+  });
+
+  it('une échelle facultative n’exige rien, mais refuse une valeur hors bornes', () => {
+    const m = juge(def({ required: false }), [{ Note: 0 }, { Note: null }, { Note: 4 }, { Note: 7 }]);
+    assert.equal(m[0], '');
+    assert.equal(m[1], '');
+    assert.equal(m[2], '');
+    assert.match(m[3], /hors des bornes/);
+  });
+
+  it('les bornes déclarées à la main l’emportent sur celles de l’échelle', () => {
+    const m = juge(def({ options: { echelle: 'satisfaction', min: 1, max: 3 } }), [{ Note: 3 }, { Note: 4 }]);
+    assert.equal(m[0], '');
+    assert.match(m[1], /hors des bornes/);
+  });
+});
