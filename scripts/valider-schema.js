@@ -88,9 +88,11 @@ function valider(valeur, schema, racine, chemin = '') {
   return ecarts;
 }
 
-module.exports = { valider };
+// Servi aussi au navigateur (page WebMCP de Form Builder) : sans `module`, il s'expose en `ValiderSchema`.
+if (typeof module === 'object' && module.exports) module.exports = { valider };
+else (typeof self !== 'undefined' ? self : this).ValiderSchema = { valider };
 
-if (require.main === module) {
+if (typeof require !== 'undefined' && typeof module === 'object' && require.main === module) {
   const fs = require('fs');
   const [schemaPath, donneePath] = process.argv.slice(2);
   if (!schemaPath || !donneePath) {

@@ -1,0 +1,37 @@
+# Form Builder
+
+> Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document.
+
+Version 1.6.0. Fiche de capacités : fiche-capacites.json (contrat fiche-capacites-0.1).
+
+## Comment appeler ces commandes
+
+- Serveur MCP : `node mcp.js` (stdio, lecture seule).
+- Ligne de commande : `node cli.js <commande> <entree.json>`, `--liste`, `--decrire <commande>`.
+- Page WebMCP : webmcp.html (navigator.modelContext), mêmes commandes, plus forms_rendre et forms_recolter qui n’existent que dans la page.
+
+## Commandes
+
+- `forms_capacites` (presenter) : Présente Form Builder : ce qu’il sait faire (les commandes par verbe), ce qu’il ne couvre pas encore, les contrats qu’il produit et lit, ses limites. À appeler en premier.
+- `forms_formdef_depuis_colonnes` (creer) : Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes). Rend `formdef: null` quand aucune colonne ne donne de question.
+- `forms_formdef_depuis_formulaire_grist` (creer) : Lit les formulaires natifs d’un document Grist et rend chacun en FormDef. L’entrée est le contenu des tables de métadonnées (tables, colonnes, vues, sections, champs), tel que fetchTable le rend.
+- `forms_valider_formdef` (structurer) : Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. Un FormDef conforme rend une liste d’écarts vide.
+- `forms_valider_condition` (structurer) : Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; `bloquant` dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».
+- `forms_verifier_format` (structurer) : Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`.
+- `forms_formdef_vers_manifeste_enquete` (structurer) : Convertit un FormDef en manifeste d’enquête (survey-manifest). Sens inverse : forms_manifeste_enquete_vers_formdef.
+- `forms_manifeste_enquete_vers_formdef` (structurer) : Convertit un manifeste d’enquête en FormDef. Sens inverse : forms_formdef_vers_manifeste_enquete.
+- `forms_plan_schema` (configurer) : Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante.
+- `forms_resoudre_theme` (personnaliser) : Dérive les variables de thème (--kit-*) d’un ThemeDef 1.0 à partir de ses couleurs de départ, pour un mode clair ou sombre. Un thème illisible est refusé en entier.
+- `forms_plan_publication` (publier) : Calcule les actions qui créent une page personnalisée liée à une table, et les options de la vue qui porte le formulaire (HTML et JS déjà assemblés). Il rend le plan sans l’appliquer.
+- `forms_synthese` (traiter) : Relit les réponses d’un formulaire avec le FormDef qui les a produites : fréquences, échelles, classements, listes. La table seule n’est pas lisible, le FormDef sait ce que chaque colonne veut dire.
+
+## Ce qui n’est pas couvert
+
+Verbes sans commande : editer, exploiter, recolter.
+
+## Limites
+
+- Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.
+- Appliquer un plan de schéma ou de publication n’est pas encore une commande.
+- Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.
+- Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée.

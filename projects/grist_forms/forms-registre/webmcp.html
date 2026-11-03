@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Form Builder — les commandes pour un agent</title>
+<link rel="stylesheet" href="../shared/dsfr-like.css">
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: var(--kit-fond, #fff); color: var(--kit-texte, #161616); }
+  main { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+  h1 { font-size: 1.6rem; } h2 { font-size: 1.15rem; margin-top: 2rem; }
+  .etat { padding: .7rem 1rem; border: 1px solid var(--kit-bord, #c6c6c6); border-radius: .4rem; }
+  .commande { border-top: 1px solid var(--kit-bord, #c6c6c6); padding: .8rem 0; }
+  .commande b { font-family: ui-monospace, monospace; }
+  .commande .verbe { color: var(--kit-texte-doux, #3a3a3a); font-size: .85rem; margin-left: .5rem; }
+  .commande p { margin: .3rem 0 0; }
+  .page-seule { font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Form Builder : les commandes pour un agent</h1>
+  <p>Cette page rend les commandes de Form Builder appelables par un agent du navigateur. Elles lisent et calculent : aucune n’écrit dans un document Grist, et la page n’est connectée à aucun document.</p>
+  <p class="etat" id="etat" role="status">Chargement…</p>
+
+  <h2>Les commandes</h2>
+  <div id="commandes"></div>
+
+  <h2>Le formulaire monté par un agent</h2>
+  <p>Quand un agent appelle <code>forms_rendre</code>, le formulaire apparaît ici. L’envoi est simulé : rien n’est enregistré.</p>
+  <div id="formulaire"></div>
+</main>
+
+<script src="../shared/types.js"></script>
+<script src="../shared/attachments.js"></script>
+<script src="../shared/session-context.js"></script>
+<script src="../shared/carte-geometrie.js"></script>
+<script src="../shared/dessin.js"></script>
+<script src="../shared/referentiel.js"></script>
+<script src="../shared/formats.js"></script>
+<script src="../shared/enrichir.js"></script>
+<script src="../shared/saisies.js"></script>
+<script src="../shared/prefill.js"></script>
+<script src="../shared/conditions.js"></script>
+<script src="../shared/limites.js"></script>
+<script src="../runtime/engine.js"></script>
+<script src="../shared/formdef-from-table.js"></script>
+<script src="../shared/formdef-from-grist-form.js"></script>
+<script src="../shared/survey-project.js"></script>
+<script src="../shared/ensure-schema.js"></script>
+<script src="../shared/theme.js"></script>
+<script src="../shared/theme-instance.js"></script>
+<script src="../shared/derivation-valeurs.js"></script>
+<script src="../shared/themedef.js"></script>
+<script src="../shared/publish.js"></script>
+<script src="../shared/synthese.js"></script>
+<script src="../shared/valider-schema.js"></script>
+<script src="registre.js"></script>
+<script src="navigateur.js"></script>
+<script>
+(function () {
+  'use strict';
+  var etat = document.getElementById('etat');
+  var liste = document.getElementById('commandes');
+
+  function ligne(c, page) {
+    var d = document.createElement('div');
+    d.className = 'commande';
+    var nom = document.createElement('b'); nom.textContent = c.name;
+    var verbe = document.createElement('span'); verbe.className = 'verbe'; verbe.textContent = c.verbe + (page ? ' · seulement dans cette page' : '');
+    var p = document.createElement('p'); p.textContent = c.description;
+    d.appendChild(nom); d.appendChild(verbe); d.appendChild(p);
+    return d;
+  }
+
+  FormsWebMCP.installer({
+    global: window,
+    navigator: navigator,
+    lireJson: function (chemin) { return fetch(chemin).then(function (r) { if (!r.ok) throw new Error(chemin + ' : ' + r.status); return r.json(); }); },
+    conteneur: document.getElementById('formulaire')
+  }).then(function (p) {
+    var verbes = {};
+    p.registre.commandes.concat(p.commandesPage).forEach(function (c) { verbes[c.nom] = c; });
+    p.outils.forEach(function (o) {
+      var c = verbes[o.name];
+      liste.appendChild(ligne({ name: o.name, verbe: c.verbe, description: o.description }, c.nature === 'exige-la-page'));
+    });
+    window.formsWebMCP = { appeler: p.appeler };
+    etat.textContent = p.expose
+      ? p.outils.length + ' commandes sont proposées aux agents de ce navigateur.'
+      : 'Ce navigateur ne propose pas WebMCP : les ' + p.outils.length + ' commandes sont listées ci-dessous, et un agent peut les appeler par window.formsWebMCP.appeler(nom, entrée).';
+  }).catch(function (e) {
+    etat.textContent = 'Les commandes n’ont pas pu être chargées : ' + e.message;
+  });
+}());
+</script>
+</body>
+</html>
