@@ -122,7 +122,7 @@ test('CSP.txt qui associe une empreinte et unsafe-inline dans une même directiv
   const { dossier, nettoyer } = paquet();
   try {
     const csp = path.join(dossier, 'CSP.txt');
-    fs.writeFileSync(csp, fs.readFileSync(csp, 'utf8').replace("style-src 'self'", "style-src 'self' 'sha256-AAAA' 'unsafe-inline'")); rescellerManifeste(dossier);
+    fs.writeFileSync(csp, fs.readFileSync(csp, 'utf8').replace(/(Content-Security-Policy:[^\n]*?)style-src 'self'/, "$1style-src 'self' 'sha256-AAAA' 'unsafe-inline'")); rescellerManifeste(dossier);
     const v = verdict(controlerFichiers(dossier), 'csp');
     assert.equal(v.niveau, 'echec'); assert.match(v.texte, /ignore alors 'unsafe-inline'/);
   } finally { nettoyer(); }

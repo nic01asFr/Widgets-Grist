@@ -6,6 +6,8 @@
  * personne qui le déplace). Clavier : flèches du curseur, Espace sur le bouton. Annoncé aux lecteurs d’écran (`role="group"`, valeur lisible). Module sans
  * dépendance : le DOM, la zone et l’état du temps sont injectés.
  */
+import { poserFeuille } from './feuille.js';
+
 const STYLE_ID = 'atlas-bi-temps-style';
 export const FEUILLE = `
 .atlas-bi-temps { display: flex; align-items: center; gap: 10px; }
@@ -20,7 +22,7 @@ export const FEUILLE = `
  *   poser: (valeur: number) => void, lire: () => void, pauser: () => void, position?: string, formater?: (valeur: number) => string }} o
  */
 export function creerTemps({ document: doc = globalThis.document, zone, etat, poser, lire, pauser, position = 'bas-centre', formater = (v) => String(Math.round(v * 100) / 100) }) {
-  if (doc.head && !doc.getElementById(STYLE_ID)) { const s = doc.createElement('style'); s.id = STYLE_ID; s.textContent = FEUILLE; doc.head.appendChild(s); }
+  poserFeuille(doc, STYLE_ID, FEUILLE);   // feuille construite : tient sous style-src 'self' (lib/bi/ui/feuille.js)
   const racine = doc.createElement('div'); racine.className = 'atlas-bi-ui-carte atlas-bi-temps'; racine.setAttribute('role', 'group'); racine.setAttribute('aria-label', 'Temps');
   const bouton = doc.createElement('button'); bouton.type = 'button'; bouton.className = 'atlas-bi-temps-bouton';
   const curseur = doc.createElement('input'); curseur.type = 'range'; curseur.className = 'atlas-bi-temps-curseur'; curseur.setAttribute('aria-label', 'Valeur du temps');

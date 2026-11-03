@@ -102,7 +102,10 @@ test('la page maigre est promue (bi.html) sous le même numéro de version que l
   const pub = path.join(ATLAS, '..', '..', 'published', 'atlas');
   const v = JSON.parse(fs.readFileSync(path.join(pub, 'package.json'), 'utf8')).version;
   const bi = fs.readFileSync(path.join(pub, 'bi.html'), 'utf8'), app = fs.readFileSync(path.join(pub, 'index.html'), 'utf8');
-  assert.match(bi, new RegExp('lib/bi/entree\\.js\\?v=' + v.replace(/\./g, '\\.')));
+  const vv = v.replace(/\./g, '\\.');
+  // depuis la 1.43 la page ne porte plus de script en ligne : elle charge demarrer.js, qui importe entree.js sous le même numéro
+  assert.match(bi, new RegExp('lib/bi/demarrer\\.js\\?v=' + vv));
+  assert.match(fs.readFileSync(path.join(pub, 'lib', 'bi', 'demarrer.js'), 'utf8'), new RegExp('entree\\.js\\?v=' + vv));
   assert.ok(app.includes("location.replace('./bi.html'") && !app.includes("location.replace('./index_bi.html'"), 'la redirection publiée vise bi.html');
   assert.ok(!/unpkg\.com|jsdelivr|googleapis/.test(bi), 'aucune dépendance externe');
   assert.ok(bi.includes('./vendor/maplibre-gl/maplibre-gl.js'));

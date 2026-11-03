@@ -6,8 +6,8 @@
  * dessine à part. `captureStoryState` ne connaît pas ce module — la photo est
  * prise d'abord, le trajet est fusionné ensuite.
  */
-import { distanceMetres } from './releve.js?v=1.42.2';
-import { flattenCoords2D } from './grist-rows.js?v=1.42.2';
+import { distanceMetres } from './releve.js?v=1.43.0';
+import { flattenCoords2D } from './grist-rows.js?v=1.43.0';
 
 export const VERSION = '1.0.0';
 

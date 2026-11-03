@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.42.2';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.42.2';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.43.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.43.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.42.2';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.43.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -31,6 +31,7 @@ import { verifierPlan } from '../charte/verification.js';
 import { variablesInterface, appliquerVariables } from '../charte/interface.js';
 import { creerBulle, normaliserBulle } from './bulle.js';
 import { normaliserLignes, mettreAJour as mettreAJourLigne } from './tables.js';
+import { verifierPolice, plagesDesTextes } from './police.js';
 import { normaliserMarges, avecConfort, limiterPadding } from './marges.js';
 
 export const VERSION = VERSION_PONT;   // une seule version du contrat : celle du pont
@@ -108,7 +109,26 @@ export function attacher(map, opts = {}) {
   }
   const idSrc = (c) => PREF + 'src-' + c.id, idAgg = (c) => PREF + 'agg-' + c.id;
   const geom = (c) => { const g = String(c.def.geometry_type || '').toLowerCase(); return g.startsWith('poly') ? 'polygon' : g.startsWith('line') ? 'line' : 'point'; };
+  /** La pile de polices des étiquettes : celle de la charte, sinon celle du fond de plan, sinon Noto Sans Regular (embarquée). */
+  const policeSymboles = (T) => { const p = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular']; return Array.isArray(p) ? p : [String(p)]; };
+  const memoPolices = new Map();
   const ajouterCalque = (c, spec, avant) => { map.addLayer(spec, avant && map.getLayer(avant) ? avant : undefined); c.ids.push(spec.id); };
+
+  /** Vérifie la police des étiquettes d'une couche qui en déclare : `c.policeOk = false` et `c.avertPolice` si elle ne répond pas. Sans texte déclaré, ou sans adresse de glyphes connue, rien. */
+  async function verifierLaPolice(c) {
+    const v = c.visuel || {};
+    if (!v.etiquette && !v.texte) return;
+    let gabarit; try { gabarit = typeof map.getStyle === 'function' ? (map.getStyle() || {}).glyphs : undefined; } catch (_) { /* style illisible : rien à vérifier */ }
+    const police = policeSymboles(themeDe(c));
+    // les plages de glyphes qu'exigent les textes réellement affichés : une seule plage absente du fournisseur fait échouer la couche entière
+    const { plages, exemples } = plagesDesTextes(c.features, [v.etiquette && v.etiquette.champ, v.texte].filter(Boolean));
+    const r = await (opts.verifierPolice || verifierPolice)({ gabarit, police, plages, memo: memoPolices });
+    if (r.ok) return;
+    c.policeOk = false;
+    const cause = r.plage && exemples.get(r.plage) ? 'elle n’a pas les glyphes de la plage ' + r.plage + ' (par exemple « ' + [...exemples.get(r.plage)].join(' », « ') + ' »)' : 'elle est inaccessible';
+    c.avertPolice = 'étiquettes : la police « ' + police.join(', ') + ' » ne peut pas dessiner ce texte : ' + cause + ' (' + r.raison + ') ; la couche est dessinée sans texte, faute de quoi MapLibre ne la dessinerait pas du tout';
+    emettre('error', { code: 'police', message: c.avertPolice, niveau: 'avertissement' }, 'api');
+  }
 
   function monter(c) {
     const T = themeDe(c);
@@ -140,15 +160,15 @@ export function attacher(map, opts = {}) {
       c.avertVisuel = [];   // ce que le visuel a refusé (couleur illisible, jeton inconnu), dit à l'hôte par `setScene`
       const ids = ajouterIcones(map, v.etats || {}, { resoudre: (cc) => resoudre(cc, T), contourDefaut: T.marqueurs && T.marqueurs.contour, jetons: T.jetons, noter: (m) => c.avertVisuel.push(m) }); const cles = Object.keys(ids);
       const icone = cles.length ? ['match', ['get', v.champEtat || 'etat'], ...cles.flatMap((k) => [k, ids[k]]), ids[cles[0]]] : '';
-      const police = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
+      const police = policeSymboles(T);
       ajouterCalque(c, { id: PREF + 'anneau-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', sel, 24, 0], 'circle-color': 'rgba(255,255,255,0.75)', 'circle-stroke-width': ['case', sel, 3, 0], 'circle-stroke-color': T.selection } });
-      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'icon-image': icone, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.9, 17, 1.1], 'icon-allow-overlap': true, 'text-field': v.texte ? ['to-string', ['coalesce', ['get', v.texte], TIRET_MARQUEUR]] : '', 'text-font': police, 'text-size': tailleTexte(v.texte, v.texteTaille, T.tailles.etiquette), 'text-allow-overlap': true, 'text-offset': [0, 0.1] }, paint: { 'text-color': couleurTexteEtats(v.champEtat, v.etats, (cc) => resoudre(cc, T), '#000000'), 'text-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12, 1] } });
+      ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'icon-image': icone, 'icon-size': ['interpolate', ['linear'], ['zoom'], 8, 0.55, 14, 0.9, 17, 1.1], 'icon-allow-overlap': true, 'text-field': v.texte && c.policeOk !== false ? ['to-string', ['coalesce', ['get', v.texte], TIRET_MARQUEUR]] : '', 'text-font': police, 'text-size': tailleTexte(v.texte, v.texteTaille, T.tailles.etiquette), 'text-allow-overlap': true, 'text-offset': [0, 0.1] }, paint: { 'text-color': couleurTexteEtats(v.champEtat, v.etats, (cc) => resoudre(cc, T), '#000000'), 'text-opacity': ['interpolate', ['linear'], ['zoom'], 11, 0, 12, 1] } });
     } else if (g === 'point') {
       const rayon = v.type === 'proportionnel' && v.champ ? ['interpolate', ['linear'], ['to-number', ['get', v.champ], 0], v.min ?? 0, v.rMin ?? 4, v.max ?? 100, v.rMax ?? 22] : (v.rayon ?? 6);
       ajouterCalque(c, { id: PREF + 'pts-' + c.id, type: 'circle', source: idSrc(c), paint: { 'circle-radius': ['case', hl, ['+', rayon, 3], rayon], 'circle-color': couleur, 'circle-opacity': 0.9, 'circle-stroke-width': ['case', sel, 3, hl ? 2 : 1], 'circle-stroke-color': ['case', sel, T.selection, contourMarque(0.9)] } });
       const etp = etiquetteDeclaree(v.etiquette);   // l'étiquette d'un point : son texte, sous la marque, posé dans une couche À PART (une police en erreur n'emporte pas les marques)
-      if (etp) {
-        const policeEp = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
+      if (etp && c.policeOk !== false) {   // sans police joignable la couche entière ne serait pas dessinée (setScene a vérifié la police avant de monter)
+        const policeEp = policeSymboles(T);
         ajouterCalque(c, { id: PREF + 'etiq-' + c.id, type: 'symbol', source: idSrc(c), minzoom: Number.isFinite(Number(v.etiquette.zoomMin)) ? Math.min(22, Math.max(0, Number(v.etiquette.zoomMin))) : 0,
           layout: { 'text-field': ['to-string', ['coalesce', ['get', etp.champ], '']], 'text-size': etp.taille, 'text-font': policeEp, 'text-anchor': 'top', 'text-offset': [0, 0.9], 'text-optional': true },
           paint: { 'text-color': T.selection || '#111111', 'text-halo-color': T.halo || '#ffffff', 'text-halo-width': 1.4 } });
@@ -170,8 +190,8 @@ export function attacher(map, opts = {}) {
         // sous un volume, le contour posé au sol traverserait les faces (une couche de lignes n'est pas masquée par une extrusion) : il n'apparaît qu'à la sélection
         ...(vol ? { 'line-opacity': ['case', sel, 1, hl, 1, 0] } : {}) } });
       const et = etiquetteDeclaree(v.etiquette);   // l’étiquette permanente (« 6/25 ») : un texte par surface, jamais masqué par une collision
-      if (et) {
-        const policeEt = T.policeSymboles || (map.getLayer('label_city') && map.getLayoutProperty('label_city', 'text-font')) || ['Noto Sans Regular'];
+      if (et && c.policeOk !== false) {
+        const policeEt = policeSymboles(T);
         ajouterCalque(c, { id: PREF + 'etiq-' + c.id, type: 'symbol', source: idSrc(c), layout: { 'text-field': ['to-string', ['coalesce', ['get', et.champ], '']], 'text-size': et.taille, 'text-font': policeEt, 'text-allow-overlap': true, 'text-ignore-placement': true },
           paint: { 'text-color': T.selection || '#111111', 'text-halo-color': T.halo || '#ffffff', 'text-halo-width': 1.4 } });
       }
@@ -480,7 +500,7 @@ export function attacher(map, opts = {}) {
       // l'environnement déclaré (relief, bâti en volume, ciel, soleil) : brique chargée à la demande, jamais pour une scène qui n'en déclare pas et n'a rien à défaire
       if (manifest.environnement !== undefined || (!fusion && etatEnvironnement)) {
         try {
-          const env = await import('./environnement.js?v=1.42.2');
+          const env = await import('./environnement.js?v=1.43.0');
           if (etatEnvironnement && (!fusion || manifest.environnement !== undefined)) { env.reinitialiserEnvironnement(map, etatEnvironnement); etatEnvironnement = null; }
           const r = env.appliquerEnvironnement(map, env.environnementDeclare(manifest.environnement), { theme });
           etatEnvironnement = Object.values(r.etat).some(Boolean) ? r.etat : null;
@@ -514,8 +534,10 @@ export function attacher(map, opts = {}) {
           const c = creerCouche(def, source);
           const nb = normaliserBulle(def.bulle); c.bulle = nb.bulle;   // la bulle déclarée ; ce qui n'est pas valide est écarté et dit
           if (nb.avertissements.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...nb.avertissements];
+          await verifierLaPolice(c);   // une couche de texte dont la police n'est pas joignable disparaîtrait entièrement (mesuré) : on la monte sans texte, et on le dit
           couches.set(def.id, c); monter(c);
           if (c.avertVisuel && c.avertVisuel.length) avertissements[def.id] = [...(avertissements[def.id] || []), ...c.avertVisuel];
+          if (c.avertPolice) avertissements[def.id] = [...(avertissements[def.id] || []), c.avertPolice];
         }
         catch (e) { const c = couches.get(def.id); if (c) { try { demonter(c); } catch (_) { /* déjà démontée */ } couches.delete(def.id); } erreurs[def.id] = String((e && e.message) || e); }
       }
@@ -602,7 +624,7 @@ export function attacher(map, opts = {}) {
      */
     async getBuildings(o) {
       // brique chargée À LA DEMANDE : la page maigre n'embarque pas un module que la plupart des hôtes n'appellent jamais
-      const B = await import('./batiments.js?v=1.42.2');
+      const B = await import('./batiments.js?v=1.43.0');
       const { normaliserOptionsBatiments, batimentsDeEntites, creerLimiteur, ZOOM_MINIMAL: ZOOM_MINIMAL_BATIMENTS, APPELS_PAR_SECONDE, ATTRIBUTION: ATTRIBUTION_BATIMENTS } = B, intersectionBatiments = B.intersection;
       const opt = normaliserOptionsBatiments(o);
       if (!limiteurBatiments) limiteurBatiments = creerLimiteur(maintenant);
@@ -622,7 +644,7 @@ export function attacher(map, opts = {}) {
      * (visuel, style, légende). Voir lib/bi/features.js pour les plafonds. Une couche de table (sans géométrie) ou une couche administrative est refusée.
      */
     async getFeatures(layer, o) {
-      const F = await import('./features.js?v=1.42.2');
+      const F = await import('./features.js?v=1.43.0');
       const opt = F.normaliserOptionsFeatures(o);
       if (!limiteurFeatures) limiteurFeatures = F.creerLimiteur(maintenant);
       if (!limiteurFeatures()) throw new Error('getFeatures : trop_frequent (' + F.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
