@@ -409,6 +409,7 @@ telle quelle.
 | `forms-registre/cli.js` | `--liste`, `--decrire <commande>`, `<commande> <entree.json \| ->` ; sortie 0 réussi, 1 refus, 2 usage |
 | `forms-registre/mcp.js` | Serveur MCP (stdio, JSON-RPC, sans dépendance) : mêmes commandes que le registre ; une commande qui écrit n'est ni listée ni appelable sans `--autoriser-ecriture` |
 | `forms-registre/webmcp.html` + `navigateur.js` | Page WebMCP (`navigator.modelContext`) : mêmes commandes pures, plus `forms_rendre` / `forms_recolter` qui n'existent que dans la page (nature `exige-la-page`, envoi simulé). Sans WebMCP, `window.formsWebMCP.appeler(nom, entree)`. À PROMOUVOIR avec `forms-registre/` et `shared/valider-schema.js` au moment de la publication |
+| `shared/valider-schema.js` | COPIE DE NÉCESSITÉ de `scripts/valider-schema.js` (le navigateur ne lit pas `scripts/`) ; la queue UMD de l'original est strictement additive (aucun changement du validateur ni de son CLI Node) ; un test garde les deux identiques |
 | `forms-registre/llms.txt` | Présentation pour un agent qui lit du texte, GÉNÉRÉE : `node projects/grist_forms/forms-registre/generer-llms.js` |
 | `forms-registre/fiche-capacites.json` | La fiche (`fiche-capacites-0.1`), GÉNÉRÉE : `node projects/grist_forms/forms-registre/generer-fiche.js` |
 | `tests/forms-registre.test.js` | Descriptions, exemples exécutés, lecture seule, fiche, CLI |
