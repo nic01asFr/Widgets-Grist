@@ -90,7 +90,7 @@ la première d'une famille. Les modules `grist-*` bougent peu : ils deviennent
 ### Étape 4 — Composants d'interface
 
 Le plus long et le moins urgent. À n'engager qu'une fois l'engine stable, et en
-tranchant d'abord l'articulation avec `cerema-geo-components` (cf. §6) : autant
+tranchant d'abord l'articulation avec la bibliothèque commune de composants cartographiques (cf. §6) : autant
 ne pas produire deux familles de composants carto.
 
 ## 5. Points d'extension à spécifier (cas D)
@@ -110,7 +110,7 @@ lignées divergentes.
 
 ## 6. Ce qui reste à trancher
 
-**Articulation avec `cerema-geo-components`** (projet Passerelle) : la répartition
+**Articulation avec la bibliothèque commune de composants cartographiques** (projet Passerelle) : la répartition
 naturelle est *Atlas apporte le modèle applicatif, les Web Components apportent
 l'embarquabilité*. À confirmer avec Passerelle **avant l'étape 4**, sinon deux
 familles de composants coexisteront.

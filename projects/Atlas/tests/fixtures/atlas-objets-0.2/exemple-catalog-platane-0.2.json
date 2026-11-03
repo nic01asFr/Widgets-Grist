@@ -22,7 +22,7 @@
   ],
   "parametric": {
     "schema": "atlas-objets/0.2",
-    "catalog_id": "cerema.vegetation.essai",
+    "catalog_id": "exemple.vegetation.essai",
     "version": "0.2.0",
     "requires_atlas": "1.34.0",
     "generated_at": "2026-10-25T12:00:00+00:00",
@@ -310,14 +310,14 @@
         },
         "licence": {
           "usage": "internal",
-          "notice": "Profils SESAME à licence non vérifiée : usage interne Cerema."
+          "notice": "Profils SESAME à licence non vérifiée : usage interne."
         },
         "sources": [
           {
             "corpus": "SESAME",
             "ref_id": "179",
             "millesime": "export DataSud jeu 3980",
-            "authority": "Cerema",
+            "authority": "Organisation A",
             "licence": "a verifier",
             "statut": "a_verifier"
           },

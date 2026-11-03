@@ -52,11 +52,28 @@
             var causes = [], alerte = false;
             function voile(t) { var v = document.getElementById('bi-voile'); if (v) v.textContent = t; }
             function hote(u) { try { return new URL(u, location.href).host; } catch (e) { return String(u).slice(0, 60); } }
+            /* Les origines à prévenir sont celles que le composant écoute (lireHotes, lib/bi/liaison.js) : la configuration de la page (window.ATLAS_BI.hotes ou
+               <meta name="atlas-bi-hotes">) fait seule autorité si elle déclare au moins une origine valide ; sinon, les ?hote= de l'adresse. Même règle d'origine que normaliserOrigine. */
+            function origine(b) {
+                try {
+                    if (typeof b !== 'string' || b.indexOf('*') >= 0) return null;
+                    var u = new URL(b.trim());
+                    return ((u.protocol === 'https:' || u.protocol === 'http:') && !u.username && !u.password && !u.search && !u.hash && (!u.pathname || u.pathname === '/')) ? u.origin : null;
+                } catch (e) { return null; }
+            }
+            function hotes() {
+                var conf = [];
+                try { if (window.ATLAS_BI && Array.isArray(window.ATLAS_BI.hotes)) conf = conf.concat(window.ATLAS_BI.hotes); } catch (e) { /* configuration illisible */ }
+                try { var m = document.querySelector && document.querySelector('meta[name="atlas-bi-hotes"]'); if (m && m.content) conf = conf.concat(m.content.split(/[\s,]+/)); } catch (e) { /* pas de meta */ }
+                var liste = conf.map(origine).filter(Boolean);
+                if (!liste.length) liste = sp.getAll('hote').map(origine).filter(Boolean);
+                return liste.filter(function (o, i) { return liste.indexOf(o) === i; });
+            }
             function prevenir(code, message, niveau) {
                 if (alerte) return; alerte = true;
                 console.error('[Atlas BI] ' + message);
                 try {
-                    if (window.parent && window.parent !== window) sp.getAll('hote').forEach(function (o) {
+                    if (window.parent && window.parent !== window) hotes().forEach(function (o) {
                         try { window.parent.postMessage({ source: 'atlas-bi', version: '0.3', type: 'error', charge: { code: code, message: message, niveau: niveau || 'fatal' }, origine: 'utilisateur' }, o); } catch (e) { /* origine invalide */ }
                     });
                 } catch (e) { /* pas d'hote */ }

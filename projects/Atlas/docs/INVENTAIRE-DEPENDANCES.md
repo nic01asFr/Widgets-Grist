@@ -29,7 +29,7 @@ Atlas ne dépend d'aucun service pour **démarrer** ; ceux-ci sont sollicités s
 |---|---|---|
 | `docs.getgrist.com` | API de plugin de Grist (`grist-plugin-api.js`) | application dans Grist ; **pas** en mode composant (`bi=1`) |
 | `tiles.openfreemap.org` | fond de carte vectoriel (OpenStreetMap, OpenMapTiles) | fond par défaut |
-| `demotiles.maplibre.org` | polices des étiquettes du style de repli hors réseau | fond de repli |
+| ~~`demotiles.maplibre.org`~~ | polices des étiquettes du style de repli hors réseau : **embarquées** (`lib/bi/polices/`) à partir de la version qui suit la 1.42 | plus appelé |
 | `data.geopf.fr` | Géoplateforme de l'IGN : données BD TOPO et Admin Express, itinéraire, relief | import IGN, relief IGN |
 | `nominatim.openstreetmap.org` | recherche de lieux | recherche d'un lieu |
 | `overpass-api.de` | import de données OpenStreetMap | import OSM |

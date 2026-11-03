@@ -1,4 +1,4 @@
-# Cadrage — Binding complet Atlas v7 × qgis2grist × offre Cerema
+# Cadrage — Binding complet Atlas v7 × qgis2grist × offre de l'organisation
 
 > Synthèse juillet 2026 — après tour d'horizon style, controls, récit, QGIS Atlas.
 > Objectif : interop fonctionnelle et cohérente bout-en-bout (QGIS → Grist → Atlas → storymap).
@@ -68,7 +68,7 @@ QGIS (.qgs / QField / BigQgisMCP)
 | L2 | Gradué BigQgisMCP ≠ filtre range Atlas | Sémantique simulation flood non alignée |
 | L3 | Pas d'import QGIS Print Atlas → story | Récit 100 % manuel ; pas de lien QGIS Atlas |
 | L4 | Encarts récit limités (titre + texte) | Narration pauvre vs layout QGIS (labels, légendes) |
-| L5 | Spec Scene Manifest `story` / `panels` non formalisée Cerema | interop `interactive_map` / DSFR bloquée |
+| L5 | Spec Scene Manifest `story` / `panels` non formalisée côté offre | interop `interactive_map` / DSFR bloquée |
 | L6 | Validation manuelle Bee Farming non faite | Binding non certifié en conditions réelles |
 | L7 | Pas de publication `published/atlas/` | Déploiement gh-pages absent |
 
@@ -87,7 +87,7 @@ QGIS (.qgs / QField / BigQgisMCP)
 | A3 | Cas QGIS standard | Gradué → range ; catégorisé → select ; champ date → time |
 | A4 | Cas BigQgisMCP | flood/temporal → control par couche + `mode: "simulation"` (extension) |
 | A5 | Tests | `tests/controls-from-layer.test.js` + fixture bees + flood |
-| A6 | Doc | Mise à jour `BINDING-QGIS-GRIST-CEREMA-v2.md` § controls |
+| A6 | Doc | Mise à jour du document de binding de qgis2grist, § controls |
 
 **Critère d'acceptation A** : re-import bees.zip → SceneManifest contient `Pollen_Consumption.controls[]` ; Atlas affiche filtre sans config manuelle.
 
@@ -172,7 +172,7 @@ QGIS (.qgs / QField / BigQgisMCP)
 
 ## 5. Matrice responsabilités
 
-| Concern | qgis2grist | Atlas v7 | Grist (tables) | Aval Cerema |
+| Concern | qgis2grist | Atlas v7 | Grist (tables) | Aval (offre) |
 |---------|------------|----------|----------------|-------------|
 | Données géo | import | lecture | tables source | — |
 | StyleDeclarative | émet | lit/écrit prefs | SceneManifest | interactive_map |
@@ -241,7 +241,7 @@ projects/qgis2grist/
   lib/scene-manifest.js          ← A2
   lib/controls-from-layer.js     ← A1 (nouveau)
   lib/layout-atlas-to-story.js   ← D1 (nouveau)
-  docs/BINDING-QGIS-GRIST-CEREMA-v2.md
+  le document de binding de qgis2grist (dossier docs de qgis2grist)
 
 projects/Atlas/
   lib/manifest-binding.js        ← maintenance

@@ -3,17 +3,24 @@
  * un seul endroit, pour que les deux démarrent la même carte.
  */
 
+/**
+ * Les polices de carte EMBARQUÉES (lib/bi/polices/, Noto Sans Regular, latin) : l'adresse des glyphes des fonds qui n'en apportent pas (`base=aucune`, repli hors réseau).
+ * Adresse ABSOLUE construite depuis ce module, `{fontstack}` et `{range}` laissés tels quels pour MapLibre (un `new URL(...)` les encoderait). Avant, ces polices
+ * venaient d'un serveur de démonstration : bloquées (réseau coupé, politique de sécurité de contenu), la couche étiquetée disparaissait avec ses points.
+ */
+export const GLYPHES_EMBARQUES = new URL('./bi/polices/', import.meta.url).href + '{fontstack}/{range}.pbf';
+
 /** Le style de base d'Atlas (OpenFreeMap « Liberty »). */
 export const STYLE_BASE_URL = 'https://tiles.openfreemap.org/styles/liberty';
 
 /**
  * Le fond quand le réseau manque : un aplat. Sans lui, le style de base ne se lit jamais, la carte ne déclare jamais être
  * chargée, et les couches — qui sont sur l'appareil — ne se montent pas : une scène préparée pour le terrain s'ouvrirait sur
- * du blanc. Les glyphes restent ceux du réseau (les étiquettes manqueront, pas les données).
+ * du blanc. Les glyphes sont ceux de la copie (voir GLYPHES_EMBARQUES) : le texte s'affiche sans réseau.
  */
 export const STYLE_HORS_RESEAU = {
     version: 8, name: 'Hors réseau',
-    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    glyphs: GLYPHES_EMBARQUES,
     sources: {},
     layers: [{ id: 'fond-hors-reseau', type: 'background', paint: { 'background-color': '#ece7da' } }],
 };
@@ -24,7 +31,7 @@ export const STYLE_HORS_RESEAU = {
  */
 export const STYLE_AUCUN_FOND = {
     version: 8, name: 'Aucun fond',
-    glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+    glyphs: GLYPHES_EMBARQUES,
     sources: {},
     layers: [{ id: 'background', type: 'background', paint: { 'background-color': '#ffffff' } }],
 };

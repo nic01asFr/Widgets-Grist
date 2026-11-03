@@ -72,7 +72,7 @@ Le **Component / Assembly** du hub n’est **pas** le contrat d’Atlas.
   (comme `meta` du Scene Manifest) ; `runtime` = **rôle**, pas bibliothèque.
 
 **Propriété du schéma Component** : ne pas répéter le piège des « trois 0.2.2 ».
-Source de vérité = Pydantic offre / hub (ou `cerema-offre-de-service`).
+Source de vérité = Pydantic offre / hub (ou le projet d'offre de service).
 Widgets-Grist = **miroir CDN optionnel**, pas autorité, sauf besoin réel d’un
 consommateur chez nous.
 

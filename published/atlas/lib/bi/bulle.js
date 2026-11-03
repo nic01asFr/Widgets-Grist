@@ -24,6 +24,7 @@
 
 import { decalageDansZone } from './marges.js';
 import { lignesLiees, MAX_AFFICHE } from './tables.js';
+import { poserFeuille } from './ui/feuille.js';
 
 export const CHAMPS_MAX = 4;
 export const ACTIONS_MAX = 3;
@@ -209,8 +210,7 @@ export function creerBulle({ map, document: doc = globalThis.document, creerPopu
   let popup = null, courante = null, contenuRacine = null, derniere = null;
   const ecrire = (el) => { if (!el || !appliquer) return; try { appliquer(el, variables()); } catch (_) { /* variables illisibles : les valeurs de repli de la feuille s'appliquent */ } };
   function feuille() {
-    if (!doc || !doc.head || doc.getElementById(STYLE_ID)) return;
-    const s = doc.createElement('style'); s.id = STYLE_ID; s.textContent = FEUILLE; doc.head.appendChild(s);
+    poserFeuille(doc, STYLE_ID, FEUILLE);   // feuille construite : tient sous style-src 'self' (lib/bi/ui/feuille.js)
   }
   function construire(contenu, c, f) {
     const racine = doc.createElement('div'); racine.className = 'atlas-bi-bulle'; racine.setAttribute('role', 'dialog'); racine.setAttribute('aria-label', contenu.titre || 'Objet');

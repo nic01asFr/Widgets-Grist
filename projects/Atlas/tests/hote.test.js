@@ -125,8 +125,8 @@ test('une date absente ou illisible ne montre rien', () => {
 });
 
 test('la situation tolere ce qui manque', () => {
-  assert.equal(situer({ org: 'Cerema', espace: 'Etudes' }), 'Cerema · Etudes');
-  assert.equal(situer({ org: 'Cerema' }), 'Cerema');
+  assert.equal(situer({ org: 'Organisation A', espace: 'Etudes' }), 'Organisation A · Etudes');
+  assert.equal(situer({ org: 'Organisation A' }), 'Organisation A');
   assert.equal(situer({}), '');
 });
 
@@ -172,8 +172,8 @@ test('un stockage defaillant le dit, au lieu de recharger sur la meme scene', ()
 /* ---------- retrouver ses projets au retour ---------- */
 
 const SCENES = [
-  { id: 'a', nom: 'CRESO', org: 'Cerema', espace: 'Etudes', maj: '2026-08-20T10:00:00Z' },
-  { id: 'b', nom: 'Bees', org: 'Cerema', espace: 'Bac', maj: '2026-08-01T10:00:00Z' },
+  { id: 'a', nom: 'CRESO', org: 'Organisation A', espace: 'Etudes', maj: '2026-08-20T10:00:00Z' },
+  { id: 'b', nom: 'Bees', org: 'Organisation A', espace: 'Bac', maj: '2026-08-01T10:00:00Z' },
 ];
 
 test('la liste trouvee se retrouve a l ouverture suivante', () => {

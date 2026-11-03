@@ -6,6 +6,8 @@
  * contrôles, qui filtre ou cible. Sur une carte étroite (téléphone) elle se range en bas, repliée, comme une feuille. Texte seul (`textContent`), thémée par les
  * variables de la charte, repliable au clavier, annoncée comme une région nommée. Module sans dépendance : le DOM et la zone sont injectés.
  */
+import { poserFeuille } from './feuille.js';
+
 const STYLE_ID = 'atlas-bi-legende-style';
 export const FEUILLE = `
 /* La carte de la légende ne défile pas elle-même : seul son corps défile. Une carte à défilement par-dessus la carte laissait, dans Chrome, un rectangle vide au-dessus d'elle. */
@@ -39,7 +41,7 @@ export function couleurSure(c) {
 export function creerLegende({ document: doc = globalThis.document, zone, fournir, position = 'bas-gauche', repliee, cible = false, surClasse = () => {} }) {
   const etroit = typeof zone.etroit === 'function' && zone.etroit();
   if (repliee === undefined) repliee = etroit;   // sur un téléphone, la légende ne couvre pas la carte tant qu’on ne la demande pas
-  if (doc.head && !doc.getElementById(STYLE_ID)) { const s = doc.createElement('style'); s.id = STYLE_ID; s.textContent = FEUILLE; doc.head.appendChild(s); }
+  poserFeuille(doc, STYLE_ID, FEUILLE);   // feuille construite : tient sous style-src 'self' (lib/bi/ui/feuille.js)
   const racine = doc.createElement('section'); racine.className = 'atlas-bi-ui-carte atlas-bi-legende'; racine.setAttribute('aria-label', 'Légende');
   const tete = doc.createElement('button'); tete.type = 'button'; tete.className = 'atlas-bi-legende-tete'; tete.setAttribute('aria-expanded', String(!repliee));
   const titre = doc.createElement('span'); titre.textContent = 'Légende'; const fleche = doc.createElement('span'); fleche.setAttribute('aria-hidden', 'true');

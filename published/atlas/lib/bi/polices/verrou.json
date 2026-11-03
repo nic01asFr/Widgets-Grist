@@ -1,0 +1,50 @@
+{
+  "format": "atlas-polices/1",
+  "police": "Noto Sans Regular",
+  "licence": "SIL Open Font License 1.1 ou Apache License 2.0, selon la version de la police (le fournisseur des glyphes ne précise pas laquelle) : les deux textes sont joints",
+  "copyright": "Copyright 2022 The Noto Project Authors (https://github.com/notofonts/latin-greek-cyrillic)",
+  "recupere": "2026-11-02",
+  "fichiers": {
+    "Noto Sans Regular/0-255.pbf": {
+      "octets": 76580,
+      "integrite": "sha384-+g8f63Mhz+LjnLx1Ecl4PpK55D7zQUa4dZFQ4c6ipiTr5AY20poiM9eyXZ8pwyP7",
+      "origine": "https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/0-255.pbf"
+    },
+    "Noto Sans Regular/256-511.pbf": {
+      "octets": 127219,
+      "integrite": "sha384-GpUqPjSA4gym85a05ZdxdP5hZxD5L49Jw9y4Y2WaRgX67EiY49YCnC18bunqz9+Q",
+      "origine": "https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/256-511.pbf"
+    },
+    "Noto Sans Regular/8192-8447.pbf": {
+      "octets": 34070,
+      "integrite": "sha384-aSzIv5NprXwyuFGgC4Oj40Q8hpG7TLCYhetZpeWLcEA5SHSSvcs5dScHHkKCgdM9",
+      "origine": "https://tiles.openfreemap.org/fonts/Noto%20Sans%20Regular/8192-8447.pbf"
+    }
+  },
+  "pile": [
+    "Noto Sans Regular",
+    "Noto Naskh Arabic Regular",
+    "Noto Sans Armenian Regular",
+    "Noto Sans Balinese Regular",
+    "Noto Sans Bengali Regular",
+    "Noto Sans CJK TC Regular",
+    "Noto Sans Devanagari Regular",
+    "Noto Sans Ethiopic Regular",
+    "Noto Sans Georgian Regular",
+    "Noto Sans Gujarati Regular",
+    "Noto Sans Gurmukhi Regular",
+    "Noto Sans Hebrew Regular",
+    "Noto Sans Javanese Regular",
+    "Noto Sans Kannada Regular",
+    "Noto Sans Khmer Regular",
+    "Noto Sans Lao Regular",
+    "Noto Sans Mongolian Regular",
+    "Noto Sans Myanmar Regular",
+    "Noto Sans Oriya Regular",
+    "Noto Sans Sinhala Regular",
+    "Noto Sans Tamil Regular",
+    "Noto Sans Thai Regular",
+    "Noto Sans Tibetan Regular"
+  ],
+  "remarque": "Les fichiers portent une pile composée (Noto Sans en tête, puis des polices Noto d'autres alphabets) ; les trois plages embarquées ne contiennent que du latin et de la ponctuation, que Noto Sans couvre."
+}

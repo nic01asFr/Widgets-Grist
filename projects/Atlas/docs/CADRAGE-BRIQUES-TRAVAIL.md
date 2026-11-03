@@ -201,7 +201,7 @@ implémentation GeoJSON valide le contrat.
 
 ### Lot 5 — Composants d'interface · non chiffré
 
-À n'engager qu'après arbitrage avec `cerema-geo-components` (Passerelle) —
+À n'engager qu'après arbitrage avec la bibliothèque commune de composants cartographiques (Passerelle) —
 sinon deux familles de composants carto coexisteront.
 
 ---
@@ -257,7 +257,7 @@ réponse décide de la faisabilité du hors-ligne, pas seulement de son confort.
 **Distribution.** Paquet npm, sous-dossier du monorepo, ou copie versionnée ? La
 promotion par script de copie ne tient plus dès qu'un projet tiers dépend d'Atlas.
 
-**`cerema-geo-components`.** Répartition proposée : Atlas apporte le modèle
+**la bibliothèque commune de composants cartographiques.** Répartition proposée : Atlas apporte le modèle
 applicatif, les Web Components l'embarquabilité. À confirmer avec Passerelle
 avant le lot 5.
 ---

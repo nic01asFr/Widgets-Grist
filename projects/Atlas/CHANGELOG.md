@@ -13,6 +13,19 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.43.0 — intégrer la carte chez soi : paquet « carte seule », CSP stricte, polices embarquées
+
+Aucun changement du contrat (0.7) ni du client hôte (`VERSION_CLIENT` 5, même empreinte). Ce qui change touche la page `bi.html`, le paquet web et ce qu'un hôte doit connaître.
+
+- **Deux paquets web par étiquette `atlas-web-v*`** : `complet` (application d'Atlas, profil `complet`) et `bi` (carte seule : `bi.html`, le composant et ce qu'ils importent, sans three.js ni modèles 3D). Chacun porte `PAQUET.json` (empreintes, dépendances externes), `LICENSE`, `CSP.txt` (la politique de sécurité de contenu à poser, avec les empreintes des feuilles de style pour les navigateurs anciens) et `PRECACHE.json` (la liste à précacher pour un fonctionnement hors réseau). La carte seule embarque `controle-copie.mjs`.
+- **`bi.html` sans script ni style en ligne** : il charge `lib/bi/amorcage.js` (garde d'origine), `lib/bi/voile-initial.js`, `lib/bi/demarrer.js` et `lib/page-bi.css`. Elle tient sous `script-src 'self'; style-src 'self'`. Les feuilles de style de l'interface montée passent par `adoptedStyleSheets` (repli : élément `<style>`). La garde d'origine lit `window.ATLAS_BI.hotes` ou `<meta name="atlas-bi-hotes">` avant `?hote=`, avec la même règle d'origine qu'avant.
+- **Polices de carte embarquées** (`lib/bi/polices/`, Noto Sans Regular, trois plages latines, licences OFL 1.1 et Apache 2.0 jointes) : les étiquettes ajoutées par le composant ne demandent plus de glyphes à un serveur extérieur avec `base="aucune"` ou le fond de repli.
+- **Vérification de la police avant d'ajouter des étiquettes** : si les glyphes ne répondent pas, ou si un texte demande une plage que la police n'a pas, la couche est montée **sans étiquettes** (MapLibre ferait sinon disparaître la couche entière, points compris), la scène rend l'avertissement dans `_avertissements` et l'événement `error` porte le code `police`, niveau `avertissement`. Un hôte qui traite tous les `error` comme fatals doit lire `niveau`.
+- **`controle-copie.mjs`** : vérifie une copie (manifeste, empreintes, licence, absence de CDN, fermeture des imports, couverture de `CSP.txt`, précache) et, avec `--navigateur`, la fait fonctionner sous la politique annoncée, y compris sans fond de carte ni hôte extérieur (`--base-aucune`) ; codes de sortie 0, 1, 2 ; `--json`.
+- **Documentation** : `docs/EXPLOITATION-EXTERNE-BI.md` (profils, CSP, même origine ou origine séparée, démarrage lent mesuré à 16 s en Fast 3G et 55 s en Slow 3G, mise à jour d'une copie, compatibilité d'un client plus ancien), `docs/PAQUET-HORS-LIGNE.md`, `docs/INVENTAIRE-DEPENDANCES.md`.
+
+Pour un hôte : un ancien client (version 1 du paquet 1.33.0) se connecte au composant de cette version ; seules les commandes ajoutées depuis lui lui manquent. Le paquet `atlas-web-v1.33.0` n'a ni `LICENSE` ni page sans script en ligne.
+
 ## 1.42.2 — correctif : OpenStreetMap depuis l'application
 
 - **Erreur 406 dans l'application Android** (recherche d'adresse, import OpenStreetMap) : Atlas envoie aussi son `Referer`, et si le service refuse encore le client natif (406 ou 403), la requête repart par le moteur web de la page (`CapacitorWebFetch`), qui présente celui d'un navigateur. Non éprouvé sur un appareil.

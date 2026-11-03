@@ -22,6 +22,17 @@ test('le paquet porte la page maigre, l\'application, le client et les dépendan
   assert.deepEqual(f, [...f].sort(), 'liste triée : le manifeste est reproductible');
 });
 
+test('la licence d’Atlas voyage avec le paquet : MIT impose que l’avis accompagne chaque copie, et vendor/LICENCES.txt ne couvre que les dépendances', () => {
+  assert.ok(fichiersDuPaquet().includes('LICENSE'));
+  const m = construireManifeste({ commit: 'abc1234', genere: '2026-11-02T00:00:00.000Z' });
+  const l = m.fichiers.find((x) => x.chemin === 'LICENSE');
+  const racine = fs.readFileSync(path.join(RACINE, 'LICENSE'));
+  assert.ok(l, 'LICENSE listé dans PAQUET.json');
+  assert.equal(l.sha256, crypto.createHash('sha256').update(racine).digest('hex')); assert.equal(l.octets, racine.length);
+  assert.match(racine.toString('utf8'), /^MIT License/);
+  assert.equal(fichiersDuPaquet(SOURCE, path.join(RACINE, 'projects')).includes('LICENSE'), false, 'sans licence à la racine, rien n’est inventé');
+});
+
 test('le manifeste dit la version, le contrat, le client et son empreinte, et l\'empreinte de chaque fichier', () => {
   const m = construireManifeste({ commit: 'abc1234', genere: '2026-10-25T00:00:00.000Z' });
   const pkg = JSON.parse(fs.readFileSync(path.join(SOURCE, 'package.json'), 'utf8'));
@@ -55,6 +66,7 @@ test('ecrire : le dossier du paquet (avec PAQUET.json) et les notes de la releas
     const { dossier, manifeste } = ecrire({ sortie, commit: 'abc1234' });
     assert.equal(path.basename(dossier), 'atlas-web-' + manifeste.version);
     assert.ok(fs.existsSync(path.join(dossier, 'bi.html'))); assert.ok(!fs.existsSync(path.join(dossier, 'demos')));
+    assert.equal(fs.readFileSync(path.join(dossier, 'LICENSE'), 'utf8'), fs.readFileSync(path.join(RACINE, 'LICENSE'), 'utf8'), 'la licence est écrite dans le paquet');
     assert.deepEqual(JSON.parse(fs.readFileSync(path.join(dossier, 'PAQUET.json'), 'utf8')).fichiers.length, manifeste.fichiers.length);
     for (const f of manifeste.fichiers.slice(0, 20)) assert.equal(crypto.createHash('sha256').update(fs.readFileSync(path.join(dossier, f.chemin))).digest('hex'), f.sha256);
     const notes = fs.readFileSync(path.join(sortie, 'NOTES.md'), 'utf8');

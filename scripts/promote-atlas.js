@@ -56,7 +56,7 @@ pageBi = pageBi.replace('<title>Atlas v7 — Carte</title>', '<title>Atlas — C
 pageBi = normaliserVersions(pageBi);
 if (fs.existsSync(verrouExterne) && fs.existsSync(manifesteExterne)) {
   const vendorHtml = require(path.join(src, 'tools', 'vendor-web-html.cjs'));
-  pageBi = vendorHtml.reecrireHtml(pageBi, JSON.parse(fs.readFileSync(manifesteExterne, 'utf8')));
+  pageBi = vendorHtml.reecrireHtml(pageBi, JSON.parse(fs.readFileSync(manifesteExterne, 'utf8')), { poserDossier: false });   // la page maigre n'a aucun script en ligne
   const resteBi = vendorHtml.resteExterne(pageBi);
   if (resteBi.length) { console.error('Echec : dependances encore en ligne dans bi.html : ' + resteBi.join(', ')); process.exit(1); }
 }
@@ -155,8 +155,21 @@ if (fs.existsSync(biSrc)) {
       if (f.endsWith('.json')) { fs.copyFileSync(path.join(donSrc, f), path.join(donPub, f)); modulesBi++; }
     }
   }
+  // Polices de carte embarquees (glyphes .pbf, licence, verrou) : copiees telles quelles, recursivement. Sans elles, une couche etiquetee disparait avec ses points
+  // des qu'un fond sans glyphes (`base=aucune`, repli hors reseau) est utilise.
+  const polSrc = path.join(biSrc, 'polices'), polPub = path.join(biPub, 'polices');
+  if (fs.existsSync(polSrc)) {
+    const copier = (de, vers) => {
+      fs.mkdirSync(vers, { recursive: true });
+      for (const e of fs.readdirSync(de, { withFileTypes: true })) {
+        if (e.isDirectory()) copier(path.join(de, e.name), path.join(vers, e.name));
+        else { fs.copyFileSync(path.join(de, e.name), path.join(vers, e.name)); modulesBi++; }
+      }
+    };
+    copier(polSrc, polPub);
+  }
   for (const f of fs.readdirSync(biPub)) {
-    if (!f.endsWith('.js')) continue;      // `donnees/` est un dossier : on ne lit que les modules
+    if (!f.endsWith('.js')) continue;      // `donnees/` et `polices/` sont des dossiers : on ne lit que les modules
     for (const m of fs.readFileSync(path.join(biPub, f), 'utf8').matchAll(/from\s+'(\.{1,2}\/[^']+?\.js)(?:\?[^']*)?'/g)) {
       if (!fs.existsSync(path.join(biPub, m[1]))) {
         console.error(`Echec : lib/bi/${f} importe ${m[1]}, absent de la copie publiee`);

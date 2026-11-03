@@ -5,6 +5,8 @@
  * Module sans dépendance : le DOM est injecté. Chargé à la demande, seulement quand la scène déclare `interface` (voir docs/EXPLOITATION-EXTERNE-BI.md).
  * Tout est thémé par les variables `--atlas-*` de la charte (lib/charte/interface.js), rien n’est figé en couleur.
  */
+import { poserFeuille } from './feuille.js';
+
 export const COINS = Object.freeze(['haut-gauche', 'haut-droite', 'bas-gauche', 'bas-droite', 'bas-centre']);
 const STYLE_ID = 'atlas-bi-ui-style';
 const ESPACE = 8;
@@ -31,7 +33,7 @@ export const FEUILLE = `
  */
 export function creerZone({ document: doc = globalThis.document, conteneur, variables = () => ({}), appliquer = null }) {
   if (!doc || !conteneur || typeof conteneur.appendChild !== 'function') throw new Error('zone d’interface : un conteneur de carte est nécessaire');
-  if (doc.head && !doc.getElementById(STYLE_ID)) { const s = doc.createElement('style'); s.id = STYLE_ID; s.textContent = FEUILLE; doc.head.appendChild(s); }
+  poserFeuille(doc, STYLE_ID, FEUILLE);   // feuille construite : tient sous style-src 'self' (lib/bi/ui/feuille.js)
   const racine = doc.createElement('div'); racine.className = 'atlas-bi-ui'; racine.setAttribute('data-atlas-bi-ui', '');
   const coins = new Map();
   for (const nom of COINS) { const c = doc.createElement('div'); c.className = 'atlas-bi-ui-coin atlas-bi-ui-' + nom; coins.set(nom, c); racine.appendChild(c); }
