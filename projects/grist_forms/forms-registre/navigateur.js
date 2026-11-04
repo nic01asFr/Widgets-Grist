@@ -23,7 +23,8 @@
    * @param {object} env
    * @param {object} env.global        porte FormDefFromTable, FormDefFromGristForm, FormConditions, FormFormats, SurveyProject, EnsureSchema,
    *                                   FormThemeDef, Publish, FormSynthese, ValiderSchema, FormsRegistre, et FormEngine pour le rendu
-   * @param {object} [env.navigator]   expose `modelContext` quand le navigateur sait WebMCP
+   * @param {object} [env.document]    expose `modelContext` (forme actuelle de WebMCP)
+   * @param {object} [env.navigator]   ancienne forme : `navigator.modelContext`, gardée en repli
    * @param {function} env.lireJson    (chemin) -> Promise du JSON lu (schéma du FormDef, fiche de capacités)
    * @param {Element} [env.conteneur]  où monter le formulaire (forms_rendre)
    * @param {boolean} [env.pures_seulement]  n'exposer que les commandes pures du registre (page publique) : ni forms_rendre ni forms_recolter
@@ -113,12 +114,29 @@
         };
       });
 
-      var mc = env.navigator && env.navigator.modelContext;
+      // WebMCP : la forme actuelle est `document.modelContext.registerTool(outil, options)` (essai d'origine de Chrome) ; l'ancienne,
+      // `navigator.modelContext`, reste en repli. Dans la forme actuelle, `execute(entree)` rend du TEXTE et l'outil dit s'il a des conséquences.
+      var mc = env.document && env.document.modelContext;
       var expose = false;
-      if (mc && typeof mc.provideContext === 'function') { mc.provideContext({ tools: outils }); expose = true; }
-      else if (mc && typeof mc.registerTool === 'function') { outils.forEach(function (o) { mc.registerTool(o); }); expose = true; }
+      var forme = null;
+      if (mc && typeof mc.registerTool === 'function') {
+        outils.forEach(function (o) {
+          mc.registerTool({
+            name: o.name,
+            description: o.description,
+            inputSchema: o.inputSchema,
+            annotations: { readOnlyHint: o.annotations.readOnlyHint, consequentialHint: !o.annotations.readOnlyHint },
+            execute: function (args) { return o.execute(args).then(function (r) { return r.content[0].text; }); }
+          });
+        });
+        expose = true; forme = 'document';
+      } else {
+        var ancien = env.navigator && env.navigator.modelContext;
+        if (ancien && typeof ancien.provideContext === 'function') { ancien.provideContext({ tools: outils }); expose = true; forme = 'navigator'; }
+        else if (ancien && typeof ancien.registerTool === 'function') { outils.forEach(function (o) { ancien.registerTool(o); }); expose = true; forme = 'navigator'; }
+      }
 
-      return { outils: outils, registre: registre, expose: expose, appeler: appeler, commandesPage: commandesPage };
+      return { outils: outils, registre: registre, expose: expose, forme: forme, appeler: appeler, commandesPage: commandesPage };
     });
   }
 
