@@ -40,6 +40,10 @@
   ],
   "journal": [
     {
+      "version": "v1.5.0",
+      "texte": "L'ordre posé à la main dans le Kanban et le Gantt (glisser-déposer en tri Manuel) est désormais conservé après rechargement et partagé entre les deux vues. Le tri « Ordre du tableau » du Kanban est renommé « Manuel », pour correspondre au Gantt. Le lieu d'une réunion s'affiche de nouveau en mode démonstration."
+    },
+    {
       "version": "v1.4.0",
       "texte": "Les huit vues peuvent désormais prendre la charte de votre document (table Theme_document) ou, à défaut, celle de votre instance Grist — couleurs, mode clair/sombre et police, sans rien configurer. Un réglage « sans thème » reste disponible par widget pour qui préfère l'apparence d'origine. Lieu de réunion géolocalisé et rattachement d'objets externes sur les tâches (Kanban, Gantt, Calendrier). Correction d'un bug au Gantt sur le panneau des tâches rattachées."
     },
