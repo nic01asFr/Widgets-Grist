@@ -121,7 +121,7 @@ export function composerImage(source, opt, mentions, fabrique) {
   }
   let url;
   try { url = toile.toDataURL(opt.mime, opt.qualite); } catch (e) {
-    throw new Error('captureImage : canvas_illisible : le navigateur refuse de lire la carte (un fond ou une donnée tierce sans autorisation d\'origine croisée) — ' + ((e && e.message) || e));
+    throw new Error('captureImage : canvas_illisible : le navigateur refuse de lire la carte (un fond ou une donnée tierce sans autorisation d\'origine croisée) — ' + ((e && e.message) || e), { cause: e });
   }
   if (typeof url !== 'string' || !url.startsWith('data:' + opt.mime)) throw new Error("captureImage : format_indisponible : ce navigateur n'encode pas le format « " + opt.format + ' »');
   const octets = Math.round(((url.length - url.indexOf(',') - 1) * 3) / 4);
