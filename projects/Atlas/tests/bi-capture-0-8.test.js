@@ -118,3 +118,13 @@ test('runtime : des refus à code, un rythme limité', async () => {
   const vite = attacher(carteACapturer(), { fabriqueCanvas: fabriqueSimulee() });
   await vite.api.captureImage(); await assert.rejects(vite.api.captureImage(), /trop_frequent/);
 });
+
+test('runtime : la mention d\'une source décrite par TileJSON est lue dans la source chargée, pas dans le style', async () => {
+  const m = carteACapturer();
+  m.getStyle = () => ({ layers: [], glyphs: '', sources: { fond: { type: 'vector', url: 'https://tuiles.test/planet' }, relief: { type: 'raster-dem', attribution: 'Relief' } } });
+  m.getSource = (id) => (id === 'fond' ? { attribution: '<a href="https://openfreemap.org">OpenFreeMap</a> © OpenMapTiles' } : null);
+  const { api } = attacher(m, { fabriqueCanvas: fabriqueSimulee({ octets: 2000 }) });
+  const r = await api.captureImage({ largeur: 800 });
+  assert.deepEqual(r.attributions, ['OpenFreeMap © OpenMapTiles']);
+  assert.ok(!r.avertissements.some((a) => /^attribution-vide/.test(a)));
+});

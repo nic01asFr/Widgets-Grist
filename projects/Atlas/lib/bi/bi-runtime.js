@@ -709,7 +709,10 @@ export function attacher(map, opts = {}) {
         map.triggerRepaint();
       });
       let sources = {}; try { sources = map.getStyle().sources || {}; } catch (e) { /* un style illisible n'a pas de mentions */ }
-      const r = C.composerImage(source, opt, C.mentionsDeSources(sources), fabrique);
+      // une source décrite par TileJSON ne porte sa mention que dans la source chargée (le style n'en a pas) : on la lit là aussi (les doublons sont écartés)
+      const chargees = [];
+      try { for (const [id, s] of Object.entries(sources)) { const x = s && s.type !== 'raster-dem' && typeof map.getSource === 'function' ? map.getSource(id) : null; if (x && typeof x.attribution === 'string') chargees.push(x.attribution); } } catch (e) { /* on garde les mentions du style */ }
+      const r = C.composerImage(source, opt, C.mentionsDeSources(sources, chargees), fabrique);
       return { ...r, avertissements: [...avertissements, ...r.avertissements], camera: etatCamera() };
     },
     /**
