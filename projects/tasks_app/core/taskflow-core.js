@@ -303,7 +303,7 @@ const TF = (function () {
     function initUi() {
         if (typeof document === 'undefined' || initUi.done) return;
         initUi.done = true;
-        try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
+        try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
         // Bandeau (recherche / filtres / affichage) : un clic sur le bouton l'ouvre ou le referme, Echap le referme.
         // Il reste ouvert pendant la manipulation du widget : les filtres s'appliquent en direct.
         document.addEventListener('click', (e) => {
@@ -399,7 +399,9 @@ const TF = (function () {
         image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
         plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
         today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>',
-        pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'
+        pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+        check: '<polyline points="20 6 9 17 4 12"/>',
+        shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'
     };
     const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
 

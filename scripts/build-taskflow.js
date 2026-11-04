@@ -45,8 +45,12 @@ const TARGETS = [
     path.join(ROOT, 'projects', 'tasks_app', 'cra.html'),
     path.join(ROOT, 'projects', 'tasks_app', 'orgchart.html')
 ];
-// Le CSS commun ne concerne que les 4 widgets principaux.
-const UI_TARGETS = TARGETS.slice(0, 4);
+// Le CSS commun : les 4 widgets principaux, plus cra/orgchart desormais alignes sur le meme
+// skin (lot 1 de l'harmonisation des en-tetes). Plan et Whiteboard suivront (lots 2 et 3).
+const UI_TARGETS = TARGETS.slice(0, 4).concat([
+    path.join(ROOT, 'projects', 'tasks_app', 'cra.html'),
+    path.join(ROOT, 'projects', 'tasks_app', 'orgchart.html')
+]);
 
 const NOTE = ' -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI';
 const BLOCKS = [
