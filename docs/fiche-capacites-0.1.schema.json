@@ -226,6 +226,9 @@
         "type": "string"
       }
     },
+    "entree_webmcp": {
+      "type": "string"
+    },
     "interfaces": {
       "type": "object",
       "additionalProperties": false,

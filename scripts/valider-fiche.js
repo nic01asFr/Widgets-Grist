@@ -32,6 +32,10 @@ function validerFiche(fiche, { schema = chargerSchema(), catalogue = chargerCata
   if (ecarts.length) return ecarts;
 
   if (!/^[a-z][a-z0-9-]*$/.test(fiche.widget)) ecarts.push(`widget : « ${fiche.widget} » n'est pas un identifiant`);
+  if (fiche.entree_webmcp !== undefined) {
+    if (typeof fiche.entree_webmcp !== 'string' || !/^[a-z0-9][a-z0-9_.\/-]*[.]js$/.test(fiche.entree_webmcp) || fiche.entree_webmcp.includes('..')) ecarts.push(`entree_webmcp : « ${fiche.entree_webmcp} » doit être un chemin relatif vers un module .js, sans « .. »`);
+    if (!fiche.interfaces || fiche.interfaces.webmcp !== true) ecarts.push('entree_webmcp : exige interfaces.webmcp à true');
+  }
   if (!/^[0-9]+[.][0-9]+[.][0-9]+$/.test(fiche.version)) ecarts.push(`version : « ${fiche.version} » n'est pas x.y.z`);
 
   const vues = new Map();

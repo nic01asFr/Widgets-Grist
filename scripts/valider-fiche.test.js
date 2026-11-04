@@ -49,3 +49,17 @@ test('la parité compare le registre, la fiche et le CLI', () => {
   assert.match(verifierParite({ ...base, listeCli: () => ['demo_creer', 'demo_rendre'] }).join(), /commandes pures/);
   assert.match(verifierParite({ ...base, fiche: { verbes: { creer: ['demo_creer'] } } }).join(), /pas les mêmes commandes/);
 });
+
+const schemaFiche = require('../docs/fiche-capacites-0.1.schema.json');
+const baseWebmcp = {
+  contrat: 'fiche-capacites-0.1', widget: 'demo', version: '1.0.0',
+  presentation: { titre: 'D', resume: 'R' },
+  verbes: { presenter: ['demo_capacites'] }, non_couverts: [], contrats: { produit: [], lit: [] },
+  prerequis: { acces_grist: 'none' }, limites: ['x'], exemples: ['demo_capacites'],
+  interfaces: { skill: true, cli: true, mcp: true, webmcp: true, vitrine: true },
+};
+const ecartsWebmcp = (f) => validerFiche(f, { schema: schemaFiche, catalogue: { schemas: [] } }).filter((e) => e.includes('entree_webmcp'));
+
+test('entree_webmcp : un chemin relatif propre est accepté', () => assert.deepEqual(ecartsWebmcp({ ...baseWebmcp, entree_webmcp: 'demo-registre/webmcp-entree.js' }), []));
+test('entree_webmcp : un chemin qui remonte est refusé', () => assert.equal(ecartsWebmcp({ ...baseWebmcp, entree_webmcp: '../x.js' }).length, 1));
+test('entree_webmcp : exige interfaces.webmcp', () => assert.equal(ecartsWebmcp({ ...baseWebmcp, interfaces: { ...baseWebmcp.interfaces, webmcp: false }, entree_webmcp: 'a.js' }).length, 1));

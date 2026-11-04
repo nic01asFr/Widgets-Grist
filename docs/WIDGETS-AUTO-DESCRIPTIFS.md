@@ -69,7 +69,7 @@ Fiche lisible par une machine et par une personne, schéma versionné COMMUN à 
 }
 ```
 
-`interfaces` (facultatif en 0.1) dit lesquelles des cinq le widget fournit réellement ; une interface à `false` est dite, pas passée sous silence. Un verbe sans commande est listé dans `non_couverts` : il n'est pas passé sous silence.
+`entree_webmcp` (facultatif) nomme, relatif au widget publié, le module navigateur autoportant qui expose `installer()` : la vitrine l'injecte sur la page du widget quand `interfaces.webmcp` est vrai, sans rien savoir du widget ; seules les commandes `pure` qui n'écrivent rien y sont enregistrées. `interfaces` (facultatif en 0.1) dit lesquelles des cinq le widget fournit réellement ; une interface à `false` est dite, pas passée sous silence. Un verbe sans commande est listé dans `non_couverts` : il n'est pas passé sous silence.
 
 Le mot `capacites` reste libre pour les widgets qui l'emploient déjà autrement (Atlas : les briques chargées, renvoyées par `ping()` et refusées par `capacite_absente`) ; la fiche porte donc le nom `fiche-capacites`. Un contrat non encore au catalogue se déclare avec `catalogue: false` et son `empreinte`.
 
