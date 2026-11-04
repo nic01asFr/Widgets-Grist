@@ -26,23 +26,23 @@ Version 1.6.0. Généré depuis `fiche-capacites.json` (contrat fiche-capacites-
 
 ### configurer
 
-- `forms_plan_schema` : Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante.
+- `forms_plan_schema` : Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il ne lit AUCUN document : il compare le FormDef à `colonnes_existantes` et `table_existe`, que l’appelant doit fournir. Sans eux, il suppose une table sans colonne et prévoit un AddColumn par champ, sans AddTable. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante. Il refuse (`ok: false`, `errors`) un Choice ou ChoiceList sans liste de choix (dans `choices[colId]` à la racine ou `options.choices` du champ).
   Entrée requise : `formdef` ; calcul pur ; n’écrit rien.
 
 ### creer
 
-- `forms_formdef_depuis_colonnes` : Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes). Rend `formdef: null` quand aucune colonne ne donne de question.
+- `forms_formdef_depuis_colonnes` : Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes et colonnes calculées). Rend `formdef: null` quand aucune colonne ne donne de question. Les choix d’une colonne Choice ou ChoiceList sont lus dans son `widgetOptions` (chaîne JSON `{"choices":["a","b"]}`) et rangés dans `options.choices` du champ ; sans `widgetOptions`, le champ n’a pas de choix et forms_plan_schema le refusera. La racine `choices` du FormDef rendu reste `{}` : les choix vivent dans le champ.
   Entrée requise : `tableId`, `colonnes` ; calcul pur ; n’écrit rien.
 - `forms_formdef_depuis_formulaire_grist` : Lit les formulaires natifs d’un document Grist et rend chacun en FormDef. L’entrée est le contenu des tables de métadonnées (tables, colonnes, vues, sections, champs), tel que fetchTable le rend.
   Entrée requise : `meta` ; calcul pur ; n’écrit rien.
 
 ### structurer
 
-- `forms_valider_formdef` : Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. Un FormDef conforme rend une liste d’écarts vide.
+- `forms_valider_formdef` : Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. `conforme` ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. `plan_realisable` dit si le plan serait calculé sur une table à créer, et `avertissements` rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.
   Entrée requise : `formdef` ; calcul pur ; n’écrit rien.
 - `forms_valider_condition` : Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; `bloquant` dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».
   Entrée requise : `condition` ; calcul pur ; n’écrit rien.
-- `forms_verifier_format` : Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`.
+- `forms_verifier_format` : Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`. Pour attacher un format à une question d’un FormDef, ajouter au champ `validation: { "format": "courriel" }` (mode `verifier` par défaut : une réponse non conforme est refusée ; `corriger` remet la forme en ordre sans refuser, réservé aux noms).
   Entrée requise : `format`, `valeur` ; calcul pur ; n’écrit rien.
 - `forms_formdef_vers_manifeste_enquete` : Convertit un FormDef en manifeste d’enquête (survey-manifest). Sens inverse : forms_manifeste_enquete_vers_formdef.
   Entrée requise : `formdef` ; calcul pur ; n’écrit rien.

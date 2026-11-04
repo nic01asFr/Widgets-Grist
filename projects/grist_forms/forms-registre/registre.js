@@ -51,14 +51,38 @@
       {
         nom: 'forms_formdef_depuis_colonnes',
         verbe: 'creer',
-        description: 'Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes). Rend `formdef: null` quand aucune colonne ne donne de question.',
-        entree: { type: 'object', required: ['tableId', 'colonnes'], properties: { tableId: TEXTE, colonnes: LISTE, titre: TEXTE, ignorer: LISTE } },
+        description: 'Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes et colonnes calculées). Rend `formdef: null` quand aucune colonne ne donne de question. Les choix d’une colonne Choice ou ChoiceList sont lus dans son `widgetOptions` (chaîne JSON `{"choices":["a","b"]}`) et rangés dans `options.choices` du champ ; sans `widgetOptions`, le champ n’a pas de choix et forms_plan_schema le refusera. La racine `choices` du FormDef rendu reste `{}` : les choix vivent dans le champ.',
+        entree: {
+          type: 'object', required: ['tableId', 'colonnes'],
+          properties: {
+            tableId: { type: 'string', description: 'Identifiant Grist de la table.' },
+            colonnes: {
+              type: 'array', description: 'Les colonnes telles que `_grist_Tables_column` les donne.',
+              items: {
+                type: 'object', required: ['colId', 'type'],
+                properties: {
+                  colId: { type: 'string', description: 'Identifiant de la colonne.' },
+                  type: { type: 'string', description: 'Type Grist : Text, Int, Numeric, Bool, Date, DateTime, Choice, ChoiceList, Ref:Table, RefList:Table, Attachments.' },
+                  label: { type: 'string', description: 'Libellé affiché ; à défaut, le colId.' },
+                  isFormula: { type: 'boolean', description: 'Vrai pour une colonne calculée : elle est écartée.' },
+                  widgetOptions: { type: 'string', description: 'Chaîne JSON des options Grist ; porte la liste des choix : {"choices":["a","b"]}.' },
+                  visibleCol: { description: 'Colonne affichée pour une référence.' }
+                }
+              }
+            },
+            titre: { type: 'string', description: 'Titre du formulaire ; à défaut, le tableId.' },
+            ignorer: { type: 'array', items: { type: 'string' }, description: 'colId à écarter en plus des colonnes internes (par exemple la géométrie d’une couche).' }
+          }
+        },
         sortie: { type: 'object', required: ['formdef'] },
         nature: 'pure',
         ecrit: 'rien',
         exemples: [{
           titre: 'Une table de deux colonnes',
           entree: { tableId: 'Inscriptions', colonnes: [{ colId: 'nom', type: 'Text', label: 'Nom' }, { colId: 'age', type: 'Int', label: 'Âge' }] }
+        }, {
+          titre: 'Une colonne à choix, lus dans widgetOptions',
+          entree: { tableId: 'Inscriptions', colonnes: [{ colId: 'atelier', type: 'Choice', label: 'Atelier', widgetOptions: '{"choices":["Matin","Après-midi"]}' }] }
         }],
         executer: function (e) {
           return { formdef: exiger('FormDefFromTable').formDefDepuisColonnes(e) };
@@ -80,17 +104,25 @@
       {
         nom: 'forms_valider_formdef',
         verbe: 'structurer',
-        description: 'Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. Un FormDef conforme rend une liste d’écarts vide.',
+        description: 'Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. `conforme` ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. `plan_realisable` dit si le plan serait calculé sur une table à créer, et `avertissements` rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.',
         entree: { type: 'object', required: ['formdef'], properties: { formdef: OBJET } },
-        sortie: { type: 'object', required: ['conforme', 'ecarts'] },
+        sortie: { type: 'object', required: ['conforme', 'ecarts', 'plan_realisable', 'avertissements'] },
         nature: 'pure',
         ecrit: 'rien',
-        exemples: [{ titre: 'Un FormDef vide', entree: { formdef: {} } }],
+        exemples: [{ titre: 'Un FormDef vide', entree: { formdef: {} } }, {
+          titre: 'Conforme au contrat, mais un Choice sans choix : le plan sera refusé',
+          entree: { formdef: { manifest_version: '1.0.0', id: 'exemple', title: 'Exemple', tableId: 'Exemple', composeMode: 'bind', sections: [{ id: 'main', label: 'Exemple', fields: [{ colId: 'atelier', type: 'Choice', widget: 'select', label: 'Atelier', required: false }] }], choices: {} } }
+        }],
         executer: function (e) {
           var valider = exiger('validerSchema');
           var schema = exiger('schemaFormDef');
           var ecarts = valider(e.formdef, schema, schema);
-          return { conforme: ecarts.length === 0, ecarts: ecarts };
+          var avertissements = [];
+          if (!ecarts.length) {
+            var plan = exiger('EnsureSchema').planEnsureSchema(e.formdef, [], { tableExists: false });
+            avertissements = plan.ok ? [] : (plan.errors || []);
+          }
+          return { conforme: ecarts.length === 0, ecarts: ecarts, plan_realisable: ecarts.length === 0 && avertissements.length === 0, avertissements: avertissements };
         }
       },
       {
@@ -113,7 +145,7 @@
       {
         nom: 'forms_verifier_format',
         verbe: 'structurer',
-        description: 'Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`.',
+        description: 'Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`. Pour attacher un format à une question d’un FormDef, ajouter au champ `validation: { "format": "courriel" }` (mode `verifier` par défaut : une réponse non conforme est refusée ; `corriger` remet la forme en ordre sans refuser, réservé aux noms).',
         entree: { type: 'object', required: ['format', 'valeur'], properties: { format: TEXTE, valeur: {} } },
         sortie: { type: 'object', required: ['connu', 'valide', 'normalise', 'message_si_invalide'] },
         nature: 'pure',
@@ -159,8 +191,15 @@
       {
         nom: 'forms_plan_schema',
         verbe: 'configurer',
-        description: 'Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante.',
-        entree: { type: 'object', required: ['formdef'], properties: { formdef: OBJET, colonnes_existantes: LISTE, table_existe: { type: 'boolean' } } },
+        description: 'Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il ne lit AUCUN document : il compare le FormDef à `colonnes_existantes` et `table_existe`, que l’appelant doit fournir. Sans eux, il suppose une table sans colonne et prévoit un AddColumn par champ, sans AddTable. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante. Il refuse (`ok: false`, `errors`) un Choice ou ChoiceList sans liste de choix (dans `choices[colId]` à la racine ou `options.choices` du champ).',
+        entree: {
+          type: 'object', required: ['formdef'],
+          properties: {
+            formdef: { type: 'object', description: 'Un FormDef (formdef-1.0). Les choix d’une question à choix : `options.choices` du champ ou `choices[colId]` à la racine.' },
+            colonnes_existantes: { type: 'array', items: { type: 'object' }, description: 'Les colonnes déjà présentes dans la table, au format { colId, type, … } ; à fournir pour que le plan ne recrée pas ce qui existe.' },
+            table_existe: { type: 'boolean', description: 'Vrai si la table existe déjà : le plan n’émet alors pas d’AddTable.' }
+          }
+        },
         sortie: { type: 'object', required: ['ok', 'actions'] },
         nature: 'pure',
         ecrit: 'rien',
