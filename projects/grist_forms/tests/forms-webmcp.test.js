@@ -204,3 +204,48 @@ describe('Page WebMCP Form Builder : le module d’entrée que la vitrine inject
     assert.ok(!/method:\s*['"](POST|PUT|PATCH|DELETE)/i.test(entree));
   });
 });
+
+describe('Page WebMCP Form Builder : la forme actuelle de l’API (document.modelContext)', () => {
+  it('enregistre chaque outil par document.modelContext.registerTool, en lecture seule, sans conséquence, et execute rend du texte', async () => {
+    const enregistres = [];
+    const doc = { modelContext: { registerTool: (t) => enregistres.push(t) } };
+    const { page } = await installer(undefined, { document: doc, navigator: {}, pures_seulement: true });
+    assert.equal(page.expose, true);
+    assert.equal(page.forme, 'document');
+    assert.deepEqual(enregistres.map((t) => t.name).sort(), registre.commandes.map((c) => c.nom).sort());
+    for (const t of enregistres) {
+      assert.equal(t.annotations.readOnlyHint, true, t.name);
+      assert.equal(t.annotations.consequentialHint, false, t.name);
+      assert.equal(typeof t.inputSchema, 'object');
+    }
+    const t = enregistres.find((x) => x.name === 'forms_verifier_format');
+    const texte = await t.execute({ format: 'codePostal', valeur: '13001' });
+    assert.equal(typeof texte, 'string');
+    assert.equal(JSON.parse(texte).valide, true);
+  });
+
+  it('préfère document.modelContext à l’ancienne forme quand les deux existent', async () => {
+    const nouveaux = [];
+    const anciens = [];
+    const doc = { modelContext: { registerTool: (t) => nouveaux.push(t) } };
+    const nav = { modelContext: { provideContext: (c) => anciens.push(...c.tools) } };
+    const { page } = await installer(undefined, { document: doc, navigator: nav, pures_seulement: true });
+    assert.equal(page.forme, 'document');
+    assert.equal(anciens.length, 0);
+    assert.ok(nouveaux.length > 0);
+  });
+
+  it('retombe sur navigator.modelContext quand document.modelContext manque', async () => {
+    const { page, fournis } = await installer(undefined, { document: {}, pures_seulement: true });
+    assert.equal(page.forme, 'navigator');
+    assert.equal(fournis.length, registre.commandes.length);
+  });
+
+  it('sans aucune des deux, la page reste utilisable par le repli', async () => {
+    const ctx = espace();
+    const page = await ctx.FormsWebMCP.installer({ global: ctx, document: {}, navigator: {}, lireJson, pures_seulement: true });
+    assert.equal(page.expose, false);
+    assert.equal(page.forme, null);
+    assert.equal(page.appeler('forms_verifier_format', { format: 'codePostal', valeur: '13001' }).ok, true);
+  });
+});

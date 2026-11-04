@@ -43,6 +43,7 @@
       .then(function () {
         return root.FormsWebMCP.installer({
           global: root,
+          document: root.document,
           navigator: root.navigator,
           pures_seulement: true,
           lireJson: function (chemin) {
@@ -52,7 +53,7 @@
       })
       .then(function (p) {
         root.formsWebMCP = { appeler: p.appeler };
-        return { outils: p.outils, expose: p.expose, appeler: p.appeler };
+        return { outils: p.outils, expose: p.expose, forme: p.forme, appeler: p.appeler };
       });
   }
 
