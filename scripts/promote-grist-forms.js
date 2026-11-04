@@ -52,6 +52,18 @@ COPY_DIRS.forEach(function (d) {
   copyDir(path.join(SRC, d), path.join(DEST, d));
 });
 
+// Le widget auto-descriptif (forms-registre) : seulement ce qui sert en ligne, c'est-a-dire le module que la vitrine injecte et ce qu'il lit.
+// Le CLI et le serveur MCP requierent les scripts du depot (scripts/valider-schema.js) : ils restent dans les sources, pas dans published/.
+// La fiche, les commandes, le llms.txt et le skill vont aussi a la racine du widget, la ou la vitrine les cherche.
+const REGISTRE_EN_LIGNE = ['registre.js', 'navigateur.js', 'webmcp-entree.js', 'fiche-capacites.json', 'commandes.json'];
+const REGISTRE_A_LA_RACINE = ['fiche-capacites.json', 'commandes.json', 'llms.txt', 'SKILL.md'];
+const REGISTRE_SRC = path.join(SRC, 'forms-registre');
+if (fs.existsSync(REGISTRE_SRC)) {
+  fs.mkdirSync(path.join(DEST, 'forms-registre'), { recursive: true });
+  REGISTRE_EN_LIGNE.forEach(function (f) { fs.copyFileSync(path.join(REGISTRE_SRC, f), path.join(DEST, 'forms-registre', f)); });
+  REGISTRE_A_LA_RACINE.forEach(function (f) { fs.copyFileSync(path.join(REGISTRE_SRC, f), path.join(DEST, f)); });
+}
+
 // La version se lit dans le journal de la fiche de vitrine (sa première entrée) : c'est elle qu'on écrit à chaque
 // publication. Elle était ici en dur (« 1.4.0 ») et écrasait, à chaque promotion, la version corrigée à la main.
 function versionPubliee() {

@@ -285,6 +285,10 @@
   },
   "journal": [
     {
+      "version": "v1.7.0",
+      "texte": "Form Builder se laisse décrire et piloter par un agent. Une page « Pour un agent » dit ce que le widget sait faire, commande par commande, avec son entrée et sa sortie, et ce qu'il ne couvre pas encore. La même description sert un fichier pour les moteurs de recherche et les assistants (llms.txt), un skill prêt à l'emploi, une ligne de commande, un serveur MCP et, sur la page, des outils WebMCP que les navigateurs compatibles proposent aux agents. Douze commandes de calcul, qui n'écrivent jamais dans un document : déduire un formulaire des colonnes d'une table, le vérifier, éprouver un format, calculer le plan de création d'une table ou d'une page, relire des réponses. Aucun navigateur grand public n'expose encore WebMCP : la page reste lisible sans, et ces commandes restent appelables à la main. Les commandes précisent aussi mieux ce qu'elles font : un plan dit qu'il ne lit aucun document, et un formulaire conforme au contrat mais sans liste de choix est signalé avant d'échouer."
+    },
+    {
       "version": "v1.6.1",
       "texte": "Une page hors de Grist qui contourne le formulaire ne peut plus faire passer une note hors échelle pour une réponse en règle. Sur une échelle de 1 à 5, un 9, ou l’absence de réponse que Grist écrit alors 0, est maintenant marqué non conforme dans la colonne « Conforme ». Pour un document déjà préparé, il suffit de relancer « Préparer la table » pour mettre à jour la formule."
     },
