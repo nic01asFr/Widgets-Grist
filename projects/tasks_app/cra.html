@@ -29,19 +29,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
 body { display: flex; flex-direction: column; background: var(--bg); color: var(--text); overflow: hidden; }
-.topbar { flex-shrink: 0; display: flex; align-items: center; gap: 14px; padding: 12px 20px; border-bottom: 1px solid var(--border); background: var(--card-bg); flex-wrap: wrap; }
-h1 { font-size: 1.15rem; font-weight: 700; }
 .status { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-muted); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
 .dot.ok { background: var(--ok); }
-.sp { flex: 1; }
-.week { display: flex; align-items: center; gap: 4px; }
-.wbtn { border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: 7px; padding: 5px 9px; font-size: .78rem; cursor: pointer; font-family: inherit; line-height: 1; }
-.wbtn:hover { color: var(--text); }
-.wlabel { font-size: .82rem; font-weight: 600; min-width: 150px; text-align: center; }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.seg button { border: none; background: var(--bg); color: var(--text-muted); padding: 6px 11px; font-size: .76rem; font-weight: 600; cursor: pointer; font-family: inherit; }
-.seg button.active { background: var(--primary); color: #fff; }
 .btn { border: 1px solid var(--primary); background: var(--primary); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
 .btn.ghost { background: var(--bg); color: var(--text); border-color: var(--border); }
 .btn:hover { background: var(--primary-dark); }
@@ -2558,14 +2548,21 @@ TF.ui.mount({
     meta: '<div class="status"><span class="dot" id="stDot"></span><span id="stTxt">Demo</span></div>'
   },
   view: [
-    '<div class="seg" id="tabSeg"><button data-t="saisie" class="active">Ma semaine</button><button data-t="valider" id="tabValider">A valider</button></div>',
-    '<div class="week"><button class="wbtn" id="wPrev" title="Semaine precedente">&lsaquo;</button><span class="wlabel" id="wLabel"></span><button class="wbtn" id="wNext" title="Semaine suivante">&rsaquo;</button><button class="wbtn" id="wNow" title="Semaine courante">Auj.</button></div>',
-    '<div class="seg" id="unitSeg"><button data-u="heures" class="active">h</button><button data-u="jours">j</button><button data-u="demi">&frac12;j</button></div>'
+    TF.ui.segmented({ cls: 'tab-seg', items: [
+      { label: 'Ma semaine', id: 'tabSaisie', active: true, onclick: "switchTab('saisie')" },
+      { label: 'A valider', id: 'tabValider', onclick: "switchTab('valider')" }
+    ] }),
+    TF.ui.periodNav({ id: 'wLabel', text: '', prev: 'weekPrev()', next: 'weekNext()', today: 'weekNow()' }),
+    TF.ui.segmented({ cls: 'unit-seg', items: [
+      { label: 'h', id: 'uHeures', active: true, onclick: "setUnit('heures')" },
+      { label: 'j', id: 'uJours', onclick: "setUnit('jours')" },
+      { label: '½j', id: 'uDemi', onclick: "setUnit('demi')" }
+    ] })
   ],
   tools: [],
   actions: [
     TF.ui.button({ id: 'submitBtn', icon: 'check', label: 'Soumettre la semaine' }),
-    TF.ui.button({ id: 'exportBtn', cls: 'btn ghost', icon: 'download', label: 'Export', title: 'Export Excel (CSV)' })
+    TF.ui.button({ id: 'exportBtn', cls: 'btn ghost', icon: 'download', label: 'Export', title: 'Export Excel (CSV)', onclick: 'exportCSV()' })
   ]
 });
 
@@ -2646,7 +2643,8 @@ function render() {
   const pending = S.feuilles.filter(f => S.mesGeres.includes(f.membre) && f.statut === 'soumis').length;
   tv.style.display = S.mesGeres.length ? 'inline-block' : 'none';
   tv.textContent = 'A valider' + (pending ? ' (' + pending + ')' : '');
-  document.querySelectorAll('#tabSeg button').forEach(b => b.classList.toggle('active', b.dataset.t === S.tab));
+  document.getElementById('tabSaisie').classList.toggle('active', S.tab === 'saisie');
+  document.getElementById('tabValider').classList.toggle('active', S.tab === 'valider');
   updateSubmitBtn();
   const main = document.getElementById('main');
   if (!S.hasTable) {
@@ -2760,16 +2758,17 @@ function taskRealizedHours(taskId) { let h = 0; for (const e of S.entries) if (e
 
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2600); }
 
-// ---- Controles ------------------------------------------------------------
-document.getElementById('wPrev').onclick = () => { S.weekStart -= 7 * DAY; render(); };
-document.getElementById('wNext').onclick = () => { S.weekStart += 7 * DAY; render(); };
-document.getElementById('wNow').onclick = () => { S.weekStart = mondayOf(Date.now()); render(); };
-document.getElementById('unitSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('#unitSeg button').forEach(x => x.classList.remove('active'));
-  b.classList.add('active'); S.unit = b.dataset.u; render();
-});
-document.getElementById('tabSeg').querySelectorAll('button').forEach(b => b.onclick = () => { S.tab = b.dataset.t; render(); });
-document.getElementById('exportBtn').onclick = () => exportCSV();
+// ---- Controles (appeles depuis les onclick de l'en-tete partagee) --------
+function weekPrev() { S.weekStart -= 7 * DAY; render(); }
+function weekNext() { S.weekStart += 7 * DAY; render(); }
+function weekNow() { S.weekStart = mondayOf(Date.now()); render(); }
+function setUnit(u) {
+  document.querySelectorAll('.unit-seg button').forEach(x => x.classList.remove('active'));
+  const map = { heures: 'uHeures', jours: 'uJours', demi: 'uDemi' };
+  const btn = document.getElementById(map[u]); if (btn) btn.classList.add('active');
+  S.unit = u; render();
+}
+function switchTab(t) { S.tab = t; render(); }
 
 // ---- Workflow : soumission / validation par le chef (via l'annuaire) ------
 function myStatut() { const f = S.feuilles.find(x => x.membre === S.me && sameDay(gristToMs(x.semaine), S.weekStart)); return f ? f.statut : 'brouillon'; }

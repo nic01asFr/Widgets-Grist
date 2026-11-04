@@ -30,12 +30,6 @@
 html, body { height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
 body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
 
-.topbar { flex-shrink: 0; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--card-bg); border-bottom: 1px solid var(--border); }
-.topbar h1 { font-size: 1.15rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-.topbar .sp { flex: 1; }
-.seg { display: flex; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.seg button { border: none; background: transparent; color: var(--text-muted); padding: 6px 12px; font-size: .78rem; font-weight: 600; cursor: pointer; font-family: inherit; }
-.seg button.active { background: var(--primary); color: #fff; }
 .period { display: flex; align-items: center; gap: 4px; }
 .pbtn { border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: 7px; padding: 5px 9px; font-size: .78rem; cursor: pointer; font-family: inherit; line-height: 1; }
 .pbtn:hover { color: var(--text); }
@@ -108,7 +102,7 @@ body { background: var(--bg); color: var(--text); display: flex; flex-direction:
 .eact button.del:hover { background: var(--over); color: #fff; }
 .prow { cursor: pointer; }
 /* Bouton + modale Droits (ACL) */
-.acl-btn { display: none; align-items: center; gap: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: 7px; padding: 5px 10px; font-size: .76rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.acl-btn { display: none; align-items: center; gap: 5px; border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: var(--ctl-r, 7px); height: var(--ctl-h, 34px); box-sizing: border-box; padding: 0 10px; font-size: .76rem; font-weight: 600; cursor: pointer; font-family: inherit; }
 .acl-btn:hover { color: var(--primary); border-color: var(--primary); }
 .acl-btn.on { display: inline-flex; }
 .modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: none; align-items: center; justify-content: center; z-index: 100; }
@@ -2614,12 +2608,20 @@ TF.ui.mount({
   },
   view: [
     '<div class="period" id="periodCtl"><span class="pchip">Periode courante</span><span class="plabel" id="pLabel"></span></div>',
-    '<div class="seg" id="granSeg"><button data-g="semaine" class="active">Sem.</button><button data-g="mois">Mois</button><button data-g="trimestre">Trim.</button></div>',
-    '<div class="seg" id="measureSeg"><button data-m="charge" class="active">Charge</button><button data-m="realise">Realise</button><button data-m="effectif">Effectif</button></div>'
+    TF.ui.segmented({ cls: 'gran-seg', items: [
+      { label: 'Sem.', id: 'gSemaine', active: true, onclick: "setGran('semaine')" },
+      { label: 'Mois', id: 'gMois', onclick: "setGran('mois')" },
+      { label: 'Trim.', id: 'gTrimestre', onclick: "setGran('trimestre')" }
+    ] }),
+    TF.ui.segmented({ cls: 'measure-seg', items: [
+      { label: 'Charge', id: 'mCharge', active: true, onclick: "setMeasure('charge')" },
+      { label: 'Realise', id: 'mRealise', onclick: "setMeasure('realise')" },
+      { label: 'Effectif', id: 'mEffectif', onclick: "setMeasure('effectif')" }
+    ] })
   ],
   tools: [],
   actions: [
-    '<button class="acl-btn" id="aclBtn" title="Configurer les droits selon l\'annuaire"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Droits</button>'
+    '<button class="acl-btn" id="aclBtn" title="Configurer les droits selon l\'annuaire">' + TF.ui.icon('shield', 14) + '<span class="btn-label">Droits</span></button>'
   ]
 });
 
@@ -2902,16 +2904,20 @@ function renderPanel() {
   panel.innerHTML = html;
 }
 
-// ---- Mesure --------------------------------------------------------------
-document.getElementById('measureSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('#measureSeg button').forEach(x => x.classList.remove('active'));
-  b.classList.add('active'); S.measure = b.dataset.m; render();
-});
+// ---- Mesure (appelees depuis les onclick de l'en-tete partagee) ----------
+function setMeasure(m) {
+  document.querySelectorAll('.measure-seg button').forEach(x => x.classList.remove('active'));
+  const map = { charge: 'mCharge', realise: 'mRealise', effectif: 'mEffectif' };
+  const btn = document.getElementById(map[m]); if (btn) btn.classList.add('active');
+  S.measure = m; render();
+}
 function recompute() { computeCharge(); computeRealise(); render(); }
-document.getElementById('granSeg').querySelectorAll('button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('#granSeg button').forEach(x => x.classList.remove('active'));
-  b.classList.add('active'); S.gran = b.dataset.g; recompute();
-});
+function setGran(g) {
+  document.querySelectorAll('.gran-seg button').forEach(x => x.classList.remove('active'));
+  const map = { semaine: 'gSemaine', mois: 'gMois', trimestre: 'gTrimestre' };
+  const btn = document.getElementById(map[g]); if (btn) btn.classList.add('active');
+  S.gran = g; recompute();
+}
 
 // =========================================================================
 //  Grist
