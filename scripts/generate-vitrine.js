@@ -1197,12 +1197,13 @@ ${corps}
 }
 
 /**
- * L'enregistrement WebMCP : la page du widget charge le module que la fiche nomme (entree_webmcp) et appelle son `installer()`.
+ * L'enregistrement WebMCP : la page du widget charge le script que la fiche nomme (entree_webmcp) et appelle `EntreeWebMCP.installer()`, que ce script pose.
  * Le generateur ne sait rien du widget ; le module n'enregistre que les commandes pures qui n'ecrivent rien. Sans WebMCP dans le
  * navigateur, ou si le module echoue, la page reste la meme : le texte est la porte des robots.
  */
 function scriptWebmcp(id, entree) {
-  return `\n<script type="module">import('../../../${id}/${entree}').then(function (m) { if (m && typeof m.installer === 'function') m.installer(); }).catch(function () { /* page lisible sans */ });</` + 'script>';
+  return `\n<script src="../../../${id}/${entree}"></` + 'script>'
+    + `\n<script>addEventListener('load', function () { var e = self.EntreeWebMCP; if (e && typeof e.installer === 'function') { try { var r = e.installer(); if (r && r.catch) r.catch(function () { /* page lisible sans */ }); } catch (x) { /* page lisible sans */ } } });</` + 'script>';
 }
 
 /** Les annexes declarees par la fiche d'un projet, celles qui ont de quoi etre rendues (un identifiant et un titre). */

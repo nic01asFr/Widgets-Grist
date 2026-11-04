@@ -145,8 +145,8 @@ test('la page agents charge le module WebMCP nomme par la fiche, et rien sinon',
   const p = projet();
   p.agents = V.agentsDe(p, avec);
   const html = V.rendreAnnexe(p, V.annexesDe(p).find((a) => a.id === 'agents'), BASE);
-  assert.match(html, /import\('\.\.\/\.\.\/\.\.\/essai\/forms-registre\/webmcp-entree\.js'\)/);
-  assert.match(html, /m\.installer\(\)/);
+  assert.match(html, /<script src="\.\.\/\.\.\/\.\.\/essai\/forms-registre\/webmcp-entree\.js"><\/script>/);
+  assert.match(html, /EntreeWebMCP/);
   assert.match(html, /<link rel="alternate" type="text\/plain" href="\.\.\/\.\.\/\.\.\/essai\/llms\.txt"/);
   assert.match(html, /application\/ld\+json/);
 
@@ -154,7 +154,7 @@ test('la page agents charge le module WebMCP nomme par la fiche, et rien sinon',
   const q = projet();
   q.agents = V.agentsDe(q, sans);
   const h2 = V.rendreAnnexe(q, V.annexesDe(q).find((a) => a.id === 'agents'), BASE);
-  assert.doesNotMatch(h2, /import\(/);
+  assert.doesNotMatch(h2, /EntreeWebMCP/);
   assert.doesNotMatch(h2, /llms\.txt/);
 });
 
