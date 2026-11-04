@@ -26,6 +26,7 @@
    * @param {object} [env.navigator]   expose `modelContext` quand le navigateur sait WebMCP
    * @param {function} env.lireJson    (chemin) -> Promise du JSON lu (schéma du FormDef, fiche de capacités)
    * @param {Element} [env.conteneur]  où monter le formulaire (forms_rendre)
+   * @param {boolean} [env.pures_seulement]  n'exposer que les commandes pures du registre (page publique) : ni forms_rendre ni forms_recolter
    * @returns {Promise<{outils:object[], registre:object, expose:boolean, appeler:function}>}
    */
   function installer(env) {
@@ -90,6 +91,7 @@
 
       function appeler(nom, entree) {
         var page = commandesPage.filter(function (c) { return c.nom === nom; })[0];
+        if (page && env.pures_seulement) return { ok: false, erreur: { code: 'exige-la-page', message: nom + ' n’est pas proposée sur cette page : elle monte un formulaire vivant.' } };
         if (page) {
           var ecarts = modules.valider(entree === undefined ? {} : entree, page.entree, page.entree);
           if (ecarts.length) return { ok: false, erreur: { code: 'entree-invalide', message: 'L’entrée ne correspond pas au schéma de ' + nom + '.', details: ecarts } };
@@ -98,7 +100,7 @@
         return registre.appeler(nom, entree);
       }
 
-      var outils = registre.commandes.concat(commandesPage).map(function (c) {
+      var outils = (env.pures_seulement ? registre.commandes : registre.commandes.concat(commandesPage)).map(function (c) {
         return {
           name: c.nom,
           description: c.description,

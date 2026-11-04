@@ -169,3 +169,37 @@ describe('Page WebMCP Form Builder : les fichiers qui l’accompagnent', () => {
     assert.ok(pos('shared/derivation-valeurs.js') < pos('shared/themedef.js'));
   });
 });
+
+describe('Page WebMCP Form Builder : le module d’entrée que la vitrine injecte', () => {
+  const entree = fs.readFileSync(path.join(RACINE, 'forms-registre', 'webmcp-entree.js'), 'utf8');
+
+  it('la fiche nomme ce module, et il existe', () => {
+    const fiche = registre.fiche();
+    assert.equal(fiche.interfaces.webmcp, true);
+    assert.equal(fiche.entree_webmcp, 'forms-registre/webmcp-entree.js');
+    assert.ok(fs.existsSync(path.join(RACINE, fiche.entree_webmcp)));
+  });
+
+  it('il charge les mêmes scripts, dans le même ordre, que webmcp.html', () => {
+    const ctx = vm.createContext({ console });
+    ctx.self = ctx;
+    vm.runInContext(entree, ctx);
+    const html = fs.readFileSync(path.join(RACINE, 'forms-registre', 'webmcp.html'), 'utf8');
+    const dePage = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual([...ctx.FormsWebMCPEntree.SCRIPTS], dePage);
+    assert.equal(typeof ctx.FormsWebMCPEntree.installer, 'function');
+  });
+
+  it('en page publique (pures_seulement) : les commandes du registre seulement, jamais forms_rendre ni forms_recolter', async () => {
+    const { page, fournis } = await installer(undefined, { pures_seulement: true });
+    assert.deepEqual(fournis.map((t) => t.name).sort(), registre.commandes.map((c) => c.nom).sort());
+    const r = page.appeler('forms_rendre', { formdef: {} });
+    assert.equal(r.ok, false);
+    assert.equal(r.erreur.code, 'exige-la-page');
+  });
+
+  it('il ne contient aucun appel d’écriture ni aucune adresse hors du widget', () => {
+    assert.ok(!/https?:\/\//.test(entree.replace(/\/\*[\s\S]*?\*\//g, '')));
+    assert.ok(!/method:\s*['"](POST|PUT|PATCH|DELETE)/i.test(entree));
+  });
+});

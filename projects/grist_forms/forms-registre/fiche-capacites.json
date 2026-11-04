@@ -112,5 +112,6 @@
     "mcp": true,
     "webmcp": true,
     "vitrine": true
-  }
+  },
+  "entree_webmcp": "forms-registre/webmcp-entree.js"
 }
