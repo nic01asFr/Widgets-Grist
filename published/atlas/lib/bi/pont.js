@@ -10,9 +10,9 @@
  */
 import { verifierTaille } from '../charte/schema.js';
 
-export const VERSION = '0.7';
-/** Versions d'hôte acceptées : les 0.3 à 0.7 n'ajoutent que des commandes et des événements ; une 0.2 reste servie pour ses 19 commandes, une 0.3 pour les siennes. */
-export const VERSIONS_ACCEPTEES = Object.freeze(['0.2', '0.3', '0.4', '0.5', '0.6', '0.7']);
+export const VERSION = '0.8';
+/** Versions d'hôte acceptées : les 0.3 à 0.8 n'ajoutent que des commandes et des événements ; une 0.2 reste servie pour ses 19 commandes, une 0.3 pour les siennes. */
+export const VERSIONS_ACCEPTEES = Object.freeze(['0.2', '0.3', '0.4', '0.5', '0.6', '0.7', '0.8']);
 export const SOURCE_RUNTIME = 'atlas-bi';
 export const SOURCE_HOTE = 'hote-bi';
 
@@ -61,6 +61,13 @@ export const COMMANDES = Object.freeze({
   // --- contrat 0.7 : le soleil de la scène (date et heure, ombres), pour une page dont la 3D doit rester synchrone avec la carte ---
   setSun: [['object', true]],
   getSun: [],
+  // --- contrat 0.8 : les altitudes elles-mêmes, pour une page qui calcule (écoulement, bassin versant, profil) ---
+  getElevationGrid: [['object', false]],
+  // --- le récit piloté par la page : lire ses étapes, en jouer une (profil complet seulement) ---
+  getRecit: [],
+  goToStep: [['any', true], ['object', false]],
+  // --- la figure papier d'un état figé de la carte ---
+  captureImage: [['object', false]],
 });
 /** Commandes ajoutées par la 0.3 (une commande 0.3 envoyée avec la version 0.2 est refusée). */
 export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne', 'getTheme']);
@@ -72,8 +79,10 @@ export const COMMANDES_0_5 = Object.freeze(['getFeatures']);
 export const COMMANDES_0_6 = Object.freeze(['exportScene3D']);
 /** Commandes ajoutées par la 0.7. */
 export const COMMANDES_0_7 = Object.freeze(['setSun', 'getSun']);
+/** Commandes ajoutées par la 0.8. */
+export const COMMANDES_0_8 = Object.freeze(['getElevationGrid', 'getRecit', 'goToStep', 'captureImage']);
 /** La plus petite version du contrat qui connaît la commande. */
-export function versionDeCommande(cmd) { return COMMANDES_0_7.includes(cmd) ? '0.7' : COMMANDES_0_6.includes(cmd) ? '0.6' : COMMANDES_0_5.includes(cmd) ? '0.5' : COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
+export function versionDeCommande(cmd) { return COMMANDES_0_8.includes(cmd) ? '0.8' : COMMANDES_0_7.includes(cmd) ? '0.7' : COMMANDES_0_6.includes(cmd) ? '0.6' : COMMANDES_0_5.includes(cmd) ? '0.5' : COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
 /** Vrai si la version `v` du contrat (« 0.x ») est au moins `min`. Une version illisible n'est jamais suffisante. */
 export function versionAuMoins(v, min) {
   const mineure = (x) => { const [maj, min2] = String(x).split('.').map(Number); return maj === 0 && Number.isFinite(min2) ? min2 : NaN; };
@@ -91,12 +100,28 @@ export const CAPACITES = Object.freeze(['edition', 'points', 'socle', 'temps', '
 /** Brique dont dépend chaque commande. `socle` : ce qui vaut pour toute scène (carte, thème, fond, cadrage, couches, filtres, sélection). */
 export const CAPACITE_DE_COMMANDE = Object.freeze({
   ping: 'socle', setScene: 'socle', setLayerVisibility: 'socle', setFilter: 'socle', select: 'socle', highlight: 'socle', flyTo: 'socle', fitTo: 'socle',
-  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle', getCamera: 'socle', watchCamera: 'socle', setViewMode: 'socle', getBuildings: 'socle', getFeatures: 'socle', exportScene3D: 'socle', setSun: 'socle', getSun: 'socle',
+  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle', getCamera: 'socle', watchCamera: 'socle', setViewMode: 'socle', getBuildings: 'socle', getFeatures: 'socle', getElevationGrid: 'socle', getRecit: 'socle', goToStep: 'socle', captureImage: 'socle', exportScene3D: 'socle', setSun: 'socle', getSun: 'socle',
   setVisual: 'points',
   setTime: 'temps', play: 'temps', pause: 'temps',
   setEdition: 'edition', updateFeature: 'edition',
   addAdminLayer: 'territoires', removeLayer: 'territoires', setChoropleth: 'territoires', setStatistique: 'territoires', drillDown: 'territoires', drillUp: 'territoires', setDrillAuto: 'territoires', setUnitFilter: 'territoires',
 });
+
+/**
+ * Commandes qui n'existent que dans le profil complet (l'application : scène 3D, soleil, récit). La carte nue les REFUSE (`capacite_absente`) ; le profil complet les
+ * ajoute à la liste du `ping` quand il les branche (`commandesServies(capacites, branchees)`).
+ */
+export const COMMANDES_PROFIL_COMPLET = Object.freeze(['exportScene3D', 'setSun', 'getSun', 'getRecit', 'goToStep']);
+/**
+ * Les noms des commandes que ce chargement SERT (le `ping` les annonce) : celles du contrat dont la brique est présente, hors commandes du profil complet, plus celles que le
+ * profil complet a branchées. Triée : un hôte teste `commandes.includes('getElevationGrid')` au lieu de tenter l'appel et d'attendre un refus.
+ */
+export function commandesServies(capacites, branchees = []) {
+  const presentes = new Set(capacites);
+  const base = Object.keys(COMMANDES).filter((nom) => !COMMANDES_PROFIL_COMPLET.includes(nom) && (!CAPACITE_DE_COMMANDE[nom] || presentes.has(CAPACITE_DE_COMMANDE[nom])));
+  return [...new Set([...base, ...branchees.filter((n) => nom_ok(n))])].sort();
+}
+const nom_ok = (n) => typeof n === 'string' && Object.prototype.hasOwnProperty.call(COMMANDES, n);
 
 /** Erreur d'une commande ou d'un type de couche dont la brique n'est pas dans ce chargement. */
 export class ErreurCapacite extends Error {

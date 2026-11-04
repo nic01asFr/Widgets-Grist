@@ -23,6 +23,8 @@
  * @typedef {{VERSIONS_LUES: string[], deballerScene: Function, verifierFormeScene: Function, adresseAdmise: Function}} OutilsScene
  */
 
+import { commandesServies } from './pont.js';
+
 export const PLAFOND_OCTETS = 4 * 1024 * 1024;
 export const PLAFOND_COUCHES = 64;
 /** Le type d'une couche qui désigne une maquette en dalles 3D servies par adresse (voir `lib/dalles3d-geo.js`). */
@@ -166,6 +168,8 @@ export function brancher(rt, canevas) {
   const idSceneDe = (idCouche) => Object.keys(correspondance).find((k) => correspondance[k] === idCouche) || null;
   const desabonner = typeof canevas.abonner === 'function' ? canevas.abonner((type, c) => {
     // le soleil a changé dans l'application (contrat 0.7) : la même forme que `getSun`, `origine` api pour l'effet de `setSun`
+    // l'étape du récit a changé (contrat 0.8) : la même forme que le retour de `goToStep`, `origine` api pour l'effet de `goToStep`
+    if (type === 'step') { if (c && c.etat) rt._interne.emettre('step', c.etat, c.origine === 'api' ? 'api' : 'utilisateur'); return; }
     if (type === 'sun') { if (c && c.etat) rt._interne.emettre('sun', c.etat, c.origine === 'api' ? 'api' : 'utilisateur'); return; }
     if (type !== 'select' && type !== 'hover') return;
     const layer = c && c.couche ? idSceneDe(c.couche) : null;
@@ -190,6 +194,12 @@ export function brancher(rt, canevas) {
       return { ...r, dockSoleil: canevas.soleil.dockVisible() };
     };
   }
-  api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
+  // le récit de l'application (contrat 0.8) : ses étapes, et le moyen d'en jouer une
+  if (canevas.recit && typeof canevas.recit.lire === 'function') {
+    api.getRecit = () => canevas.recit.lire();
+    api.goToStep = (cible, o) => canevas.recit.aller(cible, o);
+  }
+  const branchees = [...(typeof canevas.exporter3d === 'function' ? ['exportScene3D'] : []), ...(canevas.soleil && typeof canevas.soleil.lire === 'function' ? ['getSun', 'setSun'] : []), ...(canevas.recit && typeof canevas.recit.lire === 'function' ? ['getRecit', 'goToStep'] : [])];
+  api.ping = () => { const p = avant.ping(); return { ...p, commandes: commandesServies(p.capacites || [], branchees), canevas: true, couches_scene: Object.keys(correspondance) }; };
   return { couches: () => ({ ...correspondance }), desabonner };
 }

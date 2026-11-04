@@ -13,7 +13,7 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
-## 1.44.0 — contrat 0.8 : altitudes, récit piloté, figure papier ; client 6 (EN PRÉPARATION, non publié)
+## 1.44.0 — contrat 0.8 : altitudes, récit piloté, figure papier ; client 6 (04/11/2026)
 
 Contrat **0.8**, additif : une commande 0.2 à 0.7 reste servie, un client plus ancien reste compris. Nouveau client de l'hôte : `VERSION_CLIENT` **6**, nouvelle empreinte (voir la table ci-dessus) : annoncée aux hôtes avant publication.
 

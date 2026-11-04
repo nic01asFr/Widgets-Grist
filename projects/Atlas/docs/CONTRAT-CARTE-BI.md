@@ -360,6 +360,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.40.0 | 0.6 | `exportScene3D` : option `sol` (aplat, dalle, fond de carte à plat), luminaires du catalogue exportés. Contrat et client inchangés. |
 | 1.41.0 | 0.6 | `exportScene3D` : option `relief`, `sol.format`, bâti et surfaces rognés à l'emprise, attribution du fond décodée avec sa licence. Contrat et client inchangés. |
 | 1.42.0 | 0.6 -> 0.7 | contrat 0.7, additif : `setSun`, `getSun`, événement `sun`, champ `soleil` de `exportScene3D`, option `soleil` de `setViewMode` ; `VERSION_CLIENT` 5. Une commande 0.2 à 0.6 reste servie. |
-| à venir (1.44.0) | 0.7 -> 0.8 | contrat 0.8, additif : `getElevationGrid` ; `getRecit`, `goToStep` et l'événement `step` ; `captureImage` ; `VERSION_CLIENT` 6. Une commande 0.2 à 0.7 reste servie. |
+| 1.44.0 (04/11/2026) | 0.7 -> 0.8 | contrat 0.8, additif : `getElevationGrid` ; `getRecit`, `goToStep` et l'événement `step` ; `captureImage` ; `VERSION_CLIENT` 6. Une commande 0.2 à 0.7 reste servie. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

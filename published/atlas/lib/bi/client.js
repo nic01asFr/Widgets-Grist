@@ -13,20 +13,22 @@
  * Garanties :
  *  - chaque commande renvoie une promesse, résolue par l'accusé du composant, rejetée par son erreur ou à l'expiration du
  *    délai maximal (`delai`, défaut 10 s) ;
+ *  - `connecter()` échoue VITE quand le composant annonce une erreur fatale (`error`, niveau `fatal` : une dépendance qui ne se charge pas), avec la cause ; sinon il attend
+ *    `delaiConnexion` (90 s par défaut : 55 s mesurées en 3G lente) et le message du délai cite ce que le composant a signalé entre-temps ;
  *  - les messages d'une origine ou d'une fenêtre inattendue sont écartés (`transportFenetre`), jamais traités ;
  *  - les commandes partent avec une `targetOrigin` précise, jamais `*` ;
- *  - la version du contrat se négocie (0.7, puis 0.6, 0.5, 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
+ *  - la version du contrat se négocie (0.8, puis 0.7, 0.6, 0.5, 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
  *  - anti-boucle : les événements se filtrent par leur champ `origine` (voir `on`).
  */
 import { COMMANDES, VERSIONS_ACCEPTEES, SOURCE_RUNTIME, SOURCE_HOTE, versionsCompatibles, estCommande, versionDeCommande, versionAuMoins } from './pont.js';
 
 /** Révision de ce fichier client (entier croissant), pour qu'un hôte qui l'a copié sache ce qu'il embarque. Distincte de la version du contrat. */
-export const VERSION_CLIENT = 5;
+export const VERSION_CLIENT = 6;
 
 /** Versions que ce client sait parler, de la plus récente à la plus ancienne. */
 export const VERSIONS_CLIENT = Object.freeze([...VERSIONS_ACCEPTEES].reverse());
 
-/** Erreur d'une commande. `code` : delai, deconnecte, version, origine, forme, commande, argument, capacite_absente (avec `capacite`), api. */
+/** Erreur d'une commande. `code` : delai, deconnecte, version, origine, forme, commande, argument, capacite_absente (avec `capacite`), api ; à la connexion aussi `composant` (erreur fatale annoncée par le composant, avec `details.causes`). */
 export class ErreurBi extends Error {
   constructor(code, message, details) { super(message); this.name = 'ErreurBi'; this.code = code; if (details !== undefined) this.details = details; }
 }
@@ -79,10 +81,10 @@ const nouvelId = () => 'h' + (++compteur).toString(36) + Math.random().toString(
  *   intervalle?:number, versions?:string[], minuterie?:{setTimeout:Function, clearTimeout:Function, setInterval:Function, clearInterval:Function}}} o
  *   delai : délai maximal d'une commande (ms) ; delaiConnexion : attente du composant à la connexion ; intervalle : relance du ping
  */
-export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, intervalle = 250, versions = VERSIONS_CLIENT, minuterie = globalThis } = {}) {
+export function creerClient({ transport, delai = 10000, delaiConnexion = 90000, intervalle = 250, versions = VERSIONS_CLIENT, minuterie = globalThis } = {}) {
   const attente = new Map();           // id -> { resolve, reject, minuteur, cmd }
   const ecouteurs = new Map();         // type -> Set({ cb, origine })
-  let desinscrire = null, connecte = false, version = null, composant = null, signalPret = null;
+  let desinscrire = null, connecte = false, version = null, composant = null, signalPret = null, surErreur = null;
 
   const livrer = (type, charge, meta) => {
     for (const e of ecouteurs.get(type) || []) {
@@ -104,6 +106,7 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
       return;
     }
     if (msg.type === 'ready' && msg.charge && msg.charge.runtime === true && signalPret) signalPret(msg.charge);
+    if (msg.type === 'error' && surErreur) surErreur(msg.charge);
     livrer(msg.type, msg.charge, { origine: msg.origine, version: msg.version, type: msg.type });
   }
   function demarrerEcoute() { if (!desinscrire) desinscrire = transport.ecouter(recevoir); }
@@ -136,9 +139,9 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
       if (connecte) return Promise.resolve({ version, ...composant });
       demarrerEcoute();
       return new Promise((resolve, reject) => {
-        let fini = false; let essai = 0; let timer = null, chien = null; const sondes = new Set();
+        let fini = false; let essai = 0; let timer = null, chien = null; const sondes = new Set(); const causes = [];
         const terminer = (err) => {
-          if (fini) return; fini = true; signalPret = null; minuterie.clearInterval(timer); minuterie.clearTimeout(chien);
+          if (fini) return; fini = true; signalPret = null; surErreur = null; minuterie.clearInterval(timer); minuterie.clearTimeout(chien);
           for (const id of sondes) { const a = attente.get(id); if (a) { minuterie.clearTimeout(a.minuteur); attente.delete(id); } }   // les sondes sans réponse ne doivent rien laisser en attente
           if (err) return reject(err);
           connecte = true; resolve({ version, ...composant });
@@ -150,13 +153,20 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
           version = v; terminer(null);
         };
         signalPret = adopter;
+        // ce que le composant dit de lui-même pendant la connexion : une erreur fatale la coupe tout de suite, les autres s'ajoutent au message du délai
+        surErreur = (charge) => {
+          if (!charge || typeof charge !== 'object') return;
+          const texte = String(charge.message || charge.code || 'erreur').slice(0, 300);
+          if (!causes.includes(texte)) causes.push(texte);
+          if (charge.niveau === 'fatal') terminer(new ErreurBi('composant', 'le composant ne peut pas démarrer : ' + texte, { causes: [...causes], code: charge.code === undefined ? null : String(charge.code).slice(0, 40) }));
+        };
         const sonde = () => {
           const v = versions[Math.min(essai, versions.length - 1)];
           envoyerCommande('ping', [], v, Math.min(delai, intervalle * 4), sondes).then(
             (r) => { if (!fini) { composant = { ...(composant || {}), ...(r || {}) }; version = v; terminer(null); } },
             (e) => { if (e.code === 'version') essai++; /* sinon : nouvel essai au prochain tour */ });
         };
-        chien = minuterie.setTimeout(() => terminer(new ErreurBi('delai', 'le composant ne répond pas après ' + delaiConnexion + " ms : vérifier l'URL, et que l'origine de cet hôte est déclarée au composant (?hote=<origine>)")), delaiConnexion);
+        chien = minuterie.setTimeout(() => terminer(new ErreurBi('delai', 'le composant ne répond pas après ' + delaiConnexion + " ms. Causes possibles : l'URL du composant ; l'origine de cet hôte non déclarée au composant (?hote=<origine>) ; un réseau très lent (augmenter delaiConnexion)" + (causes.length ? ' ; signalé par le composant : ' + causes.join(' ; ') : ''), { causes: [...causes] })), delaiConnexion);
         timer = minuterie.setInterval(sonde, intervalle); sonde();
       });
     },

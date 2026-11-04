@@ -22,8 +22,8 @@
  *    `charte="herite"` (au lieu d'une adresse) : la charte est LUE dans la page hôte (couleurs, famille de police, mode sombre ; voir `lib/bi/herite.js`) et relue
  *    quand le thème de la page change (événement `atlas-bi-herite`). Convention sûre : poser `--atlas-principal`, `--atlas-fond`, `--atlas-encre`, `--atlas-police` en CSS ;
  *  - `delai`: délai maximal d'une commande, en millisecondes (défaut 10 000) ;
- *  - `delai-connexion` : attente du composant à la connexion, en millisecondes (défaut 30 000 : un démarrage à froid prend 15 à 45 s sur un réseau lent ;
- *    le défaut du client en un fichier, 8 000, est trop court pour cela : passez `delaiConnexion: 30000` à `creerClient`) ;
+ *  - `delai-connexion` : attente du composant à la connexion, en millisecondes (défaut 90 000 depuis le client 6 : un démarrage à froid prend 15 à 55 s sur un réseau lent, et une erreur fatale du composant coupe l'attente tout de suite ;
+ *    le client en un fichier a le même défaut depuis la version 6, il était de 8 000 avant) ;
  *  - `evenements-api` : présent -> reçoit aussi les événements provoqués par vos propres commandes (défaut : gestes de
  *    l'utilisateur seulement, ce qui évite les boucles).
  *
@@ -121,7 +121,7 @@ export class AtlasBi extends Base {
     this.style.display = this.style.display || 'block';
     this.appendChild(cadre); this._cadre = cadre;
     const delai = Number(this.getAttribute('delai')) || 10000;
-    const delaiConnexion = Number(this.getAttribute('delai-connexion')) || 30000;
+    const delaiConnexion = Number(this.getAttribute('delai-connexion')) || 90000;
     const client = creerClient({ delai, delaiConnexion, transport: transportFenetre({ fenetre: window, cadre, origineComposant: url.origin }) });
     this._client = client;
     const tout = this.hasAttribute('evenements-api') ? 'tout' : 'utilisateur';

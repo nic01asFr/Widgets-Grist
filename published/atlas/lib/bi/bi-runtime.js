@@ -8,14 +8,14 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.43.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.43.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.44.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.44.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.43.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.44.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
-import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite, VERSION as VERSION_PONT } from './pont.js';
+import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite, commandesServies, VERSION as VERSION_PONT } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, TIRET_MARQUEUR, tailleTexte } from './icones-etats.js';
 import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, extrusionDeclaree, curseurDeclare, traceLigneDeclare, CURSEURS } from './style-polygone.js';
@@ -387,6 +387,20 @@ export function attacher(map, opts = {}) {
   const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
   const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
   let limiteurFeatures = null;    // idem pour getFeatures
+  let limiteurElevation = null;   // idem pour getElevationGrid
+  let limiteurCapture = null;     // idem pour captureImage
+  /** Vrai quand la carte est posée (mouvement fini) et chargée (tuiles) ; faux si le délai (ms) s'écoule avant. Une carte qui ne sait pas le dire est tenue pour posée. */
+  function cartePosee(delai) {
+    if (typeof map.areTilesLoaded !== 'function' || typeof map.isMoving !== 'function') return Promise.resolve(true);
+    return new Promise((ok) => {
+      let clos = false, minuteur = null;
+      const fin = (v) => { if (clos) return; clos = true; annuler(minuteur); try { map.off('idle', auRepos); } catch (e) { /* carte retirée */ } ok(v); };
+      const auRepos = () => { if (!map.isMoving() && map.areTilesLoaded()) fin(true); };
+      minuteur = planifier(() => fin(false), delai);
+      map.on('idle', auRepos);
+      if (typeof map.triggerRepaint === 'function') map.triggerRepaint();   // une carte déjà au repos ne produirait pas d'événement `idle` sans cela
+    });
+  }
   let limiteurBatiments = null;   // au plus APPELS_PAR_SECONDE lectures de bâtiments par seconde ; créé au premier appel, avec le module chargé à la demande
   const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
   /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
@@ -479,7 +493,7 @@ export function attacher(map, opts = {}) {
 
   // ---------- API ----------
   const api = {
-    ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
+    ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet, commandes: commandesServies(capacites) }),
     async setScene(manifest, donnees = {}) {
       // `fusion: true` : seules les couches listées sont remplacées (ajoutées si nouvelles) ; les autres, leur visuel, le temps et l’interface restent : mettre à jour UNE couche
       // (une grille qui suit la vue, des cases sélectionnées) sans rejouer la scène
@@ -500,7 +514,7 @@ export function attacher(map, opts = {}) {
       // l'environnement déclaré (relief, bâti en volume, ciel, soleil) : brique chargée à la demande, jamais pour une scène qui n'en déclare pas et n'a rien à défaire
       if (manifest.environnement !== undefined || (!fusion && etatEnvironnement)) {
         try {
-          const env = await import('./environnement.js?v=1.43.0');
+          const env = await import('./environnement.js?v=1.44.0');
           if (etatEnvironnement && (!fusion || manifest.environnement !== undefined)) { env.reinitialiserEnvironnement(map, etatEnvironnement); etatEnvironnement = null; }
           const r = env.appliquerEnvironnement(map, env.environnementDeclare(manifest.environnement), { theme });
           etatEnvironnement = Object.values(r.etat).some(Boolean) ? r.etat : null;
@@ -624,7 +638,7 @@ export function attacher(map, opts = {}) {
      */
     async getBuildings(o) {
       // brique chargée À LA DEMANDE : la page maigre n'embarque pas un module que la plupart des hôtes n'appellent jamais
-      const B = await import('./batiments.js?v=1.43.0');
+      const B = await import('./batiments.js?v=1.44.0');
       const { normaliserOptionsBatiments, batimentsDeEntites, creerLimiteur, ZOOM_MINIMAL: ZOOM_MINIMAL_BATIMENTS, APPELS_PAR_SECONDE, ATTRIBUTION: ATTRIBUTION_BATIMENTS } = B, intersectionBatiments = B.intersection;
       const opt = normaliserOptionsBatiments(o);
       if (!limiteurBatiments) limiteurBatiments = creerLimiteur(maintenant);
@@ -644,7 +658,7 @@ export function attacher(map, opts = {}) {
      * (visuel, style, légende). Voir lib/bi/features.js pour les plafonds. Une couche de table (sans géométrie) ou une couche administrative est refusée.
      */
     async getFeatures(layer, o) {
-      const F = await import('./features.js?v=1.43.0');
+      const F = await import('./features.js?v=1.44.0');
       const opt = F.normaliserOptionsFeatures(o);
       if (!limiteurFeatures) limiteurFeatures = F.creerLimiteur(maintenant);
       if (!limiteurFeatures()) throw new Error('getFeatures : trop_frequent (' + F.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
@@ -658,6 +672,50 @@ export function attacher(map, opts = {}) {
       return { type: 'FeatureCollection', layer: c.id, nom: c.def.name || c.id, geometrie: geom(c), features: r.features, total: r.total, tronque: r.tronque, bounds: opt.bbox, visuel: clone(c.visuel), style: clone(c.def.style), legende: clone(legende), visible: c.visible, avertissements: r.avertissements };
     },
     /**
+     * Une grille d'altitudes (contrat 0.8) : l'emprise demandée (la vue par défaut) échantillonnée au pas demandé, à partir du relief que la carte a CHARGÉ (aucune requête de plus).
+     * Sans relief dans la scène : refus `relief_absent`, jamais une grille de zéros. Voir lib/bi/elevation-grille.js pour la forme et les plafonds.
+     */
+    async getElevationGrid(o) {
+      const G = await import('./elevation-grille.js?v=1.44.0');
+      if (!limiteurElevation) limiteurElevation = G.creerLimiteur(maintenant);
+      if (!limiteurElevation()) throw new Error('getElevationGrid : trop_frequent (' + G.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
+      const b = typeof map.getBounds === 'function' ? map.getBounds() : null;
+      const opt = G.normaliserOptionsElevation(o, b ? [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] : undefined);
+      const terrain = typeof map.getTerrain === 'function' ? map.getTerrain() : null;
+      if (!terrain || typeof map.queryTerrainElevation !== 'function') throw new Error("getElevationGrid : relief_absent : la scène n'a pas de relief (environnement.relief) ; sans relief chargé, aucune altitude n'est rendue");
+      const exageration = Number.isFinite(terrain.exaggeration) && terrain.exaggeration > 0 ? terrain.exaggeration : 1;
+      // la tuile d'altitude lue est celle du zoom de la vue, plafonnée au zoom natif de la source (terrarium : 15 ; ses données ne sont pas plus fines que le zoom 14)
+      const zoomVue = typeof map.getZoom === 'function' ? map.getZoom() : null;
+      const zoomRelief = Number.isFinite(zoomVue) ? Math.max(0, Math.min(14, Math.floor(zoomVue))) : null;
+      const latMilieu = (opt.bbox[1] + opt.bbox[3]) / 2;
+      const r = G.grilleDAltitudes(opt, (lng, lat) => { const v = map.queryTerrainElevation([lng, lat]); return Number.isFinite(v) ? v / exageration : null; }, { zoomRelief, pasNatifM: zoomRelief === null ? null : G.metresParPixelTuile256(zoomRelief, latMilieu), exageration });
+      return r;
+    },
+    /**
+     * Une image de la carte (contrat 0.8), pour la figure papier d'un état figé : { format, qualite, largeur, attribution, attendre, delai }. Rend une URL de données (`image`), les dimensions,
+     * les mentions de source (aussi dessinées en pied d'image) et l'état de la caméra, de quoi retrouver la même vue. Voir lib/bi/capture-image.js pour ce qu'elle contient, ses plafonds et la limite d'origine.
+     */
+    async captureImage(o) {
+      const C = await import('./capture-image.js?v=1.44.0');
+      const opt = C.normaliserOptionsCapture(o);
+      if (!limiteurCapture) limiteurCapture = C.creerLimiteur(maintenant);
+      if (!limiteurCapture()) throw new Error('captureImage : trop_frequent (' + C.APPELS_PAR_SECONDE + ' appel par seconde au plus)');
+      const avertissements = [];
+      if (opt.attendre && !(await cartePosee(opt.delai))) avertissements.push("carte-non-chargee : la carte n'était pas au repos après " + opt.delai + ' ms (mouvement ou tuiles en cours) ; l\'image montre l\'état à cet instant');
+      const fabrique = opts.fabriqueCanvas || ((w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+      const source = await new Promise((ok, ko) => {
+        // le tampon d'une carte WebGL n'est lisible que pendant le rendu qui vient de le remplir : on copie dans cet instant
+        map.once('render', () => { try { const s = map.getCanvas(); const c = fabrique(s.width, s.height); const g = c.getContext('2d'); if (!g) throw new Error('captureImage : canvas_indisponible : canevas 2D indisponible'); g.drawImage(s, 0, 0); ok(c); } catch (e) { ko(e); } });
+        map.triggerRepaint();
+      });
+      let sources = {}; try { sources = map.getStyle().sources || {}; } catch (e) { /* un style illisible n'a pas de mentions */ }
+      // une source décrite par TileJSON ne porte sa mention que dans la source chargée (le style n'en a pas) : on la lit là aussi (les doublons sont écartés)
+      const chargees = [];
+      try { for (const [id, s] of Object.entries(sources)) { const x = s && s.type !== 'raster-dem' && typeof map.getSource === 'function' ? map.getSource(id) : null; if (x && typeof x.attribution === 'string') chargees.push(x.attribution); } } catch (e) { /* on garde les mentions du style */ }
+      const r = C.composerImage(source, opt, C.mentionsDeSources(sources, chargees), fabrique);
+      return { ...r, avertissements: [...avertissements, ...r.avertissements], camera: etatCamera() };
+    },
+    /**
      * La scène 3D en UN GLB (contrat 0.6) : objets, couches extrudées, bâti du fond. Elle vit dans l'application (three.js, modèles du catalogue) : cette commande n'existe donc qu'en profil
      * complet (`lib/bi/canevas.js` la branche) ; la carte nue répond `capacite_absente`.
      */
@@ -667,6 +725,12 @@ export function attacher(map, opts = {}) {
      * qu'en profil complet (`lib/bi/canevas.js` les branche) ; la carte nue répond `capacite_absente`.
      */
     async setSun() { throw new Error("capacite_absente : setSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
+    /**
+     * Le récit d'Atlas piloté par la page (contrat 0.8) : `getRecit` liste les étapes, `goToStep` en joue une. Le récit vit dans l'application : profil complet seulement
+     * (`lib/bi/canevas.js` les branche) ; la carte nue répond `capacite_absente`.
+     */
+    async getRecit() { throw new Error("capacite_absente : getRecit demande le profil complet (`profil=\"complet\"`) : le récit (étapes de la scène) est celui de l'application ; la carte nue n'en a pas"); },
+    async goToStep() { throw new Error("capacite_absente : goToStep demande le profil complet (`profil=\"complet\"`) : le récit (étapes de la scène) est celui de l'application ; la carte nue n'en a pas"); },
     async getSun() { throw new Error("capacite_absente : getSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {

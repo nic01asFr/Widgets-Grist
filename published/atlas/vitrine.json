@@ -16,6 +16,10 @@
   "points": [],
   "journal": [
     {
+      "version": "v1.44.0",
+      "texte": "Pour les applications qui intègrent la carte d’Atlas : elles peuvent maintenant lire une grille d’altitudes du relief affiché, lire les étapes du récit et en jouer une (et savoir quand la personne change d’étape), et obtenir une image de la carte avec les mentions de ses sources, pour une figure papier. Le composant dit aussi plus vite et plus clairement pourquoi la carte ne démarre pas, et attend plus longtemps sur une connexion lente. Rien ne change pour les applications existantes. L’application Android reste une version de test, non signée."
+    },
+    {
       "version": "v1.43.0",
       "texte": "Pour les applications qui intègrent la carte d’Atlas : un paquet « carte seule », léger et fonctionnant sous une politique de sécurité de contenu stricte, avec un outil qui vérifie la copie. Les étiquettes de la carte ne dépendent plus d’un serveur extérieur (les polices sont embarquées), et si un texte demande des caractères qu’elles n’ont pas, la carte l’affiche sans étiquettes et le dit, au lieu de faire disparaître les points."
     },
@@ -1214,7 +1218,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.43.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, et un composant de carte pour les applications externes. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.44.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, un composant de carte pour les applications externes, qui lit maintenant les altitudes, joue le récit et fournit une image de la carte. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [
