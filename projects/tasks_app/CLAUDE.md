@@ -629,6 +629,41 @@ Découvrabilité de la feature dès la première ouverture.
 
 ---
 
+## Alignement des widgets secondaires sur le socle (05/11/2026, en cours)
+
+Chantier ouvert par Nicolas pour rapprocher `cra.html`, `orgchart.html`, `plan.html` et
+`projects/whiteboard/index.html` des 4 widgets principaux. Avant de coder quoi que ce soit,
+un audit par `grep` seul avait conclu à tort que le mode démo manquait sur les 4 — **faux**,
+vérifié en navigateur : les 4 ont déjà un mode démo fonctionnel (`loadDemo()`/`initDemo()`),
+seul le nom de fonction différait de ce qui était cherché. Réflexe à garder : **toujours
+vérifier en navigateur avant de conclure un audit par grep.**
+
+- **`cra.html`/`orgchart.html` intégrés au build** (`scripts/build-taskflow.js`, `TARGETS`) :
+  ils recevaient `core/taskflow-core.js` nulle part avant ce chantier — ThemeDef n'était
+  qu'un commentaire CSS jamais câblé (`--kit-*` prêt côté CSS, zéro appel JS), et le garde
+  d'écriture (bandeau lecture seule + blocage `applyUserActions`) y était réimplémenté à la
+  main, identique au socle mais dupliqué. Les deux appellent maintenant
+  `TF.theme.initialiser()`/`suivreInstance()` et `TF.guardWrites()`/`TF.readOnlyBanner()`,
+  comme les 6 autres widgets. Les 6 widgets déjà intégrés ne sont pas affectés (`core.js`
+  lui-même inchangé, `--check` confirme).
+- **`whiteboard/index.html` — bascule démo automatique** : seul widget du build à ne pas
+  basculer seul hors Grist (bouton « Mode autonome » à cliquer). Le catch de `GB.init()`
+  teste maintenant `TF.shouldAutoDemo()` (page en fenêtre top / `?demo` explicite, jamais une
+  vraie iframe Grist en échec réel) avant de basculer directement.
+- **`whiteboard/index.html` — Grille temporelle triée par portefeuille** : `autoLayoutTasks()`
+  ordonne et étiquette désormais les zones-projets par portefeuille (`Nom du portefeuille ›
+  Nom du projet`, projets sans portefeuille groupés en dernier) quand
+  `Projects.portefeuille`/`Portefeuilles` existent (opt-in, créé par le Plan) ; comportement
+  inchangé en leur absence. Chargement additif de ces deux sources dans `loadTaskflowData`
+  (`S.projCache[...].portefeuille`, nouveau `S.portefCache`).
+
+Reste du chantier (non traité à ce stade) : rattachement de `cra.html`/`orgchart.html` au
+schéma commun (`TASKFLOW_SCHEMA`/`ensureSchema`) — le plus lourd, pas engagé ; le volet
+transverse de la suite (ThemeDef/FormDef partagés avec Atlas/Form Builder, structuration
+démo/vitrine commune) reste à cadrer séparément avec Nicolas.
+
+---
+
 ## Backlog forum (prochaines évolutions)
 
 Demandes remontées sur le forum Grist community :
