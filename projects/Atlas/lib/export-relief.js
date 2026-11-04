@@ -10,7 +10,12 @@ export const RELIEF_PAS_MIN = 1;
 export const RELIEF_PAS_MAX = 500;
 export const RELIEF_EXAGERATION_MIN = 0.5;
 export const RELIEF_EXAGERATION_MAX = 5;
-export const RELIEF_ATTRIBUTION = Object.freeze({ source: 'Relief : Mapzen / AWS Terrain Tiles', url: 'https://registry.opendata.aws/terrain-tiles/' });
+export const RELIEF_ATTRIBUTION = Object.freeze({
+  source: 'Relief : Mapzen / AWS Terrain Tiles',
+  url: 'https://registry.opendata.aws/terrain-tiles/',
+  licence: 'Sources multiples sous leurs licences propres (domaine public avec mention pour SRTM, 3DEP et ETOPO1 ; CC BY ou licences ouvertes nationales ailleurs) : attribution exigée. Détail par pays : https://github.com/tilezen/joerd/blob/master/docs/attribution.md',
+  mention: 'Relief : Mapzen / AWS Terrain Tiles',
+});
 export const URL_TUILE_TERRARIUM = 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
 const fini = (v) => typeof v === 'number' && Number.isFinite(v);
 const LAT_MAX = 85.0511287798;

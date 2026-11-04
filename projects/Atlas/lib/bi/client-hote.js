@@ -1,8 +1,8 @@
 /**
  * Client JavaScript de l'application HÔTE du composant carte d'Atlas, en UN SEUL FICHIER, sans import.
  *
- * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (2f3d13b4f365c644) et lib/bi/pont.js (c05031664242c9d5).
- * Ne pas modifier à la main : relancer le générateur. Contrat 0.7 ; les tables de commandes sont celles du pont (test d'égalité).
+ * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (fa820f9ae9ca8822) et lib/bi/pont.js (48b8ffe64709f125).
+ * Ne pas modifier à la main : relancer le générateur. Contrat 0.8 ; les tables de commandes sont celles du pont (test d'égalité).
  * Usage : voir docs/EXPLOITATION-EXTERNE-BI.md.
  */
 
@@ -21,22 +21,25 @@
  * Garanties :
  *  - chaque commande renvoie une promesse, résolue par l'accusé du composant, rejetée par son erreur ou à l'expiration du
  *    délai maximal (`delai`, défaut 10 s) ;
+ *  - `connecter()` échoue VITE quand le composant annonce une erreur fatale (`error`, niveau `fatal` : une dépendance qui ne se charge pas), avec la cause ; sinon il attend
+ *    `delaiConnexion` (90 s par défaut : 55 s mesurées en 3G lente) et le message du délai cite ce que le composant a signalé entre-temps ;
  *  - les messages d'une origine ou d'une fenêtre inattendue sont écartés (`transportFenetre`), jamais traités ;
  *  - les commandes partent avec une `targetOrigin` précise, jamais `*` ;
- *  - la version du contrat se négocie (0.7, puis 0.6, 0.5, 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
+ *  - la version du contrat se négocie (0.8, puis 0.7, 0.6, 0.5, 0.4, 0.3, puis 0.2) ; une commande absente de la version retenue est refusée côté hôte ;
  *  - anti-boucle : les événements se filtrent par leur champ `origine` (voir `on`).
  */
 // ---- Ce que le client utilise du pont (tables lues du pont, fonctions reprises de ses sources) ----
-export const VERSION = "0.7";
-export const VERSIONS_ACCEPTEES = Object.freeze(["0.2","0.3","0.4","0.5","0.6","0.7"]);
+export const VERSION = "0.8";
+export const VERSIONS_ACCEPTEES = Object.freeze(["0.2","0.3","0.4","0.5","0.6","0.7","0.8"]);
 export const SOURCE_RUNTIME = "atlas-bi";
 export const SOURCE_HOTE = "hote-bi";
-export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]],"setViewMode":[["string",true],["object",false]],"getBuildings":[["object",false]],"getFeatures":[["string",true],["object",false]],"exportScene3D":[["object",false]],"setSun":[["object",true]],"getSun":[]});
+export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]],"setViewMode":[["string",true],["object",false]],"getBuildings":[["object",false]],"getFeatures":[["string",true],["object",false]],"exportScene3D":[["object",false]],"setSun":[["object",true]],"getSun":[],"getElevationGrid":[["object",false]],"getRecit":[],"goToStep":[["any",true],["object",false]],"captureImage":[["object",false]]});
 export const COMMANDES_0_3 = Object.freeze(["addAdminLayer","removeLayer","setChoropleth","setStatistique","drillDown","drillUp","setDrillAuto","setUnitFilter","batch","setHorsLigne","getTheme"]);
 export const COMMANDES_0_4 = Object.freeze(["getCamera","watchCamera","setViewMode","getBuildings"]);
 export const COMMANDES_0_5 = Object.freeze(["getFeatures"]);
 export const COMMANDES_0_6 = Object.freeze(["exportScene3D"]);
 export const COMMANDES_0_7 = Object.freeze(["setSun","getSun"]);
+export const COMMANDES_0_8 = Object.freeze(["getElevationGrid","getRecit","goToStep","captureImage"]);
 /** Majeure et mineure égales (0.x : toute évolution de mineure peut casser). */
 export function versionsCompatibles(a, b = VERSION) {
   const p = (v) => (typeof v === 'string' ? v : '').split('.').map((x) => Number(x)); const [a1, a2] = p(a), [b1, b2] = p(b);
@@ -45,7 +48,7 @@ export function versionsCompatibles(a, b = VERSION) {
 /** Une commande du contrat, en propriété PROPRE : `constructor`, `__proto__`... ne sont pas des commandes. */
 export const estCommande = (c) => typeof c === 'string' && Object.prototype.hasOwnProperty.call(COMMANDES, c);
 /** La plus petite version du contrat qui connaît la commande. */
-export function versionDeCommande(cmd) { return COMMANDES_0_7.includes(cmd) ? '0.7' : COMMANDES_0_6.includes(cmd) ? '0.6' : COMMANDES_0_5.includes(cmd) ? '0.5' : COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
+export function versionDeCommande(cmd) { return COMMANDES_0_8.includes(cmd) ? '0.8' : COMMANDES_0_7.includes(cmd) ? '0.7' : COMMANDES_0_6.includes(cmd) ? '0.6' : COMMANDES_0_5.includes(cmd) ? '0.5' : COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
 /** Vrai si la version `v` du contrat (« 0.x ») est au moins `min`. Une version illisible n'est jamais suffisante. */
 export function versionAuMoins(v, min) {
   const mineure = (x) => { const [maj, min2] = String(x).split('.').map(Number); return maj === 0 && Number.isFinite(min2) ? min2 : NaN; };
@@ -54,12 +57,12 @@ export function versionAuMoins(v, min) {
 // ---- Fin ----
 
 /** Révision de ce fichier client (entier croissant), pour qu'un hôte qui l'a copié sache ce qu'il embarque. Distincte de la version du contrat. */
-export const VERSION_CLIENT = 5;
+export const VERSION_CLIENT = 6;
 
 /** Versions que ce client sait parler, de la plus récente à la plus ancienne. */
 export const VERSIONS_CLIENT = Object.freeze([...VERSIONS_ACCEPTEES].reverse());
 
-/** Erreur d'une commande. `code` : delai, deconnecte, version, origine, forme, commande, argument, capacite_absente (avec `capacite`), api. */
+/** Erreur d'une commande. `code` : delai, deconnecte, version, origine, forme, commande, argument, capacite_absente (avec `capacite`), api ; à la connexion aussi `composant` (erreur fatale annoncée par le composant, avec `details.causes`). */
 export class ErreurBi extends Error {
   constructor(code, message, details) { super(message); this.name = 'ErreurBi'; this.code = code; if (details !== undefined) this.details = details; }
 }
@@ -112,10 +115,10 @@ const nouvelId = () => 'h' + (++compteur).toString(36) + Math.random().toString(
  *   intervalle?:number, versions?:string[], minuterie?:{setTimeout:Function, clearTimeout:Function, setInterval:Function, clearInterval:Function}}} o
  *   delai : délai maximal d'une commande (ms) ; delaiConnexion : attente du composant à la connexion ; intervalle : relance du ping
  */
-export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, intervalle = 250, versions = VERSIONS_CLIENT, minuterie = globalThis } = {}) {
+export function creerClient({ transport, delai = 10000, delaiConnexion = 90000, intervalle = 250, versions = VERSIONS_CLIENT, minuterie = globalThis } = {}) {
   const attente = new Map();           // id -> { resolve, reject, minuteur, cmd }
   const ecouteurs = new Map();         // type -> Set({ cb, origine })
-  let desinscrire = null, connecte = false, version = null, composant = null, signalPret = null;
+  let desinscrire = null, connecte = false, version = null, composant = null, signalPret = null, surErreur = null;
 
   const livrer = (type, charge, meta) => {
     for (const e of ecouteurs.get(type) || []) {
@@ -137,6 +140,7 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
       return;
     }
     if (msg.type === 'ready' && msg.charge && msg.charge.runtime === true && signalPret) signalPret(msg.charge);
+    if (msg.type === 'error' && surErreur) surErreur(msg.charge);
     livrer(msg.type, msg.charge, { origine: msg.origine, version: msg.version, type: msg.type });
   }
   function demarrerEcoute() { if (!desinscrire) desinscrire = transport.ecouter(recevoir); }
@@ -169,9 +173,9 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
       if (connecte) return Promise.resolve({ version, ...composant });
       demarrerEcoute();
       return new Promise((resolve, reject) => {
-        let fini = false; let essai = 0; let timer = null, chien = null; const sondes = new Set();
+        let fini = false; let essai = 0; let timer = null, chien = null; const sondes = new Set(); const causes = [];
         const terminer = (err) => {
-          if (fini) return; fini = true; signalPret = null; minuterie.clearInterval(timer); minuterie.clearTimeout(chien);
+          if (fini) return; fini = true; signalPret = null; surErreur = null; minuterie.clearInterval(timer); minuterie.clearTimeout(chien);
           for (const id of sondes) { const a = attente.get(id); if (a) { minuterie.clearTimeout(a.minuteur); attente.delete(id); } }   // les sondes sans réponse ne doivent rien laisser en attente
           if (err) return reject(err);
           connecte = true; resolve({ version, ...composant });
@@ -183,13 +187,20 @@ export function creerClient({ transport, delai = 10000, delaiConnexion = 8000, i
           version = v; terminer(null);
         };
         signalPret = adopter;
+        // ce que le composant dit de lui-même pendant la connexion : une erreur fatale la coupe tout de suite, les autres s'ajoutent au message du délai
+        surErreur = (charge) => {
+          if (!charge || typeof charge !== 'object') return;
+          const texte = String(charge.message || charge.code || 'erreur').slice(0, 300);
+          if (!causes.includes(texte)) causes.push(texte);
+          if (charge.niveau === 'fatal') terminer(new ErreurBi('composant', 'le composant ne peut pas démarrer : ' + texte, { causes: [...causes], code: charge.code === undefined ? null : String(charge.code).slice(0, 40) }));
+        };
         const sonde = () => {
           const v = versions[Math.min(essai, versions.length - 1)];
           envoyerCommande('ping', [], v, Math.min(delai, intervalle * 4), sondes).then(
             (r) => { if (!fini) { composant = { ...(composant || {}), ...(r || {}) }; version = v; terminer(null); } },
             (e) => { if (e.code === 'version') essai++; /* sinon : nouvel essai au prochain tour */ });
         };
-        chien = minuterie.setTimeout(() => terminer(new ErreurBi('delai', 'le composant ne répond pas après ' + delaiConnexion + " ms : vérifier l'URL, et que l'origine de cet hôte est déclarée au composant (?hote=<origine>)")), delaiConnexion);
+        chien = minuterie.setTimeout(() => terminer(new ErreurBi('delai', 'le composant ne répond pas après ' + delaiConnexion + " ms. Causes possibles : l'URL du composant ; l'origine de cet hôte non déclarée au composant (?hote=<origine>) ; un réseau très lent (augmenter delaiConnexion)" + (causes.length ? ' ; signalé par le composant : ' + causes.join(' ; ') : ''), { causes: [...causes] })), delaiConnexion);
         timer = minuterie.setInterval(sonde, intervalle); sonde();
       });
     },

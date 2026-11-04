@@ -13,18 +13,18 @@
          et l'hôte en est averti (événement `error`, aux seules origines déclarées par `hote=`). Sans ce garde, un CDN bloqué laissait un écran vide sans cause.
          Place EN TETE de la page (même garde que index_v7.html, sans le test de ?bi=1 : cette page est toujours le composant) : il doit ecouter avant les scripts du head (MapLibre, SunCalc), dont l'echec survient avant que le voile existe.
          Gardé par tests/amorcage-garde.test.js ; `window.__biPret` est posé par lib/bi/montage.js. -->
-    <script src="./lib/bi/amorcage.js?v=1.43.0"></script>
+    <script src="./lib/bi/amorcage.js?v=1.44.0"></script>
 
     <script src="./vendor/maplibre-gl/maplibre-gl.js"></script>
     <link href="./vendor/maplibre-gl/maplibre-gl.css" rel="stylesheet" />
 
-    <link rel="stylesheet" href="./lib/page-bi.css?v=1.43.0" />
+    <link rel="stylesheet" href="./lib/page-bi.css?v=1.44.0" />
 </head>
 <body class="mode-bi">
     <!-- La classe du voile est posée AVANT le premier affichage. Même règle que `voileDemande` (lib/bi/voile.js), gardée par tests/bi-premier-affichage.test.js. -->
-    <script src="./lib/bi/voile-initial.js?v=1.43.0"></script>
+    <script src="./lib/bi/voile-initial.js?v=1.44.0"></script>
     <div id="bi-voile" role="status" aria-live="polite">Chargement de la carte…</div>
     <div id="map"></div>
-    <script type="module" src="./lib/bi/demarrer.js?v=1.43.0"></script>
+    <script type="module" src="./lib/bi/demarrer.js?v=1.44.0"></script>
 </body>
 </html>

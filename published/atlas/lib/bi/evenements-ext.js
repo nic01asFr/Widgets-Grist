@@ -9,10 +9,11 @@
  *    quand elle désélectionne. La légende ne filtre rien : l'hôte route (par exemple `setFilter`) ;
  *  - `mouvement { …vue de getCamera, phase }` (0.4) : le flux de la caméra, SUR ABONNEMENT (`watchCamera`) ; `phase` vaut `debut`, `en_cours` ou `fin` (toujours envoyé à la fin du mouvement) ;
  *  - `sun { date, actif, azimut, hauteur, lever, coucher }` (0.7) : la date, l'heure ou les ombres du soleil ont changé (la forme de `getSun`) ; `origine` vaut `utilisateur` pour un geste dans Atlas, `api` pour l'effet de `setSun` ;
+ *  - `step { lecture, index, cle, titre, total }` (0.8) : le récit change d'étape (la forme du retour de `goToStep`) ; `index` et `cle` valent null quand la lecture s'arrête ; `origine` vaut `utilisateur` pour un geste dans Atlas, `api` pour l'effet de `goToStep` ;
  *  - `clic { lng, lat, x, y, zoom }` (0.4) : la personne a cliqué la carte en un point qui ne touche aucune entité interactive (un clic sur une entité reste un `select` seul).
  */
 import { EVENEMENTS } from './pont.js';
 
-export const EVENEMENTS_AJOUTES = Object.freeze(['action', 'bulle', 'classe', 'clic', 'mouvement', 'sun']);
+export const EVENEMENTS_AJOUTES = Object.freeze(['action', 'bulle', 'classe', 'clic', 'mouvement', 'sun', 'step']);
 /** Tous les événements du composant : ceux du pont, puis ceux qui s'y sont ajoutés. */
 export const TOUS_LES_EVENEMENTS = Object.freeze([...EVENEMENTS, ...EVENEMENTS_AJOUTES]);
