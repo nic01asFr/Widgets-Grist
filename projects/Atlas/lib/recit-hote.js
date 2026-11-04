@@ -22,9 +22,12 @@ const estContexte = (e) => !!(e && e.state && typeof e.state === 'object' && e.s
 /** La caméra d'une étape telle qu'on la rend à l'hôte (même forme que `getCamera` pour les champs communs), ou null. */
 function cameraDe(etat) {
   const c = etat && etat.camera;
-  if (!c || !fini(c.lng) || !fini(c.lat)) return null;
+  if (!c || typeof c !== 'object') return null;
+  // la forme enregistrée par l'application est { center: [lng, lat], zoom, pitch, bearing } (lib/story.js) ; { lng, lat } est aussi accepté
+  const lng = Array.isArray(c.center) ? c.center[0] : c.lng, lat = Array.isArray(c.center) ? c.center[1] : c.lat;
+  if (!fini(lng) || !fini(lat)) return null;
   const r = (v, n) => Math.round(v * 10 ** n) / 10 ** n;
-  return { center: [r(c.lng, 6), r(c.lat, 6)], zoom: fini(c.zoom) ? r(c.zoom, 2) : null, pitch: fini(c.pitch) ? r(c.pitch, 1) : 0, bearing: fini(c.bearing) ? r(c.bearing, 1) : 0 };
+  return { center: [r(lng, 6), r(lat, 6)], zoom: fini(c.zoom) ? r(c.zoom, 2) : null, pitch: fini(c.pitch) ? r(c.pitch, 1) : 0, bearing: fini(c.bearing) ? r(c.bearing, 1) : 0 };
 }
 
 /** Les étapes du RÉCIT (hors contextes), avec leur place dans la liste complète de `Atlas_Story`. */

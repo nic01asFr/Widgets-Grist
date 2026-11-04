@@ -19,7 +19,7 @@ import { carteSimulee } from './aide-carte-bi.js';
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const app = fs.readFileSync(path.join(ICI, '..', 'app_v7.js'), 'utf8');
 
-const etape = (cle, titre, extra = {}) => ({ cle, title: titre, text: 'Texte de ' + titre, state: { camera: { lng: 5.4, lat: 43.3, zoom: 14.123, pitch: 20, bearing: 10 }, layers: [{ sourceTable: 'sites', visible: true }, { sourceTable: 'cachee', visible: false }], ...extra } });
+const etape = (cle, titre, extra = {}) => ({ cle, title: titre, text: 'Texte de ' + titre, state: { camera: { center: [5.4, 43.3], zoom: 14.123, pitch: 20, bearing: 10 }, layers: [{ sourceTable: 'sites', visible: true }, { sourceTable: 'cachee', visible: false }], ...extra } });
 const RECIT = [etape('a1', 'Entrée'), etape('ctx', 'Contexte de travail', { usage: { contexte: true } }), etape('b2', 'Le canal'), { title: 'Sans clé', text: '', state: {} }];
 
 test('contrat : getRecit et goToStep sont des commandes 0.8 de la capacité socle, décrites, refusées à un hôte resté en 0.7 ; step est un événement décrit', () => {
@@ -106,4 +106,13 @@ test('application : la façade du récit est branchée, signale chaque changemen
   assert.match(app, /storyExit\(\) \{[\s\S]{0,400}signalerRecitAHote\(\);/, 'l\'arrêt de la lecture est signalé');
   assert.match(app, /_originRecit = 'api';\s*try \{ if \(_storyPresenting\) allerEtape\(etape\.indexSource\); else enterStoryPresentation\(etape\.indexSource\); \} finally \{ _originRecit = 'utilisateur'; \}/);
   assert.match(app, /map\.triggerRepaint\(\)/, 'une étape qui ne change rien rend quand même la main');
+});
+
+test('caméra d\'une étape : la forme enregistrée par l\'application (center) et la forme { lng, lat } sont lues', async () => {
+  const { resumerRecit } = await import('../lib/recit-hote.js');
+  const camDe = (camera) => resumerRecit([{ cle: 'a', title: 'A', text: '', state: { camera } }], { courant: null, lecture: false }).etapes[0].camera;
+  assert.deepEqual(camDe({ center: [5.4, 43.3], zoom: 12, pitch: 10, bearing: 5 }), { center: [5.4, 43.3], zoom: 12, pitch: 10, bearing: 5 });
+  assert.deepEqual(camDe({ lng: 5.4, lat: 43.3, zoom: 12 }), { center: [5.4, 43.3], zoom: 12, pitch: 0, bearing: 0 });
+  assert.equal(camDe({ center: ['x', 1] }), null);
+  assert.equal(camDe(undefined), null);
 });
