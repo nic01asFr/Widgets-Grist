@@ -213,6 +213,33 @@ describe('tri d affichage commun', () => {
     it('sans configuration de statuts, l echeance reste croissante', () => {
         assert.equal(ids(TF.sortTasks([t(1, 'x', 9), t(2, 'x', 1)], 'date')), '2,1');
     });
+    it('manuel avec un ordre pose : les taches deplacees passent devant, les autres gardent leur position', () => {
+        const r = TF.sortTasks(liste, 'manual', cfg, { 6: -1 });
+        assert.equal(ids(r), '6,1,2,3,4,5');
+    });
+    it('manuel : un rang egal entre deux taches ne change pas leur ordre relatif (tri stable)', () => {
+        const l = [t(1, 'todo', 1), t(2, 'todo', 2), t(3, 'todo', 3)];
+        assert.equal(ids(TF.sortTasks(l, 'manual', cfg, { 1: 5, 3: 5 })), '2,1,3', '2 (replie sur son index 1) passe devant ; 1 et 3, a egalite a 5, gardent leur ordre d origine entre eux');
+    });
+});
+
+describe('rang d une tache deplacee (orderBetween)', () => {
+    const arr = [{ id: 1 }, { id: 2 }, { id: 3 }];
+    it('entre deux voisins jamais deplaces (reglés sur leur index) : la moyenne', () => {
+        assert.equal(TF.orderBetween(arr, 1, {}), 1);   // (0 + 2) / 2
+    });
+    it('en tete : juste avant le voisin suivant (rang replie sur son index, 1)', () => {
+        assert.equal(TF.orderBetween(arr, 0, {}), 0);   // 1 - 1
+    });
+    it('en fin : juste apres le voisin precedent (rang replie sur son index, 1)', () => {
+        assert.equal(TF.orderBetween(arr, 2, {}), 2);   // 1 + 1
+    });
+    it('seule tache de la fratrie : 0', () => {
+        assert.equal(TF.orderBetween([{ id: 1 }], 0, {}), 0);
+    });
+    it('un voisin deja deplace : son rang pose prime sur son index', () => {
+        assert.equal(TF.orderBetween(arr, 1, { 1: 100 }), 51);  // (100 + 2) / 2
+    });
 });
 
 describe('recherche commune', () => {

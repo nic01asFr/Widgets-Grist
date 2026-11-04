@@ -86,6 +86,38 @@ describe('contexte commun : anciens reglages', () => {
     });
 });
 
+describe('contexte commun : ordre manuel', () => {
+    it('demarre vide, se fusionne (ne remplace pas) et ecarte les cles invalides', () => {
+        const c = widget(stockage(), 'docA', 'gantt');
+        assert.deepEqual(c.get().order, {});
+        c.set({ order: { 1: 5, 2: -3 } });
+        c.set({ order: { 3: 9 } });
+        assert.deepEqual(c.get().order, { 1: 5, 2: -3, 3: 9 }, 'la 2e ecriture ne doit pas effacer la 1ere');
+        c.set({ order: { x: 1, 4: 'abc', 5: 2 } });
+        assert.deepEqual(c.get().order, { 1: 5, 2: -3, 3: 9, 5: 2 }, 'cle non numerique et valeur non finie ecartees');
+    });
+    it('est partage entre widgets du meme document, comme le reste du contexte', () => {
+        const store = stockage();
+        widget(store, 'docA', 'kanban').set({ order: { 7: 1 } });
+        assert.deepEqual(widget(store, 'docA', 'gantt').get().order, { 7: 1 });
+    });
+    it('n est pas repris par les vues nommees (ce n est pas une preference d affichage)', () => {
+        const c = widget(stockage(), 'docA', 'kanban');
+        c.set({ order: { 1: 5 }, sort: 'manual' });
+        c.views.save('V');
+        c.set({ order: { 1: 99 } });
+        c.views.apply('V');
+        assert.deepEqual(c.get().order, { 1: 99 }, 'appliquer une vue ne touche pas a l ordre pose');
+    });
+    it('prune retire les entrees dont la tache a disparu', () => {
+        const c = widget(stockage(), 'docA', 'kanban');
+        c.set({ order: { 1: 5, 2: -3, 3: 9 } });
+        const retires = c.prune({ tasks: [1, 3] });
+        assert.equal(retires, 1);
+        assert.deepEqual(c.get().order, { 1: 5, 3: 9 });
+    });
+});
+
 describe('contexte commun : filtres sans objet', () => {
     it('ecarte les identifiants disparus et compte', () => {
         const c = widget(stockage(), 'docA', 'kanban');
