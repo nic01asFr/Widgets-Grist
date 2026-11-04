@@ -2994,6 +2994,13 @@ const GB = {
       setTimeout(() => Boot.hide(), 600);
       return;
     }
+    // ?demo : donnees d'exemple tout de suite, sans attendre Grist. Necessaire derriere le
+    // lanceur (iframe imbriquee) : l'appel ne repond jamais au lieu de rejeter, et le catch
+    // ci-dessous ne se declenche alors jamais (meme bascule que kanban.html).
+    if (typeof TF !== 'undefined' && TF.isExplicitDemo && TF.isExplicitDemo()) {
+      S.alone = true; Boot.hide(); await initDemo();
+      return;
+    }
 
     try {
       Boot.log('Connexion à Grist…');

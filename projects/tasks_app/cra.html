@@ -2519,6 +2519,10 @@ async function activate() {
 
 // ---- Init -----------------------------------------------------------------
 (async () => {
+  // ?demo : donnees d'exemple tout de suite, sans attendre Grist. Necessaire derriere le
+  // lanceur (iframe imbriquee) : l'appel ne repond jamais au lieu de rejeter, et le catch
+  // ci-dessous ne se declenche alors jamais (meme bascule que kanban.html).
+  if (TF.isExplicitDemo()) { loadDemo(); return; }
   try {
     grist.ready({ requiredAccess: 'full' });
     // #7 respect des droits : bandeau lecture seule + garde sur les ecritures (socle commun).
