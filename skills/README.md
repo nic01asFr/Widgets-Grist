@@ -12,6 +12,7 @@ Ce dossier contient les **patterns de code réutilisables** pour le développeme
 |---------|---------|
 | [schema.md](schema.md) | ⭐ **Création schéma complet** : tables, colonnes, labels, refs, choices |
 | [grist-api.md](grist-api.md) | API Grist CRUD : ready, fetchTable, applyUserActions |
+| [../docs/WIDGETS-AUTO-DESCRIPTIFS.md](../docs/WIDGETS-AUTO-DESCRIPTIFS.md) | **Proposition** : widgets auto-descriptifs (skill, MCP, CLI, WebMCP, vitrine) depuis un noyau pur et un registre de commandes |
 | [data-conversion.md](data-conversion.md) | Conversion colonaire → objets, dates, RefList |
 | [inter-widget.md](inter-widget.md) | Communication entre widgets : sélection, options, events |
 | [bridge.md](bridge.md) | GristBridge pour iframes sandboxées |
