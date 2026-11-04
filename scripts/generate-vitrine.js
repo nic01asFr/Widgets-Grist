@@ -1174,12 +1174,14 @@ function rendreAnnexe(p, annexe, base = '') {
   const description = annexe.chapeau || v.pitch || '';
   const url = base ? `${base}w/${p.id}/${annexe.id}/` : '';
   const corps = (annexe.blocs || []).map(blocAnnexe).join('\n');
+  const ag = annexe.id === 'agents' ? p.agents : null;
   return page({
     titre,
     description,
     accent: v.couleur,
     peau: v.peau,
-    meta: url ? entete({ url, titre, description, image: '' }) : '',
+    meta: (url ? entete({ url, titre, description, image: '' }) : '') + (ag && ag.llms ? `\n<link rel="alternate" type="text/plain" href="../../../${echapper(p.id)}/llms.txt" title="llms.txt">` : ''),
+    ld: ag && url ? donneesStructurees({ '@context': 'https://schema.org', '@type': 'WebPage', name: titre, description, url, about: { '@type': 'SoftwareApplication', name: nom, applicationCategory: 'BusinessApplication', softwareVersion: ag.fiche.version } }) : '',
     css: CSS_PROJET + CSS_PRODUIT + CSS_PARCOURS,
     corps: `<main>
   <a class="retour" href="../">← ${echapper(nom)}</a>
@@ -1187,11 +1189,20 @@ function rendreAnnexe(p, annexe, base = '') {
   <h1>${echapper(annexe.titre)}</h1>
   ${annexe.chapeau ? `<p class="chapeau">${enLigne(annexe.chapeau)}</p>` : ''}
 ${corps}
-</main>${corps.includes('class="bloc-code"') ? JS_PARCOURS : ''}
+</main>${corps.includes('class="bloc-code"') ? JS_PARCOURS : ''}${ag && ag.entree ? scriptWebmcp(p.id, ag.entree) : ''}
 <footer class="pied">
   <p><a href="../">← Retour à la page d’${echapper(nom)}</a></p>
 </footer>`,
   });
+}
+
+/**
+ * L'enregistrement WebMCP : la page du widget charge le module que la fiche nomme (entree_webmcp) et appelle son `installer()`.
+ * Le generateur ne sait rien du widget ; le module n'enregistre que les commandes pures qui n'ecrivent rien. Sans WebMCP dans le
+ * navigateur, ou si le module echoue, la page reste la meme : le texte est la porte des robots.
+ */
+function scriptWebmcp(id, entree) {
+  return `\n<script type="module">import('../../../${id}/${entree}').then(function (m) { if (m && typeof m.installer === 'function') m.installer(); }).catch(function () { /* page lisible sans */ });</` + 'script>';
 }
 
 /** Les annexes declarees par la fiche d'un projet, celles qui ont de quoi etre rendues (un identifiant et un titre). */
@@ -1241,7 +1252,10 @@ function agentsDe(projet, racine = PUBLIE) {
     const ecarts = [...depuisFiche.filter((x) => !depuisCommandes.includes(x)), ...depuisCommandes.filter((x) => !depuisFiche.includes(x))];
     throw new Error(`${quoi} — la fiche et les commandes divergent : ${ecarts.join(', ')}`);
   }
-  return { fiche, commandes: commandes.commandes };
+  const entree = typeof fiche.entree_webmcp === 'string' && fiche.interfaces && fiche.interfaces.webmcp === true
+    && /^[a-z0-9][a-z0-9_./-]*[.]js$/.test(fiche.entree_webmcp) && !fiche.entree_webmcp.includes('..')
+    && fs.existsSync(path.join(dossier, fiche.entree_webmcp)) ? fiche.entree_webmcp : null;
+  return { fiche, commandes: commandes.commandes, entree, llms: fs.existsSync(path.join(dossier, 'llms.txt')) };
 }
 
 const LIMITE_JSON = 1400;

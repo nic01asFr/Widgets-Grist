@@ -136,3 +136,29 @@ test('l’annexe entre au plan du site', () => {
   const plan = V.rendreSitemap([p], BASE);
   assert.match(plan, /\/w\/essai\/agents\//);
 });
+
+test('la page agents charge le module WebMCP nomme par la fiche, et rien sinon', () => {
+  const avec = dossier({ fiche: { ...FICHE, interfaces: { skill: true, cli: true, mcp: true, webmcp: true, vitrine: true }, entree_webmcp: 'forms-registre/webmcp-entree.js' } });
+  fs.mkdirSync(path.join(avec, 'essai', 'forms-registre'));
+  fs.writeFileSync(path.join(avec, 'essai', 'forms-registre', 'webmcp-entree.js'), 'export function installer() {}');
+  fs.writeFileSync(path.join(avec, 'essai', 'llms.txt'), '# essai');
+  const p = projet();
+  p.agents = V.agentsDe(p, avec);
+  const html = V.rendreAnnexe(p, V.annexesDe(p).find((a) => a.id === 'agents'), BASE);
+  assert.match(html, /import\('\.\.\/\.\.\/\.\.\/essai\/forms-registre\/webmcp-entree\.js'\)/);
+  assert.match(html, /m\.installer\(\)/);
+  assert.match(html, /<link rel="alternate" type="text\/plain" href="\.\.\/\.\.\/\.\.\/essai\/llms\.txt"/);
+  assert.match(html, /application\/ld\+json/);
+
+  const sans = dossier();
+  const q = projet();
+  q.agents = V.agentsDe(q, sans);
+  const h2 = V.rendreAnnexe(q, V.annexesDe(q).find((a) => a.id === 'agents'), BASE);
+  assert.doesNotMatch(h2, /import\(/);
+  assert.doesNotMatch(h2, /llms\.txt/);
+});
+
+test('un module nomme mais absent du dossier n’est pas injecte', () => {
+  const racine = dossier({ fiche: { ...FICHE, interfaces: { skill: true, cli: true, mcp: true, webmcp: true, vitrine: true }, entree_webmcp: 'forms-registre/absent.js' } });
+  assert.equal(V.agentsDe(projet(), racine).entree, null);
+});
