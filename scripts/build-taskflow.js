@@ -41,7 +41,9 @@ const TARGETS = [
     path.join(ROOT, 'projects', 'tasks_app', 'calendar.html'),
     path.join(ROOT, 'projects', 'tasks_app', 'dashboard.html'),
     path.join(ROOT, 'projects', 'tasks_app', 'plan.html'),
-    path.join(ROOT, 'projects', 'whiteboard', 'index.html')
+    path.join(ROOT, 'projects', 'whiteboard', 'index.html'),
+    path.join(ROOT, 'projects', 'tasks_app', 'cra.html'),
+    path.join(ROOT, 'projects', 'tasks_app', 'orgchart.html')
 ];
 // Le CSS commun ne concerne que les 4 widgets principaux.
 const UI_TARGETS = TARGETS.slice(0, 4);
