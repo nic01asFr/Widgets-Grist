@@ -66,6 +66,8 @@ export const COMMANDES = Object.freeze({
   // --- le récit piloté par la page : lire ses étapes, en jouer une (profil complet seulement) ---
   getRecit: [],
   goToStep: [['any', true], ['object', false]],
+  // --- la figure papier d'un état figé de la carte ---
+  captureImage: [['object', false]],
 });
 /** Commandes ajoutées par la 0.3 (une commande 0.3 envoyée avec la version 0.2 est refusée). */
 export const COMMANDES_0_3 = Object.freeze(['addAdminLayer', 'removeLayer', 'setChoropleth', 'setStatistique', 'drillDown', 'drillUp', 'setDrillAuto', 'setUnitFilter', 'batch', 'setHorsLigne', 'getTheme']);
@@ -78,7 +80,7 @@ export const COMMANDES_0_6 = Object.freeze(['exportScene3D']);
 /** Commandes ajoutées par la 0.7. */
 export const COMMANDES_0_7 = Object.freeze(['setSun', 'getSun']);
 /** Commandes ajoutées par la 0.8. */
-export const COMMANDES_0_8 = Object.freeze(['getElevationGrid', 'getRecit', 'goToStep']);
+export const COMMANDES_0_8 = Object.freeze(['getElevationGrid', 'getRecit', 'goToStep', 'captureImage']);
 /** La plus petite version du contrat qui connaît la commande. */
 export function versionDeCommande(cmd) { return COMMANDES_0_8.includes(cmd) ? '0.8' : COMMANDES_0_7.includes(cmd) ? '0.7' : COMMANDES_0_6.includes(cmd) ? '0.6' : COMMANDES_0_5.includes(cmd) ? '0.5' : COMMANDES_0_4.includes(cmd) ? '0.4' : COMMANDES_0_3.includes(cmd) ? '0.3' : '0.2'; }
 /** Vrai si la version `v` du contrat (« 0.x ») est au moins `min`. Une version illisible n'est jamais suffisante. */
@@ -98,7 +100,7 @@ export const CAPACITES = Object.freeze(['edition', 'points', 'socle', 'temps', '
 /** Brique dont dépend chaque commande. `socle` : ce qui vaut pour toute scène (carte, thème, fond, cadrage, couches, filtres, sélection). */
 export const CAPACITE_DE_COMMANDE = Object.freeze({
   ping: 'socle', setScene: 'socle', setLayerVisibility: 'socle', setFilter: 'socle', select: 'socle', highlight: 'socle', flyTo: 'socle', fitTo: 'socle',
-  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle', getCamera: 'socle', watchCamera: 'socle', setViewMode: 'socle', getBuildings: 'socle', getFeatures: 'socle', getElevationGrid: 'socle', getRecit: 'socle', goToStep: 'socle', exportScene3D: 'socle', setSun: 'socle', getSun: 'socle',
+  setTheme: 'socle', setFond: 'socle', getTheme: 'socle', getLegend: 'socle', getRows: 'socle', resize: 'socle', setHorsLigne: 'socle', batch: 'socle', getCamera: 'socle', watchCamera: 'socle', setViewMode: 'socle', getBuildings: 'socle', getFeatures: 'socle', getElevationGrid: 'socle', getRecit: 'socle', goToStep: 'socle', captureImage: 'socle', exportScene3D: 'socle', setSun: 'socle', getSun: 'socle',
   setVisual: 'points',
   setTime: 'temps', play: 'temps', pause: 'temps',
   setEdition: 'edition', updateFeature: 'edition',

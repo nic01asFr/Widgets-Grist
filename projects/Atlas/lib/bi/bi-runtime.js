@@ -388,6 +388,19 @@ export function attacher(map, opts = {}) {
   const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
   let limiteurFeatures = null;    // idem pour getFeatures
   let limiteurElevation = null;   // idem pour getElevationGrid
+  let limiteurCapture = null;     // idem pour captureImage
+  /** Vrai quand la carte est posée (mouvement fini) et chargée (tuiles) ; faux si le délai (ms) s'écoule avant. Une carte qui ne sait pas le dire est tenue pour posée. */
+  function cartePosee(delai) {
+    if (typeof map.areTilesLoaded !== 'function' || typeof map.isMoving !== 'function') return Promise.resolve(true);
+    return new Promise((ok) => {
+      let clos = false, minuteur = null;
+      const fin = (v) => { if (clos) return; clos = true; annuler(minuteur); try { map.off('idle', auRepos); } catch (e) { /* carte retirée */ } ok(v); };
+      const auRepos = () => { if (!map.isMoving() && map.areTilesLoaded()) fin(true); };
+      minuteur = planifier(() => fin(false), delai);
+      map.on('idle', auRepos);
+      if (typeof map.triggerRepaint === 'function') map.triggerRepaint();   // une carte déjà au repos ne produirait pas d'événement `idle` sans cela
+    });
+  }
   let limiteurBatiments = null;   // au plus APPELS_PAR_SECONDE lectures de bâtiments par seconde ; créé au premier appel, avec le module chargé à la demande
   const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
   /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
@@ -677,6 +690,27 @@ export function attacher(map, opts = {}) {
       const latMilieu = (opt.bbox[1] + opt.bbox[3]) / 2;
       const r = G.grilleDAltitudes(opt, (lng, lat) => { const v = map.queryTerrainElevation([lng, lat]); return Number.isFinite(v) ? v / exageration : null; }, { zoomRelief, pasNatifM: zoomRelief === null ? null : G.metresParPixelTuile256(zoomRelief, latMilieu), exageration });
       return r;
+    },
+    /**
+     * Une image de la carte (contrat 0.8), pour la figure papier d'un état figé : { format, qualite, largeur, attribution, attendre, delai }. Rend une URL de données (`image`), les dimensions,
+     * les mentions de source (aussi dessinées en pied d'image) et l'état de la caméra, de quoi retrouver la même vue. Voir lib/bi/capture-image.js pour ce qu'elle contient, ses plafonds et la limite d'origine.
+     */
+    async captureImage(o) {
+      const C = await import('./capture-image.js?v=20261104a');
+      const opt = C.normaliserOptionsCapture(o);
+      if (!limiteurCapture) limiteurCapture = C.creerLimiteur(maintenant);
+      if (!limiteurCapture()) throw new Error('captureImage : trop_frequent (' + C.APPELS_PAR_SECONDE + ' appel par seconde au plus)');
+      const avertissements = [];
+      if (opt.attendre && !(await cartePosee(opt.delai))) avertissements.push("carte-non-chargee : la carte n'était pas au repos après " + opt.delai + ' ms (mouvement ou tuiles en cours) ; l\'image montre l\'état à cet instant');
+      const fabrique = opts.fabriqueCanvas || ((w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; });
+      const source = await new Promise((ok, ko) => {
+        // le tampon d'une carte WebGL n'est lisible que pendant le rendu qui vient de le remplir : on copie dans cet instant
+        map.once('render', () => { try { const s = map.getCanvas(); const c = fabrique(s.width, s.height); const g = c.getContext('2d'); if (!g) throw new Error('captureImage : canvas_indisponible : canevas 2D indisponible'); g.drawImage(s, 0, 0); ok(c); } catch (e) { ko(e); } });
+        map.triggerRepaint();
+      });
+      let sources = {}; try { sources = map.getStyle().sources || {}; } catch (e) { /* un style illisible n'a pas de mentions */ }
+      const r = C.composerImage(source, opt, C.mentionsDeSources(sources), fabrique);
+      return { ...r, avertissements: [...avertissements, ...r.avertissements], camera: etatCamera() };
     },
     /**
      * La scène 3D en UN GLB (contrat 0.6) : objets, couches extrudées, bâti du fond. Elle vit dans l'application (three.js, modèles du catalogue) : cette commande n'existe donc qu'en profil

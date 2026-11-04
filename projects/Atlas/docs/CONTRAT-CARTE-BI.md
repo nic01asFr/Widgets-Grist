@@ -200,7 +200,7 @@ Pour une page dont la 3D (réalité augmentée, lecteur de modèle) doit rester 
 - **`setViewMode(mode, { soleil })`** : `soleil: true` montre le dock soleil d'Atlas en mode intégré, `false` le masque (l'hôte le garde alors pour lui) ; sans l'option, le dock reste comme il est. Le retour porte `dockSoleil`. Ce n'est pas une préférence de la scène : rien n'est écrit dans le document.
 - **Ce que la carte montre du soleil** [mesuré dans Chrome] : une lumière directionnelle sur les faces du bâti (MapLibre : `position` suit l'azimut et la hauteur, intensité 0,55), le ciel et la teinte de nuit, l'éclairage public. **Aucune ombre portée du bâti** (limite de MapLibre) ; les **modèles 3D** d'Atlas portent leur ombre (au zoom 14 et plus, hors relief 3D, soleil à plus de 3° au-dessus de l'horizon) quand `actif` est vrai.
 
-## 6 octies. Contrat 0.8 : les altitudes, le récit, la capture [en cours, testé]
+## 6 octies. Contrat 0.8 : les altitudes, le récit, la capture [testé, navigateur à mesurer]
 
 Ajouts demandés par un hôte de référence (hydrologie, guide vivant, figures papier). Tous additifs : une commande 0.2 à 0.7 reste servie, un client plus ancien reste compris. Le client de l'hôte passe à la `VERSION_CLIENT` 6.
 
@@ -223,6 +223,17 @@ Capacité `socle`, exige la 0.8. Pour une page qui calcule (écoulement, bassin 
 - **Refus** (le code est le premier mot) : `recit_vide` (aucune étape de récit), `etape_inconnue` (clé absente, rang hors du récit, ou clé d'un contexte), `etape_invalide` (ni texte ni entier), `contexte_actif` (un contexte de travail est joué : le quitter d'abord).
 - **Événement `step`** `{ lecture, index, cle, titre, total }` : à chaque changement d'étape ; quand la lecture s'arrête, `lecture` vaut `false` et `index`, `cle`, `titre` valent `null`. `origine` vaut `utilisateur` pour un geste dans Atlas (flèches, clavier), `api` pour l'effet de `goToStep` (l'hôte ignore ses propres échos).
 - **Ce que le contrat ne fait pas** : il n'écrit rien dans le récit (pas de création ni de modification d'étape), et ne commande pas l'interface de lecture d'Atlas (barre d'étapes, texte de l'étape), qui reste celle de l'application.
+
+### `captureImage({ format?, qualite?, largeur?, attribution?, attendre?, delai? })` : la figure papier d'une carte [testé, navigateur à mesurer]
+
+Capacité `socle`, exige la 0.8, **dans les deux profils**. Pour un état figé et reproductible d'une carte 2D, sans passer par un export 3D.
+
+- **Entrée** : `format` `png` (défaut, garde la transparence), `jpeg` ou `webp` ; `qualite` 0,1 à 1 (0,92) pour jpeg et webp ; `largeur` en pixels (64 à 8192), **jamais plus large que la carte** (une image plus large ne montrerait pas plus de détail : elle est rendue à la taille de la carte, avec l'avertissement `agrandissement-refuse`) ; `attendre` (vrai) rend la main une fois la carte au repos (mouvement fini, tuiles chargées), `delai` 100 à 60 000 ms ; `attribution` (vrai) dessine les mentions de source en pied d'image.
+- **Sortie** `{ format, mime, largeur, hauteur, octets, image, attributions, avertissements, camera }`. `image` est une **URL de données** (`data:image/png;base64,...`) ; `attributions` liste les mentions de source des fonds (sources d'altitude exclues), dessinées en pied d'image **et** rendues à part, pour une figure qui garde sa licence ; `camera` est l'état de `getCamera` au moment de la prise, de quoi retrouver la même vue (`flyTo`).
+- **Ce que l'image contient** : le canevas de la carte (fond, couches, étiquettes, et en profil complet les modèles 3D posés sur la carte). **Ce qu'elle ne contient pas** : les éléments HTML posés par-dessus (bulle, légende, zone de filtres, marqueurs HTML) ; l'hôte les redessine ou les décrit à côté (`getLegend`).
+- **Limite d'origine du canevas** : un canevas qui a reçu une image sans autorisation d'origine croisée (CORS) est « souillé » et le navigateur refuse de le lire : refus `canvas_illisible`. MapLibre charge ses tuiles avec CORS, donc les fonds et données qui acceptent les requêtes d'origine croisée se capturent ; **un fond tiers qui ne les accepte pas ne se capture pas** (et ne s'affiche en général pas non plus). Les fonds d'Atlas (`atlas`, `voile`, `uni`, `plan`, `plan-ign`, `photo`) l'acceptent ; à vérifier pour tout fond ajouté par l'hôte.
+- **Refus** (le code est le premier mot) : `format_invalide`, `canvas_illisible`, `canvas_indisponible`, `format_indisponible` (le navigateur n'encode pas ce format, webp surtout), `image_trop_grande` (plus de 33 millions de pixels), `image_trop_lourde` (plus de 12 Mo : demander une largeur plus petite ou le jpeg), `carte_vide`, `trop_frequent` (1 appel par seconde au plus). Si la carte n'est pas au repos à l'échéance du délai, l'image est rendue avec l'avertissement `carte-non-chargee`.
+- **Avec le récit** : `goToStep(cle)` (qui attend la carte posée) puis `captureImage()` donnent la figure de chaque étape.
 
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
@@ -349,6 +360,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.40.0 | 0.6 | `exportScene3D` : option `sol` (aplat, dalle, fond de carte à plat), luminaires du catalogue exportés. Contrat et client inchangés. |
 | 1.41.0 | 0.6 | `exportScene3D` : option `relief`, `sol.format`, bâti et surfaces rognés à l'emprise, attribution du fond décodée avec sa licence. Contrat et client inchangés. |
 | 1.42.0 | 0.6 -> 0.7 | contrat 0.7, additif : `setSun`, `getSun`, événement `sun`, champ `soleil` de `exportScene3D`, option `soleil` de `setViewMode` ; `VERSION_CLIENT` 5. Une commande 0.2 à 0.6 reste servie. |
-| à venir (1.44.0) | 0.7 -> 0.8 | contrat 0.8, additif : `getElevationGrid` (puis la capture d'image) ; `getRecit`, `goToStep` et l'événement `step` ; `VERSION_CLIENT` 6. Une commande 0.2 à 0.7 reste servie. |
+| à venir (1.44.0) | 0.7 -> 0.8 | contrat 0.8, additif : `getElevationGrid` ; `getRecit`, `goToStep` et l'événement `step` ; `captureImage` ; `VERSION_CLIENT` 6. Une commande 0.2 à 0.7 reste servie. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.
