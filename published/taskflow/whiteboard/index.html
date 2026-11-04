@@ -1201,14 +1201,20 @@ const TF = (function () {
         const hay = searchNorm([t.titre, t.description, list(t.tags).join(' '), proj ? proj.nom : '', names.join(' ')].join(' '));
         return q.split(/\s+/).every(w => hay.indexOf(w) !== -1);
     }
-    // Tri commun (affichage seulement, rien n'est ecrit dans les donnees). Modes :
-    //   manual   : ordre de la table, inchange ;
+    // Tri commun (affichage seulement, rien n'est ecrit dans les donnees sauf ordre, pose par un drag — TF.ctx.set({order})). Modes :
+    //   manual   : ordre pose a la main (TF.ctx `order`, { [taskId]: rang }) ; une tache jamais deplacee garde sa
+    //              position d'origine dans la liste (tri stable, repli sur l'index de depart) ;
     //   date     : echeance. Les taches en cours d'abord, de la plus proche a la plus lointaine ; puis les taches
     //              closees (terminees / abandonnees), de la plus recente a la plus ancienne. Sans echeance : en dernier ;
     //   priority : priorite (1 = critique) puis echeance.
-    // Retourne une NOUVELLE liste ; le tri est stable (a criteres egaux, l'ordre de la table est conserve).
-    function sortTasks(list, mode, cfg) {
+    // Retourne une NOUVELLE liste ; le tri est stable (a criteres egaux, l'ordre de depart est conserve).
+    function sortTasks(list, mode, cfg, order) {
         const arr = (list || []).slice();
+        if (mode === 'manual') {
+            if (!order) return arr;
+            const rank = (t, idx) => { const v = order[t.id]; return typeof v === 'number' ? v : idx; };
+            return arr.map((t, idx) => ({ t: t, r: rank(t, idx), idx: idx })).sort((a, b) => (a.r - b.r) || (a.idx - b.idx)).map(x => x.t);
+        }
         if (mode !== 'date' && mode !== 'priority') return arr;
         const echeance = (t) => { const v = Number(t && t.dateEcheance); return v > 0 ? v : null; };
         const prio = (t) => parseInt(t && t.priorite, 10) || 3;
@@ -1225,6 +1231,18 @@ const TF = (function () {
             return parDate(a, b, fa) || (prio(a) - prio(b));
         });
         return arr;
+    }
+    // Calcule le rang a poser sur la tache deplacee a l'index `index` de `arr` (l'ordre affiche APRES le drag), pour
+    // TF.ctx.set({ order: { [id]: TF.orderBetween(...) } }). Les voisins sans rang pose se rabattent sur leur index
+    // (coherent avec sortTasks ci-dessus) : un premier drag dans une fratrie jamais touchee reste bien place.
+    function orderBetween(arr, index, order) {
+        order = order || {};
+        const rankOf = (i) => { if (i < 0 || i >= arr.length) return null; const t = arr[i]; const v = order[t.id]; return typeof v === 'number' ? v : i; };
+        const prev = rankOf(index - 1), next = rankOf(index + 1);
+        if (prev !== null && next !== null) return (prev + next) / 2;
+        if (prev !== null) return prev + 1;
+        if (next !== null) return next - 1;
+        return 0;
     }
     // Titre du widget (+ information secondaire, ex. « Mis a jour »). t = { icon (svg), text, meta (html) }
     function uiTitle(t) {
@@ -1710,7 +1728,7 @@ const TF = (function () {
     const CTX_LEVELS = ['all', 'actions', 'parents'];
     const CTX_POS_MAX_AGE = 12 * 3600 * 1000;
     function ctxBlank() {
-        return { filters: { project: [], priority: [], assignee: [], status: [] }, color: null, sort: null, level: null, subs: null, view: null };
+        return { filters: { project: [], priority: [], assignee: [], status: [] }, color: null, sort: null, level: null, subs: null, view: null, order: {} };
     }
     function ctxList(arr, conv) {
         const out = [];
@@ -1734,9 +1752,13 @@ const TF = (function () {
         out.level = CTX_LEVELS.indexOf(raw.level) !== -1 ? raw.level : null;
         out.subs = typeof raw.subs === 'boolean' ? raw.subs : null;
         out.view = typeof raw.view === 'string' && raw.view ? raw.view : null;
+        if (raw.order && typeof raw.order === 'object') {
+            Object.keys(raw.order).forEach(k => { const n = Number(raw.order[k]); if (/^\d+$/.test(k) && isFinite(n)) out.order[k] = n; });
+        }
         return out;
     }
-    // Ce qu'une vue memorise : tout le contexte sauf le nom de la vue elle-meme.
+    // Ce qu'une vue memorise : tout le contexte sauf le nom de la vue elle-meme et l'ordre manuel
+    // (un rangement de taches n'est pas une preference d'affichage a rejouer en changeant de vue).
     function ctxData(s) { return { filters: s.filters, color: s.color, sort: s.sort, level: s.level, subs: s.subs }; }
     function createCtx(env) {
         env = env || {};
@@ -1842,19 +1864,21 @@ const TF = (function () {
                 return api.bind(id, widget);
             },
             get: function () { return copy(state); },
-            // patch = { filters: { project: [..] }, color, sort, level, subs, view } ; seules les cles presentes changent.
+            // patch = { filters: { project: [..] }, color, sort, level, subs, view, order } ; seules les cles presentes
+            // changent. order est fusionne (pas remplace) : un drag ne touche que la tache deplacee, jamais les autres.
             set: function (patch) {
                 const next = copy(state);
                 patch = patch || {};
                 if (patch.filters) Object.keys(next.filters).forEach(k => { if (patch.filters[k] !== undefined) next.filters[k] = patch.filters[k]; });
+                if (patch.order) next.order = Object.assign({}, next.order, patch.order);
                 ['color', 'sort', 'level', 'subs', 'view'].forEach(k => { if (k in patch) next[k] = patch[k]; });
                 return commit(ctxClean(next), 'local');
             },
             // fn(contexte, source) quand le contexte change SANS que ce widget en soit l'auteur : source = 'external' ou 'view'.
             onChange: function (fn) { listeners.push(fn); },
             // Ecarte les filtres devenus sans objet (projet supprime, membre retire, statut renomme) : ils masqueraient
-            // tout sans qu'on puisse les retirer. valid = { project: [ids], assignee: [ids], status: [valeurs] } ;
-            // une liste vide n'est pas appliquee (donnees pas encore lues). Retourne le nombre de filtres retires.
+            // tout sans qu'on puisse les retirer. valid = { project: [ids], assignee: [ids], status: [valeurs], tasks: [ids] } ;
+            // une liste vide n'est pas appliquee (donnees pas encore lues). Retourne le nombre d'entrees retirees.
             prune: function (valid) {
                 const next = copy(state);
                 let removed = 0;
@@ -1866,6 +1890,10 @@ const TF = (function () {
                     removed += next.filters[k].length - kept.length;
                     next.filters[k] = kept;
                 });
+                if (valid && valid.tasks && valid.tasks.length) {
+                    const keep = new Set(valid.tasks.map(String));
+                    Object.keys(next.order).forEach(k => { if (!keep.has(k)) { delete next.order[k]; removed++; } });
+                }
                 if (removed) commit(next, 'prune');
                 return removed;
             },
@@ -1886,7 +1914,8 @@ const TF = (function () {
                 apply: function (name) {
                     const v = views.find(x => x.name === name);
                     if (!v) return false;
-                    commit(ctxClean(Object.assign(copy(v.data), { view: name })), 'view');
+                    // v.data (ctxData) ne porte pas order : le rangement manuel pose n'est pas une donnee de vue.
+                    commit(ctxClean(Object.assign(copy(v.data), { view: name, order: state.order })), 'view');
                     return true;
                 },
                 clear: function () { return commit(ctxClean(Object.assign(copy(state), { view: null })), 'local'); },
@@ -2704,6 +2733,7 @@ const TF = (function () {
         relinkToTasks: relinkToTasks,
         consumeRelinkNotice: consumeRelinkNotice,
         sortTasks: sortTasks,
+        orderBetween: orderBetween,
         setPeriodLabel: setPeriodLabel,
         monthYearShort: monthYearShort,
         monthShort: monthShort,

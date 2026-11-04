@@ -2,7 +2,7 @@
   {
     "widgetId": "artefactory",
     "name": "Artefactory",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/artefactory/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/artefactory/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -18,12 +18,12 @@
   {
     "widgetId": "atlas",
     "name": "Atlas — Maquette 3D",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/atlas/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/atlas/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Maquette territoriale 3D : couches Grist, Scene Manifest, symbolisation, contrôles, récit, trajet, soleil",
-    "lastUpdatedAt": "2026-11-01T20:52:08+01:00",
+    "lastUpdatedAt": "2026-11-03T09:27:40+01:00",
     "authors": [
       {
         "name": "nic01asfr",
@@ -34,12 +34,12 @@
   {
     "widgetId": "grist-forms-builder",
     "name": "Form Builder — formulaires Grist",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/grist_forms/builder.html",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/grist_forms/builder.html",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
     "description": "Questionnaires liés aux tables : étapes, conditions, audience, carte, dessin, synthèse",
-    "lastUpdatedAt": "2026-11-04T11:39:32+01:00",
+    "lastUpdatedAt": "2026-11-04T13:29:55+01:00",
     "authors": [
       {
         "name": "nic01asfr",
@@ -50,7 +50,7 @@
   {
     "widgetId": "qgis2grist",
     "name": "QGIS → Grist Importer",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/qgis2grist/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/qgis2grist/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -66,7 +66,7 @@
   {
     "widgetId": "qgis2grist-v2",
     "name": "QGIS → Grist Importer v2",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/qgis2grist/v2/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/qgis2grist/v2/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -82,7 +82,7 @@
   {
     "widgetId": "taskflow",
     "name": "TaskFlow — Suite complète",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -98,7 +98,7 @@
   {
     "widgetId": "taskflow-kanban",
     "name": "TaskFlow Kanban",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/kanban/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/kanban/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -114,7 +114,7 @@
   {
     "widgetId": "taskflow-gantt",
     "name": "TaskFlow Gantt",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/gantt/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/gantt/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -130,7 +130,7 @@
   {
     "widgetId": "taskflow-calendar",
     "name": "TaskFlow Calendar",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/calendar/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/calendar/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -146,7 +146,7 @@
   {
     "widgetId": "taskflow-dashboard",
     "name": "TaskFlow Dashboard",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/dashboard/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/dashboard/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -162,7 +162,7 @@
   {
     "widgetId": "taskflow-plan",
     "name": "TaskFlow Plan",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/plan/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/plan/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -178,7 +178,7 @@
   {
     "widgetId": "taskflow-cra",
     "name": "TaskFlow Feuille de temps",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/cra/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/cra/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
@@ -194,7 +194,7 @@
   {
     "widgetId": "taskflow-orgchart",
     "name": "TaskFlow Organigramme",
-    "url": "https://nic01asfr.github.io/Widgets-Grist/taskflow/orgchart/",
+    "url": "https://nic01asFr.github.io/Widgets-Grist/taskflow/orgchart/",
     "published": true,
     "accessLevel": "full",
     "renderAfterReady": true,
