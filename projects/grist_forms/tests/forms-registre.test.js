@@ -242,3 +242,32 @@ describe('Registre Form Builder : parité registre / fiche / CLI', () => {
     }
   });
 });
+
+describe('Registre Form Builder : le skill généré', () => {
+  const { contenu: contenuSkillFichier, CHEMIN: CHEMIN_SKILL } = require('../forms-registre/generer-skill.js');
+  const { verifierSkill } = require('../forms-registre/generer-skill-commun.js');
+  const commandes = JSON.parse(fs.readFileSync(path.join(DOSSIER, 'commandes.json'), 'utf8'));
+
+  it('le SKILL.md versionné est celui que le générateur rend, sans écart avec la fiche ni les commandes', () => {
+    const texte = fs.readFileSync(CHEMIN_SKILL, 'utf8');
+    assert.equal(texte, contenuSkillFichier());
+    assert.deepEqual(verifierSkill(texte, { fiche, commandes }), []);
+  });
+
+  it('un skill périmé ou qui cite une commande inconnue est refusé', () => {
+    const texte = fs.readFileSync(CHEMIN_SKILL, 'utf8');
+    assert.ok(verifierSkill(texte + '\n', { fiche, commandes }).length >= 1);
+    assert.ok(verifierSkill(texte.replace('`forms_capacites`', '`forms_inconnue`'), { fiche, commandes }).length >= 1);
+  });
+
+  it('la fiche déclare ses cinq interfaces et le skill ne promet aucun refus serveur', () => {
+    assert.deepEqual(fiche.interfaces, { skill: true, cli: true, mcp: true, webmcp: true, vitrine: true });
+    assert.match(fs.readFileSync(CHEMIN_SKILL, 'utf8'), /Ne jamais promettre un refus côté serveur/);
+  });
+
+  it('la copie du gabarit commun est identique à scripts/generer-skill.js quand le dépôt le porte', () => {
+    const source = path.join(__dirname, '..', '..', '..', 'scripts', 'generer-skill.js');
+    if (!fs.existsSync(source)) return;
+    assert.equal(fs.readFileSync(path.join(DOSSIER, 'generer-skill-commun.js'), 'utf8'), fs.readFileSync(source, 'utf8'));
+  });
+});

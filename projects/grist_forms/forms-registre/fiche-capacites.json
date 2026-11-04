@@ -105,5 +105,12 @@
     "forms_resoudre_theme",
     "forms_plan_publication",
     "forms_synthese"
-  ]
+  ],
+  "interfaces": {
+    "skill": true,
+    "cli": true,
+    "mcp": true,
+    "webmcp": true,
+    "vitrine": true
+  }
 }

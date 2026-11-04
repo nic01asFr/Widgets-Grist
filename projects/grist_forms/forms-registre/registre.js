@@ -308,7 +308,8 @@
           'Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.',
           'Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée.'
         ],
-        exemples: commandes.filter(function (c) { return c.exemples.length; }).map(function (c) { return c.nom; })
+        exemples: commandes.filter(function (c) { return c.exemples.length; }).map(function (c) { return c.nom; }),
+        interfaces: { skill: true, cli: true, mcp: true, webmcp: true, vitrine: true }
       };
     }
 
