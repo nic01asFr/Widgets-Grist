@@ -34,9 +34,9 @@ test('contrat : captureImage est une commande 0.8 de la capacité socle, décrit
 });
 
 test('options : format, qualité, largeur, drapeaux et délai vérifiés', () => {
-  assert.deepEqual(normaliserOptionsCapture(), { format: 'png', mime: 'image/png', qualite: 0.92, largeur: null, attribution: true, attendre: true, delai: 15000 });
-  assert.equal(normaliserOptionsCapture({ format: 'jpeg', largeur: 800, attribution: false, attendre: false }).mime, 'image/jpeg');
-  for (const mauvais of [{ format: 'gif' }, { format: 'toString' }, { qualite: 0 }, { qualite: 2 }, { largeur: 10 }, { largeur: 9000 }, { largeur: 800.5 }, { attribution: 'oui' }, { attendre: 1 }, { delai: 5 }, { x: 1 }, 'x', []]) assert.throws(() => normaliserOptionsCapture(mauvais), /captureImage/, JSON.stringify(mauvais));
+  assert.deepEqual(normaliserOptionsCapture(), { format: 'png', mime: 'image/png', qualite: 0.92, largeur: null, mentions: true, attendre: true, delai: 15000 });
+  assert.equal(normaliserOptionsCapture({ format: 'jpeg', largeur: 800, mentions: false, attendre: false }).mime, 'image/jpeg');
+  for (const mauvais of [{ format: 'gif' }, { format: 'toString' }, { qualite: 0 }, { qualite: 2 }, { largeur: 10 }, { largeur: 9000 }, { largeur: 800.5 }, { mentions: 'oui' }, { attendre: 1 }, { delai: 5 }, { x: 1 }, 'x', []]) assert.throws(() => normaliserOptionsCapture(mauvais), /captureImage/, JSON.stringify(mauvais));
   assert.throws(() => normaliserOptionsCapture({ format: 'gif' }), /format_invalide/);
 });
 
@@ -69,7 +69,7 @@ test('composition : la source réduite, un fond blanc hors png, la mention en pi
   const g = fabriqueSimulee(); composerImage({ width: 400, height: 200 }, normaliserOptionsCapture(), ['x'], g);
   assert.equal(g.journal[0].dessins[0][0], 'drawImage');
   // sans pied
-  const h = fabriqueSimulee(); const sans = composerImage({ width: 400, height: 200 }, normaliserOptionsCapture({ attribution: false }), ['x'], h);
+  const h = fabriqueSimulee(); const sans = composerImage({ width: 400, height: 200 }, normaliserOptionsCapture({ mentions: false }), ['x'], h);
   assert.ok(!h.journal[0].dessins.some((x) => x[0] === 'fillText')); assert.deepEqual(sans.attributions, ['x']);
   // aucune mention : dit
   assert.ok(composerImage({ width: 400, height: 200 }, normaliserOptionsCapture(), [], fabriqueSimulee()).avertissements.some((a) => /^attribution-vide/.test(a)));

@@ -6,12 +6,22 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 | Repère | Valeur actuelle |
 |---|---|
-| Contrat du composant carte BI | 0.7 (additif ; 0.6, 0.5, 0.4, 0.3 et 0.2 restent servis) |
-| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 5, 16 045 octets |
-| Empreinte du client | `sha384-pErr+0QQ+ks6NcELEVcQXItMcDu0TsKOk492sbwom9csMDwTRtJe9PAdIlVDJmVU` |
+| Contrat du composant carte BI | 0.8 (additif ; 0.7, 0.6, 0.5, 0.4, 0.3 et 0.2 restent servis) |
+| Client de l'hôte en un seul fichier | `lib/bi/client-hote.js`, `VERSION_CLIENT` 6, 17 679 octets |
+| Empreinte du client | `sha384-n225MQKxr/e+skg9TCTNeQ4EBwG9y4TPvY1LFK6lBOKW2pHVb+Y0RvEI8RLpVpqx` |
 | Moteur de formulaires vendorisé | celui de la 1.13.1 (une publication d'Atlas ne le fait pas bouger) |
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
+
+## 1.44.0 — contrat 0.8 : altitudes, récit piloté, figure papier ; client 6 (EN PRÉPARATION, non publié)
+
+Contrat **0.8**, additif : une commande 0.2 à 0.7 reste servie, un client plus ancien reste compris. Nouveau client de l'hôte : `VERSION_CLIENT` **6**, nouvelle empreinte (voir la table ci-dessus) : annoncée aux hôtes avant publication.
+
+- **`getElevationGrid({ bbox?, resolution? })`** : une grille d'altitudes en mètres (jusqu'à 250 000 cellules), lue dans le relief que la carte a chargé, avec pas, valeur sans-donnée, repère, source et licence. Sans relief dans la scène : refus `relief_absent`, jamais une grille de zéros.
+- **`getRecit()`, `goToStep(cle ou rang)` et l'événement `step`** (profil complet) : l'hôte lit les étapes du récit et en joue une ; `goToStep` rend la main une fois la carte posée et chargée.
+- **`captureImage({ format, qualite, largeur, mentions, attendre })`** : une image de la carte (png, jpeg, webp) avec les mentions de source en pied et la caméra, pour la figure papier d'un état figé. Refus `canvas_illisible` si un fond tiers n'autorise pas la lecture.
+- **Client 6** : `connecter()` échoue vite sur une erreur fatale du composant (code `composant`, avec les causes), le message du délai cite ce que le composant a signalé, le délai de connexion par défaut passe de 8 s à **90 s** (client et élément `<atlas-bi>`, qui avait 30 s) ; le `ping` annonce `commandes` (les commandes servies par ce chargement).
+- **Licence du relief** (« Relief : Mapzen / AWS Terrain Tiles ») renseignée, dans l'export 3D comme dans la grille d'altitudes.
 
 ## 1.43.0 — intégrer la carte chez soi : paquet « carte seule », CSP stricte, polices embarquées
 

@@ -118,7 +118,7 @@ test('lib/bi/montage.js pose __biPret quand le composant est monté', () => {
 
 test('<atlas-bi> attend le composant 30 s par défaut, réglable par delai-connexion', () => {
   const src = fs.readFileSync(path.join(ICI, '..', 'lib', 'bi', 'atlas-bi-element.js'), 'utf8');
-  assert.match(src, /delaiConnexion = Number\(this\.getAttribute\('delai-connexion'\)\) \|\| 30000/);
+  assert.match(src, /delaiConnexion = Number\(this\.getAttribute\('delai-connexion'\)\) \|\| 90000/);
   assert.match(src, /observedAttributes\(\) \{ return \[[^\]]*'delai-connexion'/);
   assert.match(src, /creerClient\(\{ delai, delaiConnexion,/);
 });

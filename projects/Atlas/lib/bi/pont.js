@@ -107,6 +107,22 @@ export const CAPACITE_DE_COMMANDE = Object.freeze({
   addAdminLayer: 'territoires', removeLayer: 'territoires', setChoropleth: 'territoires', setStatistique: 'territoires', drillDown: 'territoires', drillUp: 'territoires', setDrillAuto: 'territoires', setUnitFilter: 'territoires',
 });
 
+/**
+ * Commandes qui n'existent que dans le profil complet (l'application : scène 3D, soleil, récit). La carte nue les REFUSE (`capacite_absente`) ; le profil complet les
+ * ajoute à la liste du `ping` quand il les branche (`commandesServies(capacites, branchees)`).
+ */
+export const COMMANDES_PROFIL_COMPLET = Object.freeze(['exportScene3D', 'setSun', 'getSun', 'getRecit', 'goToStep']);
+/**
+ * Les noms des commandes que ce chargement SERT (le `ping` les annonce) : celles du contrat dont la brique est présente, hors commandes du profil complet, plus celles que le
+ * profil complet a branchées. Triée : un hôte teste `commandes.includes('getElevationGrid')` au lieu de tenter l'appel et d'attendre un refus.
+ */
+export function commandesServies(capacites, branchees = []) {
+  const presentes = new Set(capacites);
+  const base = Object.keys(COMMANDES).filter((nom) => !COMMANDES_PROFIL_COMPLET.includes(nom) && (!CAPACITE_DE_COMMANDE[nom] || presentes.has(CAPACITE_DE_COMMANDE[nom])));
+  return [...new Set([...base, ...branchees.filter((n) => nom_ok(n))])].sort();
+}
+const nom_ok = (n) => typeof n === 'string' && Object.prototype.hasOwnProperty.call(COMMANDES, n);
+
 /** Erreur d'une commande ou d'un type de couche dont la brique n'est pas dans ce chargement. */
 export class ErreurCapacite extends Error {
   constructor(capacite, cible) {

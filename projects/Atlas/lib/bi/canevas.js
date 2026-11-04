@@ -23,6 +23,8 @@
  * @typedef {{VERSIONS_LUES: string[], deballerScene: Function, verifierFormeScene: Function, adresseAdmise: Function}} OutilsScene
  */
 
+import { commandesServies } from './pont.js';
+
 export const PLAFOND_OCTETS = 4 * 1024 * 1024;
 export const PLAFOND_COUCHES = 64;
 /** Le type d'une couche qui désigne une maquette en dalles 3D servies par adresse (voir `lib/dalles3d-geo.js`). */
@@ -197,6 +199,7 @@ export function brancher(rt, canevas) {
     api.getRecit = () => canevas.recit.lire();
     api.goToStep = (cible, o) => canevas.recit.aller(cible, o);
   }
-  api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
+  const branchees = [...(typeof canevas.exporter3d === 'function' ? ['exportScene3D'] : []), ...(canevas.soleil && typeof canevas.soleil.lire === 'function' ? ['getSun', 'setSun'] : []), ...(canevas.recit && typeof canevas.recit.lire === 'function' ? ['getRecit', 'goToStep'] : [])];
+  api.ping = () => { const p = avant.ping(); return { ...p, commandes: commandesServies(p.capacites || [], branchees), canevas: true, couches_scene: Object.keys(correspondance) }; };
   return { couches: () => ({ ...correspondance }), desabonner };
 }

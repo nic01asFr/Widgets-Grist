@@ -9,7 +9,7 @@
  * CORS, donc les fonds et les données qui acceptent les requêtes d'origine croisée se capturent ; un fond tiers qui ne les accepte pas s'affiche mal ou ne se capture pas. Le refus porte
  * le code `canvas_illisible`.
  *
- * Les mentions de source des fonds sont DESSINÉES en pied d'image (option `attribution`, vraie par défaut) et rendues à part : une figure imprimée sans sa source est une figure sans licence.
+ * Les mentions de source des fonds sont DESSINÉES en pied d'image (option `mentions`, vraie par défaut) et rendues à part : une figure imprimée sans sa source est une figure sans licence.
  */
 export const VERSION = '1.0.0';
 
@@ -27,22 +27,22 @@ const fini = (v) => typeof v === 'number' && Number.isFinite(v);
 
 /**
  * Les options de la commande, vérifiées ; lève une erreur lisible dont le code est le premier mot.
- * @returns {{ format:string, mime:string, qualite:number, largeur:(number|null), attribution:boolean, attendre:boolean, delai:number }}
+ * @returns {{ format:string, mime:string, qualite:number, largeur:(number|null), mentions:boolean, attendre:boolean, delai:number }}
  */
 export function normaliserOptionsCapture(o) {
   const options = o === undefined ? {} : o;
-  if (!options || typeof options !== 'object' || Array.isArray(options)) throw new Error("captureImage : un objet d'options est attendu ({ format, qualite, largeur, attribution, attendre, delai })");
-  for (const k of Object.keys(options)) if (!['format', 'qualite', 'largeur', 'attribution', 'attendre', 'delai'].includes(k)) throw new Error('captureImage : option inconnue « ' + String(k).slice(0, 30) + ' » (format, qualite, largeur, attribution, attendre, delai)');
+  if (!options || typeof options !== 'object' || Array.isArray(options)) throw new Error("captureImage : un objet d'options est attendu ({ format, qualite, largeur, mentions, attendre, delai })");
+  for (const k of Object.keys(options)) if (!['format', 'qualite', 'largeur', 'mentions', 'attendre', 'delai'].includes(k)) throw new Error('captureImage : option inconnue « ' + String(k).slice(0, 30) + ' » (format, qualite, largeur, mentions, attendre, delai)');
   const format = options.format === undefined ? 'png' : options.format;
   if (typeof format !== 'string' || !Object.prototype.hasOwnProperty.call(FORMATS, format)) throw new Error('captureImage : format_invalide : png, jpeg ou webp');
   const qualite = options.qualite === undefined ? 0.92 : options.qualite;
   if (!fini(qualite) || qualite < 0.1 || qualite > 1) throw new Error('captureImage : qualite hors bornes (0,1 à 1)');
   const largeur = options.largeur === undefined ? null : options.largeur;
   if (largeur !== null && (!Number.isInteger(largeur) || largeur < LARGEUR_MIN || largeur > LARGEUR_MAX)) throw new Error('captureImage : largeur hors bornes (' + LARGEUR_MIN + ' à ' + LARGEUR_MAX + ' pixels)');
-  for (const k of ['attribution', 'attendre']) if (options[k] !== undefined && typeof options[k] !== 'boolean') throw new Error('captureImage : ' + k + ' doit être true ou false');
+  for (const k of ['mentions', 'attendre']) if (options[k] !== undefined && typeof options[k] !== 'boolean') throw new Error('captureImage : ' + k + ' doit être true ou false');
   const delai = options.delai === undefined ? DELAI_DEFAUT_MS : options.delai;
   if (!Number.isInteger(delai) || delai < 100 || delai > DELAI_MAX_MS) throw new Error('captureImage : delai hors bornes (100 à ' + DELAI_MAX_MS + ' millisecondes)');
-  return { format, mime: FORMATS[format], qualite, largeur, attribution: options.attribution !== false, attendre: options.attendre !== false, delai };
+  return { format, mime: FORMATS[format], qualite, largeur, mentions: options.mentions !== false, attendre: options.attendre !== false, delai };
 }
 
 /** Une limite d'appels par seconde, sans horloge globale : `creerLimiteur(maintenant)()` rend vrai si l'appel passe. */
@@ -106,7 +106,7 @@ export function composerImage(source, opt, mentions, fabrique) {
   if (opt.mime !== 'image/png') { ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); }
   ctx.drawImage(source, 0, 0, w, h);
   let texte = mentions.join(' | ');
-  if (opt.attribution) {
+  if (opt.mentions) {
     if (!texte) avertissements.push('attribution-vide : aucune source du fond ne déclare de mention ; à renseigner avant diffusion');
     else {
       if (texte.length > ATTRIBUTION_MAX) { texte = texte.slice(0, ATTRIBUTION_MAX - 1) + '…'; avertissements.push('attribution-tronquee : mentions coupées à ' + ATTRIBUTION_MAX + ' caractères en pied d\'image ; la liste complète est dans `attributions`'); }

@@ -15,7 +15,7 @@ import { expressionCouleurDeclarative } from '../declarative-style.js?v=20261001
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
-import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite, VERSION as VERSION_PONT } from './pont.js';
+import { executerBatch, garderApi, normaliserCapacites, ErreurCapacite, commandesServies, VERSION as VERSION_PONT } from './pont.js';
 import { creerFond } from './fond.js';
 import { ajouterIcones, couleurTexteEtats, TIRET_MARQUEUR, tailleTexte } from './icones-etats.js';
 import { opaciteDeclaree, contourPolygone, etiquetteDeclaree, extrusionDeclaree, curseurDeclare, traceLigneDeclare, CURSEURS } from './style-polygone.js';
@@ -493,7 +493,7 @@ export function attacher(map, opts = {}) {
 
   // ---------- API ----------
   const api = {
-    ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet }),
+    ping: () => ({ version: VERSION, couches: [...couches.keys()], capacites: [...capacites], paquet, commandes: commandesServies(capacites) }),
     async setScene(manifest, donnees = {}) {
       // `fusion: true` : seules les couches listées sont remplacées (ajoutées si nouvelles) ; les autres, leur visuel, le temps et l’interface restent : mettre à jour UNE couche
       // (une grille qui suit la vue, des cases sélectionnées) sans rejouer la scène
