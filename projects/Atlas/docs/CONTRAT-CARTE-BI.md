@@ -1,4 +1,4 @@
-# Composant carte BI : contrat 0.7
+# Composant carte BI : contrat 0.8
 
 Atlas peut être embarqué dans une application externe (« l'hôte ») comme **composant de carte** : l'hôte envoie des commandes, la carte renvoie des événements. Ce document fixe le **contrat** (version `0.3`). Le guide du développeur de l'hôte est `EXPLOITATION-EXTERNE-BI.md`.
 
@@ -200,6 +200,20 @@ Pour une page dont la 3D (réalité augmentée, lecteur de modèle) doit rester 
 - **`setViewMode(mode, { soleil })`** : `soleil: true` montre le dock soleil d'Atlas en mode intégré, `false` le masque (l'hôte le garde alors pour lui) ; sans l'option, le dock reste comme il est. Le retour porte `dockSoleil`. Ce n'est pas une préférence de la scène : rien n'est écrit dans le document.
 - **Ce que la carte montre du soleil** [mesuré dans Chrome] : une lumière directionnelle sur les faces du bâti (MapLibre : `position` suit l'azimut et la hauteur, intensité 0,55), le ciel et la teinte de nuit, l'éclairage public. **Aucune ombre portée du bâti** (limite de MapLibre) ; les **modèles 3D** d'Atlas portent leur ombre (au zoom 14 et plus, hors relief 3D, soleil à plus de 3° au-dessus de l'horizon) quand `actif` est vrai.
 
+## 6 octies. Contrat 0.8 : les altitudes, le récit, la capture [en cours, testé]
+
+Ajouts demandés par un hôte de référence (hydrologie, guide vivant, figures papier). Tous additifs : une commande 0.2 à 0.7 reste servie, un client plus ancien reste compris. Le client de l'hôte passe à la `VERSION_CLIENT` 6.
+
+### `getElevationGrid({ bbox?, resolution? })` : une grille d'altitudes [testé]
+
+Capacité `socle`, exige la 0.8. Pour une page qui calcule (écoulement, bassin versant, profil en long) et qui a besoin des altitudes elles-mêmes, pas d'un fichier 3D qui les contient à une résolution moyenne.
+
+- **Entrée** : `bbox` `[ouest, sud, est, nord]` (la vue par défaut ; latitudes de -85 à 85) et `resolution` en mètres (1 à 1000, 30 par défaut). Plafond : 250 000 cellules et 2000 sur un côté ; au-delà, refus `grille_trop_grande` qui dit la résolution minimale utile.
+- **Sortie** `{ format: 'grille-altitudes/1', colonnes, lignes, bbox, pas: { x_m, y_m, x_deg, y_deg }, resolution_demandee_m, pas_natif_m, unite: 'm', sans_donnee: -9999, repere, source, min, max, sans_donnee_nb, valeurs, avertissements }`. `valeurs` est à plat, **du nord au sud, de l'ouest à l'est**, une valeur au **centre** de chaque cellule, arrondie au centimètre. `repere` dit le repère horizontal (EPSG:4326), l'ordre et la référence verticale (niveau moyen de la mer, **exagération du relief retirée**). `source` porte le nom, l'adresse, la **licence** et la mention à afficher, et le zoom des tuiles lues.
+- **Lue dans le relief que la carte a chargé** : aucune requête de plus (la politique de sécurité d'un hôte n'a pas à ouvrir une origine). Conséquences : la résolution réelle est celle des tuiles d'altitude du zoom de la vue (`pas_natif_m`, environ 7 m au zoom 14 sous nos latitudes) ; des cellules dont les tuiles ne sont pas encore chargées valent `sans_donnee` et sont comptées (`sans_donnee_nb`, avertissement `sans-donnee`) ; un `pas_natif_m` plus grossier que la résolution demandée est signalé (`resolution-plus-fine-que-le-relief`). Pour une grille fine, cadrer la carte sur la zone avant d'appeler.
+- **Refus** (le code est le premier mot du message) : `relief_absent` si la scène n'a pas de relief (`environnement.relief`), `relief_non_charge` si aucune altitude n'est lisible dans l'emprise, `emprise_invalide`, `resolution_invalide`, `grille_trop_grande`, `trop_frequent` (2 appels par seconde au plus). **Jamais une grille de zéros** : une altitude nulle n'est rendue que si le relief la porte.
+- **Licence** : les altitudes viennent de « Relief : Mapzen / AWS Terrain Tiles » ; l'attribution est exigée et les sources (SRTM, 3DEP, EU-DEM, relevés nationaux) ont chacune leur licence. Le texte est dans `source.licence`, repris par l'export 3D.
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
@@ -325,5 +339,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.40.0 | 0.6 | `exportScene3D` : option `sol` (aplat, dalle, fond de carte à plat), luminaires du catalogue exportés. Contrat et client inchangés. |
 | 1.41.0 | 0.6 | `exportScene3D` : option `relief`, `sol.format`, bâti et surfaces rognés à l'emprise, attribution du fond décodée avec sa licence. Contrat et client inchangés. |
 | 1.42.0 | 0.6 -> 0.7 | contrat 0.7, additif : `setSun`, `getSun`, événement `sun`, champ `soleil` de `exportScene3D`, option `soleil` de `setViewMode` ; `VERSION_CLIENT` 5. Une commande 0.2 à 0.6 reste servie. |
+| à venir (1.44.0) | 0.7 -> 0.8 | contrat 0.8, additif : `getElevationGrid` (puis le récit piloté et la capture d'image) ; `VERSION_CLIENT` 6. Une commande 0.2 à 0.7 reste servie. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

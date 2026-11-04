@@ -387,6 +387,7 @@ export function attacher(map, opts = {}) {
   const maintenant = horloge.maintenant || (() => (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()));
   const planifier = horloge.setTimeout || ((f, ms) => setTimeout(f, ms)), annuler = horloge.clearTimeout || ((h) => clearTimeout(h));
   let limiteurFeatures = null;    // idem pour getFeatures
+  let limiteurElevation = null;   // idem pour getElevationGrid
   let limiteurBatiments = null;   // au plus APPELS_PAR_SECONDE lectures de bâtiments par seconde ; créé au premier appel, avec le module chargé à la demande
   const arrondi = (v, n) => (Number.isFinite(v) ? Math.round(v * 10 ** n) / 10 ** n : null);
   /** L'état complet de la vue : de quoi poser une 3D alignée. `padding` décale le point de projection du centre ; `metresParPixel` suppose des tuiles de 512 px (MapLibre). */
@@ -656,6 +657,26 @@ export function attacher(map, opts = {}) {
       let legende = null; try { legende = api.getLegend(c.id); } catch (e) { /* une couche sans légende n'en rend pas */ }
       const clone = (v) => { try { return v === undefined ? null : JSON.parse(JSON.stringify(v)); } catch (e) { return null; } };
       return { type: 'FeatureCollection', layer: c.id, nom: c.def.name || c.id, geometrie: geom(c), features: r.features, total: r.total, tronque: r.tronque, bounds: opt.bbox, visuel: clone(c.visuel), style: clone(c.def.style), legende: clone(legende), visible: c.visible, avertissements: r.avertissements };
+    },
+    /**
+     * Une grille d'altitudes (contrat 0.8) : l'emprise demandée (la vue par défaut) échantillonnée au pas demandé, à partir du relief que la carte a CHARGÉ (aucune requête de plus).
+     * Sans relief dans la scène : refus `relief_absent`, jamais une grille de zéros. Voir lib/bi/elevation-grille.js pour la forme et les plafonds.
+     */
+    async getElevationGrid(o) {
+      const G = await import('./elevation-grille.js?v=20261104a');
+      if (!limiteurElevation) limiteurElevation = G.creerLimiteur(maintenant);
+      if (!limiteurElevation()) throw new Error('getElevationGrid : trop_frequent (' + G.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
+      const b = typeof map.getBounds === 'function' ? map.getBounds() : null;
+      const opt = G.normaliserOptionsElevation(o, b ? [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()] : undefined);
+      const terrain = typeof map.getTerrain === 'function' ? map.getTerrain() : null;
+      if (!terrain || typeof map.queryTerrainElevation !== 'function') throw new Error("getElevationGrid : relief_absent : la scène n'a pas de relief (environnement.relief) ; sans relief chargé, aucune altitude n'est rendue");
+      const exageration = Number.isFinite(terrain.exaggeration) && terrain.exaggeration > 0 ? terrain.exaggeration : 1;
+      // la tuile d'altitude lue est celle du zoom de la vue, plafonnée au zoom natif de la source (terrarium : 15 ; ses données ne sont pas plus fines que le zoom 14)
+      const zoomVue = typeof map.getZoom === 'function' ? map.getZoom() : null;
+      const zoomRelief = Number.isFinite(zoomVue) ? Math.max(0, Math.min(14, Math.floor(zoomVue))) : null;
+      const latMilieu = (opt.bbox[1] + opt.bbox[3]) / 2;
+      const r = G.grilleDAltitudes(opt, (lng, lat) => { const v = map.queryTerrainElevation([lng, lat]); return Number.isFinite(v) ? v / exageration : null; }, { zoomRelief, pasNatifM: zoomRelief === null ? null : G.metresParPixelTuile256(zoomRelief, latMilieu), exageration });
+      return r;
     },
     /**
      * La scène 3D en UN GLB (contrat 0.6) : objets, couches extrudées, bâti du fond. Elle vit dans l'application (three.js, modèles du catalogue) : cette commande n'existe donc qu'en profil
