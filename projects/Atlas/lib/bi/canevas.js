@@ -166,6 +166,8 @@ export function brancher(rt, canevas) {
   const idSceneDe = (idCouche) => Object.keys(correspondance).find((k) => correspondance[k] === idCouche) || null;
   const desabonner = typeof canevas.abonner === 'function' ? canevas.abonner((type, c) => {
     // le soleil a changé dans l'application (contrat 0.7) : la même forme que `getSun`, `origine` api pour l'effet de `setSun`
+    // l'étape du récit a changé (contrat 0.8) : la même forme que le retour de `goToStep`, `origine` api pour l'effet de `goToStep`
+    if (type === 'step') { if (c && c.etat) rt._interne.emettre('step', c.etat, c.origine === 'api' ? 'api' : 'utilisateur'); return; }
     if (type === 'sun') { if (c && c.etat) rt._interne.emettre('sun', c.etat, c.origine === 'api' ? 'api' : 'utilisateur'); return; }
     if (type !== 'select' && type !== 'hover') return;
     const layer = c && c.couche ? idSceneDe(c.couche) : null;
@@ -189,6 +191,11 @@ export function brancher(rt, canevas) {
       if (o && typeof o === 'object' && typeof o.soleil === 'boolean') canevas.soleil.dock(o.soleil);
       return { ...r, dockSoleil: canevas.soleil.dockVisible() };
     };
+  }
+  // le récit de l'application (contrat 0.8) : ses étapes, et le moyen d'en jouer une
+  if (canevas.recit && typeof canevas.recit.lire === 'function') {
+    api.getRecit = () => canevas.recit.lire();
+    api.goToStep = (cible, o) => canevas.recit.aller(cible, o);
   }
   api.ping = () => ({ ...avant.ping(), canevas: true, couches_scene: Object.keys(correspondance) });
   return { couches: () => ({ ...correspondance }), desabonner };

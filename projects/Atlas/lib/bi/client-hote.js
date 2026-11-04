@@ -1,7 +1,7 @@
 /**
  * Client JavaScript de l'application HÔTE du composant carte d'Atlas, en UN SEUL FICHIER, sans import.
  *
- * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (4b6ee58746cd1711) et lib/bi/pont.js (12287db43febef61).
+ * Généré par tools/generer-client-hote.mjs depuis lib/bi/client.js (4b6ee58746cd1711) et lib/bi/pont.js (3e6eb7c61a0a1c35).
  * Ne pas modifier à la main : relancer le générateur. Contrat 0.8 ; les tables de commandes sont celles du pont (test d'égalité).
  * Usage : voir docs/EXPLOITATION-EXTERNE-BI.md.
  */
@@ -31,13 +31,13 @@ export const VERSION = "0.8";
 export const VERSIONS_ACCEPTEES = Object.freeze(["0.2","0.3","0.4","0.5","0.6","0.7","0.8"]);
 export const SOURCE_RUNTIME = "atlas-bi";
 export const SOURCE_HOTE = "hote-bi";
-export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]],"setViewMode":[["string",true],["object",false]],"getBuildings":[["object",false]],"getFeatures":[["string",true],["object",false]],"exportScene3D":[["object",false]],"setSun":[["object",true]],"getSun":[],"getElevationGrid":[["object",false]]});
+export const COMMANDES = Object.freeze({"ping":[],"setScene":[["object",true],["object",false]],"setLayerVisibility":[["string",true],["boolean",true]],"setFilter":[["string",true],["any",true]],"setTime":[["any",true]],"play":[["object",false]],"pause":[],"select":[["any",true]],"highlight":[["array",true]],"flyTo":[["object",true]],"fitTo":[["any",false]],"setTheme":[["object",true],["object",false]],"setVisual":[["string",true],["object",true]],"updateFeature":[["string",true],["any",true],["object",true]],"setEdition":[["string",true],["boolean",true]],"setFond":[["string",true],["object",false]],"getLegend":[["string",false]],"getRows":[["string",false],["object",false]],"resize":[],"addAdminLayer":[["string",true],["object",false]],"removeLayer":[["string",true]],"setChoropleth":[["string",true],["object",true]],"setStatistique":[["string",true],["object",true]],"drillDown":[["string",true],["string",true],["object",false]],"drillUp":[],"setDrillAuto":[["any",false]],"setUnitFilter":[["string",true],["string",true],["any",true]],"batch":[["array",true],["object",false]],"setHorsLigne":[["any",true]],"getTheme":[],"getCamera":[],"watchCamera":[["object",false]],"setViewMode":[["string",true],["object",false]],"getBuildings":[["object",false]],"getFeatures":[["string",true],["object",false]],"exportScene3D":[["object",false]],"setSun":[["object",true]],"getSun":[],"getElevationGrid":[["object",false]],"getRecit":[],"goToStep":[["any",true],["object",false]]});
 export const COMMANDES_0_3 = Object.freeze(["addAdminLayer","removeLayer","setChoropleth","setStatistique","drillDown","drillUp","setDrillAuto","setUnitFilter","batch","setHorsLigne","getTheme"]);
 export const COMMANDES_0_4 = Object.freeze(["getCamera","watchCamera","setViewMode","getBuildings"]);
 export const COMMANDES_0_5 = Object.freeze(["getFeatures"]);
 export const COMMANDES_0_6 = Object.freeze(["exportScene3D"]);
 export const COMMANDES_0_7 = Object.freeze(["setSun","getSun"]);
-export const COMMANDES_0_8 = Object.freeze(["getElevationGrid"]);
+export const COMMANDES_0_8 = Object.freeze(["getElevationGrid","getRecit","goToStep"]);
 /** Majeure et mineure égales (0.x : toute évolution de mineure peut casser). */
 export function versionsCompatibles(a, b = VERSION) {
   const p = (v) => (typeof v === 'string' ? v : '').split('.').map((x) => Number(x)); const [a1, a2] = p(a), [b1, b2] = p(b);

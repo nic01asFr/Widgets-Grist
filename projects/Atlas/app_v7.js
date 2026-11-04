@@ -24,6 +24,7 @@ import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, h
 import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=20260924v';
 import { coucherLever, positionSoleil } from './lib/soleil.js?v=20260924a';
 import { normaliserSetSun, reglageDepuisInstant, etatSoleil, blocSoleilExport, creerSignalSoleil } from './lib/soleil-hote.js?v=20261102a';
+import { resumerRecit, resoudreEtape, normaliserOptionsAller, etatEtape } from './lib/recit-hote.js?v=20261104a';
 import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=20260924a';
 import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=20261002g';
 import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=20261016a';
@@ -3941,6 +3942,40 @@ const SoleilHote = {
     dockVisible: () => !!getViewerControl(STATE.viewerControls, 'sun')?.exposed,
 };
 
+// ---- le récit piloté par la page hôte (contrat 0.8) : `getRecit`, `goToStep`, l'événement `step` ----
+let _originRecit = 'utilisateur';
+function signalerRecitAHote() {
+    try {
+        if (!_abonneHote) return;
+        const lecture = lecteurRecitActif();
+        _abonneHote('step', { etat: etatEtape(STATE.story, lecture ? _storyIdx : null, lecture), origine: _originRecit });
+    } catch (_) { /* l'hôte ne doit pas casser le récit */ }
+}
+/** Rend la main quand la carte est posée (mouvement fini) et chargée (tuiles) : `true` ; `false` si le délai est écoulé avant. */
+function attendreCartePosee(delai) {
+    return new Promise((ok) => {
+        let clos = false, minuteur = null;
+        const fin = (charge) => { if (clos) return; clos = true; clearTimeout(minuteur); try { map.off('idle', auRepos); } catch (_) { /* carte retirée */ } ok(charge); };
+        const auRepos = () => { if (!map.isMoving() && map.areTilesLoaded()) fin(true); };
+        minuteur = setTimeout(() => fin(false), delai);
+        map.on('idle', auRepos);
+        map.triggerRepaint();   // une étape qui ne change rien à la carte ne produirait pas d'événement `idle` sans cela
+    });
+}
+const RecitHote = {
+    lire: () => resumerRecit(STATE.story, { courant: lecteurRecitActif() ? _storyIdx : null, lecture: lecteurRecitActif() }),
+    async aller(cible, o) {
+        const opt = normaliserOptionsAller(o);
+        const etape = resoudreEtape(STATE.story, cible);
+        if (!map) throw new Error("goToStep : la carte n'est pas prête");
+        if (_contexteCle) throw new Error('goToStep : contexte_actif : un contexte de travail est joué ; le quitter avant de jouer le récit');
+        _originRecit = 'api';
+        try { if (_storyPresenting) allerEtape(etape.indexSource); else enterStoryPresentation(etape.indexSource); } finally { _originRecit = 'utilisateur'; }
+        const charge = opt.attendre ? await attendreCartePosee(opt.delai) : null;
+        return { ...etatEtape(STATE.story, _storyIdx, lecteurRecitActif()), charge };
+    },
+};
+
 function updateSunStrip() {
     const { azimuth, altitude, date } = sunPosition();
     const min = STATE.settings.timeOfDay;
@@ -5621,6 +5656,7 @@ function allerEtape(i, opts = {}) {
     renderStoryPresentation();
     applyStoryState(cloneStoryState(STATE.story[_storyIdx].state), { camera: !opts.suivi });
     remplirAutour();
+    signalerRecitAHote();
 }
 
 /**
@@ -8608,6 +8644,7 @@ function enterStoryPresentation(i) {
     }
     renderStoryPresentation();
     applyStoryState(cloneStoryState(STATE.story[_storyIdx].state));
+    signalerRecitAHote();
 }
 
 /** Le titre d'un module, avec une explication au survol quand le module en demande une. */
@@ -17016,6 +17053,7 @@ const A = {
         _alerteTexte = '';
         _storyPresenting = false;
         _contexteCle = null;
+        signalerRecitAHote();
         rafraichirTrajet();
         document.body.classList.remove('story-presenting');
         majEtageCarte();
@@ -18873,6 +18911,7 @@ async function demarrerBi() {
                 outils: Object.freeze({ VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise }),
                 exporter3d: exporter3dScene,   // la scène 3D en un GLB (contrat 0.6)
                 soleil: SoleilHote,   // le soleil de la scène : getSun, setSun, dock (contrat 0.7)
+                recit: RecitHote,   // le récit de la scène : getRecit, goToStep, événement step (contrat 0.8)
                 // L'identité de l'hôte sur l'interface de l'application (lib/charte/application.js, chargé à la demande) : ce que `setTheme` a donné devient les jetons
                 // de l'application ; sans charte de l'hôte, ses jetons d'origine. Rend les notes (ce qui n'a pas été suivi, et pourquoi).
                 // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.

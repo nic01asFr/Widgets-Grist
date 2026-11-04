@@ -13,7 +13,7 @@ import { carteSimulee } from './aide-carte-bi.js';
 const VUE = [5.38, 43.29, 5.39, 43.30];
 
 test('contrat : getElevationGrid est une commande 0.8 de la capacité socle, décrite, refusée à un hôte resté en 0.7', () => {
-  assert.deepEqual([...COMMANDES_0_8], ['getElevationGrid']);
+  assert.ok(COMMANDES_0_8.includes('getElevationGrid'));
   assert.ok('getElevationGrid' in COMMANDES); assert.equal(versionDeCommande('getElevationGrid'), '0.8'); assert.equal(CAPACITE_DE_COMMANDE.getElevationGrid, 'socle');
   assert.ok(Array.isArray(TEXTES_COMMANDES.getElevationGrid) && TEXTES_COMMANDES.getElevationGrid[0].length > 80);
   const ctx = { origine: 'https://hote.test', autorisees: ['https://hote.test'] };

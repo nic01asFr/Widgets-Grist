@@ -214,6 +214,16 @@ Capacité `socle`, exige la 0.8. Pour une page qui calcule (écoulement, bassin 
 - **Refus** (le code est le premier mot du message) : `relief_absent` si la scène n'a pas de relief (`environnement.relief`), `relief_non_charge` si aucune altitude n'est lisible dans l'emprise, `emprise_invalide`, `resolution_invalide`, `grille_trop_grande`, `trop_frequent` (2 appels par seconde au plus). **Jamais une grille de zéros** : une altitude nulle n'est rendue que si le relief la porte.
 - **Licence** : les altitudes viennent de « Relief : Mapzen / AWS Terrain Tiles » ; l'attribution est exigée et les sources (SRTM, 3DEP, EU-DEM, relevés nationaux) ont chacune leur licence. Le texte est dans `source.licence`, repris par l'export 3D.
 
+### `getRecit()`, `goToStep(cible, { attendre?, delai? })` et l'événement `step` : le récit piloté [testé, navigateur à mesurer]
+
+**Profil complet seulement** (le récit est celui de l'application, `Atlas_Story` ; la carte nue répond `capacite_absente`). Pour un guide vivant : la carte avance étape par étape sous la main de la page, qui garde pour chaque étape sa figure (avec `captureImage`).
+
+- **`getRecit()`** rend `{ lecture, total, courant, cle_courante, etapes: [{ index, cle, titre, texte, camera, couches }] }`. Les **contextes de travail** (étapes marquées `usage.contexte`) n'en font pas partie : ils se jouent hors séquence. `index` est le rang dans le récit (0 = la première étape) ; `cle` est la clé stable de l'étape (elle survit aux réordonnancements ; `null` pour une étape ancienne sans clé) ; `camera` `{ center, zoom, pitch, bearing }` ou `null` ; `couches` : les couches visibles à cette étape. Titres bornés à 200 caractères, textes à 4000.
+- **`goToStep(cible, options)`** joue une étape : `cible` est une **clé** (texte) ou un **rang** (entier). La carte se pose comme pour la personne (caméra, couches, filtres, symbolisation, ambiance) ; la lecture du récit s'ouvre si elle ne l'était pas. `attendre` (vrai par défaut) rend la main **une fois la carte posée et chargée** (mouvement fini, tuiles chargées) : l'étape est prête pour `captureImage`. `delai` : 100 à 60 000 ms (15 000 par défaut) ; passé ce délai, la commande rend quand même la main avec `charge: false`. Retour : `{ lecture, index, cle, titre, total, charge }`.
+- **Refus** (le code est le premier mot) : `recit_vide` (aucune étape de récit), `etape_inconnue` (clé absente, rang hors du récit, ou clé d'un contexte), `etape_invalide` (ni texte ni entier), `contexte_actif` (un contexte de travail est joué : le quitter d'abord).
+- **Événement `step`** `{ lecture, index, cle, titre, total }` : à chaque changement d'étape ; quand la lecture s'arrête, `lecture` vaut `false` et `index`, `cle`, `titre` valent `null`. `origine` vaut `utilisateur` pour un geste dans Atlas (flèches, clavier), `api` pour l'effet de `goToStep` (l'hôte ignore ses propres échos).
+- **Ce que le contrat ne fait pas** : il n'écrit rien dans le récit (pas de création ni de modification d'étape), et ne commande pas l'interface de lecture d'Atlas (barre d'étapes, texte de l'étape), qui reste celle de l'application.
+
 ## 7. Jointure d'un tableau hôte, codes et hiérarchie [testé]
 
 - Formes acceptées : `{ code: valeur }`, `Map`, ou lignes `{ [cleTable]: code, [champTable]: valeur }`.
@@ -339,6 +349,6 @@ Ce qui change pour un hôte, version par version. Le contrat reste **0.3** : tou
 | 1.40.0 | 0.6 | `exportScene3D` : option `sol` (aplat, dalle, fond de carte à plat), luminaires du catalogue exportés. Contrat et client inchangés. |
 | 1.41.0 | 0.6 | `exportScene3D` : option `relief`, `sol.format`, bâti et surfaces rognés à l'emprise, attribution du fond décodée avec sa licence. Contrat et client inchangés. |
 | 1.42.0 | 0.6 -> 0.7 | contrat 0.7, additif : `setSun`, `getSun`, événement `sun`, champ `soleil` de `exportScene3D`, option `soleil` de `setViewMode` ; `VERSION_CLIENT` 5. Une commande 0.2 à 0.6 reste servie. |
-| à venir (1.44.0) | 0.7 -> 0.8 | contrat 0.8, additif : `getElevationGrid` (puis le récit piloté et la capture d'image) ; `VERSION_CLIENT` 6. Une commande 0.2 à 0.7 reste servie. |
+| à venir (1.44.0) | 0.7 -> 0.8 | contrat 0.8, additif : `getElevationGrid` (puis la capture d'image) ; `getRecit`, `goToStep` et l'événement `step` ; `VERSION_CLIENT` 6. Une commande 0.2 à 0.7 reste servie. |
 
 **Règle** : une évolution qui change le sens d'une commande ou d'un événement existant donne une nouvelle version du contrat (0.4) et une nouvelle `VERSION_CLIENT`, annoncée aux hôtes avant publication.

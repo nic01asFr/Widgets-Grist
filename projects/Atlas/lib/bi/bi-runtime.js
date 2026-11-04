@@ -688,6 +688,12 @@ export function attacher(map, opts = {}) {
      * qu'en profil complet (`lib/bi/canevas.js` les branche) ; la carte nue répond `capacite_absente`.
      */
     async setSun() { throw new Error("capacite_absente : setSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
+    /**
+     * Le récit d'Atlas piloté par la page (contrat 0.8) : `getRecit` liste les étapes, `goToStep` en joue une. Le récit vit dans l'application : profil complet seulement
+     * (`lib/bi/canevas.js` les branche) ; la carte nue répond `capacite_absente`.
+     */
+    async getRecit() { throw new Error("capacite_absente : getRecit demande le profil complet (`profil=\"complet\"`) : le récit (étapes de la scène) est celui de l'application ; la carte nue n'en a pas"); },
+    async goToStep() { throw new Error("capacite_absente : goToStep demande le profil complet (`profil=\"complet\"`) : le récit (étapes de la scène) est celui de l'application ; la carte nue n'en a pas"); },
     async getSun() { throw new Error("capacite_absente : getSun demande le profil complet (`profil=\"complet\"`) : le soleil (lumière, ombres) est celui de l'application ; la carte nue n'en a pas"); },
     /** Abonne l'hôte au flux `mouvement` ; un seul abonnement, remplacé par le suivant ; `actif: false` l'arrête. */
     watchCamera(o = {}) {
