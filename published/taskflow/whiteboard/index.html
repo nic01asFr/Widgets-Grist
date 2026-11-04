@@ -2838,7 +2838,8 @@ const S = {
   // TaskFlow integration
   taskCache: new Map(),    // taskRef id → task data
   teamCache: new Map(),    // memberId → member data
-  projCache: new Map(),    // projectId → project data { id, nom, couleur }
+  projCache: new Map(),    // projectId → project data { id, nom, couleur, portefeuille }
+  portefCache: new Map(),  // portefeuilleId → { id, nom, couleur } (opt-in, cree par le Plan)
   hasTF: false,            // TaskFlow tables detected
   tgCtxGrain: null,        // grain forcé pour contexte courant (null = auto-zoom)
   selTaskId: null,         // ID tâche sélectionnée (TF)
@@ -3081,6 +3082,13 @@ const GB = {
 
     } catch (e) {
       console.error('Grist init:', e);
+      // Hors d'une vraie iframe Grist (apercu/essai direct, ?demo) : bascule automatique,
+      // comme les autres widgets TaskFlow (TF.shouldAutoDemo). Dans une iframe Grist qui a
+      // reellement echoue, on ne fabrique pas de donnees a la place : choix explicite requis.
+      if (typeof TF !== 'undefined' && TF.shouldAutoDemo && TF.shouldAutoDemo()) {
+        S.alone = true; Boot.hide(); initDemo();
+        return;
+      }
       const _m = Q('#boot-msg'); if (_m) { _m.textContent = 'Connexion à Grist impossible.'; _m.style.display = 'block'; }
       Boot.showActions([
         { label: 'Mode autonome', fn: () => { S.alone = true; Boot.hide(); initDemo(); } },
@@ -3864,9 +3872,28 @@ const GB = {
           S.projCache.clear();
           for (let i = 0; i < pData.id.length; i++) {
             S.projCache.set(pData.id[i], {
-              id:      pData.id[i],
-              nom:     pData.nom?.[i]     || '',
-              couleur: pData.couleur?.[i] || '#4f46e5',
+              id:          pData.id[i],
+              nom:         pData.nom?.[i]     || '',
+              couleur:     pData.couleur?.[i] || '#4f46e5',
+              // Portefeuille = opt-in (comme dans Plan/Kanban) : absent tant que la colonne
+              // n'existe pas sur ce document, ce qui est le cas normal hors Plan.
+              portefeuille: Number(pData.portefeuille?.[i]) || 0,
+            });
+          }
+        }
+      }
+
+      // Charger Portefeuilles si disponible (opt-in, cree par le Plan). Absence = pas de
+      // regroupement par portefeuille dans la Grille temporelle, comportement inchange.
+      if (tables.includes('Portefeuilles')) {
+        const pfData = await grist.docApi.fetchTable('Portefeuilles');
+        if (pfData?.id) {
+          S.portefCache.clear();
+          for (let i = 0; i < pfData.id.length; i++) {
+            S.portefCache.set(pfData.id[i], {
+              id:      pfData.id[i],
+              nom:     pfData.nom?.[i]     || '',
+              couleur: pfData.couleur?.[i] || '',
             });
           }
         }
@@ -4937,13 +4964,31 @@ async function autoLayoutTasks() {
   }
   if (projGroups.size === 0) { toast('Aucune tâche avec date', 'warn'); return; }
 
+  // ── 3b. Ordonner les projets par portefeuille (opt-in, cree par le Plan) ─────
+  // Sans portefeuille active sur le document : S.portefCache est vide, le label est
+  // toujours '' et le tri par projet seul revient au comportement precedent.
+  const portefLabelOf = (pid) => {
+    const proj = S.projCache.get(pid);
+    const pf = proj && proj.portefeuille ? S.portefCache.get(proj.portefeuille) : null;
+    return pf ? pf.nom : '';
+  };
+  const projGroupsOrdered = [...projGroups.entries()].sort((a, b) => {
+    const [pidA] = a, [pidB] = b;
+    const lblA = portefLabelOf(pidA), lblB = portefLabelOf(pidB);
+    // Projets sans portefeuille groupes en dernier, pas intercales avec les portefeuilles nommes.
+    if (!!lblA !== !!lblB) return lblA ? -1 : 1;
+    if (lblA !== lblB) return lblA.localeCompare(lblB);
+    const nomA = S.projCache.get(pidA)?.nom || '', nomB = S.projCache.get(pidB)?.nom || '';
+    return nomA.localeCompare(nomB);
+  });
+
   // ── 4. Calculer positions + stacking pour chaque groupe ──────────────────
   // taskLayout : taskId → { x, y, w }
   const taskLayout = new Map();
   const zoneSpecs  = [];   // { pid, projName, zoneX, zoneY, zoneW, zoneH }
 
   let zoneY = 40;
-  for (const [pid, tasks] of projGroups) {
+  for (const [pid, tasks] of projGroupsOrdered) {
     // Position X et largeur de chaque tâche
     const items = tasks.map(t => {
       const x = Math.round(dateToX(t.dateDebut));
@@ -4977,7 +5022,9 @@ async function autoLayoutTasks() {
     const zH = ZONE_LABEL + ZONE_PAD + numRows * (C.SH + ROW_GAP) - ROW_GAP + ZONE_PAD;
 
     const proj = S.projCache.get(pid);
-    const projName  = proj?.nom    || (pid ? `Projet #${pid}` : 'Sans projet');
+    const baseName = proj?.nom || (pid ? `Projet #${pid}` : 'Sans projet');
+    const portefLabel = portefLabelOf(pid);
+    const projName = portefLabel ? (portefLabel + ' › ' + baseName) : baseName;
     // Couleur de fallback distincte par projet.
     // '#4f46e5' = couleur UI par défaut dans TaskFlow (signifie "aucune couleur personnalisée")
     // → traiter comme absence de couleur et utiliser la palette de fallback.
