@@ -57,4 +57,6 @@
   }
 
   root.FormsWebMCPEntree = { installer: installer, SCRIPTS: SCRIPTS };
+  // Nom unique que la vitrine cherche, pour tous les widgets (contrat : self.EntreeWebMCP = { installer }).
+  root.EntreeWebMCP = root.FormsWebMCPEntree;
 }(typeof self !== 'undefined' ? self : this));

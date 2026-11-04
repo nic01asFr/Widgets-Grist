@@ -188,6 +188,7 @@ describe('Page WebMCP Form Builder : le module d’entrée que la vitrine inject
     const dePage = [...html.matchAll(/<script src="([^"]+)"/g)].map((m) => m[1]);
     assert.deepEqual([...ctx.FormsWebMCPEntree.SCRIPTS], dePage);
     assert.equal(typeof ctx.FormsWebMCPEntree.installer, 'function');
+    assert.equal(ctx.EntreeWebMCP, ctx.FormsWebMCPEntree, 'le nom unique du contrat de la vitrine');
   });
 
   it('en page publique (pures_seulement) : les commandes du registre seulement, jamais forms_rendre ni forms_recolter', async () => {
