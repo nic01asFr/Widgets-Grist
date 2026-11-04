@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pour un agent — Form Builder</title>
+<meta name="description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.0).">
+<link rel="canonical" href="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/agents/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Widgets Grist">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/agents/">
+<meta property="og:title" content="Pour un agent — Form Builder">
+<meta property="og:description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.0).">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Pour un agent — Form Builder">
+<meta name="twitter:description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.0).">
+<link rel="alternate" type="text/plain" href="../../../grist_forms/llms.txt" title="llms.txt">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Pour un agent — Form Builder","description":"Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.0).","url":"https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/agents/","about":{"@type":"SoftwareApplication","name":"Form Builder","applicationCategory":"BusinessApplication","softwareVersion":"1.7.0"}}</script>
+<style>
+:root { --papier: #F6F6F6; --surface: #FFFFFF; --encre: #161616; --plume: #666666; --filet: #DDDDDD; --accent: #000091; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--papier); color: var(--encre);
+  font: 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+main { max-width: 60rem; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+h1, h2, h3 { font-family: Marianne, "Segoe UI", system-ui, sans-serif; font-weight: 500;
+  line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: -.01em; }
+h2 { font-size: 1.5rem; margin-bottom: 1rem; }
+p { margin: 0 0 1rem; color: var(--plume); }
+.eyebrow { font-size: .78rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--plume); margin-bottom: 1.4rem; }
+.tags { display: flex; flex-wrap: wrap; gap: .4rem; margin: 1rem 0; }
+.tag { font-size: .78rem; padding: .2rem .6rem; border-radius: 999px;
+  border: 1px solid var(--filet); color: var(--plume); }
+.faits { display: flex; flex-wrap: wrap; gap: 1.4rem; align-items: baseline;
+  font-size: .88rem; color: var(--plume); margin: 1.4rem 0 2rem; }
+.faits b { color: var(--encre); font-weight: 600; }
+.vif { display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: #4E9A5B; margin-right: .4rem; vertical-align: middle; }
+.pied { max-width: 60rem; margin: 0 auto; padding: 2rem 1.5rem 4rem;
+  border-top: 1px solid var(--filet); font-size: .85rem; color: var(--plume); }
+code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: .85em;
+  background: var(--surface); border: 1px solid var(--filet); border-radius: 4px;
+  padding: .1rem .35rem; }
+
+.retour { display: inline-block; font-size: .88rem; color: var(--plume);
+  text-decoration: none; margin-bottom: 2rem; }
+.retour:hover { color: var(--accent); }
+.chapeau { font-size: 1.15rem; line-height: 1.55; color: var(--encre);
+  max-width: 40rem; margin: 1rem 0 0; }
+.accroche { max-width: 40rem; margin: .8rem 0 0; font-size: 1rem; }
+.boutons { display: flex; flex-wrap: wrap; gap: .7rem; margin: 2rem 0 3rem; }
+.bouton { display: inline-block; padding: .8rem 1.3rem; border-radius: 10px;
+  font-size: .95rem; font-weight: 600; text-decoration: none;
+  background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+.bouton.creux { background: none; color: var(--encre); border-color: var(--filet);
+  font-weight: 500; }
+.bouton.creux:hover { border-color: var(--accent); }
+section { margin: 0 0 3rem; }
+.liste { display: flex; flex-direction: column; gap: .6rem; }
+.vue { display: flex; gap: 1rem; align-items: baseline; padding: .9rem 1.1rem;
+  background: var(--surface); border: 1px solid var(--filet); border-radius: 10px; }
+.vue b { font-weight: 600; min-width: 8.5rem; }
+.vue span { color: var(--plume); font-size: .9rem; flex: 1; }
+.vue a { font-size: .82rem; color: var(--accent); text-decoration: none;
+  white-space: nowrap; }
+/* Une version precedente reste atteignable — son adresse vit dans des
+   documents — mais elle ne se presente plus comme le chemin a prendre. */
+.vue.passee { opacity: .62; }
+.vue.passee em { font-style: normal; font-weight: 400; font-size: .78rem;
+  color: var(--plume); }
+.points { list-style: none; padding: 0; margin: 0; display: grid; gap: .8rem;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+.points li { padding-left: 1.1rem; position: relative; color: var(--plume);
+  line-height: 1.55; }
+.points li::before { content: ''; position: absolute; left: 0; top: .55em;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.points li b { color: var(--encre); font-weight: 600; }
+.journal { border-left: 2px solid var(--filet); padding-left: 1.2rem; }
+.journal div { margin-bottom: 1.1rem; }
+.journal b { font-family: ui-monospace, Menlo, monospace; font-size: .85rem; }
+.journal p { margin: .2rem 0 0; font-size: .92rem; }
+.encart { background: var(--surface); border: 1px solid var(--filet);
+  border-left: 3px solid var(--accent); border-radius: 10px; padding: 1.3rem 1.4rem; }
+.encart h2 { font-size: 1.2rem; margin-bottom: .5rem; }
+.apercu { margin-top: 0; }
+.cadre { position: relative; border: 1px solid var(--filet); border-radius: 12px;
+  overflow: hidden; background: var(--surface); aspect-ratio: 1200 / 630; }
+.cadre img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cadre iframe { display: block; width: 100%; height: 100%; border: 0; }
+.cadre.vivant { aspect-ratio: auto; height: 70vh; min-height: 26rem; }
+/* Une demonstration d'application (figure vivante) a besoin de largeur : la colonne de la page la ferait tenir sur un telephone, carte
+   hors de vue. Lancee, elle passe au premier plan, presque plein ecran, et se referme (bouton ou Echap). */
+.cadre.plein { position: fixed; inset: 3vh 3vw; z-index: 60; height: auto; min-height: 0; border-radius: 10px; background: #fff; display: flex; flex-direction: column;
+  box-shadow: 0 0 0 100vmax rgba(20, 16, 12, .62); }
+.cadre.plein iframe { flex: 1; min-height: 0; height: auto; }
+.barre { flex: none; display: flex; align-items: center; justify-content: space-between; gap: .8rem; padding: .4rem .6rem .4rem .9rem; border-bottom: 1px solid #ddd5c8;
+  background: #fff; color: #1f2933; font-size: .85rem; border-radius: 10px 10px 0 0; }
+.fermer { flex: none; min-height: 44px; padding: .35rem 1rem; border: 1px solid #1f2933; border-radius: 6px; background: #fff; color: #1f2933; font: inherit; font-size: .85rem; cursor: pointer; }
+.fermer:hover { background: #eef2f6; }
+.lancer { position: absolute; inset: 0; margin: auto; width: max-content; height: max-content;
+  padding: .8rem 1.4rem; border-radius: 999px; border: 0; cursor: pointer;
+  font: inherit; font-weight: 600; color: #fff; background: var(--accent);
+  box-shadow: 0 6px 24px rgba(0,0,0,.28); }
+.lancer:hover { filter: brightness(1.08); }
+.mention { font-size: .85rem; margin-top: .7rem; }
+
+.chiffres { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  padding: 1.6rem 0; border-top: 1px solid var(--filet); border-bottom: 1px solid var(--filet); }
+.chiffres b { display: block; font-family: var(--display-f, inherit); font-size: 2rem;
+  line-height: 1; color: var(--accent); font-weight: 500; }
+.chiffres span { font-size: .88rem; color: var(--plume); }
+.contexte { display: grid; gap: 1.4rem; margin-bottom: 2.8rem;
+  grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .contexte { grid-template-columns: 17rem minmax(0, 1fr); gap: 2.2rem; } }
+.contexte h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.contexte p { font-size: .94rem; margin: 0 0 .7rem; }
+.contexte .role { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin: 0 0 .3rem; }
+.contexte .exemple { font-size: .86rem; color: var(--plume); margin: .9rem 0 0; padding: .6rem .8rem; background: var(--filet); border-radius: 8px; }
+.contexte .exemple b { color: var(--encre); font-weight: 600; margin-right: .3rem; }
+.contexte .utilise { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; padding: 0; margin: .9rem 0 0; }
+.contexte .utilise li { font-size: .74rem; padding: .1rem .55rem; border: 1px solid var(--filet); border-radius: 999px; color: var(--plume); }
+/* Ce que ce contexte apporte que les autres n'apportent pas : c'est la seule
+   raison de montrer une capture de plus. */
+.contexte .pourquoi { font-size: .88rem; padding-left: .85rem;
+  border-left: 2px solid var(--accent); margin-bottom: 0; }
+.contexte figure { margin: 0 0 1rem; }
+.contexte .large img { width: 100%; height: auto; display: block; border-radius: 12px;
+  border: 1px solid var(--filet); }
+.contexte figcaption { font-size: .85rem; color: var(--plume); margin-top: .6rem; }
+.telephones { display: grid; gap: 1.6rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); }
+/* Un cadre : sans lui, une capture verticale se lit comme une image mal recadree. */
+/* Un téléphone n'est pas plus large qu'un téléphone : seul dans sa colonne, il ne s'étire pas. */
+.telephone { max-width: 17rem; }
+.telephone .ecran { border: 8px solid var(--encre); border-radius: 26px; overflow: hidden;
+  background: var(--encre); box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+/* Le cadre suit l image, au lieu de lui imposer un rapport : une capture prise
+   sur un autre appareil se trouvait rognee, et c est le haut de l ecran — la
+   barre du produit — qui disparaissait. */
+.telephone .ecran img { width: 100%; height: auto; display: block; }
+.telephone figcaption { text-align: center; }
+.sequence ol { list-style: none; counter-reset: pas; padding: 0; margin: 0;
+  display: grid; gap: 1.2rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+.sequence li { counter-increment: pas; padding-top: 2.6rem; position: relative; }
+.sequence li::before { content: counter(pas); position: absolute; top: 0; left: 0;
+  width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center;
+  font-size: .85rem; font-weight: 600; color: #fff; background: var(--accent); }
+.sequence li b { display: block; margin-bottom: .3rem; }
+.sequence li p { font-size: .93rem; margin: 0; }
+.facons .groupes { display: grid; gap: 2rem 2.6rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .facons .groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.facons h3 { font-size: 1.12rem; margin-bottom: .4rem; }
+.groupe-points { font-size: 1rem; margin: 1.4rem 0 .6rem; color: var(--plume); font-weight: 600; }
+.facons .intro { font-size: .92rem; color: var(--plume); margin: 0 0 .9rem; }
+.facons ul { list-style: none; padding: 0; margin: 0; }
+.facons li { padding: .8rem 0; border-top: 1px solid var(--filet); }
+.facons li p { font-size: .9rem; margin: .25rem 0 0; }
+.facons .porte { display: flex; flex-wrap: wrap; align-items: baseline; gap: .3rem .6rem; }
+/* Ou la porte tourne : c'est ce qui decide laquelle choisir. */
+.facons .ou { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid currentColor; border-radius: 999px; padding: .05rem .5rem; }
+.contexte code, .sequence code, .facons code, .journal code, .mention code { font-size: .88em; padding: .05em .3em;
+  border-radius: 4px; background: var(--filet); overflow-wrap: anywhere; }
+/* La revelation accompagne le defilement ; elle ne le commande pas. */
+.reveler { opacity: 0; transform: translateY(14px);
+  transition: opacity .5s ease, transform .5s ease; }
+.reveler.vu { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveler { opacity: 1; transform: none; transition: none; }
+}
+
+.statut { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; font-size: .88rem; color: var(--plume); margin: -1.6rem 0 2.4rem; }
+.statut b { color: var(--encre); font-weight: 600; }
+.ancres { position: sticky; top: 0; z-index: 20; display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; margin: 0 -1.5rem 2rem; padding: .35rem 1.5rem;
+  background: color-mix(in srgb, var(--papier) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--filet); }
+.ancres::-webkit-scrollbar { display: none; }
+.ancres a { white-space: nowrap; text-decoration: none; font-size: .9rem; color: var(--plume); padding: .45rem .8rem; border-radius: 999px; min-height: 2.5rem; display: inline-flex; align-items: center; }
+.ancres a:hover { background: var(--filet); color: var(--encre); }
+.partie { margin: 0; padding: 3.2rem 0 .5rem; scroll-margin-top: 4rem; }
+.entete { max-width: 44rem; margin-bottom: 1.8rem; } .entete h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); margin-bottom: .6rem; } .entete p { font-size: 1.02rem; margin: 0; }
+.avant-apres, .preuves { margin: 0 0 2.6rem; padding: 0; }
+.comparaison { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--filet); font-size: .93rem; }
+.comparaison caption { text-align: left; font-weight: 600; padding-bottom: .5rem; }
+.comparaison th, .comparaison td { text-align: left; padding: .7rem 1rem; border-bottom: 1px solid var(--filet); vertical-align: top; font-weight: 400; }
+.comparaison thead th { background: var(--papier); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; }
+.comparaison tbody th { color: var(--plume); } .comparaison td:last-child { color: var(--encre); font-weight: 500; }
+.preuves ul { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.preuves li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1rem 1.1rem; }
+.preuves b { display: block; font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.9rem; line-height: 1.1; color: var(--encre); }
+.preuves span { display: block; font-size: .88rem; color: var(--plume); margin-top: .3rem; } .preuves em { display: block; font-size: .76rem; color: var(--plume); margin-top: .5rem; font-style: normal; }
+.chap { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 2.4rem; align-items: start; padding: 2.2rem 0; border-top: 1px solid var(--filet); }
+.chap.haut { display: block; } .chap.inverse .dit { order: 2; } .chap > .detail, .chap > .pleine { grid-column: 1 / -1; }
+.chap > .pleine:empty { display: none; }
+.chap .dit { max-width: 46rem; } .chap .dit h3 { font-size: 1.45rem; margin-bottom: .7rem; }
+.chap .num { display: block; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: .5rem; }
+.chap .dit p { font-size: .97rem; }
+.chap .pourquoi { font-size: .93rem; padding-left: .9rem; border-left: 3px solid var(--accent); color: var(--encre); }
+.chap .liens { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0 0; }
+.chap .lien { color: var(--accent); }
+.chap figure { margin: 0; } .chap figure img { width: 100%; height: auto; display: block; border: 1px solid var(--filet); border-radius: 12px; } .chap figcaption { font-size: .82rem; color: var(--plume); margin-top: .5rem; }
+.chap .montre figure.vivante .cadre { aspect-ratio: 1200 / 760; }
+.demo-parcours { margin: 0 0 1rem; } .demo-parcours figure { margin: 0; } .demo-parcours figcaption { font-size: .85rem; color: var(--plume); margin-top: .5rem; }
+.demo-parcours .cadre { aspect-ratio: 16 / 9; }
+.detail { background: var(--surface); border: 1px solid var(--filet); border-radius: 12px; margin: 1rem 0 .6rem; }
+.detail > summary { cursor: pointer; padding: .9rem 1.1rem; font-weight: 600; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 2.75rem; }
+.detail > summary::-webkit-details-marker { display: none; } .detail > summary::after { content: "+"; color: var(--accent); font-size: 1.3rem; line-height: 1; } .detail[open] > summary::after { content: "−"; }
+.detail > div { padding: 0 1.1rem 1rem; } .detail h4 { margin: .8rem 0 .2rem; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--plume); font-weight: 600; } .detail h4:first-child { margin-top: 0; }
+.detail p, .detail li { font-size: .93rem; } .detail .comparaison { margin-top: .4rem; }
+.liste-simple { margin: 0 0 .6rem; padding-left: 1.2rem; color: var(--plume); } .liste-simple li { margin-bottom: .35rem; }
+.flux { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin: 0 0 1.4rem; padding: 0; list-style: none; }
+.flux > li { background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; padding: 1.1rem 1.2rem; } .flux h3 { font-size: 1.1rem; margin-bottom: .4rem; } .flux p { font-size: .92rem; margin: 0 0 .6rem; }
+.flux .d { display: block; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--plume); margin: .7rem 0 .2rem; font-weight: 600; } .flux ul { margin: 0; padding-left: 1.1rem; font-size: .88rem; color: var(--plume); }
+.titre-flux { font-size: 1.3rem; margin: 0 0 .4rem; }
+main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
+.bloc-code pre { scrollbar-color: #5b5446 #1C1A17; }
+.annexe-bloc { margin: 0 0 2.4rem; max-width: 46rem; } .annexe-bloc h2 { font-size: 1.4rem; } .annexe-bloc .bloc-code, .annexe-bloc .comparaison { max-width: 100%; margin: .6rem 0 1rem; } .annexe-bloc .liens { display: flex; flex-wrap: wrap; gap: .6rem; } .annexe-bloc .lien { color: var(--accent); }
+.bloc-code { background: #1C1A17; color: #E7DFD0; border-radius: 14px; overflow: hidden; }
+.entete-code { display: flex; align-items: center; justify-content: space-between; padding: .55rem .9rem .55rem 1.2rem; border-bottom: 1px solid #3a352d; font-size: .85rem; color: #BDB3A1; }
+.copier { min-height: 2.6rem; padding: .35rem .9rem; border-radius: 8px; border: 1px solid #5b5446; background: transparent; color: #F2EDE3; font: inherit; font-size: .85rem; cursor: pointer; } .copier:hover { background: #2c2823; }
+.bloc-code pre { margin: 0; padding: 1.1rem 1.2rem; overflow-x: auto; font: 13px/1.6 ui-monospace, Menlo, Consolas, monospace; font-variant-ligatures: none; tab-size: 2; }
+.bloc-code code { background: none; border: 0; padding: 0; font-size: inherit; color: inherit; }
+.carrousel { margin-top: 1.6rem; position: relative; }
+.pistes { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; padding: .2rem 0 .6rem; }
+.pistes::-webkit-scrollbar { display: none; }
+.pistes::after { content: ""; flex: 0 0 calc(12% - 1rem); }
+.diapo { flex: 0 0 88%; scroll-snap-align: start; display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6rem; padding: 1.2rem; align-items: start; background: var(--surface); border: 1px solid var(--filet); border-radius: 14px; }
+.diapo img { opacity: .45; transition: opacity .25s; }
+.diapo.actif img, .carrousel:not(.pret) .diapo img { opacity: 1; }
+.diapo.tel { grid-template-columns: 14rem 1fr; }
+.diapo figure { margin: 0; } .diapo img { border: 1px solid var(--filet); border-radius: 10px; width: 100%; height: auto; display: block; } .diapo.tel img { width: auto; max-height: 30rem; margin: 0 auto; }
+.diapo figcaption { font-size: .8rem; color: var(--plume); margin-top: .5rem; }
+.diapo h4 { font-family: var(--display-f, inherit); font-weight: 500; font-size: 1.3rem; line-height: 1.2; margin: 0 0 .7rem; text-wrap: balance; } .diapo p { font-size: .95rem; }
+.etiquettes { display: flex; flex-wrap: wrap; gap: .35rem; list-style: none; margin: .8rem 0 0; padding: 0; } .etiquettes li { font-size: .74rem; border: 1px solid var(--filet); border-radius: 999px; padding: .1rem .55rem; color: var(--plume); }
+.prec, .suiv { position: absolute; top: 38%; z-index: 3; width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 1px solid var(--filet); background: var(--surface); color: var(--encre); font: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+.prec { left: -1.2rem; } .suiv { right: -1.2rem; } .prec:hover:not(:disabled), .suiv:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); } .prec:disabled, .suiv:disabled { opacity: 0; pointer-events: none; }
+.carrousel:not(.pret) .prec, .carrousel:not(.pret) .suiv { display: none; }
+.commandes { display: flex; align-items: center; gap: .8rem; margin-top: .4rem; }
+.compteur { font-variant-numeric: tabular-nums; font-size: .9rem; color: var(--plume); min-width: 3.4rem; }
+.sommaire { display: flex; flex-wrap: nowrap; gap: .35rem; margin: 0; padding: .2rem 0; list-style: none; flex: 1 1 auto; min-width: 0; overflow-x: auto; scrollbar-width: thin; position: relative; }
+.sommaire button { white-space: nowrap; font: inherit; font-size: .78rem; min-height: 2.2rem; padding: .2rem .7rem; border-radius: 999px; border: 1px solid var(--filet); background: none; color: var(--plume); cursor: pointer; }
+.sommaire button:hover { border-color: var(--encre); color: var(--encre); } .sommaire button[aria-current="true"] { background: var(--encre); color: var(--papier); border-color: var(--encre); }
+@media (prefers-reduced-motion: reduce) { .diapo img { transition: none; } }
+@media (max-width: 52rem) {
+  .chap { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; } .chap.inverse .dit { order: 0; }
+  .diapo, .diapo.tel { grid-template-columns: 1fr; gap: 1rem; flex-basis: 90%; } .pistes::after { flex-basis: calc(10% - 1rem); } .diapo.tel img { max-height: 24rem; }
+  .prec { left: .3rem; } .suiv { right: .3rem; } .prec, .suiv { width: 2.9rem; height: 2.9rem; }
+}
+</style>
+</head>
+<body>
+<main>
+  <a class="retour" href="../">← Form Builder</a>
+  <p class="eyebrow">Form Builder</p>
+  <h1>Pour un agent</h1>
+  <p class="chapeau">Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.0).</p>
+  <section class="annexe-bloc">
+    <h2>Ce qu’un agent peut faire</h2>
+    <p>Chaque commande reçoit une entrée au format JSON et rend une sortie au format JSON. Les commandes ci-dessous sont celles que ce widget propose aujourd’hui.</p>
+    
+    
+    <table class="comparaison">
+      <thead><tr><th scope="col">Commande</th><th scope="col">Verbe</th><th scope="col">Ce qu’elle fait</th></tr></thead>
+      <tbody><tr><th scope="row"><code>forms_capacites</code></th><td>Présenter</td><td>Présente Form Builder : ce qu’il sait faire (les commandes par verbe), ce qu’il ne couvre pas encore, les contrats qu’il produit et lit, ses limites. À appeler en premier.</td></tr><tr><th scope="row"><code>forms_plan_schema</code></th><td>Configurer</td><td>Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il ne lit AUCUN document : il compare le FormDef à <code>colonnes_existantes</code> et <code>table_existe</code>, que l’appelant doit fournir. Sans eux, il suppose une table sans colonne et prévoit un AddColumn par champ, sans AddTable. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante. Il refuse (<code>ok: false</code>, <code>errors</code>) un Choice ou ChoiceList sans liste de choix (dans <code>choices[colId]</code> à la racine ou <code>options.choices</code> du champ).</td></tr><tr><th scope="row"><code>forms_formdef_depuis_colonnes</code></th><td>Créer</td><td>Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes et colonnes calculées). Rend <code>formdef: null</code> quand aucune colonne ne donne de question. Les choix d’une colonne Choice ou ChoiceList sont lus dans son <code>widgetOptions</code> (chaîne JSON <code>{&quot;choices&quot;:[&quot;a&quot;,&quot;b&quot;]}</code>) et rangés dans <code>options.choices</code> du champ ; sans <code>widgetOptions</code>, le champ n’a pas de choix et forms_plan_schema le refusera. La racine <code>choices</code> du FormDef rendu reste <code>{}</code> : les choix vivent dans le champ.</td></tr><tr><th scope="row"><code>forms_formdef_depuis_formulaire_grist</code></th><td>Créer</td><td>Lit les formulaires natifs d’un document Grist et rend chacun en FormDef. L’entrée est le contenu des tables de métadonnées (tables, colonnes, vues, sections, champs), tel que fetchTable le rend.</td></tr><tr><th scope="row"><code>forms_valider_formdef</code></th><td>Structurer</td><td>Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. <code>conforme</code> ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. <code>plan_realisable</code> dit si le plan serait calculé sur une table à créer, et <code>avertissements</code> rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.</td></tr><tr><th scope="row"><code>forms_valider_condition</code></th><td>Structurer</td><td>Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; <code>bloquant</code> dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».</td></tr><tr><th scope="row"><code>forms_verifier_format</code></th><td>Structurer</td><td>Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (<code>connu: false</code>). <code>message_si_invalide</code> est le message à montrer si la valeur est invalide, pas un verdict : le verdict est <code>valide</code>. Pour attacher un format à une question d’un FormDef, ajouter au champ <code>validation: { &quot;format&quot;: &quot;courriel&quot; }</code> (mode <code>verifier</code> par défaut : une réponse non conforme est refusée ; <code>corriger</code> remet la forme en ordre sans refuser, réservé aux noms).</td></tr><tr><th scope="row"><code>forms_formdef_vers_manifeste_enquete</code></th><td>Structurer</td><td>Convertit un FormDef en manifeste d’enquête (survey-manifest). Sens inverse : forms_manifeste_enquete_vers_formdef.</td></tr><tr><th scope="row"><code>forms_manifeste_enquete_vers_formdef</code></th><td>Structurer</td><td>Convertit un manifeste d’enquête en FormDef. Sens inverse : forms_formdef_vers_manifeste_enquete.</td></tr><tr><th scope="row"><code>forms_resoudre_theme</code></th><td>Personnaliser</td><td>Dérive les variables de thème (--kit-*) d’un ThemeDef 1.0 à partir de ses couleurs de départ, pour un mode clair ou sombre. Un thème illisible est refusé en entier.</td></tr><tr><th scope="row"><code>forms_plan_publication</code></th><td>Publier</td><td>Calcule les actions qui créent une page personnalisée liée à une table, et les options de la vue qui porte le formulaire (HTML et JS déjà assemblés). Il rend le plan sans l’appliquer.</td></tr><tr><th scope="row"><code>forms_synthese</code></th><td>Traiter</td><td>Relit les réponses d’un formulaire avec le FormDef qui les a produites : fréquences, échelles, classements, listes. La table seule n’est pas lisible, le FormDef sait ce que chaque colonne veut dire.</td></tr></tbody>
+    </table>
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>Ce qui n’est pas encore couvert</h2>
+    <p>Ces verbes n’ont aucune commande : un agent ne peut pas encore les accomplir par ce moyen.</p>
+    <ul class="liste-simple"><li>Modifier</li><li>Exploiter</li><li>Récolter</li></ul>
+    
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>Ce que les commandes lisent et produisent</h2>
+    <p>Un contrat est un format partagé : ce que l’un écrit, l’autre le lit sans avoir à le connaître.</p>
+    <ul class="liste-simple"><li>Produit : FormDef 1.0 — au catalogue des contrats du dépôt</li><li>Produit : Conditions 1.0 — au catalogue des contrats du dépôt</li><li>Produit : Survey Manifest 1 — hors catalogue, empreinte sha256:147c959fee0b3b6e</li><li>Lu : FormDef 1.0 — au catalogue des contrats du dépôt</li><li>Lu : Conditions 1.0 — au catalogue des contrats du dépôt</li><li>Lu : Survey Manifest 1 — hors catalogue, empreinte sha256:147c959fee0b3b6e</li><li>Lu : ThemeDef 1.0 — hors catalogue, empreinte sha256:a1ab777475df5d76</li></ul>
+    
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_capacites</h2>
+    <p>Présente Form Builder : ce qu’il sait faire (les commandes par verbe), ce qu’il ne couvre pas encore, les contrats qu’il produit et lit, ses limites. À appeler en premier.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : La fiche de capacités">
+      <div class="entete-code"><span>Exemple : La fiche de capacités</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{}
+
+// sortie
+{
+  &quot;contrat&quot;: &quot;fiche-capacites-0.1&quot;,
+  &quot;widget&quot;: &quot;forms&quot;,
+  &quot;version&quot;: &quot;1.7.0&quot;,
+  &quot;presentation&quot;: {
+    &quot;titre&quot;: &quot;Form Builder&quot;,
+    &quot;resume&quot;: &quot;Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document.&quot;
+  },
+  &quot;verbes&quot;: {
+    &quot;presenter&quot;: [
+      &quot;forms_capacites&quot;
+    ],
+    &quot;creer&quot;: [
+      &quot;forms_formdef_depuis_colonnes&quot;,
+      &quot;forms_formdef_depuis_formulaire_grist&quot;
+    ],
+    &quot;structurer&quot;: [
+      &quot;forms_valider_formdef&quot;,
+      &quot;forms_valider_condition&quot;,
+      &quot;forms_verifier_format&quot;,
+      &quot;forms_formdef_vers_manifeste_enquete&quot;,
+      &quot;forms_manifeste_enquete_vers_formdef&quot;
+    ],
+    &quot;configurer&quot;: [
+      &quot;forms_plan_schema&quot;
+    ],
+    &quot;personnaliser&quot;: [
+      &quot;forms_resoudre_theme&quot;
+    ],
+    &quot;publier&quot;: [
+      &quot;forms_plan_publication&quot;
+    ],
+    &quot;traiter&quot;: [
+      &quot;forms_synthese&quot;
+    ]
+  },
+  &quot;non_couverts&quot;: [
+    &quot;editer&quot;,
+    &quot;exploiter&quot;,
+    &quot;recolter&quot;
+  ],
+  &quot;contrats&quot;: {
+    &quot;produit&quot;: [
+      {
+        &quot;nom&quot;: &quot;FormDef&quot;,
+        &quot;version&quot;: &quot;1.0&quot;,
+        &quot;catalogue&quot;: true
+      },
+      {
+        &quot;nom&quot;: &quot;Conditions&quot;,
+        &quot;version&quot;: &quot;1.0&quot;,
+        &quot;catalogue&quot;: true
+      },
+      {
+        &quot;nom&quot;: &quot;Survey Manifest&quot;,
+        &quot;version&quot;: &quot;1&quot;,
+        &quot;catalogue&quot;: false,
+… (la suite est omise ici)</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_formdef_depuis_colonnes</h2>
+    <p>Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes et colonnes calculées). Rend <code>formdef: null</code> quand aucune colonne ne donne de question. Les choix d’une colonne Choice ou ChoiceList sont lus dans son <code>widgetOptions</code> (chaîne JSON <code>{&quot;choices&quot;:[&quot;a&quot;,&quot;b&quot;]}</code>) et rangés dans <code>options.choices</code> du champ ; sans <code>widgetOptions</code>, le champ n’a pas de choix et forms_plan_schema le refusera. La racine <code>choices</code> du FormDef rendu reste <code>{}</code> : les choix vivent dans le champ.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Une table de deux colonnes">
+      <div class="entete-code"><span>Exemple : Une table de deux colonnes</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;tableId&quot;: &quot;Inscriptions&quot;,
+  &quot;colonnes&quot;: [
+    {
+      &quot;colId&quot;: &quot;nom&quot;,
+      &quot;type&quot;: &quot;Text&quot;,
+      &quot;label&quot;: &quot;Nom&quot;
+    },
+    {
+      &quot;colId&quot;: &quot;age&quot;,
+      &quot;type&quot;: &quot;Int&quot;,
+      &quot;label&quot;: &quot;Âge&quot;
+    }
+  ]
+}
+
+// sortie
+{
+  &quot;formdef&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;derive:Inscriptions&quot;,
+    &quot;title&quot;: &quot;Inscriptions&quot;,
+    &quot;description&quot;: &quot;&quot;,
+    &quot;tableId&quot;: &quot;Inscriptions&quot;,
+    &quot;composeMode&quot;: &quot;bind&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Inscriptions&quot;,
+        &quot;fields&quot;: [
+          {
+            &quot;colId&quot;: &quot;nom&quot;,
+            &quot;label&quot;: &quot;Nom&quot;,
+            &quot;type&quot;: &quot;Text&quot;,
+            &quot;widget&quot;: &quot;text&quot;,
+            &quot;required&quot;: false
+          },
+          {
+            &quot;colId&quot;: &quot;age&quot;,
+            &quot;label&quot;: &quot;Âge&quot;,
+            &quot;type&quot;: &quot;Int&quot;,
+            &quot;widget&quot;: &quot;number&quot;,
+            &quot;required&quot;: false
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  }
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_formdef_depuis_formulaire_grist</h2>
+    <p>Lit les formulaires natifs d’un document Grist et rend chacun en FormDef. L’entrée est le contenu des tables de métadonnées (tables, colonnes, vues, sections, champs), tel que fetchTable le rend.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Un document sans formulaire natif">
+      <div class="entete-code"><span>Exemple : Un document sans formulaire natif</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;meta&quot;: {}
+}
+
+// sortie
+{
+  &quot;formulaires&quot;: []
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_valider_formdef</h2>
+    <p>Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. <code>conforme</code> ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. <code>plan_realisable</code> dit si le plan serait calculé sur une table à créer, et <code>avertissements</code> rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Un FormDef vide">
+      <div class="entete-code"><span>Exemple : Un FormDef vide</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;formdef&quot;: {}
+}
+
+// sortie
+{
+  &quot;conforme&quot;: false,
+  &quot;ecarts&quot;: [
+    &quot;(racine) : propriété requise absente : manifest_version&quot;,
+    &quot;(racine) : propriété requise absente : id&quot;,
+    &quot;(racine) : propriété requise absente : title&quot;,
+    &quot;(racine) : propriété requise absente : tableId&quot;,
+    &quot;(racine) : propriété requise absente : composeMode&quot;,
+    &quot;(racine) : propriété requise absente : sections&quot;,
+    &quot;(racine) : propriété requise absente : choices&quot;
+  ],
+  &quot;plan_realisable&quot;: false,
+  &quot;avertissements&quot;: []
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_valider_condition</h2>
+    <p>Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; <code>bloquant</code> dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Une règle correcte">
+      <div class="entete-code"><span>Exemple : Une règle correcte</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;condition&quot;: {
+    &quot;field&quot;: &quot;age&quot;,
+    &quot;operator&quot;: &quot;&gt;=&quot;,
+    &quot;value&quot;: 18
+  }
+}
+
+// sortie
+{
+  &quot;valide&quot;: true,
+  &quot;erreurs&quot;: []
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_verifier_format</h2>
+    <p>Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (<code>connu: false</code>). <code>message_si_invalide</code> est le message à montrer si la valeur est invalide, pas un verdict : le verdict est <code>valide</code>. Pour attacher un format à une question d’un FormDef, ajouter au champ <code>validation: { &quot;format&quot;: &quot;courriel&quot; }</code> (mode <code>verifier</code> par défaut : une réponse non conforme est refusée ; <code>corriger</code> remet la forme en ordre sans refuser, réservé aux noms).</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Un code postal">
+      <div class="entete-code"><span>Exemple : Un code postal</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;format&quot;: &quot;codePostal&quot;,
+  &quot;valeur&quot;: &quot;13001&quot;
+}
+
+// sortie
+{
+  &quot;connu&quot;: true,
+  &quot;valide&quot;: true,
+  &quot;normalise&quot;: &quot;13001&quot;,
+  &quot;message_si_invalide&quot;: &quot;Ce n’est pas un code postal (5 chiffres).&quot;
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_formdef_vers_manifeste_enquete</h2>
+    <p>Convertit un FormDef en manifeste d’enquête (survey-manifest). Sens inverse : forms_manifeste_enquete_vers_formdef.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Un formulaire d’une question">
+      <div class="entete-code"><span>Exemple : Un formulaire d’une question</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;formdef&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;exemple&quot;,
+    &quot;title&quot;: &quot;Exemple&quot;,
+    &quot;tableId&quot;: &quot;Exemple&quot;,
+    &quot;composeMode&quot;: &quot;bind&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Exemple&quot;,
+        &quot;fields&quot;: [
+          {
+            &quot;id&quot;: &quot;nom&quot;,
+            &quot;colId&quot;: &quot;nom&quot;,
+            &quot;type&quot;: &quot;Text&quot;,
+            &quot;label&quot;: &quot;Nom&quot;
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  }
+}
+
+// sortie
+{
+  &quot;manifeste&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;exemple&quot;,
+    &quot;title&quot;: &quot;Exemple&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Exemple&quot;,
+        &quot;gate&quot;: null,
+        &quot;questions&quot;: [
+          {
+            &quot;colId&quot;: &quot;nom&quot;,
+            &quot;label&quot;: &quot;Nom&quot;,
+            &quot;type&quot;: &quot;text&quot;
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  }
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_manifeste_enquete_vers_formdef</h2>
+    <p>Convertit un manifeste d’enquête en FormDef. Sens inverse : forms_formdef_vers_manifeste_enquete.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Un manifeste d’une question">
+      <div class="entete-code"><span>Exemple : Un manifeste d’une question</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;manifeste&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;exemple&quot;,
+    &quot;title&quot;: &quot;Exemple&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Exemple&quot;,
+        &quot;gate&quot;: null,
+        &quot;questions&quot;: [
+          {
+            &quot;colId&quot;: &quot;nom&quot;,
+            &quot;label&quot;: &quot;Nom&quot;,
+            &quot;type&quot;: &quot;text&quot;
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  }
+}
+
+// sortie
+{
+  &quot;formdef&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;exemple&quot;,
+    &quot;title&quot;: &quot;Exemple&quot;,
+    &quot;description&quot;: &quot;&quot;,
+    &quot;classification&quot;: &quot;&quot;,
+    &quot;successMessage&quot;: &quot;Merci !&quot;,
+    &quot;tableId&quot;: &quot;Reponses_exemple&quot;,
+    &quot;composeMode&quot;: &quot;ensureSchema&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Exemple&quot;,
+        &quot;gate&quot;: null,
+        &quot;condition&quot;: null,
+        &quot;fields&quot;: [
+          {
+            &quot;colId&quot;: &quot;nom&quot;,
+            &quot;label&quot;: &quot;Nom&quot;,
+            &quot;type&quot;: &quot;Text&quot;,
+            &quot;widget&quot;: &quot;text&quot;,
+            &quot;required&quot;: false,
+            &quot;options&quot;: {},
+            &quot;condition&quot;: null,
+            &quot;cascade&quot;: null,
+            &quot;dynamicFilter&quot;: null,
+            &quot;profile&quot;: null,
+            &quot;theme&quot;: null,
+            &quot;polarity&quot;: &quot;&quot;
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  }
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_plan_schema</h2>
+    <p>Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il ne lit AUCUN document : il compare le FormDef à <code>colonnes_existantes</code> et <code>table_existe</code>, que l’appelant doit fournir. Sans eux, il suppose une table sans colonne et prévoit un AddColumn par champ, sans AddTable. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante. Il refuse (<code>ok: false</code>, <code>errors</code>) un Choice ou ChoiceList sans liste de choix (dans <code>choices[colId]</code> à la racine ou <code>options.choices</code> du champ).</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Une table absente">
+      <div class="entete-code"><span>Exemple : Une table absente</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;formdef&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;exemple&quot;,
+    &quot;title&quot;: &quot;Exemple&quot;,
+    &quot;tableId&quot;: &quot;Exemple&quot;,
+    &quot;composeMode&quot;: &quot;bind&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Exemple&quot;,
+        &quot;fields&quot;: [
+          {
+            &quot;id&quot;: &quot;nom&quot;,
+            &quot;colId&quot;: &quot;nom&quot;,
+            &quot;type&quot;: &quot;Text&quot;,
+            &quot;label&quot;: &quot;Nom&quot;
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  },
+  &quot;colonnes_existantes&quot;: [],
+  &quot;table_existe&quot;: false
+}
+
+// sortie
+{
+  &quot;ok&quot;: true,
+  &quot;errors&quot;: [],
+  &quot;actions&quot;: [
+    [
+      &quot;AddTable&quot;,
+      &quot;Exemple&quot;,
+      [
+        {
+          &quot;id&quot;: &quot;nom&quot;,
+          &quot;type&quot;: &quot;Text&quot;,
+          &quot;label&quot;: &quot;Nom&quot;,
+          &quot;isFormula&quot;: false
+        }
+      ]
+    ]
+  ]
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_resoudre_theme</h2>
+    <p>Dérive les variables de thème (--kit-*) d’un ThemeDef 1.0 à partir de ses couleurs de départ, pour un mode clair ou sombre. Un thème illisible est refusé en entier.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Une seule couleur de départ">
+      <div class="entete-code"><span>Exemple : Une seule couleur de départ</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;themedef&quot;: {
+    &quot;version&quot;: &quot;themedef-1.0&quot;,
+    &quot;nom&quot;: &quot;Exemple&quot;,
+    &quot;graines&quot;: {
+      &quot;principal&quot;: &quot;#0b6e4f&quot;
+    }
+  },
+  &quot;mode&quot;: &quot;clair&quot;
+}
+
+// sortie
+{
+  &quot;ok&quot;: true,
+  &quot;mode&quot;: &quot;clair&quot;,
+  &quot;source&quot;: &quot;graines&quot;,
+  &quot;vars&quot;: {
+    &quot;--kit-accent&quot;: &quot;#0b6e4f&quot;,
+    &quot;--kit-accent-fond&quot;: &quot;#e2f3eb&quot;,
+    &quot;--kit-accent-texte&quot;: &quot;#ffffff&quot;,
+    &quot;--kit-action&quot;: &quot;#0b6e4f&quot;,
+    &quot;--kit-action-actif&quot;: &quot;#015239&quot;,
+    &quot;--kit-action-survol&quot;: &quot;#025b40&quot;,
+    &quot;--kit-action-texte&quot;: &quot;#ffffff&quot;,
+    &quot;--kit-alerte&quot;: &quot;#ce0500&quot;,
+    &quot;--kit-alerte-fond&quot;: &quot;#feebe8&quot;,
+    &quot;--kit-attention&quot;: &quot;#b34000&quot;,
+    &quot;--kit-attention-filet&quot;: &quot;#b34000&quot;,
+    &quot;--kit-attention-fond&quot;: &quot;#ffece4&quot;,
+    &quot;--kit-bord&quot;: &quot;#c6c6c6&quot;,
+    &quot;--kit-bord-champ&quot;: &quot;#767676&quot;,
+    &quot;--kit-focus&quot;: &quot;#000000&quot;,
+    &quot;--kit-fond&quot;: &quot;#ffffff&quot;,
+    &quot;--kit-info&quot;: &quot;#0063cb&quot;,
+    &quot;--kit-info-fond&quot;: &quot;#e7f1ff&quot;,
+    &quot;--kit-ok&quot;: &quot;#18753c&quot;,
+    &quot;--kit-ok-fond&quot;: &quot;#e0f7e5&quot;,
+    &quot;--kit-ombre&quot;: &quot;rgba(0, 0, 0, 0.35)&quot;,
+    &quot;--kit-papier&quot;: &quot;#ffffff&quot;,
+    &quot;--kit-surface&quot;: &quot;#ffffff&quot;,
+    &quot;--kit-surface-2&quot;: &quot;#e2f3eb&quot;,
+    &quot;--kit-texte&quot;: &quot;#000000&quot;,
+    &quot;--kit-texte-2&quot;: &quot;#3a3a3a&quot;
+  }
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_plan_publication</h2>
+    <p>Calcule les actions qui créent une page personnalisée liée à une table, et les options de la vue qui porte le formulaire (HTML et JS déjà assemblés). Il rend le plan sans l’appliquer.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Une page pour la table 1">
+      <div class="entete-code"><span>Exemple : Une page pour la table 1</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;table_ref&quot;: 1,
+  &quot;nom_page&quot;: &quot;Remplir&quot;,
+  &quot;html&quot;: &quot;&lt;div id=\&quot;f\&quot;&gt;&lt;/div&gt;&quot;,
+  &quot;js&quot;: &quot;void 0;&quot;
+}
+
+// sortie
+{
+  &quot;actions&quot;: [
+    [
+      &quot;CreateViewSection&quot;,
+      1,
+      0,
+      &quot;custom&quot;,
+      null,
+      &quot;Remplir&quot;
+    ]
+  ],
+  &quot;options&quot;: &quot;{\&quot;verticalGridlines\&quot;:true,\&quot;horizontalGridlines\&quot;:true,\&quot;zebraStripes\&quot;:false,\&quot;numFrozen\&quot;:0,\&quot;customView\&quot;:\&quot;{\\\&quot;mode\\\&quot;:\\\&quot;url\\\&quot;,\\\&quot;url\\\&quot;:null,\\\&quot;access\\\&quot;:\\\&quot;full\\\&quot;,\\\&quot;widgetDef\\\&quot;:{\\\&quot;widgetId\\\&quot;:\\\&quot;@berhalak/custom-widget-builder\\\&quot;,\\\&quot;name\\\&quot;:\\\&quot;Custom Widget Builder\\\&quot;,\\\&quot;url\\\&quot;:\\\&quot;https://gristgouv.github.io/gristlabs-widgets/custom-widget-builder/index.html\\\&quot;,\\\&quot;accessLevel\\\&quot;:\\\&quot;full\\\&quot;},\\\&quot;widgetId\\\&quot;:\\\&quot;@berhalak/custom-widget-builder\\\&quot;,\\\&quot;renderAfterReady\\\&quot;:true,\\\&quot;widgetOptions\\\&quot;:{\\\&quot;_html\\\&quot;:\\\&quot;&lt;div id=\\\\\\\&quot;f\\\\\\\&quot;&gt;&lt;/div&gt;\\\&quot;,\\\&quot;_js\\\&quot;:\\\&quot;void 0;\\\&quot;},\\\&quot;columnsMapping\\\&quot;:null}\&quot;}&quot;
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_synthese</h2>
+    <p>Relit les réponses d’un formulaire avec le FormDef qui les a produites : fréquences, échelles, classements, listes. La table seule n’est pas lisible, le FormDef sait ce que chaque colonne veut dire.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Deux réponses">
+      <div class="entete-code"><span>Exemple : Deux réponses</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;formdef&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;exemple&quot;,
+    &quot;title&quot;: &quot;Exemple&quot;,
+    &quot;tableId&quot;: &quot;Exemple&quot;,
+    &quot;composeMode&quot;: &quot;bind&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Exemple&quot;,
+        &quot;fields&quot;: [
+          {
+            &quot;id&quot;: &quot;avis&quot;,
+            &quot;colId&quot;: &quot;avis&quot;,
+            &quot;type&quot;: &quot;Choice&quot;,
+            &quot;label&quot;: &quot;Votre avis&quot;,
+            &quot;choices&quot;: [
+              &quot;oui&quot;,
+              &quot;non&quot;
+            ]
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  },
+  &quot;lignes&quot;: [
+    {
+      &quot;avis&quot;: &quot;oui&quot;
+    },
+    {
+      &quot;avis&quot;: &quot;oui&quot;
+    }
+  ]
+}
+
+// sortie
+{
+  &quot;reponses&quot;: 2,
+  &quot;duree&quot;: {
+    &quot;mediane&quot;: null,
+    &quot;n&quot;: 0
+  },
+  &quot;sections&quot;: [
+    {
+      &quot;id&quot;: &quot;main&quot;,
+      &quot;label&quot;: &quot;Exemple&quot;,
+      &quot;mesures&quot;: [
+        {
+          &quot;colId&quot;: &quot;avis&quot;,
+          &quot;label&quot;: &quot;Votre avis&quot;,
+          &quot;items&quot;: [
+            {
+              &quot;valeur&quot;: &quot;oui&quot;,
+              &quot;n&quot;: 2
+            }
+          ],
+          &quot;n&quot;: 2
+        }
+      ]
+    }
+  ],
+  &quot;ressort&quot;: {
+    &quot;besoins&quot;: [],
+    &quot;satisfactions&quot;: [],
+    &quot;preferences&quot;: []
+  },
+  &quot;classements&quot;: [],
+  &quot;listes&quot;: [
+    {
+      &quot;colId&quot;: &quot;avis&quot;,
+      &quot;label&quot;: &quot;Votre avis&quot;,
+      &quot;items&quot;: [
+        {
+          &quot;valeur&quot;: &quot;oui&quot;,
+          &quot;n&quot;: 2
+        }
+      ],
+      &quot;n&quot;: 2
+    }
+  ],
+  &quot;verbatims&quot;: [],
+  &quot;lieux&quot;: [],
+  &quot;pieces&quot;: [],
+  &quot;questions&quot;: 1
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>Limites</h2>
+    
+    <ul class="liste-simple"><li>Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.</li><li>Appliquer un plan de schéma ou de publication n’est pas encore une commande.</li><li>Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.</li><li>Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée.</li></ul>
+    
+    
+    
+  </section>
+</main>
+<script>
+  document.querySelectorAll('.carrousel').forEach(function (c) {
+    var piste = c.querySelector('.pistes'), diapos = [].slice.call(piste.querySelectorAll('.diapo')), n = diapos.length;
+    var prec = c.querySelector('.prec'), suiv = c.querySelector('.suiv'), cpt = c.querySelector('.compteur'), sommaire = c.querySelector('.sommaire'), puces = [].slice.call(sommaire.querySelectorAll('button'));
+    var doux = function () { return matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'; };
+    var courant = function () {
+      if (piste.scrollLeft >= piste.scrollWidth - piste.clientWidth - 2) return n - 1;
+      var k = 0, d = Infinity;
+      diapos.forEach(function (x, j) { var e = Math.abs(x.offsetLeft - piste.offsetLeft - piste.scrollLeft); if (e < d) { d = e; k = j; } });
+      return k;
+    };
+    var aller = function (k) { k = Math.max(0, Math.min(n - 1, k)); piste.scrollTo({ left: diapos[k].offsetLeft - piste.offsetLeft, behavior: doux() }); };
+    var maj = function () {
+      var k = courant(); cpt.textContent = (k + 1) + ' / ' + n; prec.disabled = k === 0; suiv.disabled = k === n - 1;
+      diapos.forEach(function (x, j) { x.classList.toggle('actif', j === k); });
+      puces.forEach(function (p, j) {
+        if (j === k) { p.setAttribute('aria-current', 'true'); sommaire.scrollTo({ left: p.offsetLeft - sommaire.clientWidth / 2 + p.clientWidth / 2, behavior: 'auto' }); }
+        else p.removeAttribute('aria-current');
+      });
+    };
+    prec.addEventListener('click', function () { aller(courant() - 1); });
+    suiv.addEventListener('click', function () { aller(courant() + 1); });
+    puces.forEach(function (p) { p.addEventListener('click', function () { aller(Number(p.dataset.n)); }); });
+    piste.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') { e.preventDefault(); aller(courant() + 1); } else if (e.key === 'ArrowLeft') { e.preventDefault(); aller(courant() - 1); }
+    });
+    var t; piste.addEventListener('scroll', function () { clearTimeout(t); t = setTimeout(maj, 50); }, { passive: true });
+    addEventListener('resize', maj);
+    c.classList.add('pret'); maj();
+  });
+  document.querySelectorAll('.bloc-code').forEach(function (b) {
+    var bouton = b.querySelector('.copier'); if (!bouton) return;
+    bouton.hidden = false;
+    bouton.addEventListener('click', function () {
+      var texte = b.querySelector('code').textContent;
+      var dit = function (m) { bouton.textContent = m; setTimeout(function () { bouton.textContent = 'Copier'; }, 1800); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texte).then(function () { dit('Copié'); }, function () { dit('Sélectionnez le code'); });
+      else dit('Sélectionnez le code');
+    });
+  });
+</script>
+<script src="../../../grist_forms/forms-registre/webmcp-entree.js"></script>
+<script>addEventListener('load', function () { var e = self.EntreeWebMCP; if (e && typeof e.installer === 'function') { try { var r = e.installer(); if (r && r.catch) r.catch(function () { /* page lisible sans */ }); } catch (x) { /* page lisible sans */ } } });</script>
+<footer class="pied">
+  <p><a href="../">← Retour à la page d’Form Builder</a></p>
+</footer>
+</body>
+</html>

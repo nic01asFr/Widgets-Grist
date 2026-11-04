@@ -2,7 +2,7 @@
 
 > Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document.
 
-Version 1.6.1. Fiche de capacités : fiche-capacites.json (contrat fiche-capacites-0.1).
+Version 1.7.0. Fiche de capacités : fiche-capacites.json (contrat fiche-capacites-0.1).
 
 ## Comment appeler ces commandes
 
