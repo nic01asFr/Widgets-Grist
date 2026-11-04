@@ -1,0 +1,117 @@
+{
+  "contrat": "fiche-capacites-0.1",
+  "widget": "forms",
+  "version": "1.6.0",
+  "presentation": {
+    "titre": "Form Builder",
+    "resume": "Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document."
+  },
+  "verbes": {
+    "presenter": [
+      "forms_capacites"
+    ],
+    "creer": [
+      "forms_formdef_depuis_colonnes",
+      "forms_formdef_depuis_formulaire_grist"
+    ],
+    "structurer": [
+      "forms_valider_formdef",
+      "forms_valider_condition",
+      "forms_verifier_format",
+      "forms_formdef_vers_manifeste_enquete",
+      "forms_manifeste_enquete_vers_formdef"
+    ],
+    "configurer": [
+      "forms_plan_schema"
+    ],
+    "personnaliser": [
+      "forms_resoudre_theme"
+    ],
+    "publier": [
+      "forms_plan_publication"
+    ],
+    "traiter": [
+      "forms_synthese"
+    ]
+  },
+  "non_couverts": [
+    "editer",
+    "exploiter",
+    "recolter"
+  ],
+  "contrats": {
+    "produit": [
+      {
+        "nom": "FormDef",
+        "version": "1.0",
+        "catalogue": true
+      },
+      {
+        "nom": "Conditions",
+        "version": "1.0",
+        "catalogue": true
+      },
+      {
+        "nom": "Survey Manifest",
+        "version": "1",
+        "catalogue": false,
+        "empreinte": "sha256:147c959fee0b3b6e"
+      }
+    ],
+    "lit": [
+      {
+        "nom": "FormDef",
+        "version": "1.0",
+        "catalogue": true
+      },
+      {
+        "nom": "Conditions",
+        "version": "1.0",
+        "catalogue": true
+      },
+      {
+        "nom": "Survey Manifest",
+        "version": "1",
+        "catalogue": false,
+        "empreinte": "sha256:147c959fee0b3b6e"
+      },
+      {
+        "nom": "ThemeDef",
+        "version": "1.0",
+        "catalogue": false,
+        "empreinte": "sha256:a1ab777475df5d76"
+      }
+    ]
+  },
+  "prerequis": {
+    "acces_grist": "none"
+  },
+  "limites": [
+    "Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.",
+    "Appliquer un plan de schéma ou de publication n’est pas encore une commande.",
+    "Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.",
+    "Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée."
+  ],
+  "exemples": [
+    "forms_capacites",
+    "forms_formdef_depuis_colonnes",
+    "forms_formdef_depuis_formulaire_grist",
+    "forms_valider_formdef",
+    "forms_valider_condition",
+    "forms_verifier_format",
+    "forms_formdef_vers_manifeste_enquete",
+    "forms_manifeste_enquete_vers_formdef",
+    "forms_plan_schema",
+    "forms_resoudre_theme",
+    "forms_plan_publication",
+    "forms_synthese"
+  ],
+  "interfaces": {
+    "skill": true,
+    "cli": true,
+    "mcp": true,
+    "webmcp": true,
+    "vitrine": true
+  },
+  "entree_webmcp": "forms-registre/webmcp-entree.js"
+}

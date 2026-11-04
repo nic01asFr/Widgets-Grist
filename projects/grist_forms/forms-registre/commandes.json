@@ -1,0 +1,1045 @@
+{
+  "contrat": "commandes-0.1",
+  "widget": "forms",
+  "version": "1.6.0",
+  "commandes": [
+    {
+      "nom": "forms_capacites",
+      "verbe": "presenter",
+      "description": "Présente Form Builder : ce qu’il sait faire (les commandes par verbe), ce qu’il ne couvre pas encore, les contrats qu’il produit et lit, ses limites. À appeler en premier.",
+      "entree": {
+        "type": "object",
+        "properties": {}
+      },
+      "sortie": {
+        "type": "object"
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "La fiche de capacités",
+          "entree": {},
+          "sortie": {
+            "contrat": "fiche-capacites-0.1",
+            "widget": "forms",
+            "version": "1.6.0",
+            "presentation": {
+              "titre": "Form Builder",
+              "resume": "Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document."
+            },
+            "verbes": {
+              "presenter": [
+                "forms_capacites"
+              ],
+              "creer": [
+                "forms_formdef_depuis_colonnes",
+                "forms_formdef_depuis_formulaire_grist"
+              ],
+              "structurer": [
+                "forms_valider_formdef",
+                "forms_valider_condition",
+                "forms_verifier_format",
+                "forms_formdef_vers_manifeste_enquete",
+                "forms_manifeste_enquete_vers_formdef"
+              ],
+              "configurer": [
+                "forms_plan_schema"
+              ],
+              "personnaliser": [
+                "forms_resoudre_theme"
+              ],
+              "publier": [
+                "forms_plan_publication"
+              ],
+              "traiter": [
+                "forms_synthese"
+              ]
+            },
+            "non_couverts": [
+              "editer",
+              "exploiter",
+              "recolter"
+            ],
+            "contrats": {
+              "produit": [
+                {
+                  "nom": "FormDef",
+                  "version": "1.0",
+                  "catalogue": true
+                },
+                {
+                  "nom": "Conditions",
+                  "version": "1.0",
+                  "catalogue": true
+                },
+                {
+                  "nom": "Survey Manifest",
+                  "version": "1",
+                  "catalogue": false,
+                  "empreinte": "sha256:147c959fee0b3b6e"
+                }
+              ],
+              "lit": [
+                {
+                  "nom": "FormDef",
+                  "version": "1.0",
+                  "catalogue": true
+                },
+                {
+                  "nom": "Conditions",
+                  "version": "1.0",
+                  "catalogue": true
+                },
+                {
+                  "nom": "Survey Manifest",
+                  "version": "1",
+                  "catalogue": false,
+                  "empreinte": "sha256:147c959fee0b3b6e"
+                },
+                {
+                  "nom": "ThemeDef",
+                  "version": "1.0",
+                  "catalogue": false,
+                  "empreinte": "sha256:a1ab777475df5d76"
+                }
+              ]
+            },
+            "prerequis": {
+              "acces_grist": "none"
+            },
+            "limites": [
+              "Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.",
+              "Appliquer un plan de schéma ou de publication n’est pas encore une commande.",
+              "Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.",
+              "Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée."
+            ],
+            "exemples": [
+              "forms_capacites",
+              "forms_formdef_depuis_colonnes",
+              "forms_formdef_depuis_formulaire_grist",
+              "forms_valider_formdef",
+              "forms_valider_condition",
+              "forms_verifier_format",
+              "forms_formdef_vers_manifeste_enquete",
+              "forms_manifeste_enquete_vers_formdef",
+              "forms_plan_schema",
+              "forms_resoudre_theme",
+              "forms_plan_publication",
+              "forms_synthese"
+            ],
+            "interfaces": {
+              "skill": true,
+              "cli": true,
+              "mcp": true,
+              "webmcp": true,
+              "vitrine": true
+            },
+            "entree_webmcp": "forms-registre/webmcp-entree.js"
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_formdef_depuis_colonnes",
+      "verbe": "creer",
+      "description": "Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes et colonnes calculées). Rend `formdef: null` quand aucune colonne ne donne de question. Les choix d’une colonne Choice ou ChoiceList sont lus dans son `widgetOptions` (chaîne JSON `{\"choices\":[\"a\",\"b\"]}`) et rangés dans `options.choices` du champ ; sans `widgetOptions`, le champ n’a pas de choix et forms_plan_schema le refusera. La racine `choices` du FormDef rendu reste `{}` : les choix vivent dans le champ.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "tableId",
+          "colonnes"
+        ],
+        "properties": {
+          "tableId": {
+            "type": "string",
+            "description": "Identifiant Grist de la table."
+          },
+          "colonnes": {
+            "type": "array",
+            "description": "Les colonnes telles que `_grist_Tables_column` les donne.",
+            "items": {
+              "type": "object",
+              "required": [
+                "colId",
+                "type"
+              ],
+              "properties": {
+                "colId": {
+                  "type": "string",
+                  "description": "Identifiant de la colonne."
+                },
+                "type": {
+                  "type": "string",
+                  "description": "Type Grist : Text, Int, Numeric, Bool, Date, DateTime, Choice, ChoiceList, Ref:Table, RefList:Table, Attachments."
+                },
+                "label": {
+                  "type": "string",
+                  "description": "Libellé affiché ; à défaut, le colId."
+                },
+                "isFormula": {
+                  "type": "boolean",
+                  "description": "Vrai pour une colonne calculée : elle est écartée."
+                },
+                "widgetOptions": {
+                  "type": "string",
+                  "description": "Chaîne JSON des options Grist ; porte la liste des choix : {\"choices\":[\"a\",\"b\"]}."
+                },
+                "visibleCol": {
+                  "description": "Colonne affichée pour une référence."
+                }
+              }
+            }
+          },
+          "titre": {
+            "type": "string",
+            "description": "Titre du formulaire ; à défaut, le tableId."
+          },
+          "ignorer": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "colId à écarter en plus des colonnes internes (par exemple la géométrie d’une couche)."
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "formdef"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Une table de deux colonnes",
+          "entree": {
+            "tableId": "Inscriptions",
+            "colonnes": [
+              {
+                "colId": "nom",
+                "type": "Text",
+                "label": "Nom"
+              },
+              {
+                "colId": "age",
+                "type": "Int",
+                "label": "Âge"
+              }
+            ]
+          },
+          "sortie": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "derive:Inscriptions",
+              "title": "Inscriptions",
+              "description": "",
+              "tableId": "Inscriptions",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Inscriptions",
+                  "fields": [
+                    {
+                      "colId": "nom",
+                      "label": "Nom",
+                      "type": "Text",
+                      "widget": "text",
+                      "required": false
+                    },
+                    {
+                      "colId": "age",
+                      "label": "Âge",
+                      "type": "Int",
+                      "widget": "number",
+                      "required": false
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          }
+        },
+        {
+          "titre": "Une colonne à choix, lus dans widgetOptions",
+          "entree": {
+            "tableId": "Inscriptions",
+            "colonnes": [
+              {
+                "colId": "atelier",
+                "type": "Choice",
+                "label": "Atelier",
+                "widgetOptions": "{\"choices\":[\"Matin\",\"Après-midi\"]}"
+              }
+            ]
+          },
+          "sortie": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "derive:Inscriptions",
+              "title": "Inscriptions",
+              "description": "",
+              "tableId": "Inscriptions",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Inscriptions",
+                  "fields": [
+                    {
+                      "colId": "atelier",
+                      "label": "Atelier",
+                      "type": "Choice",
+                      "widget": "select",
+                      "required": false,
+                      "options": {
+                        "choices": [
+                          "Matin",
+                          "Après-midi"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_formdef_depuis_formulaire_grist",
+      "verbe": "creer",
+      "description": "Lit les formulaires natifs d’un document Grist et rend chacun en FormDef. L’entrée est le contenu des tables de métadonnées (tables, colonnes, vues, sections, champs), tel que fetchTable le rend.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "meta"
+        ],
+        "properties": {
+          "meta": {
+            "type": "object"
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "formulaires"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Un document sans formulaire natif",
+          "entree": {
+            "meta": {}
+          },
+          "sortie": {
+            "formulaires": []
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_valider_formdef",
+      "verbe": "structurer",
+      "description": "Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. `conforme` ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. `plan_realisable` dit si le plan serait calculé sur une table à créer, et `avertissements` rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "formdef"
+        ],
+        "properties": {
+          "formdef": {
+            "type": "object"
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "conforme",
+          "ecarts",
+          "plan_realisable",
+          "avertissements"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Un FormDef vide",
+          "entree": {
+            "formdef": {}
+          },
+          "sortie": {
+            "conforme": false,
+            "ecarts": [
+              "(racine) : propriété requise absente : manifest_version",
+              "(racine) : propriété requise absente : id",
+              "(racine) : propriété requise absente : title",
+              "(racine) : propriété requise absente : tableId",
+              "(racine) : propriété requise absente : composeMode",
+              "(racine) : propriété requise absente : sections",
+              "(racine) : propriété requise absente : choices"
+            ],
+            "plan_realisable": false,
+            "avertissements": []
+          }
+        },
+        {
+          "titre": "Conforme au contrat, mais un Choice sans choix : le plan sera refusé",
+          "entree": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "exemple",
+              "title": "Exemple",
+              "tableId": "Exemple",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Exemple",
+                  "fields": [
+                    {
+                      "colId": "atelier",
+                      "type": "Choice",
+                      "widget": "select",
+                      "label": "Atelier",
+                      "required": false
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          },
+          "sortie": {
+            "conforme": true,
+            "ecarts": [],
+            "plan_realisable": false,
+            "avertissements": [
+              "Champ « atelier » : choices manquants pour Choice"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_valider_condition",
+      "verbe": "structurer",
+      "description": "Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; `bloquant` dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».",
+      "entree": {
+        "type": "object",
+        "required": [
+          "condition"
+        ],
+        "properties": {
+          "condition": {}
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "valide",
+          "erreurs"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Une règle correcte",
+          "entree": {
+            "condition": {
+              "field": "age",
+              "operator": ">=",
+              "value": 18
+            }
+          },
+          "sortie": {
+            "valide": true,
+            "erreurs": []
+          }
+        },
+        {
+          "titre": "Un opérateur inconnu",
+          "entree": {
+            "condition": {
+              "field": "age",
+              "operator": "presque",
+              "value": 18
+            }
+          },
+          "sortie": {
+            "valide": false,
+            "erreurs": [
+              {
+                "chemin": "/operator",
+                "code": "operateur_inconnu",
+                "message": "Opérateur « presque » inconnu : écrivez l'un de ==, !=, >, >=, <, <=, contains, in, notIn, truthy, empty, notEmpty.",
+                "bloquant": true
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_verifier_format",
+      "verbe": "structurer",
+      "description": "Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`. Pour attacher un format à une question d’un FormDef, ajouter au champ `validation: { \"format\": \"courriel\" }` (mode `verifier` par défaut : une réponse non conforme est refusée ; `corriger` remet la forme en ordre sans refuser, réservé aux noms).",
+      "entree": {
+        "type": "object",
+        "required": [
+          "format",
+          "valeur"
+        ],
+        "properties": {
+          "format": {
+            "type": "string"
+          },
+          "valeur": {}
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "connu",
+          "valide",
+          "normalise",
+          "message_si_invalide"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Un code postal",
+          "entree": {
+            "format": "codePostal",
+            "valeur": "13001"
+          },
+          "sortie": {
+            "connu": true,
+            "valide": true,
+            "normalise": "13001",
+            "message_si_invalide": "Ce n’est pas un code postal (5 chiffres)."
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_formdef_vers_manifeste_enquete",
+      "verbe": "structurer",
+      "description": "Convertit un FormDef en manifeste d’enquête (survey-manifest). Sens inverse : forms_manifeste_enquete_vers_formdef.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "formdef"
+        ],
+        "properties": {
+          "formdef": {
+            "type": "object"
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "manifeste"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Un formulaire d’une question",
+          "entree": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "exemple",
+              "title": "Exemple",
+              "tableId": "Exemple",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Exemple",
+                  "fields": [
+                    {
+                      "id": "nom",
+                      "colId": "nom",
+                      "type": "Text",
+                      "label": "Nom"
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          },
+          "sortie": {
+            "manifeste": {
+              "manifest_version": "1.0.0",
+              "id": "exemple",
+              "title": "Exemple",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Exemple",
+                  "gate": null,
+                  "questions": [
+                    {
+                      "colId": "nom",
+                      "label": "Nom",
+                      "type": "text"
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_manifeste_enquete_vers_formdef",
+      "verbe": "structurer",
+      "description": "Convertit un manifeste d’enquête en FormDef. Sens inverse : forms_formdef_vers_manifeste_enquete.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "manifeste"
+        ],
+        "properties": {
+          "manifeste": {
+            "type": "object"
+          },
+          "options": {
+            "type": "object"
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "formdef"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Un manifeste d’une question",
+          "entree": {
+            "manifeste": {
+              "manifest_version": "1.0.0",
+              "id": "exemple",
+              "title": "Exemple",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Exemple",
+                  "gate": null,
+                  "questions": [
+                    {
+                      "colId": "nom",
+                      "label": "Nom",
+                      "type": "text"
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          },
+          "sortie": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "exemple",
+              "title": "Exemple",
+              "description": "",
+              "classification": "",
+              "successMessage": "Merci !",
+              "tableId": "Reponses_exemple",
+              "composeMode": "ensureSchema",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Exemple",
+                  "gate": null,
+                  "condition": null,
+                  "fields": [
+                    {
+                      "colId": "nom",
+                      "label": "Nom",
+                      "type": "Text",
+                      "widget": "text",
+                      "required": false,
+                      "options": {},
+                      "condition": null,
+                      "cascade": null,
+                      "dynamicFilter": null,
+                      "profile": null,
+                      "theme": null,
+                      "polarity": ""
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_plan_schema",
+      "verbe": "configurer",
+      "description": "Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il ne lit AUCUN document : il compare le FormDef à `colonnes_existantes` et `table_existe`, que l’appelant doit fournir. Sans eux, il suppose une table sans colonne et prévoit un AddColumn par champ, sans AddTable. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante. Il refuse (`ok: false`, `errors`) un Choice ou ChoiceList sans liste de choix (dans `choices[colId]` à la racine ou `options.choices` du champ).",
+      "entree": {
+        "type": "object",
+        "required": [
+          "formdef"
+        ],
+        "properties": {
+          "formdef": {
+            "type": "object",
+            "description": "Un FormDef (formdef-1.0). Les choix d’une question à choix : `options.choices` du champ ou `choices[colId]` à la racine."
+          },
+          "colonnes_existantes": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Les colonnes déjà présentes dans la table, au format { colId, type, … } ; à fournir pour que le plan ne recrée pas ce qui existe."
+          },
+          "table_existe": {
+            "type": "boolean",
+            "description": "Vrai si la table existe déjà : le plan n’émet alors pas d’AddTable."
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "ok",
+          "actions"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Une table absente",
+          "entree": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "exemple",
+              "title": "Exemple",
+              "tableId": "Exemple",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Exemple",
+                  "fields": [
+                    {
+                      "id": "nom",
+                      "colId": "nom",
+                      "type": "Text",
+                      "label": "Nom"
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            },
+            "colonnes_existantes": [],
+            "table_existe": false
+          },
+          "sortie": {
+            "ok": true,
+            "errors": [],
+            "actions": [
+              [
+                "AddTable",
+                "Exemple",
+                [
+                  {
+                    "id": "nom",
+                    "type": "Text",
+                    "label": "Nom",
+                    "isFormula": false
+                  }
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_resoudre_theme",
+      "verbe": "personnaliser",
+      "description": "Dérive les variables de thème (--kit-*) d’un ThemeDef 1.0 à partir de ses couleurs de départ, pour un mode clair ou sombre. Un thème illisible est refusé en entier.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "themedef"
+        ],
+        "properties": {
+          "themedef": {
+            "type": "object"
+          },
+          "mode": {
+            "enum": [
+              "clair",
+              "sombre"
+            ]
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "ok"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Une seule couleur de départ",
+          "entree": {
+            "themedef": {
+              "version": "themedef-1.0",
+              "nom": "Exemple",
+              "graines": {
+                "principal": "#0b6e4f"
+              }
+            },
+            "mode": "clair"
+          },
+          "sortie": {
+            "ok": true,
+            "mode": "clair",
+            "source": "graines",
+            "vars": {
+              "--kit-accent": "#0b6e4f",
+              "--kit-accent-fond": "#e2f3eb",
+              "--kit-accent-texte": "#ffffff",
+              "--kit-action": "#0b6e4f",
+              "--kit-action-actif": "#015239",
+              "--kit-action-survol": "#025b40",
+              "--kit-action-texte": "#ffffff",
+              "--kit-alerte": "#ce0500",
+              "--kit-alerte-fond": "#feebe8",
+              "--kit-attention": "#b34000",
+              "--kit-attention-filet": "#b34000",
+              "--kit-attention-fond": "#ffece4",
+              "--kit-bord": "#c6c6c6",
+              "--kit-bord-champ": "#767676",
+              "--kit-focus": "#000000",
+              "--kit-fond": "#ffffff",
+              "--kit-info": "#0063cb",
+              "--kit-info-fond": "#e7f1ff",
+              "--kit-ok": "#18753c",
+              "--kit-ok-fond": "#e0f7e5",
+              "--kit-ombre": "rgba(0, 0, 0, 0.35)",
+              "--kit-papier": "#ffffff",
+              "--kit-surface": "#ffffff",
+              "--kit-surface-2": "#e2f3eb",
+              "--kit-texte": "#000000",
+              "--kit-texte-2": "#3a3a3a"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_plan_publication",
+      "verbe": "publier",
+      "description": "Calcule les actions qui créent une page personnalisée liée à une table, et les options de la vue qui porte le formulaire (HTML et JS déjà assemblés). Il rend le plan sans l’appliquer.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "table_ref",
+          "html",
+          "js"
+        ],
+        "properties": {
+          "table_ref": {
+            "type": "number"
+          },
+          "nom_page": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          },
+          "js": {
+            "type": "string"
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "actions",
+          "options"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Une page pour la table 1",
+          "entree": {
+            "table_ref": 1,
+            "nom_page": "Remplir",
+            "html": "<div id=\"f\"></div>",
+            "js": "void 0;"
+          },
+          "sortie": {
+            "actions": [
+              [
+                "CreateViewSection",
+                1,
+                0,
+                "custom",
+                null,
+                "Remplir"
+              ]
+            ],
+            "options": "{\"verticalGridlines\":true,\"horizontalGridlines\":true,\"zebraStripes\":false,\"numFrozen\":0,\"customView\":\"{\\\"mode\\\":\\\"url\\\",\\\"url\\\":null,\\\"access\\\":\\\"full\\\",\\\"widgetDef\\\":{\\\"widgetId\\\":\\\"@berhalak/custom-widget-builder\\\",\\\"name\\\":\\\"Custom Widget Builder\\\",\\\"url\\\":\\\"https://gristgouv.github.io/gristlabs-widgets/custom-widget-builder/index.html\\\",\\\"accessLevel\\\":\\\"full\\\"},\\\"widgetId\\\":\\\"@berhalak/custom-widget-builder\\\",\\\"renderAfterReady\\\":true,\\\"widgetOptions\\\":{\\\"_html\\\":\\\"<div id=\\\\\\\"f\\\\\\\"></div>\\\",\\\"_js\\\":\\\"void 0;\\\"},\\\"columnsMapping\\\":null}\"}"
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_synthese",
+      "verbe": "traiter",
+      "description": "Relit les réponses d’un formulaire avec le FormDef qui les a produites : fréquences, échelles, classements, listes. La table seule n’est pas lisible, le FormDef sait ce que chaque colonne veut dire.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "formdef",
+          "lignes"
+        ],
+        "properties": {
+          "formdef": {
+            "type": "object"
+          },
+          "lignes": {
+            "type": "array"
+          }
+        }
+      },
+      "sortie": {
+        "type": "object"
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Deux réponses",
+          "entree": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "exemple",
+              "title": "Exemple",
+              "tableId": "Exemple",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Exemple",
+                  "fields": [
+                    {
+                      "id": "avis",
+                      "colId": "avis",
+                      "type": "Choice",
+                      "label": "Votre avis",
+                      "choices": [
+                        "oui",
+                        "non"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            },
+            "lignes": [
+              {
+                "avis": "oui"
+              },
+              {
+                "avis": "oui"
+              }
+            ]
+          },
+          "sortie": {
+            "reponses": 2,
+            "duree": {
+              "mediane": null,
+              "n": 0
+            },
+            "sections": [
+              {
+                "id": "main",
+                "label": "Exemple",
+                "mesures": [
+                  {
+                    "colId": "avis",
+                    "label": "Votre avis",
+                    "items": [
+                      {
+                        "valeur": "oui",
+                        "n": 2
+                      }
+                    ],
+                    "n": 2
+                  }
+                ]
+              }
+            ],
+            "ressort": {
+              "besoins": [],
+              "satisfactions": [],
+              "preferences": []
+            },
+            "classements": [],
+            "listes": [
+              {
+                "colId": "avis",
+                "label": "Votre avis",
+                "items": [
+                  {
+                    "valeur": "oui",
+                    "n": 2
+                  }
+                ],
+                "n": 2
+              }
+            ],
+            "verbatims": [],
+            "lieux": [],
+            "pieces": [],
+            "questions": 1
+          }
+        }
+      ]
+    }
+  ]
+}
