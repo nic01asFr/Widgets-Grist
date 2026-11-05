@@ -32,9 +32,10 @@ body { display: flex; flex-direction: column; background: var(--bg); color: var(
 .status { display: flex; align-items: center; gap: 6px; font-size: .78rem; color: var(--text-muted); }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
 .dot.ok { background: var(--ok); }
-.btn { border: 1px solid var(--primary); background: var(--primary); color: #fff; border-radius: 8px; padding: 7px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
-.btn.ghost { background: var(--bg); color: var(--text); border-color: var(--border); }
-.btn:hover { background: var(--primary-dark); }
+.btn { border: 1px solid var(--border); background: var(--card-bg); color: var(--text); border-radius: 8px; padding: 7px 14px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: inherit; }
+.btn:hover { background: var(--bg); }
+.btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn.primary:hover { background: var(--primary-dark); }
 .main { flex: 1; overflow: auto; padding: 18px 20px; }
 .empty-cta { text-align: center; color: var(--text-muted); padding: 60px 20px; font-size: .9rem; line-height: 1.7; }
 table.grid { border-collapse: collapse; width: 100%; font-size: .82rem; }
@@ -2561,8 +2562,8 @@ TF.ui.mount({
   ],
   tools: [],
   actions: [
-    TF.ui.button({ id: 'submitBtn', icon: 'check', label: 'Soumettre la semaine' }),
-    TF.ui.button({ id: 'exportBtn', cls: 'btn ghost', icon: 'download', label: 'Export', title: 'Export Excel (CSV)', onclick: 'exportCSV()' })
+    TF.ui.button({ id: 'submitBtn', icon: 'check', label: 'Soumettre la semaine', primary: true }),
+    TF.ui.button({ id: 'exportBtn', icon: 'download', label: 'Export', title: 'Export Excel (CSV)', onclick: 'exportCSV()' })
   ]
 });
 
@@ -2650,7 +2651,7 @@ function render() {
   if (!S.hasTable) {
     main.innerHTML = '<div class="empty-cta">La feuille de temps n\'est pas encore activee sur ce document.<br>'
       + 'Elle cree les tables <b>TimeEntries</b> + <b>Feuilles</b> (opt-in, non destructif).<br><br>'
-      + '<button class="btn" id="activateBtn">Activer la feuille de temps</button></div>';
+      + '<button class="btn primary" id="activateBtn">Activer la feuille de temps</button></div>';
     const b = document.getElementById('activateBtn'); if (b) b.onclick = activate;
     return;
   }
@@ -2666,9 +2667,9 @@ function updateSubmitBtn() {
   sb.style.display = '';
   const st = myStatut();
   const sbLabel = (t) => { const l = sb.querySelector('.btn-label'); if (l) l.textContent = t; else sb.textContent = t; };
-  if (st === 'valide') { sbLabel('Semaine validee'); sb.disabled = true; sb.className = 'btn ghost'; sb.onclick = null; }
-  else if (st === 'soumis') { sbLabel('Retirer (soumise)'); sb.disabled = false; sb.className = 'btn ghost'; sb.onclick = withdrawWeek; }
-  else { sbLabel('Soumettre la semaine' + (st === 'rejete' ? ' (rejetee)' : '')); sb.disabled = false; sb.className = 'btn'; sb.onclick = submitWeek; }
+  if (st === 'valide') { sbLabel('Semaine validee'); sb.disabled = true; sb.className = 'btn'; sb.onclick = null; }
+  else if (st === 'soumis') { sbLabel('Retirer (soumise)'); sb.disabled = false; sb.className = 'btn'; sb.onclick = withdrawWeek; }
+  else { sbLabel('Soumettre la semaine' + (st === 'rejete' ? ' (rejetee)' : '')); sb.disabled = false; sb.className = 'btn primary'; sb.onclick = submitWeek; }
 }
 
 function renderSaisie() {
@@ -2711,7 +2712,7 @@ function renderValider() {
   for (const f of subs) {
     const p = S.team.find(t => t.id === f.membre), wk = gristToMs(f.semaine);
     const act = f.statut === 'soumis'
-      ? '<button class="btn" onclick="validerFeuille(' + f.id + ')">Valider</button> <button class="btn ghost" onclick="rejeterFeuille(' + f.id + ')">Rejeter</button>' : '';
+      ? '<button class="btn primary" onclick="validerFeuille(' + f.id + ')">Valider</button> <button class="btn" onclick="rejeterFeuille(' + f.id + ')">Rejeter</button>' : '';
     html += '<tr><td class="tcell">' + esc(p ? p.nom : '?') + '</td>'
       + '<td class="tcell">' + new Date(wk).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + '</td>'
       + '<td class="total">' + (fmtQty(weekTotalFor(f.membre, wk)) || '0') + '</td>'
