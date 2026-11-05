@@ -6,29 +6,42 @@
 <title>Plan - TaskFlow</title>
 <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
 <style>
-:root{
-  /* compatible ThemeDef (--kit-*), repli = valeur d'avant */
-  --bg: var(--kit-fond, #0f172a); --surface: var(--kit-surface, #1e293b); --surface-2: var(--kit-surface-2, #243044); --surface-3:#2c3a52;
-  --border: var(--kit-bord, #334155); --text: var(--kit-texte, #e2e8f0); --text-muted: var(--kit-texte-2, #94a3b8); --primary: var(--kit-accent, #6366f1);
-  --ok: var(--kit-ok, #3b82f6); --warn: var(--kit-attention, #f59e0b); --over: var(--kit-alerte, #e5484d); --off:#475569; --radius:8px;
+:root {
+  /* palette commune aux 8 widgets (compatible ThemeDef --kit-*, repli clair par defaut) */
+  --primary: var(--kit-accent, #3e5de7); --primary-dark: var(--kit-accent-survol, #2742b8); --primary-light: var(--kit-accent-fond, #e7ecfe);
+  --danger: var(--kit-alerte, #e5484d); --danger-light: var(--kit-alerte-fond, #fdeced);
+  --bg: var(--kit-fond, #f5f7fb); --card-bg: var(--kit-surface, #ffffff);
+  --text: var(--kit-texte, #1f2738); --text-muted: var(--kit-texte-2, #5a6679); --text-light: #8a97ab;
+  --border: var(--kit-bord, #e7ebf2); --border-dark: #d3dae5;
+  --shadow: 0 1px 2px rgba(16,24,40,0.05), 0 1px 3px rgba(16,24,40,0.04);
+  --shadow-lg: 0 18px 48px -12px rgba(16,24,40,0.22), 0 6px 16px -8px rgba(16,24,40,0.12);
+  --p-50:#eef2ff; --p-100:#dfe5ff; --surface-2: var(--kit-surface-2, #eef2f7); --radius:11px; --warn-ink:#b9740f;
+  /* jetons propres au Plan (tableau de charge), repli clair -- surface = card-bg */
+  --surface: var(--card-bg); --surface-3: #e4e9f2; --off: #9aa6bd;
+  --ok: #16a34a; --warn: #d97706; --over: var(--danger);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --primary: var(--kit-accent, #7b8cff); --primary-dark: var(--kit-accent-survol, #6878f5); --primary-light: var(--kit-accent-fond, #22306e);
+    --danger: var(--kit-alerte, #ff6168); --danger-light: var(--kit-alerte-fond, #3a1c22);
+    --bg: var(--kit-fond, #0f1626); --card-bg: var(--kit-surface, #18223a);
+    --text: var(--kit-texte, #dde3ef); --text-muted: var(--kit-texte-2, #9aa6bd); --text-light: #6c788f;
+    --border: var(--kit-bord, #283145); --border-dark: #3a455c;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4); --shadow-lg: 0 24px 60px -16px rgba(0,0,0,0.7);
+    --p-50: #1a2150; --p-100: #22306e; --surface-2: var(--kit-surface-2, #161f33); --warn-ink: #f5b454;
+    --surface: var(--card-bg); --surface-3: #202b45; --off: #5c6a85;
+    --ok: #3b82f6; --warn: #f59e0b; --over: var(--danger);
+  }
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{background:var(--bg);color:var(--text);font:14px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 #app{display:flex;flex-direction:column;height:100vh}
-.bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap}
-.title{display:flex;align-items:center;gap:8px;font-size:1.1rem;font-weight:700;color:var(--primary)}
-.title .ic{font-size:1.2rem}
-.spacer{flex:1}
-.seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.seg button{background:transparent;color:var(--text-muted);border:0;padding:5px 11px;cursor:pointer;font-size:0.82rem}
-.seg button.on{background:var(--primary);color:#fff}
+.header{background:var(--card-bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.header h1{color:var(--primary);display:flex;align-items:center;gap:8px;white-space:nowrap}
 .btn{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:var(--radius);padding:5px 10px;cursor:pointer;font-size:0.82rem}
 .btn:hover{background:var(--surface-3)}
 .btn.ghost{background:transparent;color:var(--text-muted)}
-.nav{display:inline-flex;align-items:center;gap:6px}
-.nav .range{font-size:0.82rem;color:var(--text-muted);min-width:104px;text-align:center}
-select.btn{appearance:none;padding-right:24px}
 label.chk{display:inline-flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--text-muted);cursor:pointer}
 .alerts{padding:7px 14px;font-size:0.78rem;color:var(--text-muted);border-bottom:1px solid var(--border);display:flex;gap:16px;flex-wrap:wrap}
 .alerts .warn{color:var(--warn)} .alerts .over{color:var(--over)}
@@ -79,7 +92,7 @@ tfoot td.colres{background:var(--surface-2);z-index:2}
 .unitbar button:not(.on):hover{border-color:var(--primary);color:var(--text)}
 .tk .tkdates{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)}
 .tk .tkdates .dl{font-size:0.7rem;color:var(--text-muted);font-weight:600;white-space:nowrap}
-.tk .tkdates input{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:3px 7px;font-size:0.73rem;color-scheme:dark;transition:.12s}
+.tk .tkdates input{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:3px 7px;font-size:0.73rem;color-scheme:light dark;transition:.12s}
 .tk .tkdates input:focus{outline:none;border-color:var(--primary)}
 .tk .tkdates span{color:var(--text-muted);font-size:0.74rem}
 .tk .pdot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
@@ -117,39 +130,359 @@ tfoot td.colres{background:var(--surface-2);z-index:2}
 .indispo-add{margin-top:10px;display:flex;flex-direction:column;gap:6px}
 .indispo-add>input[type=text]{background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:0.8rem}
 .indispo-add .dd{display:flex;align-items:center;gap:6px}
-.indispo-add .dd input{flex:1;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 6px;font-size:0.74rem;color-scheme:dark}
+.indispo-add .dd input{flex:1;background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 6px;font-size:0.74rem;color-scheme:light dark}
 .indispo-add .dd span{color:var(--text-muted)}
+/* <taskflow-ui> -- GENERE par scripts/build-taskflow.js, NE PAS EDITER ICI */
+/* ═════ Interface commune TaskFlow (source : core/taskflow-ui.css, inline par build-taskflow) ═════
+   Charge en dernier dans kanban, gantt, calendar et dashboard : ces regles surchargent les
+   styles propres a chaque widget pour qu'ils partagent la meme grammaire visuelle. Les composants
+   de la barre du haut sont construits par TF.ui (core/taskflow-core.js) ; ici : leur apparence. */
+
+/* 0. Jetons : echelle de polices, d'espacements, hauteur et rayons des controles. */
+:root {
+    color-scheme: light dark;          /* controles natifs (select deroule, cases, barres) suivent le theme */
+    --fs-2xs: 0.66rem;                 /* etiquettes en majuscules, pastilles */
+    --fs-xs: 0.72rem;                  /* informations secondaires, aides */
+    --fs-sm: 0.8rem;                   /* controles : boutons, selects, filtres */
+    --fs-md: 0.875rem;                 /* texte courant, champs */
+    --fs-lg: 1.05rem;                  /* titre de fiche, sections */
+    --fs-xl: 1.25rem;                  /* titre du widget */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+    --ctl-h: 34px;                     /* hauteur unique des controles de la barre du haut */
+    --ctl-r: 8px;                      /* rayon unique des controles */
+    --seg-r: 6px;                      /* rayon des items d'un controle segmente */
+    --weekend-bg: #fef2f2;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --weekend-bg: rgba(248, 113, 113, 0.07); }
+}
+
+/* 1. Base : les controles heritent de la police du widget (ils restaient en Arial, et les champs de
+      date / la description en monospace) ; defilements fins et discrets partout, meme comportement. */
+button, input, select, textarea { font-family: inherit; }
+button { color: inherit; }
+textarea { line-height: 1.45; }
+* { scrollbar-width: thin; scrollbar-color: var(--border-dark, #c4cbd8) transparent; }
+
+/* 2. Barre du haut : UNE ligne, identique dans les quatre widgets.
+      titre | vue / navigation de periode | outils (recherche, filtres, affichage) | actions.
+      Quand la place manque, core/taskflow-core.js mesure le debordement reel et choisit, dans l'ordre :
+        (1) une ligne  (2) une ligne compacte (.hz-compact : libelles en icones, recherche dans le bandeau)
+        (3) deux lignes (.hz-two : les outils passent sous le titre)  (4) deux lignes compactes.
+      Le bandeau (.tf-tray) s'ouvre sous la barre pour saisir : recherche, filtres, affichage. */
+.header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "title view tools actions";
+    align-items: center;
+    column-gap: 14px;
+    row-gap: var(--sp-2);
+    padding: var(--sp-2) var(--sp-4) 10px;
+}
+.header.hz-two {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "title view actions" "tools tools tools";
+}
+.hz-title, .hz-view, .hz-tools, .hz-actions { display: flex; align-items: center; gap: var(--sp-2); min-width: 0; }
+.hz-title { grid-area: title; gap: 10px; }
+.hz-view { grid-area: view; overflow-x: auto; scrollbar-width: none; }
+.hz-view::-webkit-scrollbar { display: none; }
+/* fondu discret au bord droit : signale qu'on peut faire defiler (invisible quand tout tient) */
+.hz-view { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent); }
+.hz-view > * { flex: none; }
+.hz-actions { grid-area: actions; }
+.hz-tools { grid-area: tools; }
+.header h1 { font-size: var(--fs-xl); }
+.hz-title-text { white-space: nowrap; }
+.last-update, .hdr-glabel { font-size: var(--fs-xs); color: var(--text-muted); white-space: nowrap; }
+.hdr-glabel { font-weight: 550; }
+.hz-tools .search-box { flex: 0 1 150px; min-width: 90px; }
+.hz-tools .search-box input { width: 100%; }
+@media (max-width: 640px) {
+    .hz-title-text, .last-update, .hdr-glabel { display: none; }
+}
+/* Dans le lanceur (?shell=1) le titre du widget est masque : l'onglet l'affiche deja. */
+.in-shell .hz-title:not(:has(.last-update)) { display: none; }
+.in-shell .hz-title h1 { display: none; }
+
+/* 3. Controles de la barre : une seule hauteur, un seul rayon, une seule taille de police. */
+.header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon,
+.header select, .header .search-box input {
+    height: var(--ctl-h);
+    box-sizing: border-box;
+    border-radius: var(--ctl-r);
+}
+.header .btn, .header .filter-btn, .header .icon-btn, .header .btn-nav, .header .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: var(--fs-sm);
+    font-weight: 550;
+    white-space: nowrap;
+}
+.header .icon-btn, .header .btn-nav, .header .btn-icon {
+    width: var(--ctl-h);
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+}
+.header select {
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: var(--fs-sm);
+    padding: 0 var(--sp-2);
+}
+.header .search-box input { font-size: var(--fs-sm); }
+
+/* 4. Controle segmente (Grouper, vues du Gantt / Calendrier) : defile au lieu de passer a la ligne. */
+.tf-seg {
+    display: inline-flex;
+    gap: 2px;
+    max-width: 100%;
+    padding: 3px;
+    border-radius: 9px;
+    background: var(--surface-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.tf-seg::-webkit-scrollbar { display: none; }
+.header .tf-seg .btn {
+    flex: none;
+    height: calc(var(--ctl-h) - 6px);
+    padding: 0 12px;
+    border: none;
+    border-radius: var(--seg-r);
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-muted);
+}
+.header .tf-seg .btn:hover { background: rgba(127, 127, 127, 0.1); }
+.header .tf-seg .btn.active { background: var(--card-bg); color: var(--primary); box-shadow: var(--shadow); }
+.hdr-group { display: inline-flex; align-items: center; gap: var(--sp-2); min-width: 0; max-width: 100%; }
+.hz-view > .tf-seg, .hz-view > .hdr-group { flex: 0 1 auto; min-width: 150px; }
+.hdr-group > .tf-seg { flex: 0 1 auto; min-width: 0; }
+
+/* 5. Navigation de periode : identique dans le Gantt et le Calendrier (‹ periode › puis Aujourd'hui). */
+.period-nav { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.nav-group { display: inline-flex; align-items: center; gap: 6px; }
+.current-period { min-width: 120px; text-align: center; font-size: var(--fs-md); font-weight: 650; white-space: nowrap; }
+
+/* 6. Bandeau de saisie : « Rechercher », « Filtres » et « Affichage » s'ouvrent au meme endroit, sous la barre,
+      sur toute la largeur. Il pousse le contenu (comme un volet) et se referme au meme bouton ou avec Echap.
+      Le menu « ⋯ » (actions) reste un menu deroulant. */
+.view-menu { position: relative; }
+.tf-tray {
+    grid-column: 1 / -1;
+    display: none;
+    margin: 2px calc(-1 * var(--sp-4)) -10px;
+    padding: var(--sp-3) var(--sp-4);
+    border-top: 1px solid var(--border);
+    background: var(--surface-2, var(--bg));
+}
+.header .tf-tray.open { display: block; }
+.header:not(.hz-two) .tf-tray { grid-row: 2; }
+.header.hz-two .tf-tray { grid-row: 3; }
+.tf-panel { display: none; }
+.tf-panel.open { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--sp-3) 28px; }
+.tf-panel[data-panel="search"].open { display: block; }
+.tf-panel .search-box input { width: 100%; max-width: 440px; }
+.tf-panel .search-box { max-width: 440px; }
+.tf-field { display: flex; flex-direction: column; gap: var(--sp-1); min-width: 150px; }
+.tf-field-label, .fm-group-label, .filter-section-label { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-light); }
+.tf-field select { width: 100%; max-width: none; }
+.tf-panel .tf-menu-action { align-self: flex-end; padding: 0 var(--sp-3); }
+/* Vues enregistrees : liste, puis nom + Enregistrer / Supprimer.
+   Sur une seule ligne : la liste, puis le nom et les boutons ; le bloc prend la place libre du panneau et les
+   reglages d'affichage (tri, couleur, niveau) se rangent a sa suite. Il passe a la ligne quand la place manque. */
+.tf-field:has(.tf-views) { flex: 1 1 440px; min-width: min(100%, 300px); }
+.tf-views { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tf-field .tf-views select { width: auto; flex: 1 1 170px; min-width: 150px; }
+.tf-views-save { display: flex; flex: 2 1 250px; min-width: 0; gap: 6px; }
+.tf-views-save input {
+    flex: 1 1 120px; min-width: 0; height: 34px; padding: 0 10px; box-sizing: border-box;
+    border: 1px solid var(--border); border-radius: 8px; background: var(--card-bg); color: var(--text); font-size: var(--fs-xs);
+}
+.tf-views-save input:focus { outline: none; border-color: var(--primary); }
+.tf-views-save .btn { height: 34px; }
+.filter-menu-right { right: 0; left: auto; min-width: 200px; }
+.filter-option { font-size: var(--fs-sm); }
+/* Panneau de filtres : des groupes cote a cote, chacun une etiquette puis des pastilles a cocher. */
+.tf-panel .fm-group, .tf-panel .filter-section { display: flex; flex-direction: column; gap: 6px; max-width: 100%; }
+.tf-panel .fm-group-label { padding: 0; }
+.tf-panel .fm-group-items, .tf-panel .filter-checkboxes, .tf-panel .filter-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.tf-panel .filter-option, .tf-panel .filter-check, .header .tf-panel .filter-btn {
+    display: inline-flex; align-items: center; gap: 5px; height: auto; padding: 3px 10px;
+    border: 1px solid var(--border); border-radius: 999px; background: var(--card-bg); color: var(--text);
+    font-size: var(--fs-xs); font-weight: 500; cursor: pointer; white-space: nowrap;
+}
+.tf-panel .filter-option input { display: none; }
+.tf-panel .filter-option:hover, .tf-panel .filter-check:hover, .header .tf-panel .filter-btn:hover { border-color: var(--primary); background: var(--card-bg); }
+.tf-panel .filter-option:has(input:checked), .tf-panel .filter-check.active, .header .tf-panel .filter-btn.active {
+    background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); font-weight: 600;
+}
+.tf-panel .filter-option.muted { border-style: dashed; }
+.tf-panel .fm-foot { align-self: flex-end; border: none; margin: 0; padding: 0; }
+.tf-panel .fm-clear, .tf-panel .filter-clear { padding: 4px 8px; font-size: var(--fs-xs); }
+/* Boutons du bandeau : l'etat « ouvert » se voit sur le bouton. */
+.header [data-tray-toggle].is-open { background: var(--p-50, var(--primary-light)); border-color: var(--primary); color: var(--primary); }
+.header [data-tray-toggle].is-open .btn-chev svg { transform: rotate(180deg); }
+.header .tf-search-toggle { display: none; position: relative; }
+.header.hz-search .tf-search-toggle { display: inline-flex; }
+.header.hz-search .tf-search > .search-box { display: none; }
+.tf-search-toggle.has-filter { color: var(--primary); border-color: var(--primary); background: var(--p-50, var(--primary-light)); }
+.tf-search { display: flex; align-items: center; }
+
+/* 7. Pastille Demo : toujours en bas a droite (elle masquait « Pluri » dans le Gantt). */
+.demo-badge { position: fixed; top: auto; left: auto; bottom: 14px; right: 14px; }
+
+/* 8. Fiche de tache : un seul langage pour les sections du haut (proprietes) et du bas
+      (description, sous-taches, checklist, details). Plus de bande grise pleine largeur. */
+.panel-section-header {
+    background: transparent;
+    margin: 0 0 var(--sp-2) 0;
+    padding: var(--sp-3) 0 var(--sp-1);
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+}
+.panel-section-header:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+.panel-section-title {
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-light);
+}
+/* Progression : une jauge (le curseur) + le pourcentage + les raccourcis ; la mini-barre faisait doublon. */
+.prop-row .progress-bar-mini { display: none; }
+.progress-slider { width: 100%; }
+/* Description : meme police que le reste (elle etait en monospace). */
+.form-textarea { font-family: inherit; }
+/* Temps & charge : la valeur s'ajuste a son contenu, sans fleches natives, et l'unite « h » reste collee
+   a la valeur (elle flottait a droite d'un champ de largeur fixe, avec un grand vide). */
+.panel .tc-box .tcv { display: flex; align-items: baseline; gap: var(--sp-1); }
+.panel .tc-box .tcv input { width: 4ch; min-width: 2ch; -moz-appearance: textfield; appearance: textfield; }
+.panel .tc-box .tcv input::-webkit-outer-spin-button,
+.panel .tc-box .tcv input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+@supports (field-sizing: content) { .panel .tc-box .tcv input { field-sizing: content; width: auto; } }
+/* Choix de priorite / statut : le point et le libelle restent sur une seule ligne (« Moyenne » se coupait). */
+.priority-pill, .status-pill { display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; min-width: 0; }
+
+/* 9. Fiche de tache : le titre est l'en-tete, la navigation « n/m » est integree a cote,
+      puis la fermeture. La fiche recouvre toute la hauteur du widget, barre du haut comprise
+      (elle contient peu de detail une fois une tache ouverte). */
+.panel-header { justify-content: flex-start; gap: var(--sp-2); padding: 10px var(--sp-3) 10px var(--sp-4); background: var(--card-bg); }
+.panel-header .panel-title-edit {
+    flex: 1; min-width: 0; width: auto; margin: 0; padding: 6px 0;
+    font-size: var(--fs-lg); font-weight: 700; line-height: 1.3;
+    border: none; border-bottom: 2px solid transparent; border-radius: 0;
+    text-overflow: ellipsis;
+}
+.panel-header .panel-title-edit:hover { border-bottom-color: var(--border); }
+.panel-header .panel-title-edit:focus { border-bottom-color: var(--primary); outline: none; }
+.panel-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; }
+.panel-nav { flex: none; display: inline-flex; align-items: center; gap: 2px; padding: 2px; border-radius: 8px; background: var(--surface-2); }
+.panel-nav-btn {
+    width: 26px; height: 26px; padding: 0; border: none; border-radius: 6px;
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+}
+.panel-nav-btn:hover { background: var(--card-bg); color: var(--text); }
+.panel-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.panel-back { flex: none; }
+.panel-count { min-width: 30px; text-align: center; font-size: var(--fs-xs); font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.panel-close {
+    flex: none; width: 30px; height: 30px; border: none; border-radius: 8px;
+    background: transparent; color: var(--text-muted); font-size: 1.25rem; line-height: 1; cursor: pointer;
+}
+.panel-close:hover { background: var(--surface-2); color: var(--text); }
+@media (min-width: 561px) {
+    .panel { position: fixed; top: 0; bottom: 0; right: 0; height: auto; z-index: 300; }
+}
+
+/* 10. Dashboard : fonds clairs codes en dur -> variables (illisibles / blancs en mode sombre). */
+.filter-check, .span-btn, .btn-icon, .cfg-input {
+    background: var(--card-bg);
+    color: var(--text);
+}
+.btn-icon.active { background: var(--primary-light); color: var(--primary); }
+.accordion-body, .dashboard-grid.edit-mode .component.selected { background: var(--p-50); }
+
+/* 11. Aide discrete « i » : l'explication (etat vide, consigne) s'affiche au survol ou au focus,
+       au lieu d'une phrase permanente qui prend de la place. */
+.tf-info {
+    position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; margin-left: 6px; border: 1px solid var(--border-dark, var(--border)); border-radius: 50%;
+    color: var(--text-light); font: italic 700 0.66rem/1 Georgia, serif; text-transform: none; letter-spacing: 0; cursor: help;
+}
+.tf-info:hover, .tf-info:focus-visible { color: var(--primary); border-color: var(--primary); outline: none; }
+/* Liste deroulante de la fiche ouverte vers le haut quand le bas de la zone visible la couperait (voir placeDropdown). */
+.multi-select.up .multi-select-dropdown { top: auto; bottom: 100%; margin-top: 0; margin-bottom: 4px; }
+/* La bulle est UN element flottant place sur le <body> (voir initUi) : positionnee dans la fenetre et recadree
+   sur ses bords, elle n'est jamais coupee par le panneau defilant ou la colonne qui contient le « i ». */
+.tf-tip-float {
+    position: fixed; z-index: 2000; display: none; pointer-events: none;
+    width: max-content; max-width: min(260px, calc(100vw - 16px)); padding: 8px 10px; border-radius: 8px;
+    background: var(--text, #1f2738); color: var(--card-bg, #fff); box-shadow: var(--shadow-lg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-style: normal; font-weight: 500;
+    font-size: var(--fs-xs); line-height: 1.4; text-align: left; white-space: normal;
+}
+
+/* 12. Libelles des boutons : icone + libelle quand la place le permet, icone seule sinon. Les memes
+       outils (recherche, filtres, affichage) et les memes actions se compactent partout de la meme facon. */
+.btn-label { white-space: nowrap; }
+.header .filter-btn { position: relative; }
+/* Le mode compact (.hz-compact) est decide par la mesure du debordement (voir 2), plus par une largeur fixe. */
+.header.hz-compact .hz-tools .btn-label { display: none; }
+.header.hz-compact .hz-tools .filter-btn, .header.hz-compact .hz-tools .view-menu > .btn { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
+.header.hz-compact .hz-tools .filter-btn .filter-count { position: absolute; top: -6px; right: -6px; }
+.header.hz-bare .hz-title-text, .header.hz-bare .hz-title h1 { display: none; }
+.header.hz-top .hz-actions .btn-label, .header.hz-top .period-nav .btn-label { display: none; }
+.header.hz-top .hz-actions .btn:not(.icon-btn), .header.hz-top .period-nav > .btn:not(.btn-nav) { width: var(--ctl-h); padding-left: 0; padding-right: 0; }
+
+/* 13. Libelle de periode : forme complete par defaut, forme courte (« Oct. 26 ») quand la place manque. */
+.current-period .pl-short { display: none; }
+@media (max-width: 760px) {
+    .current-period .pl-long { display: none; }
+    .current-period .pl-short { display: inline; }
+    .current-period { min-width: 64px; }
+}
+
+/* 14. Boite de dialogue interne (TF.confirm) et confirmation de suppression a trois issues. */
+.tf-modal-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: var(--sp-4); background: rgba(16, 24, 40, 0.45); }
+.tf-modal { width: min(380px, 100%); display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-4) calc(var(--sp-4) + 2px); background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-lg); }
+.tf-modal-title { font-size: var(--fs-lg); font-weight: 650; }
+.tf-modal-msg { font-size: var(--fs-md); line-height: 1.5; color: var(--text-muted); }
+.tf-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-1); }
+.tf-modal .btn.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.tf-modal .btn.danger:hover { filter: brightness(0.92); }
+.delete-confirm-actions.delete-confirm-col { flex-direction: column; }
+.delete-confirm-btn.keep { background: var(--card-bg); border: 1px solid var(--border-dark, var(--border)); color: var(--text); }
+
+/* 15. Etat vide du document (tables absentes) : une phrase claire, centree, sans donnees fictives. */
+.tf-notice { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-2); min-height: 240px; padding: var(--sp-4); text-align: center; color: var(--text-muted); }
+.tf-notice-title { font-size: var(--fs-lg); font-weight: 650; color: var(--text); }
+.tf-notice-sub { max-width: 380px; font-size: var(--fs-md); line-height: 1.5; }
+
+/* 16. Champ de recherche : memes regles dans les quatre widgets (icone a gauche, rayon et hauteur de la barre). */
+.search-box { position: relative; display: flex; align-items: center; }
+.search-box input { padding: 6px 10px 6px 28px; border: 1px solid var(--border); border-radius: var(--ctl-r); font-family: inherit; color: var(--text); width: 140px; background: var(--card-bg); }
+.search-box input:focus { outline: none; border-color: var(--primary); }
+.search-box::before { content: ""; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E"); background-size: contain; background-repeat: no-repeat; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .search-box::before { filter: invert(0.75); } }
+:root[data-theme="dark"] .search-box::before { filter: invert(0.75); }
+
+/* 17. Focus clavier visible sur ce qui s'ouvre : carte, ligne, barre. */
+.task-card:focus-visible, .task-row:focus-visible, .gantt-bar:focus-visible, .gantt-milestone:focus-visible,
+.event-bar:focus-visible, .week-event-bar:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+/* </taskflow-ui> */
 </style>
 </head>
 <body>
 <div id="app">
-  <div class="bar">
-    <div class="title"><span class="ic">▦</span> Plan</div>
-    <div class="seg" id="segGran"></div>
-    <div class="nav">
-      <button class="btn ghost" id="navPrev">◀</button>
-      <span class="range" id="navRange">—</span>
-      <button class="btn ghost" id="navNext">▶</button>
-      <button class="btn ghost" id="navToday" style="display:none">Aujourd'hui</button>
-    </div>
-    <div class="spacer"></div>
-    <label class="chk"><span>Grouper</span>
-      <select class="btn" id="selGroup">
-        <option value="person">Personne</option>
-        <option value="portefeuille">Portefeuille</option>
-        <option value="project">Projet</option>
-        <option value="role">Rôle</option>
-      </select>
-    </label>
-    <div class="seg" id="segMode"></div>
-    <div class="seg" id="segUnit"></div>
-    <label class="chk"><input type="checkbox" id="chkDone"> Inclure terminé</label>
-    <label class="chk" title="Estimer la charge des tâches sans charge à partir de leur estimation ÷ nb assignés"><input type="checkbox" id="chkDerive"> Estimer</label>
-    <label class="chk" title="Étaler la charge sur les jours ouvrés (lun-ven) seulement"><input type="checkbox" id="chkWorkdays"> Jours ouvrés</label>
-    <button class="btn" id="btnInit" title="Initialiser la charge des tâches sans charge depuis estimationH ÷ nb assignés">⚙ Init. charges</button>
-    <button class="btn" id="btnExport" title="Exporter le plan en CSV (COPIL)">⬇ CSV</button>
-    <button class="btn" id="btnTimeline" title="Timeline par personne : les tâches de chacun en barres sur la fenêtre">⊞ Timeline</button>
-  </div>
+  <div class="header" id="tfHeader"></div>
   <div class="alerts" id="alerts"></div>
   <div class="gridwrap" id="gridwrap"><div class="empty"><div class="ic">▦</div><div>Chargement…</div></div></div>
   <div class="legend" id="legend">
@@ -567,7 +900,7 @@ const TF = (function () {
     function initUi() {
         if (typeof document === 'undefined' || initUi.done) return;
         initUi.done = true;
-        try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
+        try { if (/[?&]shell/.test(location.search)) document.documentElement.classList.add('in-shell'); } catch (e) {}
         // Bandeau (recherche / filtres / affichage) : un clic sur le bouton l'ouvre ou le referme, Echap le referme.
         // Il reste ouvert pendant la manipulation du widget : les filtres s'appliquent en direct.
         document.addEventListener('click', (e) => {
@@ -663,7 +996,11 @@ const TF = (function () {
         image: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>',
         plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
         today: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="1.4" fill="currentColor" stroke="none"/>',
-        pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'
+        pin: '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',
+        check: '<polyline points="20 6 9 17 4 12"/>',
+        shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+        settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+        timeline: '<rect x="3" y="4" width="7" height="6" rx="1"/><rect x="14" y="14" width="7" height="6" rx="1"/><path d="M6.5 10v4a2 2 0 0 0 2 2H14M17.5 14v-4a2 2 0 0 0-2-2H10"/>'
     };
     const uiIcon = (name, size) => '<svg width="' + (size || 14) + '" height="' + (size || 14) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (UI_ICONS[name] || '') + '</svg>';
 
@@ -2339,6 +2676,34 @@ const S = {
   groupBy: 'person', unit: 'pct', includeDone: false, derive: false, mode: 'prevu', workdays: false, allocUnit: 'h',
   demo: false, extFilters: null, timeline: false
 };
+
+// En-tete partagee (meme moteur que Kanban/Gantt/Calendar/Dashboard). segGran/segMode/segUnit
+// restent des conteneurs vides : render() les repeuple a chaque rendu via renderSeg() (inchange).
+TF.ui.mount({
+  title: { icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>', text: 'Plan' },
+  view: [
+    '<div class="tf-seg" id="segGran"></div>',
+    TF.ui.periodNav({ id: 'navRange', text: '—', prev: 'planPrev()', next: 'planNext()', today: 'planToday()' }),
+    TF.ui.select({ id: 'selGroup', title: 'Grouper', onchange: 'planGroupChange(this.value)', options: [
+      ['person', 'Personne'], ['portefeuille', 'Portefeuille'], ['project', 'Projet'], ['role', 'Rôle']
+    ] })
+  ],
+  tools: [
+    TF.ui.displayMenu({ fields: [
+      { label: 'Mode', html: '<div class="tf-seg" id="segMode"></div>' },
+      { label: 'Unité', html: '<div class="tf-seg" id="segUnit"></div>' },
+      { label: '', html: '<label class="chk"><input type="checkbox" id="chkDone"> Inclure terminé</label>' },
+      { label: '', html: '<label class="chk" title="Estimer la charge des tâches sans charge à partir de leur estimation ÷ nb assignés"><input type="checkbox" id="chkDerive"> Estimer</label>' },
+      { label: '', html: '<label class="chk" title="Étaler la charge sur les jours ouvrés (lun-ven) seulement"><input type="checkbox" id="chkWorkdays"> Jours ouvrés</label>' }
+    ] })
+  ],
+  actions: [
+    TF.ui.button({ id: 'btnInit', icon: 'settings', label: 'Init. charges', title: 'Initialiser la charge des tâches sans charge depuis estimationH ÷ nb assignés' }),
+    TF.ui.button({ id: 'btnExport', icon: 'download', label: 'CSV', title: 'Exporter le plan en CSV (COPIL)' }),
+    TF.ui.button({ id: 'btnTimeline', icon: 'timeline', label: 'Timeline', title: 'Timeline par personne : les tâches de chacun en barres sur la fenêtre' })
+  ]
+});
+
 let statusCfg = TF.buildStatusConfig(TF.DEFAULT_STATUSES, 'default'); // #1 : statuts dynamiques — alimenté par TF.loadStatusConfig en Grist (terminal/libellés depuis les vrais choix)
 
 // Utils
@@ -2530,7 +2895,6 @@ function render() {
   document.getElementById('chkDone').checked = S.includeDone;
   document.getElementById('chkDerive').checked = S.derive;
   document.getElementById('chkWorkdays').checked = S.workdays;
-  document.getElementById('navToday').style.display = S.offset !== 0 ? '' : 'none';
 
   const _rmode = S.mode === 'realise' || S.mode === 'reste';
   const tasks = planTasks().map(t => (_rmode && isDone(t) && t.dateCloture && t.dateCloture >= t.dateDebut) ? Object.assign({}, t, { dateEcheance: t.dateCloture }) : t); // réalisé/reste : redater les tâches clôturées sur leur date de clôture réelle
@@ -2820,7 +3184,7 @@ function renderAlerts(matrix, periods) {
 
 function renderSeg(id, opts, cur, cb) {
   const el = document.getElementById(id);
-  el.innerHTML = opts.map(([v, l]) => '<button class="' + (v === cur ? 'on' : '') + '" data-v="' + v + '">' + l + '</button>').join('');
+  el.innerHTML = opts.map(([v, l]) => '<button type="button" class="btn' + (v === cur ? ' active' : '') + '" data-v="' + v + '">' + l + '</button>').join('');
   el.querySelectorAll('button').forEach(b => b.onclick = () => cb(b.dataset.v));
 }
 
@@ -3035,24 +3399,26 @@ function exportCSV() {
 // ============================================================================
 // Données : Grist + démo
 // ============================================================================
+// Navigation de periode et changement de groupement (appeles depuis les onclick de l'en-tete
+// partagee, comme weekPrev/setGran dans les autres widgets harmonises).
+function planPrev() { S.offset--; render(); }
+function planNext() { S.offset++; render(); }
+function planToday() { S.offset = 0; render(); }
+async function planGroupChange(v) {
+  const sel = document.getElementById('selGroup');
+  // Portefeuille = opt-in : si la colonne Projects.portefeuille n'existe pas, proposer l'activation (création table + colonne).
+  if (v === 'portefeuille' && !S.hasPortef && !S.demo) {
+    const ok = await confirmModal('Activer les portefeuilles', 'Regrouper la charge par portefeuille nécessite la table « Portefeuilles » et la colonne « Projects.portefeuille ».\nLes créer maintenant ? (rétro-compatible, sans impact sur l\'existant)');
+    if (!ok) { sel.value = S.groupBy; return; }
+    await ensurePortefSchema();
+    if (!S.hasPortef) { toast('Activation impossible (droits ?).'); sel.value = S.groupBy; return; }
+    toast('Portefeuilles activés. Affectez les projets dans la table « Projects » (colonne Portefeuille).');
+  }
+  S.groupBy = v;
+  if (S.groupBy !== 'person' && S.mode === 'dispo') { S.mode = 'prevu'; toast('Dispo indisponible en groupement « ' + groupLabel(S.groupBy) + ' » (marge = notion globale) — vue Prévu rétablie'); }
+  render();
+}
 function bindToolbar() {
-  document.getElementById('navPrev').onclick = () => { S.offset--; render(); };
-  document.getElementById('navNext').onclick = () => { S.offset++; render(); };
-  document.getElementById('navToday').onclick = () => { S.offset = 0; render(); };
-  document.getElementById('selGroup').onchange = async (e) => {
-    const v = e.target.value;
-    // Portefeuille = opt-in : si la colonne Projects.portefeuille n'existe pas, proposer l'activation (création table + colonne).
-    if (v === 'portefeuille' && !S.hasPortef && !S.demo) {
-      const ok = await confirmModal('Activer les portefeuilles', 'Regrouper la charge par portefeuille nécessite la table « Portefeuilles » et la colonne « Projects.portefeuille ».\nLes créer maintenant ? (rétro-compatible, sans impact sur l\'existant)');
-      if (!ok) { e.target.value = S.groupBy; return; }
-      await ensurePortefSchema();
-      if (!S.hasPortef) { toast('Activation impossible (droits ?).'); e.target.value = S.groupBy; return; }
-      toast('Portefeuilles activés. Affectez les projets dans la table « Projects » (colonne Portefeuille).');
-    }
-    S.groupBy = v;
-    if (S.groupBy !== 'person' && S.mode === 'dispo') { S.mode = 'prevu'; toast('Dispo indisponible en groupement « ' + groupLabel(S.groupBy) + ' » (marge = notion globale) — vue Prévu rétablie'); }
-    render();
-  };
   document.getElementById('chkDone').onchange = (e) => { S.includeDone = e.target.checked; render(); };
   document.getElementById('chkDerive').onchange = (e) => { S.derive = e.target.checked; render(); };
   document.getElementById('chkWorkdays').onchange = (e) => { S.workdays = e.target.checked; render(); };
