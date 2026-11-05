@@ -29,6 +29,8 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
 body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.header { background: var(--card-bg); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.header h1 { color: var(--primary); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
 
 .period { display: flex; align-items: center; gap: 4px; }
 .pbtn { border: 1px solid var(--border); background: var(--bg); color: var(--text-muted); border-radius: 7px; padding: 5px 9px; font-size: .78rem; cursor: pointer; font-family: inherit; line-height: 1; }
