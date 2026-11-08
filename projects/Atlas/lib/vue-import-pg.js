@@ -12,7 +12,8 @@
  *
  * Les fonctions `html*` sont pures : elles rendent du texte HTML à partir d'un état, et échappent tout ce qui vient des données.
  *
- * L'import « en direct » (couche relue à chaque déplacement de la vue) n'est pas dans cette première version.
+ * L'import « en direct » (couche relue à chaque déplacement de la vue, `pg-direct.js`) est une couche de SESSION : rien n'est écrit
+ * dans le document, elle disparaît au rechargement de la page.
  */
 
 import { echapper } from './html.js?v=20261010a';
@@ -20,6 +21,7 @@ import { mettreAPlat } from './vue-import.js?v=20260911a';
 import { creerAccesPg } from './pg-acces.js?v=20261108a';
 import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261108a';
 import { planImportPg } from './pg-import.js?v=20261108a';
+import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261108a';
 
 const CLE_URL = 'atlas.pg.url';
 const STYLE_ALERTE = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #d9a21b;background:rgba(217,162,27,.12);border-radius:4px';
@@ -84,7 +86,20 @@ export function htmlApercu(etat) {
     ${avert}${refus}${lecture}${horsDoc}
     <label class="range-info" for="pg-nom">Nom de la couche</label>
     <input id="pg-nom" type="text" value="${echapper(etat.nom || '')}" style="width:100%;margin-bottom:8px">
-    <button type="button" class="btn btn-primary btn-full" data-act="importer" ${bloque ? 'disabled' : ''}>Importer dans Grist</button>`;
+    <button type="button" class="btn btn-primary btn-full" data-act="importer" ${bloque ? 'disabled' : ''}>Importer dans Grist</button>
+    <button type="button" class="btn btn-soft btn-full" data-act="direct" style="margin-top:6px" title="La zone visible est relue à chaque déplacement de la carte ; rien n'est écrit dans le document.">Lier en direct (session)</button>`;
+}
+
+const COULEURS_DIRECT = ['#d62728', '#1f77b4', '#2ca02c', '#9467bd', '#ff7f0e', '#17becf'];
+
+/** Les couches directes de la session : état de chacune, bouton pour la retirer. */
+export function htmlDirectes(liste) {
+  if (!liste.length) return '';
+  return `<div class="section" style="margin-top:12px"><div class="range-info"><strong>Couches en direct</strong> (cette session seulement)</div>${liste.map((d) => `
+    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:6px 0">
+      <span style="font-size:12.5px"><span style="display:inline-block;width:10px;height:10px;background:${echapper(d.couleur)};border-radius:2px;margin-right:6px"></span>${echapper(d.libelle)}<br><span class="range-info">${echapper(d.etat)}</span></span>
+      <button type="button" class="btn btn-soft" data-retirer="${echapper(d.id)}" aria-label="Retirer ${echapper(d.libelle)}">Retirer</button>
+    </div>`).join('')}</div>`;
 }
 
 /** La boîte de saisie du jeton, rendue dans `document`. Rend le jeton, ou null si annulée. */
@@ -124,6 +139,8 @@ function lireUrl() { try { return globalThis.localStorage.getItem(CLE_URL) || ''
 function ecrireUrl(u) { try { globalThis.localStorage.setItem(CLE_URL, u); } catch { /* navigation privée : on ne retient pas */ } }
 
 let nettoyageCourant = null;
+// Les couches directes survivent à la fermeture du panneau (pas à celle de la page).
+const directes = new Map(); // id -> { couche, couleur, libelle, etat }
 // Le jeton survit à la fermeture du panneau, pas à celle de la page.
 let accesPartage = null;
 
@@ -158,6 +175,7 @@ export async function ouvrirImportPg(hote) {
       <div id="pg-etat" class="range-info" role="status"></div>
       <div id="pg-liste"></div>
       <div id="pg-detail" aria-live="polite"></div>
+      <div id="pg-directes"></div>
       <div class="section"><button type="button" class="btn btn-soft btn-full" data-act="retour">← Retour</button></div>
     </div>`;
     racine = hote.corps.querySelector('#pg-racine');
@@ -183,6 +201,32 @@ export async function ouvrirImportPg(hote) {
   function dessinerDetail() {
     const zone = racine && racine.querySelector('#pg-detail');
     if (zone) zone.innerHTML = htmlApercu(etat);
+  }
+  function dessinerDirectes() {
+    const zone = racine && racine.querySelector('#pg-directes');
+    if (zone) zone.innerHTML = htmlDirectes([...directes.entries()].map(([id, d]) => ({ id, couleur: d.couleur, libelle: d.libelle, etat: d.etat })));
+  }
+  function lier() {
+    if (!etat.table || !client) return;
+    const id = `${etat.connexion}-${etat.table.schema}-${etat.table.table}`.replace(/[^A-Za-z0-9_-]/g, '_');
+    if (directes.has(id)) { hote.annoncer('Cette table est déjà liée en direct.', 'warning'); return; }
+    const couleur = COULEURS_DIRECT[directes.size % COULEURS_DIRECT.length];
+    const entree = { couleur, libelle: `${etat.table.schema}.${etat.table.table}`, etat: 'lecture de la zone visible…', couche: null };
+    entree.couche = creerCoucheDirecte({
+      carte: hote.carte, client, id, couleur,
+      params: { connexion: etat.connexion, schema: etat.table.schema, table: etat.table.table },
+      surEtat: (e) => { entree.etat = libelleEtat(e); if (e.phase === 'ok' && e.tronque) hote.annoncer(`${entree.libelle} : résultat tronqué, zoomez.`, 'warning'); dessinerDirectes(); },
+    });
+    directes.set(id, entree);
+    dessinerDirectes();
+    entree.couche.demarrer();
+  }
+  function retirer(id) {
+    const d = directes.get(id);
+    if (!d) return;
+    d.couche.arreter();
+    directes.delete(id);
+    dessinerDirectes();
   }
   function majBouton() {
     const b = racine && racine.querySelector('[data-act="importer"]');
@@ -279,16 +323,20 @@ export async function ouvrirImportPg(hote) {
       lire();
       return;
     }
+    const ret = e.target.closest('[data-retirer]');
+    if (ret && racine.contains(ret)) { retirer(ret.dataset.retirer); return; }
     const act = e.target.closest('[data-act]');
     if (!act) return;
     const a = act.dataset.act;
     if (a === 'connecter') connecter();
     else if (a === 'relire') lire();
     else if (a === 'importer') importer();
+    else if (a === 'direct') lier();
     else if (a === 'retour') hote.retour();
   }
 
   monter();
+  dessinerDirectes();
   if (etat.url) connecter();
   nettoyageCourant = () => { racine = null; };
   return { etat, connecter, lire, importer };
