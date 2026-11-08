@@ -22,6 +22,7 @@ import { creerAccesPg } from './pg-acces.js?v=20261108a';
 import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261108a';
 import { planImportPg } from './pg-import.js?v=20261108a';
 import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261108a';
+import { origineLisible } from './pg-liaisons.js?v=20261108a';
 
 const CLE_URL = 'atlas.pg.url';
 const STYLE_ALERTE = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #d9a21b;background:rgba(217,162,27,.12);border-radius:4px';
@@ -87,19 +88,34 @@ export function htmlApercu(etat) {
     <label class="range-info" for="pg-nom">Nom de la couche</label>
     <input id="pg-nom" type="text" value="${echapper(etat.nom || '')}" style="width:100%;margin-bottom:8px">
     <button type="button" class="btn btn-primary btn-full" data-act="importer" ${bloque ? 'disabled' : ''}>Importer dans Grist</button>
-    <button type="button" class="btn btn-soft btn-full" data-act="direct" style="margin-top:6px" title="La zone visible est relue à chaque déplacement de la carte ; rien n'est écrit dans le document.">Lier en direct (session)</button>`;
+    <button type="button" class="btn btn-soft btn-full" data-act="direct" style="margin-top:6px" title="La zone visible est relue à chaque déplacement de la carte ; rien n'est écrit dans le document.">Lier en direct (session)</button>
+    ${etat.peutEnregistrer ? '<button type="button" class="btn btn-soft btn-full" data-act="direct-enregistre" style="margin-top:6px" title="Comme ci-dessus, et la liaison (adresse, table ; jamais le jeton) est enregistrée dans le document.">Lier et enregistrer dans le document</button>' : ''}`;
 }
 
 const COULEURS_DIRECT = ['#d62728', '#1f77b4', '#2ca02c', '#9467bd', '#ff7f0e', '#17becf'];
 
-/** Les couches directes de la session : état de chacune, bouton pour la retirer. */
+/**
+ * Les couches en direct : celles de la session, et les liaisons enregistrées dans le document (actives ou « à activer »).
+ * L'origine de la passerelle est toujours montrée : une liaison lue dans un document est une donnée, on ne l'active qu'en
+ * sachant vers où le jeton partira.
+ */
 export function htmlDirectes(liste) {
   if (!liste.length) return '';
-  return `<div class="section" style="margin-top:12px"><div class="range-info"><strong>Couches en direct</strong> (cette session seulement)</div>${liste.map((d) => `
-    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:6px 0">
-      <span style="font-size:12.5px"><span style="display:inline-block;width:10px;height:10px;background:${echapper(d.couleur)};border-radius:2px;margin-right:6px"></span>${echapper(d.libelle)}<br><span class="range-info">${echapper(d.etat)}</span></span>
-      <button type="button" class="btn btn-soft" data-retirer="${echapper(d.id)}" aria-label="Retirer ${echapper(d.libelle)}">Retirer</button>
-    </div>`).join('')}</div>`;
+  const bouton = (attr, id, texte, aria, primaire) => `<button type="button" class="btn ${primaire ? '' : 'btn-soft'}" ${attr}="${echapper(id)}" aria-label="${echapper(aria)}">${texte}</button>`;
+  return `<div class="section" style="margin-top:12px"><div class="range-info"><strong>Couches en direct</strong></div>${liste.map((d) => {
+    const active = d.active !== false;
+    const boutons = [
+      active ? bouton('data-retirer', d.id, 'Retirer', `Retirer ${d.libelle} de la carte`, false) : bouton('data-activer', d.id, 'Activer', `Activer ${d.libelle}`, true),
+      d.enregistree ? bouton('data-supprimer', d.id, 'Supprimer', `Supprimer l’enregistrement de ${d.libelle}`, false) : '',
+    ].join('');
+    const portee = d.enregistree ? 'enregistrée dans le document' : 'cette session seulement';
+    return `
+    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0">
+      <span style="font-size:12.5px"><span style="display:inline-block;width:10px;height:10px;background:${echapper(d.couleur || '#888')};border-radius:2px;margin-right:6px"></span>${echapper(d.libelle)}<br>
+        <span class="range-info">${echapper(d.etat)} · ${echapper(portee)}${d.origine ? ` · ${echapper(d.origine)}` : ''}</span></span>
+      <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${boutons}</span>
+    </div>`;
+  }).join('')}</div>`;
 }
 
 /** La boîte de saisie du jeton, rendue dans `document`. Rend le jeton, ou null si annulée. */
@@ -161,7 +177,7 @@ export async function ouvrirImportPg(hote) {
   if (!accesPartage) accesPartage = creerAccesPg({ demander: (q) => demanderJeton(doc, q) });
   const acces = accesPartage;
 
-  const etat = { url: lireUrl(), connexions: [], connexion: '', schema: null, filtre: '', table: null, couche: null, plan: null, nom: '', phase: 'repos', erreur: '', lectureSeule: !!hote.lectureSeule() };
+  const etat = { url: lireUrl(), connexions: [], connexion: '', schema: null, filtre: '', table: null, couche: null, plan: null, nom: '', phase: 'repos', erreur: '', lectureSeule: !!hote.lectureSeule(), peutEnregistrer: false };
   let client = null;
   let racine = null;
   const vivant = () => !!racine && racine.isConnected && hote.corps.contains(racine);
@@ -202,30 +218,76 @@ export async function ouvrirImportPg(hote) {
     const zone = racine && racine.querySelector('#pg-detail');
     if (zone) zone.innerHTML = htmlApercu(etat);
   }
+  function liste() {
+    const items = [...directes.entries()].map(([id, d]) => ({ id, libelle: d.libelle, couleur: d.couleur, etat: d.etat, active: true, enregistree: d.gristId != null, origine: d.url ? origineLisible(d.url) : '' }));
+    for (const l of (hote.liaisons ? hote.liaisons() : [])) {
+      if ([...directes.values()].some((d) => d.gristId === l.gristId)) continue;
+      items.push({ id: `liaison-${l.gristId}`, libelle: `${l.schema}.${l.table}`, couleur: l.color || '#d62728', etat: 'à activer', active: false, enregistree: true, origine: origineLisible(l.url) });
+    }
+    return items;
+  }
   function dessinerDirectes() {
     const zone = racine && racine.querySelector('#pg-directes');
-    if (zone) zone.innerHTML = htmlDirectes([...directes.entries()].map(([id, d]) => ({ id, couleur: d.couleur, libelle: d.libelle, etat: d.etat })));
+    if (zone) zone.innerHTML = htmlDirectes(liste());
   }
-  function lier() {
-    if (!etat.table || !client) return;
-    const id = `${etat.connexion}-${etat.table.schema}-${etat.table.table}`.replace(/[^A-Za-z0-9_-]/g, '_');
-    if (directes.has(id)) { hote.annoncer('Cette table est déjà liée en direct.', 'warning'); return; }
-    const couleur = COULEURS_DIRECT[directes.size % COULEURS_DIRECT.length];
-    const entree = { couleur, libelle: `${etat.table.schema}.${etat.table.table}`, etat: 'lecture de la zone visible…', couche: null };
+  function demarrerDirecte({ clientDirect, url, connexion, schema, table, couleur, gristId = null }) {
+    const id = `${connexion}-${schema}-${table}`.replace(/[^A-Za-z0-9_-]/g, '_');
+    if (directes.has(id)) { hote.annoncer('Cette table est déjà liée en direct.', 'warning'); return null; }
+    const entree = { couleur, url, gristId, libelle: `${schema}.${table}`, etat: 'lecture de la zone visible…', couche: null };
     entree.couche = creerCoucheDirecte({
-      carte: hote.carte, client, id, couleur,
-      params: { connexion: etat.connexion, schema: etat.table.schema, table: etat.table.table },
+      carte: hote.carte, client: clientDirect, id, couleur, params: { connexion, schema, table },
       surEtat: (e) => { entree.etat = libelleEtat(e); if (e.phase === 'ok' && e.tronque) hote.annoncer(`${entree.libelle} : résultat tronqué, zoomez.`, 'warning'); dessinerDirectes(); },
     });
     directes.set(id, entree);
     dessinerDirectes();
     entree.couche.demarrer();
+    return { id, entree };
+  }
+  async function lier({ enregistrer = false } = {}) {
+    if (!etat.table || !client) return;
+    const couleur = COULEURS_DIRECT[directes.size % COULEURS_DIRECT.length];
+    const lancee = demarrerDirecte({ clientDirect: client, url: etat.url, connexion: etat.connexion, schema: etat.table.schema, table: etat.table.table, couleur });
+    if (!lancee || !enregistrer) return;
+    try {
+      lancee.entree.gristId = await hote.enregistrerLiaison({
+        url: etat.url, connexion: etat.connexion, schema: etat.table.schema, table: etat.table.table, couleur, libelle: lancee.entree.libelle,
+      });
+      hote.annoncer(`Liaison « ${lancee.entree.libelle} » enregistrée dans le document (sans le jeton).`, 'success');
+    } catch (e) {
+      // La couche reste affichée pour la session : on dit que l'enregistrement, lui, a échoué.
+      hote.annoncer(`Liaison non enregistrée : ${(e && e.message) || e}`, 'error');
+    }
+    dessinerDirectes();
+  }
+  function activer(idListe) {
+    const l = (hote.liaisons ? hote.liaisons() : []).find((x) => `liaison-${x.gristId}` === idListe);
+    if (!l) return;
+    // Le jeton n'est demandé qu'ici, pour l'origine de CETTE liaison, qui est affichée dans la boîte de saisie.
+    demarrerDirecte({
+      clientDirect: creerClientPg({ url: l.url, acces }), url: l.url, connexion: l.connexion, schema: l.schema, table: l.table,
+      couleur: l.color || COULEURS_DIRECT[0], gristId: l.gristId,
+    });
   }
   function retirer(id) {
     const d = directes.get(id);
     if (!d) return;
     d.couche.arreter();
     directes.delete(id);
+    dessinerDirectes(); // une liaison enregistrée reste dans la liste, « à activer »
+  }
+  async function supprimer(idListe) {
+    const d = directes.get(idListe);
+    const gristId = d ? d.gristId : Number(String(idListe).replace('liaison-', ''));
+    const libelle = d ? d.libelle : ((hote.liaisons ? hote.liaisons() : []).find((x) => x.gristId === gristId) || {}).table;
+    if (!Number.isFinite(gristId) || !hote.supprimerLiaison) return;
+    if (!window.confirm(`Supprimer la liaison « ${libelle || gristId} » du document ?\n\nLa table PostgreSQL n'est pas touchée.`)) return;
+    try {
+      await hote.supprimerLiaison(gristId);
+      if (d) { d.couche.arreter(); directes.delete(idListe); }
+      hote.annoncer('Liaison supprimée du document.', 'success');
+    } catch (e) {
+      hote.annoncer(`Suppression impossible : ${(e && e.message) || e}`, 'error');
+    }
     dessinerDirectes();
   }
   function majBouton() {
@@ -291,6 +353,7 @@ export async function ouvrirImportPg(hote) {
       });
       etat.nom = etat.nom && etat.table ? etat.nom : etat.table.table;
       recalculerPlan();
+      etat.peutEnregistrer = !etat.lectureSeule && !etat.sansDocument && typeof hote.enregistrerLiaison === 'function';
       etat.phase = 'pret';
       if (vivant()) dessinerDetail();
     } catch (e) { await surErreur(e); }
@@ -325,6 +388,10 @@ export async function ouvrirImportPg(hote) {
     }
     const ret = e.target.closest('[data-retirer]');
     if (ret && racine.contains(ret)) { retirer(ret.dataset.retirer); return; }
+    const act2 = e.target.closest('[data-activer]');
+    if (act2 && racine.contains(act2)) { activer(act2.dataset.activer); return; }
+    const sup = e.target.closest('[data-supprimer]');
+    if (sup && racine.contains(sup)) { supprimer(sup.dataset.supprimer); return; }
     const act = e.target.closest('[data-act]');
     if (!act) return;
     const a = act.dataset.act;
@@ -332,6 +399,7 @@ export async function ouvrirImportPg(hote) {
     else if (a === 'relire') lire();
     else if (a === 'importer') importer();
     else if (a === 'direct') lier();
+    else if (a === 'direct-enregistre') lier({ enregistrer: true });
     else if (a === 'retour') hote.retour();
   }
 

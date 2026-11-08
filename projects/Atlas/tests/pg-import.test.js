@@ -201,7 +201,7 @@ describe('vue-import-pg — le rendu', () => {
 
 describe('le jeton n’est écrit nulle part', () => {
   const lire = (f) => readFileSync(fileURLToPath(new URL(`../lib/${f}`, import.meta.url)), 'utf8');
-  const sources = ['pg-acces.js', 'pg-passerelle.js', 'pg-import.js', 'pg-direct.js', 'vue-import-pg.js'].map((f) => [f, lire(f)]);
+  const sources = ['pg-acces.js', 'pg-passerelle.js', 'pg-import.js', 'pg-direct.js', 'pg-liaisons.js', 'vue-import-pg.js'].map((f) => [f, lire(f)]);
 
   it('ni stockage du navigateur (hors l’adresse), ni document Grist, ni adresse', () => {
     for (const [f, s] of sources) {

@@ -157,6 +157,7 @@ import {
   isLinkedTableLayer,
   formatGeometrie,
 } from './lib/geo-tables.js?v=20261002c';
+import { lireLiaison, ligneLiaison } from './lib/pg-liaisons.js?v=20261108a';
 import {
   layerFieldNames,
   controlFieldType,
@@ -12634,6 +12635,27 @@ async function importerCouchePg(plan) {
     return { nb: plan.nbLignes, tableId: layer.sourceTable };
 }
 
+/**
+ * Enregistrer une liaison PostgreSQL (couche en direct) : UNE ligne de `Maquette_Layers`, sans entités ni jeton
+ * (`lib/pg-liaisons.js`). Rien n'est lu ni contacté au chargement ; la personne l'active dans le panneau PG.
+ */
+async function enregistrerLiaisonPg(spec) {
+    if (!canWrite(CONFIG.viewMode)) throw new Error('Document ouvert en lecture seule : enregistrement impossible.');
+    await ensureMaquetteLayersTable();
+    const r = await grist.docApi.applyUserActions([['AddRecord', 'Maquette_Layers', null, ligneLiaison(spec)]]);
+    const gristId = r.retValues[0];
+    if (!STATE.liaisonsPg) STATE.liaisonsPg = [];
+    STATE.liaisonsPg.push({ gristId, name: spec.libelle, color: spec.couleur, url: spec.url, connexion: spec.connexion, schema: spec.schema, table: spec.table });
+    return gristId;
+}
+
+/** Oublier une liaison : supprime sa ligne de `Maquette_Layers` (la confirmation est demandée par le panneau). */
+async function supprimerLiaisonPg(gristId) {
+    if (!canWrite(CONFIG.viewMode)) throw new Error('Document ouvert en lecture seule : suppression impossible.');
+    await grist.docApi.applyUserActions([['RemoveRecord', 'Maquette_Layers', gristId]]);
+    STATE.liaisonsPg = (STATE.liaisonsPg || []).filter((l) => l.gristId !== gristId);
+}
+
 function finalizeNewLayer(layer) {
     // Empiler au sommet mettrait un bâti importé après un réseau par-dessus lui.
     // On insère sous les géométries plus fines : surfaces, puis lignes, puis points.
@@ -14655,11 +14677,19 @@ async function loadLayersFromGrist({ monter = true, dejaLiees = null, dejaNommee
         const ids = rec.id || [];
         const dejaMontees = new Set(STATE.layers.map((l) => l.gristId).filter((v) => v != null));
         let prefsTables = null;
+        // Liaisons PostgreSQL enregistrées (lib/pg-liaisons.js) : lues ici, activées par la personne dans le panneau PG.
+        // La fonction peut être rejouée : on repart d'une liste vide.
+        STATE.liaisonsPg = [];
         for (let i = 0; i < ids.length; i++) {
             if (dejaMontees.has(ids[i])) continue;
             let geojson, style;
             try { geojson = JSON.parse(rec.GeoJSON[i]); } catch (e) { continue; }
             try { style = JSON.parse(rec.StyleJSON[i]); } catch (e) { style = { mode: 'mapbox' }; }
+            const liaisonPg = lireLiaison(style);
+            if (liaisonPg) {
+                STATE.liaisonsPg.push({ gristId: ids[i], name: rec.Name?.[i] || `${liaisonPg.schema}.${liaisonPg.table}`, color: rec.Color?.[i], ...liaisonPg });
+                continue;
+            }
             const ctrls = style?._controls;
             if (style) delete style._controls;
             const binding = style?._binding;
@@ -14705,6 +14735,10 @@ async function loadLayersFromGrist({ monter = true, dejaLiees = null, dejaNommee
             ));
         }
         if (monter) mountLoadedLayers(computeLayersBounds());
+        if (STATE.liaisonsPg.length) {
+            const n = STATE.liaisonsPg.length;
+            showToast(`${n} couche${n > 1 ? 's' : ''} PostgreSQL en direct enregistrée${n > 1 ? 's' : ''} : à activer dans Couches › PG`, 'info');
+        }
     } catch (e) { console.warn('loadLayers:', e.message); }
 }
 /** Vrai une fois `Maquette_Layers` connue presente, pour ne pas relister a chaque enregistrement. */
@@ -16129,7 +16163,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261108a').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261108a').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     openIGN: () => import('./lib/vue-import-ign.js?v=20261010a').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {
