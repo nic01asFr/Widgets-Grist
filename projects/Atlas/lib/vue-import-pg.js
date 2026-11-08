@@ -405,7 +405,9 @@ export async function ouvrirImportPg(hote) {
 
   monter();
   dessinerDirectes();
-  if (etat.url) connecter();
+  // Connexion À LA DEMANDE : ouvrir le panneau ne contacte pas la passerelle (et ne demande donc pas le jeton). On peut ainsi
+  // activer, retirer ou supprimer une liaison enregistrée sans se connecter.
+  dire(etat.url ? 'Cliquez sur « Se connecter » pour lire le catalogue de la passerelle.' : '');
   nettoyageCourant = () => { racine = null; };
   return { etat, connecter, lire, importer };
 }

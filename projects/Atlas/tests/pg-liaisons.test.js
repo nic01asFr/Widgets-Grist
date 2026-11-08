@@ -104,6 +104,14 @@ describe('le chargement ne contacte jamais une passerelle', () => {
     assert.doesNotMatch(corps, /creerCoucheDirecte|creerClientPg|ouvrirImportPg|pg-direct|vue-import-pg|fetch\(['"`]https?/);
   });
 
+  it('ouvrir le panneau PG ne contacte pas la passerelle : connexion à la demande', () => {
+    const vue = lire('lib/vue-import-pg.js');
+    assert.doesNotMatch(vue, /if \(etat\.url\) connecter\(\)/);
+    assert.match(vue, /Cliquez sur « Se connecter »/);
+    // la seule façon d'atteindre connecter() est le bouton
+    assert.equal((vue.match(/connecter\(\)/g) || []).length, 2, 'définition + clic');
+  });
+
   it('le module de liaisons n’écrit ni ne lit rien de lui-même', () => {
     const s = lire('lib/pg-liaisons.js');
     assert.doesNotMatch(s, /fetch\(|applyUserActions|docApi|localStorage|sessionStorage/);
