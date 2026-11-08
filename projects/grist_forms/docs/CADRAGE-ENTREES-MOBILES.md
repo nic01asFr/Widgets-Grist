@@ -143,20 +143,33 @@ FormEngine.mount(el, formdef, {
     nom: 'atlas-apk',          // informatif
     capacites: { camera: true, micro: true, position: true, orientation: false, scanner: true },
     services: {
-      transcrire: async (audio, { langue, signal }) => ({ texte: '…' }),          // optionnel
-      extraire:   async ({ texte, consigne, champs, schema }, { signal }) =>      // optionnel
-                    ({ valeurs: { lieu: '…', nature: '…' } })
+      transcrire: {                                                                 // optionnel
+        sortant: 'tiers',                                                           // 'local' | 'tiers' (sans adresse)
+        appeler: async (audio, { langue, signal }) => ({ texte: '…' })
+      },
+      extraire: {                                                                   // optionnel
+        sortant: 'tiers',
+        appeler: async ({ texte, consigne, champs, schema }, { signal }) =>
+                   ({ valeurs: { lieu: '…', nature: null }, anomalies: [] })        // null = non lu
+      }
     },
     limites: { audioSecondes: 120, photoOctets: 10485760 }                         // optionnel
   }
 });
 ```
 
+*Révision du 08/11/2026 après relecture du kit (six remarques, toutes retenues).* Le contrat dit en plus : le **modèle d'erreur** des services, les **anomalies** rendues avec les valeurs, l'indicateur **`sortant`**, les **trois états** d'une capacité, et la règle **`null` contre `[]`.**
+
 Règles :
 
 - **Absent = rien.** Un hôte qui ne passe pas `hote` est un hôte sans capacité : tous les champs retombent sur leur repli. C'est le comportement d'aujourd'hui, donc la non-régression est gratuite.
 - **Les services sont des fonctions que l'hôte fournit** ; le moteur ne connaît ni leur réseau ni leurs clés.
-- **Les valeurs rendues par `extraire` sont vérifiées par le moteur** contre le type et les choix du champ visé (une valeur hors liste est écartée, un nombre non numérique aussi), puis **montrées comme suggestions** (§7). Une sortie de modèle est un contenu non fiable.
+- **Un service dit s'il envoie des données ailleurs** : `sortant: 'local'` (rien ne quitte l'appareil) ou `'tiers'` (les données partent chez un tiers, sans en dire l'adresse). L'interface affiche l'avertissement du §7 d'après cet indicateur, elle ne le devine pas. Un service sans indicateur est traité comme `tiers`.
+- **Un service échoue de façon typée**, jamais par une exception libre : `{ erreur: { genre, message } }` avec `genre` parmi `reseau`, `droits`, `limite`, `forme`, `delai`, `vide`, `annulee`. `vide` (réponse sans contenu) est réessayable et se montre comme « rien reconnu », pas comme une panne. Même vocabulaire que l'extraction de documents du kit (*une seule façon de dire une erreur de service dans l'écosystème*).
+- **Les valeurs rendues par `extraire` sont vérifiées par le moteur** contre le type et les choix du champ visé, puis **montrées comme suggestions** (§7). Une sortie de modèle est un contenu non fiable. **Rien n'est écarté en silence** : une valeur hors liste, non numérique ou hors du champ visé devient une **anomalie** `{ champ, valeur, raison }` montrée à la personne ; le service peut en rendre aussi. Forme commune avec le kit : `{ valeurs, anomalies }`.
+- **`null` n'est pas `[]` ni `''`.** Une valeur que le service n'a pas lue vaut `null` (le champ reste à saisir) ; une valeur lue et vide est une valeur. Le moteur ne remplit jamais un champ avec `null`.
+- **Une capacité a trois états, mais le contrat n'en promet qu'un.** `capacites.x = true` dit « disponible » ; la personne peut encore **refuser à l'exécution** (autorisation du navigateur). Un refus déclenche le repli exactement comme une capacité absente, et le champ ne le garde pas en mémoire d'une session à l'autre sans que la personne le décide.
+- **Un seul nom par service.** `extraire` (texte + consigne + champs → valeurs) reste le nom côté hôte ; l'action d'extraction de **documents** du kit (document → propositions d'une déclaration versionnée) porte un autre nom côté kit. Les deux partagent le **format de sortie** `{ valeurs, anomalies }`.
 - Le contrat est publié au **catalogue des contrats** (`published/schemas/index.json`) avec `produit_par` (hôtes) et `lu_par` (moteur, compositeur), comme FormDef, Conditions, Kit Theme, Scene Manifest.
 
 **Qui implémente quoi.**
@@ -258,7 +271,9 @@ Les mesures M1 à M4 se font en Grist réel (document de test, pas un document d
 
 ---
 
-## 11. Décisions à prendre (avec recommandation)
+## 11. Décisions (avec recommandation)
+
+**Tranché le 08/11/2026 : D1 à D8 validées conformément aux recommandations ; le lot 0 (mesures M1-M8, document Grist de test, sans code de production) est autorisé.** Rien n'est codé en production, rien n'est publié ni poussé sans nouvel accord explicite.
 
 | # | Décision | Recommandation |
 |---|---|---|
