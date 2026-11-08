@@ -112,33 +112,56 @@ widgetOptions: JSON.stringify({
 
 **Problème** : On ne connaît pas l'ID avant création.
 
+> ⚠️ **`visibleCol` seul ne suffit pas.** Grist enregistre la colonne à afficher, mais
+> la cellule continue d'afficher l'identifiant de ligne tant que la **formule
+> d'affichage** n'est pas posée (`SetDisplayFormula`). C'est ce que fait l'interface
+> de Grist quand on choisit « Afficher la colonne ». Séquence d'actions vérifiée sur
+> grist-core 1.7 (mcp-server-grist 0.2.2).
+
 **Solutions** :
 
-#### 1. Créer sans visibleCol, puis modifier
+#### 1. Créer, puis poser la colonne affichée ET sa formule d'affichage
 ```javascript
-// Étape 1 : Créer la colonne Ref sans visibleCol
-await grist.docApi.applyUserActions([
-    ['AddColumn', 'Tasks', 'projet', { type: 'Ref:Projects', label: 'Projet' }]
+// Étape 1 : l'ID numérique (colRef) de la colonne 'nom' dans Projects
+const refNom = await colRefDe('Projects', 'nom');
+
+// Étape 2 : créer la colonne Ref ; la valeur de retour donne son colRef et son ID réel
+const res = await grist.docApi.applyUserActions([
+    ['AddColumn', 'Tasks', 'projet', { type: 'Ref:Projects', label: 'Projet', visibleCol: refNom }]
 ]);
+const { colRef, colId } = res.retValues[0];
 
-// Étape 2 : Récupérer l'ID de la colonne 'nom' dans Projects
-const colInfo = await getColumnId('Projects', 'nom');
-
-// Étape 3 : Modifier la colonne pour ajouter visibleCol
+// Étape 3 : la formule d'affichage, sans laquelle Grist montre l'identifiant de ligne
 await grist.docApi.applyUserActions([
-    ['ModifyColumn', 'Tasks', 'projet', { visibleCol: colInfo.id }]
+    ['SetDisplayFormula', 'Tasks', null, colRef, `$${colId}.nom`]
 ]);
 ```
 
-#### 2. Utiliser l'API REST pour récupérer les IDs
+Pour une colonne Ref déjà créée : `['ModifyColumn', 'Tasks', 'projet', { visibleCol: refNom }]`,
+puis la même `SetDisplayFormula` avec `await colRefDe('Tasks', 'projet')`.
+
+> **Relation inverse** : `['AddReverseColumn', 'Tasks', 'projet']` crée dans `Projects`
+> une colonne `RefList:Tasks` que Grist synchronise dans les deux sens, et règle
+> lui-même sa colonne affichée. Ne pas fabriquer la colonne inverse à la main : une
+> RefList ajoutée séparément reste vide.
+
+#### 2. Récupérer l'ID numérique (colRef) d'une colonne
 ```javascript
-async function getColumnId(tableId, colName) {
-    // Via fetch si disponible
-    const resp = await fetch(`/api/docs/${docId}/tables/${tableId}/columns`);
-    const cols = await resp.json();
-    return cols.columns.find(c => c.id === colName);
+// visibleCol et SetDisplayFormula attendent l'ID NUMÉRIQUE de la colonne (colRef),
+// pas son nom : il se lit dans les tables de métadonnées du document.
+async function colRefDe(tableId, colId) {
+    const tables = await grist.docApi.fetchTable('_grist_Tables');
+    const tableRef = tables.id[tables.tableId.indexOf(tableId)];
+    const cols = await grist.docApi.fetchTable('_grist_Tables_column');
+    for (let i = 0; i < cols.id.length; i++) {
+        if (cols.parentId[i] === tableRef && cols.colId[i] === colId) return cols.id[i];
+    }
+    throw new Error(`Colonne ${tableId}.${colId} introuvable`);
 }
 ```
+
+Par l'API REST (`GET /api/docs/{doc}/tables/{table}/columns`), l'ID numérique est
+`col.fields.colRef` — et non `col.id`, qui est le nom de la colonne.
 
 #### 3. Pattern pragmatique (sans visibleCol)
 ```javascript
@@ -350,19 +373,26 @@ function buildColumnDef(col) {
 }
 
 async function configureVisibleCol(tableName, refColName, visibleColName) {
-    // Récupérer le type de la colonne pour extraire la table cible
-    // Ex: 'Ref:Projects' → 'Projects'
-    const tableData = await grist.docApi.fetchTable(tableName);
+    // Les IDs numériques (colRef) se lisent dans les métadonnées du document
+    const tables = await grist.docApi.fetchTable('_grist_Tables');
+    const cols = await grist.docApi.fetchTable('_grist_Tables_column');
+    const indexDe = (tableId, colId) => {
+        const tableRef = tables.id[tables.tableId.indexOf(tableId)];
+        for (let i = 0; i < cols.id.length; i++) {
+            if (cols.parentId[i] === tableRef && cols.colId[i] === colId) return i;
+        }
+        throw new Error(`Colonne ${tableId}.${colId} introuvable`);
+    };
 
-    // Note: Cette fonction nécessite un accès à l'API REST pour
-    // récupérer l'ID numérique de la colonne.
-    // En pratique, on peut laisser Grist utiliser la colonne par défaut
-    // ou configurer manuellement dans l'interface.
+    const iRef = indexDe(tableName, refColName);
+    const cible = String(cols.type[iRef]).split(':')[1];   // 'Ref:Projects' → 'Projects'
+    const iVisible = indexDe(cible, visibleColName);
 
-    // Pattern alternatif avec ModifyColumn si on connaît l'ID :
-    // await grist.docApi.applyUserActions([
-    //     ['ModifyColumn', tableName, refColName, { visibleCol: colId }]
-    // ]);
+    // visibleCol ET formule d'affichage : sans la seconde, Grist montre l'identifiant de ligne
+    await grist.docApi.applyUserActions([
+        ['ModifyColumn', tableName, refColName, { visibleCol: cols.id[iVisible] }],
+        ['SetDisplayFormula', tableName, null, cols.id[iRef], `$${refColName}.${visibleColName}`]
+    ]);
 }
 ```
 
