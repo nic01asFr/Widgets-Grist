@@ -152,6 +152,14 @@ describe('vue-import-pg — le rendu', () => {
     assert.deepEqual(listerTables(schema, 'NOT').map((t) => t.table), ['note']);
   });
 
+  it('masque les tables que PostGIS publie lui-même, sauf si elles portent une géométrie', () => {
+    const avecSysteme = { schemas: [{ nom: 'public', tables: [
+      { nom: 'spatial_ref_sys', geometries: [] }, { nom: 'geometry_columns', geometries: [] }, { nom: 'geography_columns', geometries: [] },
+      { nom: 'spatial_ref_sys', geometries: [{ colonne: 'g' }] }, { nom: 'mes_points', geometries: [{ colonne: 'g' }] },
+    ] }] };
+    assert.deepEqual(listerTables(avecSysteme).map((t) => t.table), ['mes_points', 'spatial_ref_sys']);
+  });
+
   it('échappe ce qui vient de la base, désactive une table sans géométrie', () => {
     const h = htmlTables(listerTables(schema), null);
     assert.doesNotMatch(h, /<BD TOPO>/);
@@ -168,6 +176,20 @@ describe('vue-import-pg — le rendu', () => {
     const ro = htmlApercu({ ...base, plan: { ok: true }, lectureSeule: true });
     assert.match(ro, /lecture seule/);
     assert.match(ro, /data-act="importer" disabled/);
+  });
+
+  it('hors d’un document Grist : aperçu seulement, import désactivé, et on le dit', () => {
+    const h = htmlApercu({ table: { schema: 'a', table: 'b' }, phase: 'pret', couche: { nb_entites: 2, avertissements: [] }, plan: { ok: true }, nom: 'B', sansDocument: true });
+    assert.match(h, /pas ouvert dans un document Grist/);
+    assert.match(h, /data-act="importer" disabled/);
+  });
+
+  it('aucun gabarit non interpolé dans le HTML rendu, et la troncature n’est dite qu’une fois', () => {
+    const base = { table: { schema: 'a', table: 'b' }, phase: 'pret', nom: 'B', lectureSeule: true, sansDocument: true };
+    const tronque = htmlApercu({ ...base, couche: { nb_entites: 1000, tronque: true, avertissements: ['Résultat tronqué à 1000 entités : réduisez l’emprise.'] }, plan: { ok: false, erreur: 'Le résultat est tronqué à 1000 entités : Zoomez.' } });
+    assert.doesNotMatch(tronque, /\$\{/);
+    assert.equal((tronque.match(/tronqué/g) || []).length, 1);
+    assert.doesNotMatch(htmlApercu({ ...base, couche: { nb_entites: 1, avertissements: [] }, plan: { ok: true } }), /\$\{/);
   });
 
   it('une erreur est montrée telle quelle, échappée', () => {

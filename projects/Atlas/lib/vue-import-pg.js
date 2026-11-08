@@ -22,7 +22,12 @@ import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js
 import { planImportPg } from './pg-import.js?v=20261108a';
 
 const CLE_URL = 'atlas.pg.url';
+const STYLE_ALERTE = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #d9a21b;background:rgba(217,162,27,.12);border-radius:4px';
+const STYLE_REFUS = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #c0392b;background:rgba(192,57,43,.1);border-radius:4px';
 const nombre = (n) => Number(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
+
+/** Les vues et tables que PostGIS publie lui-même : jamais ce qu'on vient chercher. */
+const TABLES_SYSTEME = new Set(['geometry_columns', 'geography_columns', 'spatial_ref_sys', 'raster_columns', 'raster_overviews']);
 
 /** Les tables géographiques d'abord : c'est ce qu'on vient chercher. */
 export function listerTables(schema, filtre = '') {
@@ -30,6 +35,7 @@ export function listerTables(schema, filtre = '') {
   const sortie = [];
   for (const sc of (schema && schema.schemas) || []) {
     for (const t of sc.tables) {
+      if (TABLES_SYSTEME.has(t.nom) && !(t.geometries || []).length) continue;
       if (f && !`${sc.nom}.${t.nom}`.toLowerCase().includes(f)) continue;
       sortie.push({ schema: sc.nom, table: t.nom, geo: (t.geometries || []).length > 0, lignes: t.lignes_estimees, commentaire: t.commentaire });
     }
@@ -40,7 +46,7 @@ export function listerTables(schema, filtre = '') {
 /** La liste des tables, en boutons (le clavier y accède). */
 export function htmlTables(tables, choisie) {
   if (!tables.length) return '<div class="hint">Aucune table à afficher.</div>';
-  return `<div class="model-grid pg-tables">${tables.map((t) => {
+  return `<div class="model-grid pg-tables" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${tables.map((t) => {
     const actif = choisie && choisie.schema === t.schema && choisie.table === t.table;
     const titre = [t.geo ? 'géographique' : 'sans géométrie', t.lignes != null ? `~${nombre(t.lignes)} lignes` : null, t.commentaire].filter(Boolean).join(' — ');
     return `<button type="button" class="model-card${actif ? ' active' : ''}" data-table="${echapper(t.schema)}.${echapper(t.table)}"
@@ -55,7 +61,7 @@ export function htmlApercu(etat) {
   const t = `<strong>${echapper(etat.table.schema)}.${echapper(etat.table.table)}</strong>`;
   if (etat.phase === 'lecture') return `<div class="range-info" role="status" aria-live="polite">${t} : lecture de la zone visible…</div>`;
   if (etat.phase === 'erreur') {
-    return `<div class="ign-alerte ign-refus" role="alert">${echapper(etat.erreur)}</div>
+    return `<div style="${STYLE_REFUS}" role="alert">${echapper(etat.erreur)}</div>
       <button type="button" class="btn btn-soft btn-full" data-act="relire">Réessayer</button>`;
   }
   if (etat.phase === 'import') return `<div class="range-info" role="status" aria-live="polite">${t} : import en cours… ${echapper(etat.avancement || '')}</div>`;
@@ -65,14 +71,17 @@ export function htmlApercu(etat) {
   }
   const c = etat.couche;
   const n = c ? c.nb_entites : 0;
-  const avert = [...((c && c.avertissements) || [])].map((a) => `<div class="ign-alerte" role="alert">${echapper(a)}</div>`).join('');
+  const sansDoublon = (a) => !(c && c.tronque && /^Résultat tronqué/.test(a));
+  const avert = [...((c && c.avertissements) || [])].filter(sansDoublon).map((a) => `<div style="${STYLE_ALERTE}" role="alert">${echapper(a)}</div>`).join('');
   const plan = etat.plan;
-  const refus = plan && !plan.ok ? `<div class="ign-alerte ign-refus" role="alert">${echapper(plan.erreur)}</div>` : '';
-  const bloque = !plan || !plan.ok || etat.lectureSeule;
+  const refus = plan && !plan.ok ? `<div style="${STYLE_REFUS}" role="alert">${echapper(plan.erreur)}</div>` : '';
+  const bloque = !plan || !plan.ok || etat.lectureSeule || etat.sansDocument;
   const lecture = etat.lectureSeule
-    ? '<div class="ign-alerte" role="alert">Ce document est ouvert en lecture seule : l’import dans Grist est désactivé.</div>' : '';
+    ? `<div style="${STYLE_ALERTE}" role="alert">Ce document est ouvert en lecture seule : l’import dans Grist est désactivé.</div>` : '';
+  const horsDoc = etat.sansDocument
+    ? `<div style="${STYLE_ALERTE}" role="alert">Atlas n’est pas ouvert dans un document Grist : aperçu seulement, l’import est désactivé.</div>` : '';
   return `<div class="range-info" role="status" aria-live="polite">${t} : <strong>${nombre(n)}</strong> entité${n > 1 ? 's' : ''} dans la zone visible.</div>
-    ${avert}${refus}${lecture}
+    ${avert}${refus}${lecture}${horsDoc}
     <label class="range-info" for="pg-nom">Nom de la couche</label>
     <input id="pg-nom" type="text" value="${echapper(etat.nom || '')}" style="width:100%;margin-bottom:8px">
     <button type="button" class="btn btn-primary btn-full" data-act="importer" ${bloque ? 'disabled' : ''}>Importer dans Grist</button>`;
@@ -198,6 +207,7 @@ export async function ouvrirImportPg(hote) {
     try {
       const info = await client.connexions();
       etat.connexions = info.connexions;
+      etat.limiteMax = Number.isInteger(info.limite_max) && info.limite_max > 0 ? info.limite_max : null;
       if (!info.connexions.length) { dire('Aucune connexion déclarée sur la passerelle.'); return; }
       etat.connexion = etat.connexion && info.connexions.some((c) => c.alias === etat.connexion) ? etat.connexion : info.connexions[0].alias;
       (info.avertissements || []).forEach((a) => hote.annoncer(a, 'warning'));
@@ -222,10 +232,18 @@ export async function ouvrirImportPg(hote) {
     dessinerDetail();
     try {
       await mettreAPlat(hote.carte);
-      etat.tablesGrist = await hote.tables();
+      try {
+        etat.tablesGrist = await hote.tables();
+        etat.sansDocument = false;
+      } catch {
+        // Hors d'un document Grist : l'aperçu reste possible, l'import non (il écrit dans le document).
+        etat.tablesGrist = [];
+        etat.sansDocument = true;
+      }
       etat.couche = await client.couche({
         connexion: etat.connexion, schema: etat.table.schema, table: etat.table.table,
         bbox: bboxDepuisBornes(hote.carte.getBounds()),
+        ...(etat.limiteMax ? { limite: etat.limiteMax } : {}),
       });
       etat.nom = etat.nom && etat.table ? etat.nom : etat.table.table;
       recalculerPlan();
