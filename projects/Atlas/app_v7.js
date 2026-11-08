@@ -12572,6 +12572,68 @@ async function entableLayer(layer) {
     return layer.geojson.features.length;
 }
 
+/**
+ * Importer une couche de pg-gateway : une table Grist (colonnes selon la convention géo), son inventaire (`Maquette_Layers`) et ses
+ * préférences (`Atlas_LayerPrefs`) en une seule transaction, puis les lignes par lots (`plan.lots`, voir `lib/pg-import.js`).
+ *
+ * Jamais `SceneManifest`. Si un lot échoue après la création de la table, on le dit (table, lignes écrites, lot, cause) et on
+ * PROPOSE de supprimer la table partielle (avec son inventaire et ses préférences) : jamais de suppression sans confirmation.
+ *
+ * @returns {Promise<{nb: number, tableId: string}>}
+ */
+async function importerCouchePg(plan) {
+    if (!canWrite(CONFIG.viewMode)) throw new Error('Document ouvert en lecture seule : import impossible.');
+    const { colonnesDuLot, messageImportPartiel } = await import('./lib/pg-import.js?v=20261108a');
+    const tables = await grist.docApi.listTables();
+    const layer = makeLayer(plan.titre, plan.geometrie, { type: 'FeatureCollection', features: [] }, null, null);
+    layer.kind = 'table';
+    layer.sourceTable = plan.tableId;
+    layer.geometryColumn = plan.geometryColumn;
+    layer.source = 'grist-table';
+    layer.controls = [];
+    const { actions, indices } = actionsNouvelleCouche({
+        tableId: plan.tableId, type: plan.geometrie, tables, colonnes: plan.colonnes,
+        inventaire: ligneInventaire(layer), prefs: lignePrefs(layer),
+        schemas: { maquette: TABLE_SCHEMAS.Maquette_Layers, prefs: ATLAS_PREFS_SCHEMA },
+    });
+    const r = await grist.docApi.applyUserActions(actions);
+    const cree = lireCreation(r?.retValues, indices, plan.tableId);
+    layer.gristId = cree.gristId;
+    layer._prefRowId = cree.prefRowId;
+    _maquetteTablePrete = true;
+    if (cree.renommee) {
+        layer.sourceTable = cree.tableId;
+        const suite = [];
+        if (cree.gristId) suite.push(['UpdateRecord', 'Maquette_Layers', cree.gristId, ligneInventaire(layer)]);
+        if (cree.prefRowId) suite.push(['UpdateRecord', 'Atlas_LayerPrefs', cree.prefRowId, lignePrefs(layer)]);
+        if (suite.length) await grist.docApi.applyUserActions(suite);
+    }
+    for (let k = 0; k < plan.lots.length; k++) {
+        const [debut, fin] = plan.lots[k];
+        try {
+            await grist.docApi.applyUserActions([['BulkAddRecord', layer.sourceTable, new Array(fin - debut).fill(null), colonnesDuLot(plan, plan.lots[k])]]);
+        } catch (e) {
+            const message = messageImportPartiel({ table: layer.sourceTable, importees: debut, total: plan.nbLignes, lot: k + 1, cause: e?.message || String(e) });
+            if (window.confirm(message + '\n\nSupprimer cette table incomplète (avec son inventaire et ses préférences) ?')) {
+                const retrait = [['RemoveTable', layer.sourceTable]];
+                if (cree.gristId) retrait.push(['RemoveRecord', 'Maquette_Layers', cree.gristId]);
+                if (cree.prefRowId) retrait.push(['RemoveRecord', 'Atlas_LayerPrefs', cree.prefRowId]);
+                try { await grist.docApi.applyUserActions(retrait); } catch (e2) { throw new Error(message + ' — suppression impossible aussi : ' + (e2?.message || e2)); }
+                throw new Error(message + ' — table supprimée sur votre demande.');
+            }
+            throw new Error(message + ' — table conservée en l’état.');
+        }
+    }
+    const cols = await grist.docApi.fetchTable(layer.sourceTable);
+    layer.geojson = tableToGeoJSON(cols, layer.geometryColumn);
+    indexFeatures(layer);
+    STATE.layers.splice(insertionIndex(STATE.layers, layer.geometryType), 0, layer);
+    addLayerToMap(layer);
+    updateRailBadge();
+    markDirty();
+    return { nb: plan.nbLignes, tableId: layer.sourceTable };
+}
+
 function finalizeNewLayer(layer) {
     // Empiler au sommet mettrait un bâti importé après un réseau par-dessus lui.
     // On insère sous les géométries plus fines : surfaces, puis lignes, puis points.
@@ -16067,6 +16129,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
+    openPG: () => import('./lib/vue-import-pg.js?v=20261108a').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     openIGN: () => import('./lib/vue-import-ign.js?v=20261010a').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {
