@@ -22,6 +22,7 @@ import { creerAccesPg } from './pg-acces.js?v=20261109a';
 import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261109a';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
+import { ouvrirEdition } from './vue-edition-pg.js?v=20261109c';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109a';
 import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109a';
@@ -115,6 +116,7 @@ export function htmlDirectes(liste) {
   return `<div class="section" style="margin-top:12px"><div class="range-info"><strong>Couches en direct</strong></div>${liste.map((d) => {
     const active = d.active !== false;
     const boutons = [
+      active ? bouton('data-modifier', d.id, 'Modifier', `Modifier les entités de ${d.libelle} dans PostgreSQL`, false) : '',
       active ? bouton('data-retirer', d.id, 'Retirer', `Retirer ${d.libelle} de la carte`, false) : bouton('data-activer', d.id, 'Activer', `Activer ${d.libelle}`, true),
       d.enregistree ? bouton('data-supprimer', d.id, 'Supprimer', `Supprimer l’enregistrement de ${d.libelle}`, false) : '',
     ].join('');
@@ -267,7 +269,7 @@ export async function ouvrirImportPg(hote) {
   function demarrerDirecte({ clientDirect, url, connexion, schema, table, couleur, gristId = null }) {
     const id = `${connexion}-${schema}-${table}`.replace(/[^A-Za-z0-9_-]/g, '_');
     if (directes.has(id)) { hote.annoncer('Cette table est déjà liée en direct.', 'warning'); return null; }
-    const entree = { couleur, url, gristId, libelle: `${schema}.${table}`, etat: 'lecture de la zone visible…', couche: null };
+    const entree = { couleur, url, gristId, client: clientDirect, libelle: `${schema}.${table}`, etat: 'lecture de la zone visible…', couche: null };
     entree.couche = creerCoucheDirecte({
       carte: hote.carte, client: clientDirect, id, couleur, params: { connexion, schema, table },
       surEtat: (e) => { entree.etat = libelleEtat(e); if (e.phase === 'ok' && e.tronque) hote.annoncer(`${entree.libelle} : résultat tronqué, zoomez.`, 'warning'); dessinerDirectes(); },
@@ -301,6 +303,27 @@ export async function ouvrirImportPg(hote) {
       clientDirect: creerClientPg({ url: l.url, acces }), url: l.url, connexion: l.connexion, schema: l.schema, table: l.table,
       couleur: l.color || COULEURS_DIRECT[0], gristId: l.gristId,
     });
+  }
+  // « Modifier » : la table doit être DÉCLARÉE modifiable par la passerelle ; sinon on le dit, on n'ouvre rien.
+  async function modifierDirecte(id) {
+    const d = directes.get(id);
+    if (!d) return;
+    const p = d.couche.params;
+    try {
+      const m = await d.client.commande('pg_gateway_tables_modifiables', { connexion: p.connexion });
+      const decl = (m.tables || []).find((t) => t.schema === p.schema && t.table === p.table);
+      if (!decl) { hote.annoncer(`« ${d.libelle} » n’est pas déclarée modifiable par la passerelle : elle reste en lecture seule.`, 'warning'); return; }
+      const meta = await d.client.commande('pg_gateway_table', { connexion: p.connexion, schema: p.schema, table: p.table });
+      const colGeo = (meta.colonnes || []).find((c) => c.nom === decl.geometrie);
+      const brut = colGeo && colGeo.geometrie && colGeo.geometrie.type ? String(colGeo.geometrie.type) : '';
+      const typeGeometrie = /^point$/i.test(brut) ? 'Point' : (brut ? 'Autre' : null);
+      ouvrirEdition({
+        hote, entree: { couche: d.couche, libelle: d.libelle, url: d.url, params: p }, decl, meta,
+        clientLecture: d.client, accesEcriture: accesEcriturePartage, typeGeometrie, retour: () => ouvrirImportPg(hote),
+      });
+    } catch (e) {
+      hote.annoncer(`Modification indisponible : ${texteErreur(e)}`, 'error');
+    }
   }
   function retirer(id) {
     const d = directes.get(id);
@@ -455,6 +478,8 @@ export async function ouvrirImportPg(hote) {
       lire();
       return;
     }
+    const mod = e.target.closest('[data-modifier]');
+    if (mod && racine.contains(mod)) { modifierDirecte(mod.dataset.modifier); return; }
     const ret = e.target.closest('[data-retirer]');
     if (ret && racine.contains(ret)) { retirer(ret.dataset.retirer); return; }
     const act2 = e.target.closest('[data-activer]');
