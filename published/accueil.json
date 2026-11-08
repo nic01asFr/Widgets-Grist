@@ -51,8 +51,8 @@
     {
       "nom": "mcp-server-grist",
       "role": "Donner l’API, sans interface",
-      "texte": "L’implémentation MCP de l’API Grist : lire des tables, en écrire, décrire un schéma. C’est la brique qu’on branche quand l’assistant doit manipuler la donnée sans qu’on ait besoin d’un atelier autour.",
-      "url": "https://github.com/nic01asFr/mcp-server-grist",
+      "texte": "Le serveur MCP de l’API Grist, avec une simple clé API et sur toute instance — y compris celles où le serveur MCP officiel de Grist n’est pas activé : lire et interroger les tables, en écrire, créer un schéma complet avec ses relations. C’est la brique qu’on branche quand l’assistant doit manipuler la donnée sans qu’on ait besoin d’un atelier autour.",
+      "url": "https://nic01asfr.github.io/mcp-server-grist/",
       "forum": "https://forum.grist.libre.sh/t/acceder-aux-donnees-grist-via-llm-mcp-server/1211"
     }
   ],
