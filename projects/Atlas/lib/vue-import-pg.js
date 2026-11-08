@@ -18,11 +18,14 @@
 
 import { echapper } from './html.js?v=20261010a';
 import { mettreAPlat } from './vue-import.js?v=20260911a';
-import { creerAccesPg } from './pg-acces.js?v=20261108a';
-import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261108a';
-import { planImportPg } from './pg-import.js?v=20261108a';
-import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261108a';
-import { origineLisible } from './pg-liaisons.js?v=20261108a';
+import { creerAccesPg } from './pg-acces.js?v=20261109a';
+import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261109a';
+import { planImportPg } from './pg-import.js?v=20261109a';
+import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
+import { origineLisible } from './pg-liaisons.js?v=20261109a';
+import { planCopie } from './pg-sync-copie.js?v=20261109a';
+import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109a';
+import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261109a';
 
 const CLE_URL = 'atlas.pg.url';
 const STYLE_ALERTE = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #d9a21b;background:rgba(217,162,27,.12);border-radius:4px';
@@ -33,14 +36,14 @@ const nombre = (n) => Number(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
 const TABLES_SYSTEME = new Set(['geometry_columns', 'geography_columns', 'spatial_ref_sys', 'raster_columns', 'raster_overviews']);
 
 /** Les tables géographiques d'abord : c'est ce qu'on vient chercher. */
-export function listerTables(schema, filtre = '') {
+export function listerTables(schema, filtre = '', modifiables = null) {
   const f = String(filtre || '').trim().toLowerCase();
   const sortie = [];
   for (const sc of (schema && schema.schemas) || []) {
     for (const t of sc.tables) {
       if (TABLES_SYSTEME.has(t.nom) && !(t.geometries || []).length) continue;
       if (f && !`${sc.nom}.${t.nom}`.toLowerCase().includes(f)) continue;
-      sortie.push({ schema: sc.nom, table: t.nom, geo: (t.geometries || []).length > 0, lignes: t.lignes_estimees, commentaire: t.commentaire });
+      sortie.push({ schema: sc.nom, table: t.nom, geo: (t.geometries || []).length > 0, modifiable: !!modifiables && modifiables.has(`${sc.nom}.${t.nom}`), lignes: t.lignes_estimees, commentaire: t.commentaire });
     }
   }
   return sortie.sort((a, b) => (b.geo - a.geo) || `${a.schema}.${a.table}`.localeCompare(`${b.schema}.${b.table}`));
@@ -51,10 +54,10 @@ export function htmlTables(tables, choisie) {
   if (!tables.length) return '<div class="hint">Aucune table à afficher.</div>';
   return `<div class="model-grid pg-tables" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">${tables.map((t) => {
     const actif = choisie && choisie.schema === t.schema && choisie.table === t.table;
-    const titre = [t.geo ? 'géographique' : 'sans géométrie', t.lignes != null ? `~${nombre(t.lignes)} lignes` : null, t.commentaire].filter(Boolean).join(' — ');
+    const titre = [t.geo ? 'géographique' : 'sans géométrie', t.modifiable ? 'modifiable' : null, t.lignes != null ? `~${nombre(t.lignes)} lignes` : null, t.commentaire].filter(Boolean).join(' — ');
     return `<button type="button" class="model-card${actif ? ' active' : ''}" data-table="${echapper(t.schema)}.${echapper(t.table)}"
-      aria-pressed="${actif ? 'true' : 'false'}" title="${echapper(titre)}" ${t.geo ? '' : 'disabled'}>
-      <div class="mn">${echapper(t.table)}</div><div class="range-info">${echapper(t.schema)}${t.geo ? '' : ' · sans géométrie'}</div></button>`;
+      aria-pressed="${actif ? 'true' : 'false'}" title="${echapper(titre)}" ${t.geo || t.modifiable ? '' : 'disabled'}>
+      <div class="mn">${echapper(t.table)}</div><div class="range-info">${echapper(t.schema)}${t.geo ? '' : ' · sans géométrie'}${t.modifiable ? ' · modifiable' : ''}</div></button>`;
   }).join('')}</div>`;
 }
 
@@ -71,6 +74,12 @@ export function htmlApercu(etat) {
   if (etat.phase === 'termine') {
     return `<div class="range-info" role="status"><strong>${nombre(etat.resultat.nb)} entité${etat.resultat.nb > 1 ? 's' : ''} importée${etat.resultat.nb > 1 ? 's' : ''}</strong>
       dans la table « ${echapper(etat.resultat.tableId)} ».</div>`;
+  }
+  const syncBloc = etat.modifiable ? `<div class="section" style="margin-top:12px"><div class="range-info"><strong>Copie synchronisable</strong> : toute la table, que la passerelle déclare modifiable. Elle se compare ensuite avec PostgreSQL.</div>
+    <button type="button" class="btn btn-soft btn-full" data-act="importer-sync" ${etat.lectureSeule || etat.sansDocument ? 'disabled' : ''}>Importer pour synchroniser</button></div>` : '';
+  if (!etat.couche && etat.phase === 'pret') {
+    const lecture0 = etat.lectureSeule ? `<div style="${STYLE_ALERTE}" role="alert">Ce document est ouvert en lecture seule : l’import dans Grist est désactivé.</div>` : '';
+    return `<div class="range-info" role="status">${t} : table sans géométrie, elle ne se place pas sur la carte.</div>${lecture0}${syncBloc}`;
   }
   const c = etat.couche;
   const n = c ? c.nb_entites : 0;
@@ -89,7 +98,8 @@ export function htmlApercu(etat) {
     <input id="pg-nom" type="text" value="${echapper(etat.nom || '')}" style="width:100%;margin-bottom:8px">
     <button type="button" class="btn btn-primary btn-full" data-act="importer" ${bloque ? 'disabled' : ''}>Importer dans Grist</button>
     <button type="button" class="btn btn-soft btn-full" data-act="direct" style="margin-top:6px" title="La zone visible est relue à chaque déplacement de la carte ; rien n'est écrit dans le document.">Lier en direct (session)</button>
-    ${etat.peutEnregistrer ? '<button type="button" class="btn btn-soft btn-full" data-act="direct-enregistre" style="margin-top:6px" title="Comme ci-dessus, et la liaison (adresse, table ; jamais le jeton) est enregistrée dans le document.">Lier et enregistrer dans le document</button>' : ''}`;
+    ${etat.peutEnregistrer ? '<button type="button" class="btn btn-soft btn-full" data-act="direct-enregistre" style="margin-top:6px" title="Comme ci-dessus, et la liaison (adresse, table ; jamais le jeton) est enregistrée dans le document.">Lier et enregistrer dans le document</button>' : ''}
+    ${syncBloc}`;
 }
 
 const COULEURS_DIRECT = ['#d62728', '#1f77b4', '#2ca02c', '#9467bd', '#ff7f0e', '#17becf'];
@@ -119,7 +129,7 @@ export function htmlDirectes(liste) {
 }
 
 /** La boîte de saisie du jeton, rendue dans `document`. Rend le jeton, ou null si annulée. */
-export function demanderJeton(doc, { origine, refuse }) {
+export function demanderJeton(doc, { origine, refuse, ecriture = false }) {
   return new Promise((resolve) => {
     const fond = doc.createElement('div');
     fond.setAttribute('role', 'dialog');
@@ -127,11 +137,13 @@ export function demanderJeton(doc, { origine, refuse }) {
     fond.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45)';
     const boite = doc.createElement('div');
     boite.style.cssText = 'background:var(--bg,#fff);color:var(--text,#222);padding:16px;border-radius:8px;max-width:340px;width:90%';
-    const titre = doc.createElement('strong'); titre.textContent = 'Passerelle PostgreSQL';
+    const titre = doc.createElement('strong'); titre.textContent = ecriture ? 'Écriture dans PostgreSQL' : 'Passerelle PostgreSQL';
     const texte = doc.createElement('div');
-    texte.textContent = (refuse ? 'Jeton refusé. ' : '') + `La passerelle ${origine} demande un jeton.`;
+    texte.textContent = (refuse ? 'Jeton refusé. ' : '') + (ecriture
+      ? `La passerelle ${origine} demande votre jeton d’ÉCRITURE : celui qui vous identifie, c’est votre nom que le journal de la base inscrira.`
+      : `La passerelle ${origine} demande un jeton.`);
     const champ = doc.createElement('input'); champ.type = 'password'; champ.autocomplete = 'off'; champ.style.cssText = 'width:100%;margin:8px 0';
-    champ.setAttribute('aria-label', 'Jeton de la passerelle');
+    champ.setAttribute('aria-label', ecriture ? 'Jeton d’écriture' : 'Jeton de la passerelle');
     const note = doc.createElement('div'); note.textContent = 'Gardé dans cette page seulement, jamais enregistré.'; note.style.cssText = 'font-size:11.5px;opacity:.7;margin-bottom:8px';
     const barre = doc.createElement('div'); barre.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
     const annuler = doc.createElement('button'); annuler.type = 'button'; annuler.className = 'btn btn-soft'; annuler.textContent = 'Annuler';
@@ -159,6 +171,7 @@ let nettoyageCourant = null;
 const directes = new Map(); // id -> { couche, couleur, libelle, etat }
 // Le jeton survit à la fermeture du panneau, pas à celle de la page.
 let accesPartage = null;
+let accesEcriturePartage = null;
 
 /**
  * @param {object} hote
@@ -175,9 +188,10 @@ export async function ouvrirImportPg(hote) {
   if (nettoyageCourant) nettoyageCourant();
   const doc = hote.corps.ownerDocument;
   if (!accesPartage) accesPartage = creerAccesPg({ demander: (q) => demanderJeton(doc, q) });
+  if (!accesEcriturePartage) accesEcriturePartage = creerAccesPg({ demander: (q) => demanderJeton(doc, { ...q, ecriture: true }) });
   const acces = accesPartage;
 
-  const etat = { url: lireUrl(), connexions: [], connexion: '', schema: null, filtre: '', table: null, couche: null, plan: null, nom: '', phase: 'repos', erreur: '', lectureSeule: !!hote.lectureSeule(), peutEnregistrer: false };
+  const etat = { url: lireUrl(), connexions: [], connexion: '', schema: null, filtre: '', table: null, couche: null, plan: null, nom: '', phase: 'repos', erreur: '', lectureSeule: !!hote.lectureSeule(), peutEnregistrer: false, modifiables: null, modifiable: null, copies: [] };
   let client = null;
   let racine = null;
   const vivant = () => !!racine && racine.isConnected && hote.corps.contains(racine);
@@ -192,6 +206,7 @@ export async function ouvrirImportPg(hote) {
       <div id="pg-liste"></div>
       <div id="pg-detail" aria-live="polite"></div>
       <div id="pg-directes"></div>
+      <div id="pg-copies"></div>
       <div class="section"><button type="button" class="btn btn-soft btn-full" data-act="retour">← Retour</button></div>
     </div>`;
     racine = hote.corps.querySelector('#pg-racine');
@@ -206,7 +221,7 @@ export async function ouvrirImportPg(hote) {
   function dessinerListe() {
     const zone = racine && racine.querySelector('#pg-liste');
     if (!zone) return;
-    const tables = listerTables(etat.schema, etat.filtre);
+    const tables = listerTables(etat.schema, etat.filtre, etat.modifiables);
     zone.innerHTML = etat.schema
       ? `<div class="section"><select id="pg-connexion" aria-label="Connexion">${etat.connexions.map((c) => `<option value="${echapper(c.alias)}"${c.alias === etat.connexion ? ' selected' : ''}>${echapper(c.libelle || c.alias)}</option>`).join('')}</select>
         <input id="pg-filtre" type="search" value="${echapper(etat.filtre)}" placeholder="Filtrer les tables" aria-label="Filtrer les tables" style="width:100%;margin:6px 0">
@@ -217,6 +232,25 @@ export async function ouvrirImportPg(hote) {
   function dessinerDetail() {
     const zone = racine && racine.querySelector('#pg-detail');
     if (zone) zone.innerHTML = htmlApercu(etat);
+  }
+  function dessinerCopies() {
+    const zone = racine && racine.querySelector('#pg-copies');
+    if (zone) zone.innerHTML = htmlCopies(etat.copies);
+  }
+  async function chargerCopies() {
+    // Rien n'est contacté : on lit seulement la configuration que le document garde (Atlas_PgSyncCopies).
+    try { etat.copies = hote.docApi ? await lireCopies(hote.docApi()) : []; } catch { etat.copies = []; }
+    dessinerCopies();
+  }
+  function ouvrirCopie(rowId) {
+    const copie = etat.copies.find((c) => String(c.rowId) === String(rowId));
+    if (!copie) return;
+    ouvrirSynchro({
+      hote, copie, accesEcriture: accesEcriturePartage, detacher: detacherCopie,
+      // La lecture n'a besoin que du jeton de lecture, pour l'origine de CETTE copie (affichée dans la boîte de saisie).
+      clientLecture: creerClientPg({ url: copie.config.url, acces }),
+      retour: () => ouvrirImportPg(hote),
+    });
   }
   function liste() {
     const items = [...directes.entries()].map(([id, d]) => ({ id, libelle: d.libelle, couleur: d.couleur, etat: d.etat, active: true, enregistree: d.gristId != null, origine: d.url ? origineLisible(d.url) : '' }));
@@ -327,6 +361,10 @@ export async function ouvrirImportPg(hote) {
       etat.schema = await client.schema(etat.connexion, true);
       dire(`${etat.schema.libelle} — ${etat.schema.nb_tables} table(s)${etat.schema.postgis ? ` — PostGIS ${etat.schema.postgis}` : ''}`);
       (etat.schema.avertissements || []).forEach((a) => hote.annoncer(a, 'warning'));
+      try {
+        const m = await client.commande('pg_gateway_tables_modifiables', { connexion: etat.connexion });
+        etat.modifiables = new Map(m.tables.map((t) => [`${t.schema}.${t.table}`, t]));
+      } catch { etat.modifiables = null; } // écriture non configurée sur cette connexion : pas de copie synchronisable
       dessinerListe();
       dessinerDetail();
     } catch (e) { dire(`Schéma illisible : ${texteErreur(e)}`); }
@@ -376,13 +414,44 @@ export async function ouvrirImportPg(hote) {
     }
   }
 
+  async function importerSync() {
+    if (!etat.table || !etat.modifiable || etat.lectureSeule || etat.sansDocument || !hote.importerCopie) return;
+    etat.phase = 'import';
+    etat.avancement = 'lecture de la table entière…';
+    dessinerDetail();
+    try {
+      const t = etat.table;
+      const cible = { connexion: etat.connexion, schema: t.schema, table: t.table };
+      const lecture = await client.commande('pg_gateway_lire', { ...cible, limite: etat.limiteMax || 10000 });
+      const meta = await client.commande('pg_gateway_table', cible);
+      const plan = planCopie({ lecture, table: meta, decl: etat.modifiable, url: etat.url, connexion: etat.connexion, nom: etat.nom || t.table, tables: await hote.tables() });
+      if (!plan.ok) throw new Error(plan.erreur);
+      etat.avancement = `${nombre(plan.nbLignes)} lignes…`;
+      dessinerDetail();
+      const r = await hote.importerCopie(plan);
+      etat.resultat = r;
+      etat.phase = 'termine';
+      hote.annoncer(`${nombre(r.nb)} lignes copiées : la synchronisation est possible depuis « Copies synchronisables ».`, 'success');
+      await chargerCopies();
+      if (vivant()) dessinerDetail();
+    } catch (e) {
+      await surErreur(e);
+      hote.annoncer(texteErreur(e), 'error');
+    }
+  }
+
   function surClic(e) {
+    const sy = e.target.closest('[data-sync]');
+    if (sy && racine.contains(sy)) { ouvrirCopie(sy.dataset.sync); return; }
     const bt = e.target.closest('[data-table]');
     if (bt && racine.contains(bt)) {
       const [schema, ...reste] = bt.dataset.table.split('.');
       etat.table = { schema, table: reste.join('.') };
       etat.nom = etat.table.table;
+      etat.modifiable = etat.modifiables ? (etat.modifiables.get(`${schema}.${etat.table.table}`) || null) : null;
+      const info = listerTables(etat.schema, '', etat.modifiables).find((t) => t.schema === schema && t.table === etat.table.table);
       dessinerListe();
+      if (info && !info.geo) { etat.couche = null; etat.plan = null; etat.phase = 'pret'; dessinerDetail(); return; }
       lire();
       return;
     }
@@ -398,6 +467,7 @@ export async function ouvrirImportPg(hote) {
     if (a === 'connecter') connecter();
     else if (a === 'relire') lire();
     else if (a === 'importer') importer();
+    else if (a === 'importer-sync') importerSync();
     else if (a === 'direct') lier();
     else if (a === 'direct-enregistre') lier({ enregistrer: true });
     else if (a === 'retour') hote.retour();
@@ -405,6 +475,7 @@ export async function ouvrirImportPg(hote) {
 
   monter();
   dessinerDirectes();
+  chargerCopies();
   // Connexion À LA DEMANDE : ouvrir le panneau ne contacte pas la passerelle (et ne demande donc pas le jeton). On peut ainsi
   // activer, retirer ou supprimer une liaison enregistrée sans se connecter.
   dire(etat.url ? 'Cliquez sur « Se connecter » pour lire le catalogue de la passerelle.' : '');

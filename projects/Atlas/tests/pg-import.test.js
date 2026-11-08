@@ -206,7 +206,9 @@ describe('le jeton n’est écrit nulle part', () => {
   it('ni stockage du navigateur (hors l’adresse), ni document Grist, ni adresse', () => {
     for (const [f, s] of sources) {
       assert.doesNotMatch(s, /sessionStorage|indexedDB|document\.cookie/, f);
-      assert.doesNotMatch(s, /applyUserActions|docApi|setOption/, f);
+      assert.doesNotMatch(s, /applyUserActions|setOption/, f);
+      // `docApi` n'est qu'un accès en lecture aux copies (lireCopies) : seule la vue le reçoit de l'application, aucun autre module.
+      if (f !== 'vue-import-pg.js') assert.doesNotMatch(s, /docApi/, f);
       assert.doesNotMatch(s, /[?&]jeton=|[?&]token=/i, f);
     }
     const vue = lire('vue-import-pg.js');

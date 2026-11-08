@@ -157,7 +157,7 @@ import {
   isLinkedTableLayer,
   formatGeometrie,
 } from './lib/geo-tables.js?v=20261002c';
-import { lireLiaison, ligneLiaison } from './lib/pg-liaisons.js?v=20261108a';
+import { lireLiaison, ligneLiaison } from './lib/pg-liaisons.js?v=20261109a';
 import {
   layerFieldNames,
   controlFieldType,
@@ -12584,7 +12584,7 @@ async function entableLayer(layer) {
  */
 async function importerCouchePg(plan) {
     if (!canWrite(CONFIG.viewMode)) throw new Error('Document ouvert en lecture seule : import impossible.');
-    const { colonnesDuLot, messageImportPartiel } = await import('./lib/pg-import.js?v=20261108a');
+    const { colonnesDuLot, messageImportPartiel } = await import('./lib/pg-import.js?v=20261109a');
     const tables = await grist.docApi.listTables();
     const layer = makeLayer(plan.titre, plan.geometrie, { type: 'FeatureCollection', features: [] }, null, null);
     layer.kind = 'table';
@@ -12625,6 +12625,11 @@ async function importerCouchePg(plan) {
             throw new Error(message + ' — table conservée en l’état.');
         }
     }
+    if (plan.copie) {
+        // Copie synchronisable : sa configuration (Atlas_PgSyncCopies) et ce qu'on a vu de chaque ligne (Atlas_PgSync).
+        const { enregistrerCopie } = await import('./lib/pg-sync-session.js?v=20261109a');
+        await enregistrerCopie({ docApi: grist.docApi, copie: plan.copie, tableId: layer.sourceTable });
+    }
     const cols = await grist.docApi.fetchTable(layer.sourceTable);
     layer.geojson = tableToGeoJSON(cols, layer.geometryColumn);
     indexFeatures(layer);
@@ -12633,6 +12638,34 @@ async function importerCouchePg(plan) {
     updateRailBadge();
     markDirty();
     return { nb: plan.nbLignes, tableId: layer.sourceTable };
+}
+
+/**
+ * Importer une copie synchronisable : une couche si la table est géographique, une simple table Grist sinon.
+ * Dans les deux cas, sa configuration et son « vu » sont enregistrés (`lib/pg-sync-session.js`).
+ */
+async function importerCopiePg(plan) {
+    if (plan.geometrie) return importerCouchePg(plan);
+    if (!canWrite(CONFIG.viewMode)) throw new Error('Document ouvert en lecture seule : import impossible.');
+    const { colonnesDuLot, messageImportPartiel } = await import('./lib/pg-import.js?v=20261109a');
+    const { enregistrerCopie } = await import('./lib/pg-sync-session.js?v=20261109a');
+    const res = await grist.docApi.applyUserActions([['AddTable', plan.tableId, plan.colonnes.map(({ id, type, label }) => ({ id, type, label }))]]);
+    const tableId = res?.retValues?.[0]?.table_id || plan.tableId;
+    for (let k = 0; k < plan.lots.length; k++) {
+        const [debut, fin] = plan.lots[k];
+        try {
+            await grist.docApi.applyUserActions([['BulkAddRecord', tableId, new Array(fin - debut).fill(null), colonnesDuLot(plan, plan.lots[k])]]);
+        } catch (e) {
+            const message = messageImportPartiel({ table: tableId, importees: debut, total: plan.nbLignes, lot: k + 1, cause: e?.message || String(e) });
+            if (window.confirm(message + '\n\nSupprimer cette table incomplète ?')) {
+                try { await grist.docApi.applyUserActions([['RemoveTable', tableId]]); } catch (e2) { throw new Error(message + ' — suppression impossible aussi : ' + (e2?.message || e2)); }
+                throw new Error(message + ' — table supprimée sur votre demande.');
+            }
+            throw new Error(message + ' — table conservée en l’état.');
+        }
+    }
+    await enregistrerCopie({ docApi: grist.docApi, copie: plan.copie, tableId });
+    return { nb: plan.nbLignes, tableId };
 }
 
 /**
@@ -16163,7 +16196,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261108a').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261109a').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     openIGN: () => import('./lib/vue-import-ign.js?v=20261010a').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {

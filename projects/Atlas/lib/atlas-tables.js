@@ -19,6 +19,9 @@ export const TABLES_CONFIGURATION = Object.freeze([
   'Atlas_LayerPrefs',
   'Atlas_ScenePrefs',
   'Atlas_Story',
+  // Synchronisation PostgreSQL (lib/pg-sync-session.js) : la configuration de chaque copie, et ce qu'on a vu à la dernière synchronisation.
+  'Atlas_PgSyncCopies',
+  'Atlas_PgSync',
 ]);
 
 /** L'inventaire des couches d'une scène sans manifeste. */

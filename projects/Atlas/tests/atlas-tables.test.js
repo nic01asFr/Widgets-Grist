@@ -7,6 +7,7 @@ import { GEO_SKIP_TABLES } from '../lib/geo-tables.js';
 
 test('une table d’Atlas se reconnaît, casse ignorée, comme Grist', () => {
   assert.ok(estTableAtlas('Atlas_Story'));
+  assert.ok(estTableAtlas('Atlas_PgSync') && estTableAtlas('Atlas_PgSyncCopies'), 'la mémoire de synchronisation n’est jamais une couche');
   assert.ok(estTableAtlas('atlas_layerprefs'));
   assert.ok(estTableAtlas('Maquette_Layers'));
   assert.ok(estTableAtlas('Atlas_Propositions'), 'un nom gardé d’avance compte déjà');

@@ -14,7 +14,7 @@
  * Module pur : ni Grist, ni DOM, ni réseau.
  */
 
-import { adresseAdmisePg } from './pg-acces.js?v=20261108a';
+import { adresseAdmisePg } from './pg-acces.js?v=20261109a';
 
 export const CLE_LIAISON = '_pg';
 

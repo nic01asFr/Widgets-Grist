@@ -121,7 +121,7 @@ function typeDepuisValeurs(valeurs) {
  * @returns {{ok:false, erreur:string} | {ok:true, tableId:string, titre:string, geometrie:string, colonnes:object[], valeurs:object,
  *   nbLignes:number, lots:number[][], geometryColumn:(string|{lat:string,lng:string}), avertissements:string[]}}
  */
-export function planImportPg({ couche, nom, tables = [] }) {
+export function planImportPg({ couche, nom, tables = [], sansGeometrie = false }) {
   const features = Array.isArray(couche && couche.features) ? couche.features : [];
   if (!features.length) return { ok: false, erreur: 'Aucune entité dans cette zone : rien à importer.' };
   if (couche.tronque) {
@@ -135,12 +135,14 @@ export function planImportPg({ couche, nom, tables = [] }) {
     const detail = Object.entries(compte).map(([t, n]) => `${n} ${t}`).join(', ');
     return { ok: false, erreur: `Géométries de types mêlés (${detail}) : une couche Atlas est d'un seul type. Importez-les séparément.` };
   }
-  if (!type) return { ok: false, erreur: 'Aucune entité n’a de géométrie : rien à placer sur la carte.' };
+  // `sansGeometrie` : une table sans colonne géométrique (copie synchronisable d'une table non cartographique) est permise ;
+  // elle n'est alors qu'une table Grist, jamais une couche.
+  if (!type && !sansGeometrie) return { ok: false, erreur: 'Aucune entité n’a de géométrie : rien à placer sur la carte.' };
   const nomDeTable = planNomDeTable(nom, tables);
   if (!nomDeTable.ok) return { ok: false, erreur: nomDeTable.erreur };
 
   const estPoint = type === 'Point';
-  const pris = new Set((estPoint ? RESERVES_POINT : RESERVES_AUTRE).map((s) => s.toLowerCase()));
+  const pris = new Set((!type ? [] : estPoint ? RESERVES_POINT : RESERVES_AUTRE).map((s) => s.toLowerCase()));
   const typesPasserelle = new Map((couche.colonnes || []).map((c) => [c.nom, c.type_grist]));
   const noms = [...typesPasserelle.keys()];
   for (const f of features) for (const k of Object.keys(f.properties || {})) if (!typesPasserelle.has(k) && !noms.includes(k)) noms.push(k);
@@ -155,8 +157,10 @@ export function planImportPg({ couche, nom, tables = [] }) {
     valeurs[id] = brutes.map((v) => convertir(v, typeGrist));
   }
 
-  let geometryColumn;
-  if (estPoint) {
+  let geometryColumn = null;
+  if (!type) {
+    // table sans géométrie : rien à ajouter
+  } else if (estPoint) {
     const pts = features.map((f) => centre(f.geometry));
     colonnes.push({ id: 'latitude', type: 'Numeric', label: 'Latitude' }, { id: 'longitude', type: 'Numeric', label: 'Longitude' });
     valeurs.latitude = pts.map((p) => (p ? p.lat : null));
@@ -175,7 +179,7 @@ export function planImportPg({ couche, nom, tables = [] }) {
     geometryColumn = 'geometry_json';
   }
 
-  const taille = TAILLE_LOT_GEOMETRIE; // la table porte toujours une géométrie ici
+  const taille = type ? TAILLE_LOT_GEOMETRIE : TAILLE_LOT_SANS_GEOMETRIE;
   const lots = [];
   for (let d = 0; d < features.length; d += taille) lots.push([d, Math.min(features.length, d + taille)]);
 
