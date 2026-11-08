@@ -25,7 +25,7 @@ import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109a';
 import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109a';
-import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261109a';
+import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261109b';
 
 const CLE_URL = 'atlas.pg.url';
 const STYLE_ALERTE = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #d9a21b;background:rgba(217,162,27,.12);border-radius:4px';

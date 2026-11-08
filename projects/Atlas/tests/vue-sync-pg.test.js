@@ -77,3 +77,16 @@ describe('vue-sync-pg : htmlSynchro', () => {
     assert.match(h, /apparaissent plusieurs fois/);
   });
 });
+
+describe('vue-sync-pg : correctifs de l’essai réel', () => {
+  it('une simulation interrompue ne montre pas de compteurs à zéro', () => {
+    const h = htmlRapport({ ok: 0, conflits: 0, refus: 0, interrompu: 'jeton refusé' }, true);
+    assert.match(h, /Simulation interrompue/);
+    assert.doesNotMatch(h, /0 envoi/);
+    assert.match(h, /Interrompu : jeton refusé/);
+  });
+
+  it('la liste des copies passe à la ligne au lieu de déborder', () => {
+    assert.match(htmlCopies([copie]), /flex-wrap:wrap/);
+  });
+});

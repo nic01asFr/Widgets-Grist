@@ -31,8 +31,8 @@ const LIGNES_MAX = 30;
 export function htmlCopies(copies) {
   if (!copies.length) return '';
   return `<div class="section" style="margin-top:12px"><div class="range-info"><strong>Copies synchronisables</strong></div>${copies.map((c) => `
-    <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0">
-      <span style="font-size:12.5px">${echapper(c.tableGrist)}<br>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0">
+      <span style="font-size:12.5px;min-width:0;flex:1 1 140px;overflow-wrap:anywhere">${echapper(c.tableGrist)}<br>
         <span class="range-info">${echapper(c.config.schema)}.${echapper(c.config.table)} · ${echapper(origineLisible(c.config.url))}</span></span>
       <button type="button" class="btn" data-sync="${echapper(String(c.rowId))}" aria-label="Synchroniser ${echapper(c.tableGrist)}">Synchroniser</button>
     </div>`).join('')}</div>`;
@@ -80,7 +80,9 @@ export function htmlConflits(conflits, choix = {}) {
 export function htmlRapport(r, simulation = false) {
   const p = r.poussees || r;
   const lignes = [];
-  if (simulation) lignes.push(`Simulation (rien n'a été conservé) : ${nombre(p.ok)} envoi${pluriel(p.ok, '', 's')} passerai${pluriel(p.ok, 't', 'ent')}, ${nombre(p.conflits)} conflit${pluriel(p.conflits, '', 's')}, ${nombre(p.refus)} refus.`);
+  // Une simulation interrompue n'a rien vérifié : ses compteurs à zéro se liraient comme « tout va bien ».
+  if (simulation && r.interrompu) lignes.push('Simulation interrompue : rien n’a été vérifié.');
+  else if (simulation) lignes.push(`Simulation (rien n'a été conservé) : ${nombre(p.ok)} envoi${pluriel(p.ok, '', 's')} passerai${pluriel(p.ok, 't', 'ent')}, ${nombre(p.conflits)} conflit${pluriel(p.conflits, '', 's')}, ${nombre(p.refus)} refus.`);
   else {
     lignes.push(`Envoyé vers PostgreSQL : ${nombre(p.ok)} ligne${pluriel(p.ok, '', 's')}${p.conflits ? `, ${nombre(p.conflits)} conflit${pluriel(p.conflits, '', 's')}` : ''}${p.refus ? `, ${nombre(p.refus)} refusée${pluriel(p.refus, '', 's')}` : ''}.`);
     const t = r.tirees || { inserees: 0, modifiees: 0, supprimees: 0 };
