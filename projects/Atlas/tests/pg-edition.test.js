@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   champsEditables, texteDeValeur, lireSaisie, valeursModifiees, operationModifier, operationInserer, operationEtat,
-  pointGeoJSON, droitsFiche, insertionPossible, interpreter, cleDeFeature,
+  pointGeoJSON, droitsFiche, insertionPossible, interpreter, cleDeFeature, lireCle,
 } from '../lib/pg-edition.js';
 
 const decl = { schema: 'public', table: 'interventions', cle: ['id'], colonnes: ['type', 'cout', 'hauteur_mesuree', 'date_intervention', 'geom'], geometrie: 'geom', suppression: 'etat:actif', operations: ['inserer', 'modifier', 'desactiver', 'reactiver'] };
@@ -137,5 +137,17 @@ describe('pg-edition : clé d’une entité de la carte', () => {
     assert.equal(cleDeFeature(decl, { properties: { type: 'x' } }), null);
     assert.equal(cleDeFeature(decl, { properties: { id: null } }), null);
     assert.equal(cleDeFeature(decl, null), null);
+  });
+});
+
+describe('pg-edition : clé tapée à la main', () => {
+  const tbl = { colonnes: [{ nom: 'id', type_grist: 'Int' }] };
+  it('lit la clé selon son type', () => {
+    assert.deepEqual(lireCle(decl, tbl, { id: ' 7 ' }), { ok: true, cle: { id: 7 } });
+  });
+  it('refuse une clé vide ou illisible, avec sa raison', () => {
+    assert.equal(lireCle(decl, tbl, { id: '' }).ok, false);
+    assert.match(lireCle(decl, tbl, { id: 'x' }).erreur, /id : un nombre entier est attendu/);
+    assert.equal(lireCle(decl, tbl, {}).ok, false);
   });
 });

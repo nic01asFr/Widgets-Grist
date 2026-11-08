@@ -20,7 +20,7 @@ import { echapper } from './html.js?v=20261010a';
 import { creerClientPg, texteErreur } from './pg-passerelle.js?v=20261109a';
 import {
   champsEditables, texteDeValeur, valeursModifiees, operationModifier, operationInserer, operationEtat, pointGeoJSON,
-  droitsFiche, insertionPossible, interpreter, cleDeFeature,
+  droitsFiche, insertionPossible, interpreter, cleDeFeature, lireCle,
 } from './pg-edition.js?v=20261109a';
 
 const STYLE_REFUS = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #c0392b;background:rgba(192,57,43,.1);border-radius:4px';
@@ -74,7 +74,12 @@ export function htmlEdition(e) {
 
   if (e.phase === 'erreur') return `${tete}${ro}<div style="${STYLE_REFUS}" role="alert">${echapper(e.erreur || 'Erreur')}</div>${nouvelle}${bas}`;
   if (e.phase === 'choix') {
-    return `${tete}${ro}<div class="range-info" style="margin:8px 0" role="status">Touchez une entité de la couche sur la carte pour la modifier.</div>${resultat}${nouvelle}${bas}`;
+    // Sans la souris : on tape la clé de la ligne (les mêmes colonnes que la clé de la table).
+    const parCle = `<div style="margin:8px 0"><div class="range-info">Ou ouvrez une ligne par sa clé :</div>
+      ${e.decl.cle.map((c) => `<label class="range-info" for="pg-cle-${echapper(c)}">${echapper(c)}</label>
+      <input id="pg-cle-${echapper(c)}" data-cle="${echapper(c)}" type="text" value="${echapper(((e.saisiesCle || {})[c]) == null ? '' : e.saisiesCle[c])}" style="width:100%;margin-bottom:6px">`).join('')}
+      <button type="button" class="btn btn-soft btn-full" data-act="ouvrir-cle" ${e.occupe ? 'disabled' : ''}>Ouvrir cette ligne</button></div>`;
+    return `${tete}${ro}<div class="range-info" style="margin:8px 0" role="status">Touchez une entité de la couche sur la carte pour la modifier.</div>${parCle}${resultat}${nouvelle}${bas}`;
   }
   const champs = (e.champs || []).map((c) => htmlChamp(c, (e.erreurs || {})[c.nom], e.lectureSeule || !droits.modifier && e.phase === 'ligne', (e.saisies || {})[c.nom])).join('');
   const actif = e.ligne && e.ligne.actif !== false;
@@ -132,6 +137,7 @@ export function ouvrirEdition({ hote, entree, decl, meta, clientLecture, accesEc
     hote.corps.innerHTML = '<div id="pg-edition"></div>';
     racine = hote.corps.querySelector('#pg-edition');
     racine.addEventListener('click', surClic);
+    racine.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && ev.target && ev.target.dataset && ev.target.dataset.cle) { ev.preventDefault(); ouvrirParCle(); } });
     dessiner();
   }
 
@@ -249,6 +255,16 @@ export function ouvrirEdition({ hote, entree, decl, meta, clientLecture, accesEc
     dessiner();
   }
 
+  function ouvrirParCle() {
+    if (etat.occupe) return;
+    const saisiesCle = {};
+    for (const el of racine.querySelectorAll('[data-cle]')) saisiesCle[el.dataset.cle] = el.value;
+    etat.saisiesCle = saisiesCle;
+    const lu = lireCle(decl, meta, saisiesCle);
+    if (!lu.ok) { etat.resultat = { ok: false, message: `Clé non lue : ${lu.erreur}.` }; dessiner(); return; }
+    ouvrirLigne(lu.cle);
+  }
+
   function fermer() { nettoyer(); retour(); }
 
   function surClic(e) {
@@ -260,6 +276,7 @@ export function ouvrirEdition({ hote, entree, decl, meta, clientLecture, accesEc
     else if (a === 'nouvelle') nouvelle();
     else if (a === 'desactiver' || a === 'reactiver' || a === 'supprimer') changerEtat(a);
     else if (a === 'relire' && etat.ligne) ouvrirLigne(etat.ligne.cle);
+    else if (a === 'ouvrir-cle') ouvrirParCle();
   }
 
   monter();

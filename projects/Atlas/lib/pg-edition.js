@@ -148,3 +148,24 @@ export function cleDeFeature(decl, feature) {
   }
   return cle;
 }
+
+/**
+ * La clé tapée à la main (choisir une entité sans la souris). Chaque colonne de la clé est lue selon son type ; une clé
+ * incomplète ou illisible est refusée avec sa raison.
+ * @param {object} decl
+ * @param {{colonnes?: {nom:string, type_grist:string}[]}} table
+ * @param {Object<string,string>} saisies  `{colonne: texte}`
+ * @returns {{ok:true, cle:object} | {ok:false, erreur:string}}
+ */
+export function lireCle(decl, table, saisies) {
+  const types = new Map(((table && table.colonnes) || []).map((c) => [c.nom, c.type_grist]));
+  const cle = {};
+  for (const c of decl.cle) {
+    const texte = String((saisies || {})[c] == null ? '' : saisies[c]).trim();
+    if (texte === '') return { ok: false, erreur: `la colonne « ${c} » de la clé est à renseigner` };
+    const lu = lireSaisie(types.get(c) || 'Text', texte);
+    if (!lu.ok) return { ok: false, erreur: `${c} : ${lu.erreur}` };
+    cle[c] = lu.valeur;
+  }
+  return { ok: true, cle };
+}

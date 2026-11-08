@@ -78,3 +78,11 @@ describe('vue-edition-pg : htmlEdition', () => {
     assert.doesNotMatch(htmlConflitEdition({ valeurs: { type: '<i>' } }, champs), /<i>/);
   });
 });
+
+describe('vue-edition-pg : choisir une entité sans la souris', () => {
+  it('la phase « choix » propose d’ouvrir une ligne par sa clé', () => {
+    const h = htmlEdition({ ...base, phase: 'choix' });
+    assert.match(h, /data-cle="id"/);
+    assert.match(h, /data-act="ouvrir-cle"/);
+  });
+});
