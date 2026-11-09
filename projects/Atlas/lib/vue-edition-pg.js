@@ -237,6 +237,7 @@ export function ouvrirEdition({ hote, entree, decl, meta, clientLecture, accesEc
     } catch { /* la ligne affichée reste : on le dira à la prochaine action */ }
     etat.resultat = resultat;
     etat.saisies = null; // la ligne vient d'être relue : on montre ce qui est dans PostgreSQL
+    etat.erreurs = {};   // et une erreur de saisie d'avant ne s'applique plus à ce qu'on voit
     dessiner();
   }
 
