@@ -1,6 +1,6 @@
 {
   "nom": "qgis2grist",
-  "pitch": "Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 rend en MapLibre et produit un Scene Manifest — ce qu'Atlas sait relire.",
+  "pitch": "Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 affiche la carte avec le composant d'Atlas (MapLibre en repli), reprend le thème du document Grist et produit un Scene Manifest — ce qu'Atlas sait relire.",
   "couleur": "#3E5DE7",
   "tags": [
     "Import",
@@ -22,8 +22,20 @@
       "texte": "les règles de couleur et de classification du projet QGIS sont converties, pas perdues à l'import."
     },
     {
+      "titre": "Une carte qui suit votre thème",
+      "texte": "la v2 utilise la carte d'Atlas, aux couleurs du thème du document ou de l'instance Grist ; le style du projet QGIS garde la priorité."
+    },
+    {
+      "titre": "Vues enregistrées",
+      "texte": "couches visibles, filtres et cadrage se retrouvent au rechargement."
+    },
+    {
+      "titre": "Saisie terrain",
+      "texte": "un paquet QField devient des formulaires Grist, avec des listes liées lisibles ; « Publier le pack » crée les pages Carte, Terrain et saisie."
+    },
+    {
       "titre": "Deux versions",
-      "texte": "la v1 rend en Leaflet ; la v2 en MapLibre, avec Scene Manifest et contrôles — ce qu'Atlas sait relire."
+      "texte": "la v1 reste disponible en Leaflet ; la v2 ajoute le Scene Manifest et les contrôles — ce qu'Atlas sait relire."
     }
   ],
   "principal": "qgis2grist-v2",
