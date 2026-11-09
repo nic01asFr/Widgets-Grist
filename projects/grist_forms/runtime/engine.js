@@ -1613,27 +1613,69 @@
   }
 
   /**
-   * Une dictée : la zone de texte ordinaire, plus un bouton qui enregistre et le dit. Le texte rendu par le service
-   * s'ajoute à ce qui est déjà écrit pour que la personne le relise et le corrige : rien n'est écrasé. L'avertissement
-   * dit, avant l'envoi, que la voix quitte l'appareil et nomme le service.
+   * Un champ « voix » que l'hôte sait servir : la zone de texte ordinaire, et selon ce qu'il offre un bouton qui
+   * dicte (service de transcription) et un bouton qui lit le texte pour proposer des valeurs aux autres champs
+   * (service d'extraction). Le texte dicté s'ajoute à ce qui est écrit, rien n'est écrasé ; les valeurs lues ne se
+   * posent pas dans les champs, elles se proposent à côté (`renderSuggestion`). Chaque avertissement dit, avant l'envoi,
+   * que le texte ou la voix quitte l'appareil, et nomme le service.
+   *
+   * `o` : { dictee: { etat, avertissement } | null, extraction: { etat, avertissement, anomalies, libelleDe } | null }
    */
-  function renderVoixDirecte(field, value, etat, avertissement) {
+  function renderVoixDirecte(field, value, o) {
     var id = fieldId(field);
     var val = value == null ? '' : value;
     var reqAttr = field.required ? ' required' : '';
-    var enCours = etat.phase === 'ecoute';
-    var occupe = etat.phase === 'envoi';
-    var libelle = enCours ? 'Arrêter la dictée' : (occupe ? 'Transcription en cours…' : 'Dicter');
+    var dic = o.dictee;
+    var ext = o.extraction;
+    var boutons = '';
+    var etats = '';
+    var avertissements = '';
+    var occupeDictee = !!dic && dic.etat.phase !== 'repos';
+
+    if (dic) {
+      var enCours = dic.etat.phase === 'ecoute';
+      var occupe = dic.etat.phase === 'envoi';
+      boutons += '<button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" data-voix-action="basculer" aria-pressed="' +
+        (enCours ? 'true' : 'false') + '"' + (occupe ? ' disabled' : '') + '>' +
+        (enCours ? 'Arrêter la dictée' : (occupe ? 'Transcription en cours…' : 'Dicter')) + '</button> ';
+      etats += '<span class="fr-hint-text" data-voix-etat role="status" aria-live="polite">' + escapeHtml(dic.etat.message || '') + '</span> ';
+      if (dic.avertissement) avertissements += '<p class="fr-hint-text fr-voix__sortant">' + escapeHtml(dic.avertissement.phrase) + '</p>';
+    }
+    var anomalies = '';
+    if (ext) {
+      var lit = ext.etat.phase === 'envoi';
+      boutons += '<button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" data-voix-action="extraire"' +
+        (lit || occupeDictee ? ' disabled' : '') + '>' + (lit ? 'Lecture en cours…' : 'Remplir les champs') + '</button> ';
+      etats += '<span class="fr-hint-text" data-extraction-etat role="status" aria-live="polite">' + escapeHtml(ext.etat.message || '') + '</span>';
+      if (ext.avertissement) avertissements += '<p class="fr-hint-text fr-voix__sortant">' + escapeHtml(ext.avertissement.phrase) + '</p>';
+      if (ext.anomalies && ext.anomalies.length) {
+        anomalies = '<ul class="fr-voix__anomalies" aria-label="Ce qui n’a pas pu être retenu">' + ext.anomalies.map(function (a) {
+          var brut = a.brut !== undefined && a.brut !== null && a.brut !== '' ? ' (lu : « ' + escapeHtml(String(a.brut)) + ' »)' : '';
+          return '<li>' + escapeHtml(ext.libelleDe(a.champ)) + ' : ' + escapeHtml(a.quoi || a.raison || 'non retenu') + brut + '</li>';
+        }).join('') + '</ul>';
+      }
+    }
     return '<div class="fr-input-group fr-voix" data-colid="' + escapeHtml(field.colId) + '" data-widget="voix" data-voix="1">' +
       renderLabel(field, id) +
       '<textarea class="fr-input" id="' + id + '" name="' + escapeHtml(field.colId) + '"' + reqAttr + placeholderAttr(field) + '>' +
       escapeHtml(val) + '</textarea>' +
-      '<p class="fr-voix__commandes">' +
-      '<button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" data-voix-action="basculer" aria-pressed="' +
-      (enCours ? 'true' : 'false') + '"' + (occupe ? ' disabled' : '') + '>' + libelle + '</button> ' +
-      '<span class="fr-hint-text" data-voix-etat role="status" aria-live="polite">' + escapeHtml(etat.message || '') + '</span></p>' +
-      (avertissement ? '<p class="fr-hint-text fr-voix__sortant">' + escapeHtml(avertissement.phrase) + '</p>' : '') +
-      '</div>';
+      '<p class="fr-voix__commandes">' + boutons + etats + '</p>' + avertissements + anomalies + '</div>';
+  }
+
+  /**
+   * Une valeur proposée pour un champ, à côté de lui : Utiliser, Corriger ou Ignorer. Aucun champ n'est rempli sans
+   * ce geste. Si le champ a déjà une valeur, la carte le dit : une proposition ne prend jamais la place d'une réponse
+   * en silence.
+   */
+  function renderSuggestion(field, suggestion, affichage, actuelAffiche) {
+    return '<div class="fr-suggestion" data-suggestion="' + escapeHtml(field.colId) + '" role="group" aria-label="Proposition pour ' +
+      escapeHtml(field.label || field.colId) + '">' +
+      '<p class="fr-suggestion__texte"><span class="fr-suggestion__etiquette">Proposition :</span> <strong>' + escapeHtml(affichage) + '</strong>' +
+      (suggestion.ecrase ? ' <span class="fr-hint-text">(remplacerait : ' + escapeHtml(actuelAffiche) + ')</span>' : '') + '</p>' +
+      '<p class="fr-suggestion__actions">' +
+      '<button type="button" class="fr-btn fr-btn--sm" data-suggestion-action="utiliser">Utiliser</button> ' +
+      '<button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" data-suggestion-action="corriger">Corriger</button> ' +
+      '<button type="button" class="fr-btn fr-btn--tertiary fr-btn--sm" data-suggestion-action="ignorer">Ignorer</button></p></div>';
   }
 
   function renderFile(field, value, widget) {
@@ -2786,6 +2828,11 @@
     var capteurs = bridge.capteurs || null;
     var refusCapacites = [];
     var dictees = {};
+    var extractions = {};
+    var suggestions = {};
+    var normaliseur = typeof bridge.normaliseur === 'function' ? bridge.normaliseur
+      : (globalCourant() && globalCourant().LectureChamps && typeof globalCourant().LectureChamps.normaliser === 'function'
+        ? globalCourant().LectureChamps.normaliser : null);
 
     // -- Brouillon (voir plus haut) : proposé au chargement, gardé à chaque changement, effacé à l'envoi --
     var stockageB = stockageDeBrouillon(bridge, formDef);
@@ -3355,6 +3402,7 @@
         var html = verrouilles.indexOf(f.colId) !== -1
           ? renderVerrouille(f, values[f.colId], libellesVerrou[f.colId])
           : (rendreDictee(f, opts) || renderFieldHtml(f, values, opts, formDef));
+        html += rendreProposition(f);
         if (errorFields.indexOf(f.colId) !== -1) {
           // > **Le message doit tenir a sa question.** Pose seul entre deux
           // > blocs, il flotte : on le lit au-dessus de la question suivante et
@@ -3496,10 +3544,36 @@
 
     function capteurAudio() { return (capteurs && capteurs.audio) || capteurAudioNavigateur(); }
 
+    function champDe(colId) {
+      var trouve = null;
+      (formDef.sections || []).forEach(function (sec) { (sec.fields || []).forEach(function (f) { if (f.colId === colId) trouve = f; }); });
+      return trouve;
+    }
+    function libelleDe(colId) { var f = champDe(colId); return f && f.label ? f.label : colId; }
+
     /**
-     * Le rendu d'une question `voix` selon ce que l'hôte offre : directe (micro, capteur et service de transcription),
-     * sinon `null` pour la zone de texte ordinaire. Sans transcription, un enregistrement n'aurait nulle part où aller
-     * dans une colonne de texte : la dictée reste du repli. Un message de la dictée se montre aussi en repli.
+     * Ce que la lecture d'un texte demande : une consigne et des champs qui peuvent recevoir une proposition (ceux du
+     * champ, à défaut ceux du formulaire), un service d'extraction chez l'hôte, un normaliseur. Il manque l'un des
+     * quatre : pas de lecture, la personne écrit les champs elle-même.
+     */
+    function extractionDisponible(f) {
+      if (!hote || !normaliseur || f.widget !== 'voix' || !noyauApi()) return null;
+      var service = hote.services && hote.services.extraire;
+      if (!service || typeof service.appeler !== 'function') return null;
+      var propre = f.options && f.options.extraction && typeof f.options.extraction === 'object' ? f.options.extraction : {};
+      var general = formDef.extraction && typeof formDef.extraction === 'object' ? formDef.extraction : {};
+      var consigne = typeof propre.consigne === 'string' && propre.consigne.trim() ? propre.consigne.trim()
+        : (typeof general.consigne === 'string' ? general.consigne.trim() : '');
+      var liste = Array.isArray(propre.champs) ? propre.champs : (Array.isArray(general.champs) ? general.champs : []);
+      var champs = liste.filter(function (c) { return typeof c === 'string' && c !== f.colId && champDe(c); });
+      if (!consigne || !champs.length) return null;
+      return { consigne: consigne, champs: champs, service: service };
+    }
+
+    /**
+     * Le rendu d'une question `voix` selon ce que l'hôte offre : dictée (micro, capteur et service de transcription),
+     * lecture du texte (service d'extraction), les deux, ou `null` pour la zone de texte ordinaire. Sans transcription,
+     * un enregistrement n'aurait nulle part où aller dans une colonne de texte. Un message se montre aussi en repli.
      */
     function rendreDictee(f, opts) {
       if (!hote || f.widget !== 'voix') return null;
@@ -3507,13 +3581,127 @@
       if (!N) return null;
       var info = N.resoudreSaisie(f, hote, refusCapacites);
       var d = dictees[f.colId];
-      if (info.mode === 'direct' && info.transcription && capteurAudio()) {
-        return renderVoixDirecte(f, values[f.colId], d || { phase: 'repos' }, N.avertissementSortant(hote.services.transcrire));
+      var dictee = info.mode === 'direct' && info.transcription && capteurAudio();
+      var cfg = extractionDisponible(f);
+      if (dictee || cfg) {
+        var e = extractions[f.colId] || { phase: 'repos', message: '', anomalies: [] };
+        return renderVoixDirecte(f, values[f.colId], {
+          dictee: dictee ? { etat: d || { phase: 'repos' }, avertissement: N.avertissementSortant(hote.services.transcrire) } : null,
+          extraction: cfg ? { etat: e, avertissement: N.avertissementSortant(cfg.service), anomalies: e.anomalies, libelleDe: libelleDe } : null
+        });
       }
       if (d && d.message) {
         return renderFieldHtml(f, values, opts, formDef) + '<p class="fr-hint-text" role="status">' + escapeHtml(d.message) + '</p>';
       }
       return null;
+    }
+
+    /** Ce qu'on montre d'une valeur : le libellé d'un choix, Oui ou Non, la liste d'une liste. */
+    function afficherValeur(f, v) {
+      if (typeof v === 'boolean') return v ? 'Oui' : 'Non';
+      if (Array.isArray(v)) return v.map(function (x) { return afficherValeur(f, x); }).join(', ');
+      // Les libellés de `options.libelles` s'appliquent ici comme au rendu du champ : une carte dit « Forte », pas « 3 ».
+      var options = appliquerLibelles(f, (resolveOptionsForField(f) || []).map(normalizeOption));
+      for (var i = 0; i < options.length; i++) {
+        if (options[i].value === v) return String(options[i].label);
+      }
+      return v === null || v === undefined ? '' : String(v);
+    }
+
+    /** La carte de proposition d'un champ, s'il y en a une en attente. */
+    function rendreProposition(f) {
+      var sg = suggestions[f.colId];
+      if (!sg || sg.etat !== 'propose') return '';
+      return renderSuggestion(f, sg, afficherValeur(f, sg.proposee), afficherValeur(f, sg.actuelle));
+    }
+
+    function decrireChampVise(colId) {
+      var f = champDe(colId);
+      var choix = f && (f.options && Array.isArray(f.options.choices) ? f.options.choices : optionsForField(f, formDef));
+      return {
+        colId: colId, type: f ? f.type : 'Text',
+        options: Array.isArray(choix) ? { choices: choix.map(function (o) { return normalizeOption(o).value; }) } : {}
+      };
+    }
+
+    /**
+     * Lire le texte du champ : le service propose des valeurs, le moteur les vérifie (type, choix), puis chacune devient
+     * une proposition à côté de son champ. Ce qui n'a pas pu être retenu est dit avec la valeur lue : rien n'est écarté
+     * en silence. Aucune valeur n'est écrite ici.
+     */
+    function lancerExtraction(colId) {
+      var N = noyauApi();
+      var f = champDe(colId);
+      var cfg = f && extractionDisponible(f);
+      if (!N || !cfg) return;
+      var e = extractions[colId] || (extractions[colId] = { phase: 'repos', message: '', anomalies: [] });
+      if (e.phase !== 'repos') return;
+      var zone = rootEl.querySelector('[name="' + colId + '"]');
+      if (zone && typeof zone.value === 'string') values[colId] = zone.value;
+      var texte = values[colId] == null ? '' : String(values[colId]).trim();
+      if (!texte) { e.message = 'Écrivez ou dictez d’abord le texte à lire.'; planifierRendu(); return; }
+      e.phase = 'envoi'; e.message = ''; e.anomalies = [];
+      planifierRendu();
+      var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+      e.controle = ctrl;
+      var vises = cfg.champs.map(decrireChampVise);
+      N.appelerService(cfg.service, { texte: texte, consigne: cfg.consigne, champs: cfg.champs, schema: vises }, {
+        signal: ctrl ? ctrl.signal : undefined, attendre: attendreMs, sujet: 'le service de lecture', objet: 'ce texte'
+      }).then(function (r) {
+        if (demonte) return;
+        e.controle = null;
+        e.phase = 'repos';
+        if (!r.ok) {
+          e.message = r.erreur.genre === 'annulee' ? '' : N.phrase(r.erreur.genre, { sujet: 'le service de lecture', objet: 'ce texte' });
+          planifierRendu();
+          return;
+        }
+        var brut = r.valeur && typeof r.valeur === 'object' ? r.valeur : {};
+        var verif;
+        try {
+          verif = N.verifierValeurs(brut.valeurs && typeof brut.valeurs === 'object' ? brut.valeurs : {}, vises, normaliseur);
+        } catch (err) {
+          journaliser('erreur', 'lecture-normaliseur', 'La vérification des valeurs lues a échoué : aucune proposition.', {});
+          e.message = 'La lecture n’a rien pu proposer.';
+          planifierRendu();
+          return;
+        }
+        e.anomalies = (Array.isArray(brut.anomalies) ? brut.anomalies : []).concat(verif.anomalies);
+        var nb = 0;
+        cfg.champs.forEach(function (c) {
+          delete suggestions[c];
+          var sg = N.proposer(c, verif.valeurs[c], values[c]);
+          if (sg) { suggestions[c] = sg; nb++; }
+        });
+        e.message = nb ? (nb + (nb > 1 ? ' propositions' : ' proposition') + ' : à vous de choisir.') : N.phrase('vide');
+        planifierRendu();
+      });
+    }
+
+    /** Utiliser, Corriger ou Ignorer : la décision de la personne, seul moment où une proposition devient une valeur. */
+    function deciderProposition(colId, action) {
+      var N = noyauApi();
+      var sg = suggestions[colId];
+      if (!N || !sg) return;
+      var decision = action === 'utiliser' ? { type: 'accepter' }
+        : (action === 'corriger' ? { type: 'modifier', valeur: sg.proposee } : { type: 'refuser' });
+      var r = N.appliquerDecision(sg, decision);
+      if (r.ignoree) return;
+      if (r.ecrire) values[r.ecrire.colId] = r.ecrire.valeur;
+      delete suggestions[colId];
+      planifierRendu();
+    }
+
+    function brancherPropositions() {
+      var cartes = rootEl.querySelectorAll('[data-suggestion]');
+      for (var i = 0; i < cartes.length; i++) (function (carte) {
+        var colId = carte.getAttribute('data-suggestion');
+        var boutons = carte.querySelectorAll('[data-suggestion-action]');
+        for (var k = 0; k < boutons.length; k++) (function (b) {
+          if (typeof b.addEventListener !== 'function') return;
+          b.addEventListener('click', function () { deciderProposition(colId, b.getAttribute('data-suggestion-action')); });
+        }(boutons[k]));
+      }(cartes[i]));
     }
 
     function arreterDictee(colId) {
@@ -3599,6 +3787,10 @@
         if (bouton && typeof bouton.addEventListener === 'function') {
           bouton.addEventListener('click', function () { basculerDictee(bloc.getAttribute('data-colid')); });
         }
+        var lire = bloc.querySelector('[data-voix-action="extraire"]');
+        if (lire && typeof lire.addEventListener === 'function') {
+          lire.addEventListener('click', function () { lancerExtraction(bloc.getAttribute('data-colid')); });
+        }
       }(blocs[i]));
     }
 
@@ -3651,6 +3843,7 @@
       brancherCurseurs();
       brancherCompteurs();
       brancherDictee();
+      brancherPropositions();
       brancherEtiquettes(fields);
       brancherClassements(fields);
       brancherPositions(fields);
@@ -4441,6 +4634,10 @@
       });
       cartes = {};
       // Une dictée en route : on libère le micro et le minuteur, on annule l'envoi. Rien ne doit survivre au formulaire.
+      Object.keys(extractions).forEach(function (k) {
+        var e = extractions[k];
+        if (e.controle && typeof e.controle.abort === 'function') { try { e.controle.abort(); } catch (err) { /* déjà fini */ } }
+      });
       Object.keys(dictees).forEach(function (k) {
         var d = dictees[k];
         if (d.minuteur) { clearTimeout(d.minuteur); d.minuteur = null; }
@@ -4622,6 +4819,9 @@
     if (typeof options.surEnvoi === 'function') pont.surEnvoi = options.surEnvoi;
     if (contexte) pont.context = Object.assign({}, contexte);
     if (hote) pont.hote = hote;
+    // Le normaliseur qui vérifie ce qu'un service propose : celui du moteur de lecture documentaire, injecté. Sans lui,
+    // la lecture d'un texte n'est pas offerte : une sortie de modèle n'entre jamais dans un champ sans être vérifiée.
+    if (typeof options.normaliseur === 'function') pont.normaliseur = options.normaliseur;
     if (options.capteurs && typeof options.capteurs === 'object') pont.capteurs = options.capteurs;
 
     var themeRes = appliquerTheme(conteneur, options.theme);
