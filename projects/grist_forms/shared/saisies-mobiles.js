@@ -14,16 +14,20 @@
 (function (root, factory) {
   'use strict';
   var asNode = typeof process !== 'undefined' && process.versions && process.versions.node;
-  if (asNode && typeof module === 'object' && module.exports) module.exports = factory();
-  else if (typeof define === 'function' && define.amd) define([], factory);
-  else root.SaisiesMobiles = factory();
-}(typeof self !== 'undefined' ? self : this, function () {
+  if (asNode && typeof module === 'object' && module.exports) module.exports = factory(require('./noyau-saisies.js'));
+  else if (typeof define === 'function' && define.amd) define(['./noyau-saisies'], factory);
+  else root.SaisiesMobiles = factory(root.NoyauSaisies);
+}(typeof self !== 'undefined' ? self : this, function (Noyau) {
   'use strict';
 
-  var CAPACITES = ['camera', 'micro', 'position', 'orientation', 'scanner'];
+  var CAPACITES = Array.from(Noyau.CAPACITES);
 
-  /** Le type Grist que chaque widget mobile écrit : un widget qui ne l'écrit pas se dégrade mal. */
-  var TYPE_DU_WIDGET = { voix: 'Text', audio: 'Attachments', scan: 'Text', photo: 'Attachments' };
+  /**
+   * Le type Grist que chaque widget mobile écrit : un widget qui ne l'écrit pas se dégrade mal. Lu dans la table du
+   * noyau, qui est la seule ; `geo` n'y figure pas, son type dépend de la colonne.
+   */
+  var TYPE_DU_WIDGET = {};
+  Object.keys(Noyau.TABLE_GESTES).forEach(function (w) { if (Noyau.TABLE_GESTES[w].type) TYPE_DU_WIDGET[w] = Noyau.TABLE_GESTES[w].type; });
 
   var CLES_INTERDITES = /^(cle|clé|apikey|api[_-]?key|token|jeton|secret|password|motdepasse|mot[_-]?de[_-]?passe|authorization|bearer|url|uri|adresse|endpoint|baseurl|base[_-]?url|modele|model|instance|docid|doc[_-]?id|documentid|document[_-]?id)$/i;
 

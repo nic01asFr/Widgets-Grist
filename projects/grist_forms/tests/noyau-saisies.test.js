@@ -48,6 +48,48 @@ describe('vocabulaire fermé', () => {
   });
 });
 
+describe('TABLE_GESTES : la seule table widget, capacité, repli, type', () => {
+  it('cinq lignes, chacune complète', () => {
+    assert.deepEqual(Object.keys(Noyau.TABLE_GESTES).sort(), ['audio', 'geo', 'photo', 'scan', 'voix']);
+    Object.keys(Noyau.TABLE_GESTES).forEach((w) => {
+      const l = Noyau.TABLE_GESTES[w];
+      assert.ok(Noyau.GESTES.includes(l.geste), w + ' : geste');
+      assert.ok(Noyau.CAPACITES.includes(l.capacite), w + ' : capacité');
+      assert.ok(typeof l.repli === 'string' && l.repli, w + ' : repli');
+    });
+  });
+  it('le type Grist écrit : texte pour voix et scan, pièces jointes pour audio et photo, aucun pour geo', () => {
+    const t = Noyau.TABLE_GESTES;
+    assert.deepEqual([t.voix.type, t.scan.type, t.audio.type, t.photo.type, t.geo.type], ['Text', 'Text', 'Attachments', 'Attachments', null]);
+  });
+  it('gelée : personne ne la modifie en route', () => {
+    assert.throws(() => { 'use strict'; Noyau.TABLE_GESTES.voix.repli = 'autre'; }, TypeError);
+    assert.throws(() => { 'use strict'; Noyau.TABLE_GESTES.pirate = {}; }, TypeError);
+  });
+  it('ligneDuWidget ne rend jamais une propriété héritée', () => {
+    ['constructor', 'toString', '__proto__', 'hasOwnProperty', 'valueOf'].forEach((w) => assert.equal(Noyau.ligneDuWidget(w), null, w));
+    assert.equal(Noyau.ligneDuWidget(undefined), null);
+    assert.equal(Noyau.ligneDuWidget(12), null);
+    assert.equal(Noyau.ligneDuWidget('voix').geste, 'voix');
+  });
+  it('un widget nommé comme une propriété du prototype n\'est pas un geste', () => {
+    ['constructor', 'toString', '__proto__'].forEach((w) => {
+      const r = Noyau.resoudreSaisie({ widget: w }, { capacites: { micro: true, camera: true } });
+      assert.equal(r.geste, null, w);
+      assert.equal(r.raison, 'aucun-geste', w);
+    });
+  });
+  it('la résolution lit la table : une ligne modifiée dans une copie change le résultat', () => {
+    // Preuve qu'il n'y a pas de seconde table cachée dans resoudreSaisie : les replis qu'elle rend sont ceux de la table.
+    Object.keys(Noyau.TABLE_GESTES).forEach((w) => {
+      const r = Noyau.resoudreSaisie({ widget: w }, null);
+      assert.equal(r.widgetRepli, Noyau.TABLE_GESTES[w].repli, w);
+      assert.equal(r.capacite, Noyau.TABLE_GESTES[w].capacite, w);
+      assert.equal(r.geste, Noyau.TABLE_GESTES[w].geste, w);
+    });
+  });
+});
+
 describe('resoudreSaisie', () => {
   vecteurs('resolution.vecteurs.json').cas.forEach((c) => {
     it(c.nom, () => {

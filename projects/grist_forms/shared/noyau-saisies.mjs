@@ -39,9 +39,23 @@ const noyau = (function () {
    * 2. Résoudre une saisie : directe, ou repli.
    * ------------------------------------------------------------------ */
 
-  var GESTE_DU_WIDGET = { voix: 'voix', audio: 'audio', scan: 'scan', photo: 'photo', geo: 'position' };
-  var CAPACITE_DU_GESTE = { voix: 'micro', audio: 'micro', scan: 'scanner', photo: 'camera', position: 'position' };
-  var REPLI_DU_GESTE = { voix: 'textarea', audio: 'file', scan: 'text', photo: 'file', position: 'geo' };
+  /**
+   * LA table : widget, geste, capacité requise, widget de repli, type Grist écrit. Elle vit ici, à un seul endroit ;
+   * le moteur, la validation du FormDef et les rendus la lisent, personne ne la recopie. `type` vaut `null` pour
+   * `geo`, dont le type dépend de la colonne.
+   */
+  var TABLE_GESTES = Object.freeze({
+    voix: Object.freeze({ geste: 'voix', capacite: 'micro', repli: 'textarea', type: 'Text' }),
+    audio: Object.freeze({ geste: 'audio', capacite: 'micro', repli: 'file', type: 'Attachments' }),
+    scan: Object.freeze({ geste: 'scan', capacite: 'scanner', repli: 'text', type: 'Text' }),
+    photo: Object.freeze({ geste: 'photo', capacite: 'camera', repli: 'file', type: 'Attachments' }),
+    geo: Object.freeze({ geste: 'position', capacite: 'position', repli: 'geo', type: null })
+  });
+
+  /** La ligne de la table pour un widget, ou `null`. Jamais une propriété héritée (`constructor`, `__proto__`…). */
+  function ligneDuWidget(widget) {
+    return typeof widget === 'string' && Object.prototype.hasOwnProperty.call(TABLE_GESTES, widget) ? TABLE_GESTES[widget] : null;
+  }
 
   /**
    * Ce que le champ demande, et ce que l'hôte lui donne.
@@ -55,15 +69,16 @@ const noyau = (function () {
   function resoudreSaisie(champ, hote, refus) {
     var f = estObjet(champ) ? champ : {};
     var options = estObjet(f.options) ? f.options : {};
-    var geste = GESTE_DU_WIDGET[f.widget] || null;
+    var ligne = ligneDuWidget(f.widget);
+    var geste = ligne ? ligne.geste : null;
     // Une capacité nommée dans les options, mais inconnue, est ignorée : jamais une erreur.
     var declaree = typeof options.capacite === 'string' && contient(CAPACITES, options.capacite) ? options.capacite : null;
 
     if (!geste && !declaree) {
       return { geste: null, mode: 'direct', capacite: null, widgetRepli: null, raison: 'aucun-geste', transcription: false };
     }
-    var capacite = declaree || CAPACITE_DU_GESTE[geste];
-    var repli = geste ? REPLI_DU_GESTE[geste] : null;
+    var capacite = declaree || ligne.capacite;
+    var repli = ligne ? ligne.repli : null;
 
     var capacites = estObjet(hote) && estObjet(hote.capacites) ? hote.capacites : null;
     if (!capacites) {
@@ -419,6 +434,8 @@ const noyau = (function () {
   return {
     CAPACITES: CAPACITES, SERVICES: SERVICES, GENRES: GENRES, GESTES: GESTES, ETATS_SUGGESTION: ETATS_SUGGESTION,
     POLITIQUE_DEFAUT: POLITIQUE_DEFAUT,
+    TABLE_GESTES: TABLE_GESTES,
+    ligneDuWidget: ligneDuWidget,
     resoudreSaisie: resoudreSaisie,
     genreDepuisStatut: genreDepuisStatut,
     reessayable: reessayable,
@@ -441,6 +458,8 @@ export const {
   GESTES,
   ETATS_SUGGESTION,
   POLITIQUE_DEFAUT,
+  TABLE_GESTES,
+  ligneDuWidget,
   resoudreSaisie,
   genreDepuisStatut,
   reessayable,

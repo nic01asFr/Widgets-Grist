@@ -62,6 +62,19 @@ describe('le type Grist d\'un widget mobile', () => {
   it('voix et scan écrivent du texte, audio et photo des pièces jointes', () => {
     assert.deepEqual(Mobiles.TYPE_DU_WIDGET, { voix: 'Text', audio: 'Attachments', scan: 'Text', photo: 'Attachments' });
   });
+  it('lu dans la table du noyau, la seule : pas de seconde copie', () => {
+    const Noyau = require('../shared/noyau-saisies.js');
+    Object.keys(Noyau.TABLE_GESTES).forEach((w) => {
+      const type = Noyau.TABLE_GESTES[w].type;
+      if (type) assert.equal(Mobiles.TYPE_DU_WIDGET[w], type, w);
+      else assert.equal(w in Mobiles.TYPE_DU_WIDGET, false, w + ' n\'a pas de type fixe');
+    });
+    assert.deepEqual(Mobiles.CAPACITES, Array.from(Noyau.CAPACITES));
+  });
+  it('geo n\'impose aucun type : la position peut s\'écrire dans plusieurs colonnes', () => {
+    assert.equal(ecartsDe([{ colId: 'p', label: 'P', type: 'Text', widget: 'geo' }]), '');
+    assert.equal(ecartsDe([{ colId: 'p', label: 'P', type: 'Numeric', widget: 'geo' }]), '');
+  });
   it('un widget sur le mauvais type est signalé', () => {
     assert.match(ecartsDe([{ colId: 'a', label: 'A', type: 'Int', widget: 'voix' }]), /« voix » écrit une colonne Text, pas Int/);
     assert.match(ecartsDe([{ colId: 'a', label: 'A', type: 'Text', widget: 'photo' }]), /« photo » écrit une colonne Attachments, pas Text/);
