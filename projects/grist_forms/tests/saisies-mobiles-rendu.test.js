@@ -46,6 +46,17 @@ describe('le repli de chaque saisie mobile', () => {
     const audio = Engine.renderFieldHtml(champ('audio', 'Attachments', { maxFiles: 3 }), {});
     assert.match(audio, /Jusqu’à 3 fichiers/);
   });
+  it('le rendu ne modifie jamais le champ de l\'auteur : le FormDef reste ce qu\'il était', () => {
+    const photo = champ('photo', 'Attachments');
+    const audio = champ('audio', 'Attachments', { maxFiles: 3 });
+    const avant = JSON.stringify([photo, audio]);
+    Engine.renderFieldHtml(photo, {});
+    Engine.renderFieldHtml(audio, {});
+    assert.equal(JSON.stringify([photo, audio]), avant);
+    assert.equal(photo.options, undefined, 'les valeurs par défaut ne s\'écrivent pas dans le champ');
+    Object.freeze(photo); Object.freeze(audio);
+    assert.doesNotThrow(() => { 'use strict'; Engine.renderFieldHtml(photo, {}); Engine.renderFieldHtml(audio, {}); });
+  });
   it('le libellé est échappé, comme pour tout champ', () => {
     const html = Engine.renderFieldHtml({ colId: 'p', label: '<img src=x onerror=alert(1)>', type: 'Attachments', widget: 'photo' }, {});
     assert.ok(!html.includes('<img'));
