@@ -1,6 +1,6 @@
 {
   "name": "qgis2grist",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Importateur QGIS → Grist : schéma typé, Scene Manifest V0.2, carte MapLibre (v2), pack terrain",
   "authors": [
     {

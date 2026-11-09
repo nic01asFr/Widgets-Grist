@@ -38,6 +38,24 @@
     return String(js || '').replace(/<\/script/gi, '<\\/script');
   }
 
+  /**
+   * Une valeur JSON posée dans une balise script : `<`, `>`, `&` et les deux séparateurs de ligne Unicode sont
+   * écrits en échappement. Sans cela, un libellé contenant `</script>` fermerait la balise et laisserait le reste
+   * du libellé s'exécuter comme du HTML.
+   */
+  function jsonPourScript(valeur) {
+    return JSON.stringify(valeur)
+      .replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026')
+      .replace(new RegExp(String.fromCharCode(0x2028), 'g'), '\\u2028')
+      .replace(new RegExp(String.fromCharCode(0x2029), 'g'), '\\u2029');
+  }
+
+  /** Un texte posé entre deux balises ou dans un attribut. */
+  function echapperHtml(texte) {
+    return String(texte).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   function splitHtmlJs(fullHtml) {
     var js = [];
     var html = String(fullHtml || '').replace(
@@ -71,16 +89,49 @@
     var typesJs = bundles.typesJs || '';
     var attachmentsJs = bundles.attachmentsJs || '';
     var sessionContextJs = bundles.sessionContextJs || '';
+    // La carte ne pese rien tant qu'aucune question de lieu n'est posee :
+    // le module ne charge MapLibre qu'au moment ou il monte une carte.
+    var carteJs = bundles.carteJs || '';
+    // Le dessin, de meme : rien ne se charge tant qu'aucune question n'en pose.
+    var dessinJs = bundles.dessinJs || '';
+    // Le champ d'adresse, de même : sans lui le champ reste un champ texte, et
+    // un formulaire publié avant son arrivée n'en voit pas la différence.
+    var referentielJs = bundles.referentielJs || '';
+    // Les formats (IBAN, SIRET…), de même : sans lui un format déclaré ne contrôle rien.
+    var formatsJs = bundles.formatsJs || '';
+    // L'enrichissement d'un lieu par les services publics : sans lui le point reste un point.
+    var enrichirJs = bundles.enrichirJs || '';
+    // Départs, bornes et ordre entre deux questions : sans lui ces réglages ne font rien.
+    var saisiesJs = bundles.saisiesJs || '';
+    // Les conditions, avant le moteur qui les évalue. Absent, le moteur se
+    // replie sur son ancien évaluateur : un formulaire déjà publié sans ce
+    // script continue de fonctionner.
+    var conditionsJs = bundles.conditionsJs || '';
+    // Les limites (places, fenêtre d'ouverture) : absentes, un formulaire qui en déclare s'ouvre comme avant.
+    var limitesJs = bundles.limitesJs || '';
+    // Le thème du document (ThemeDef 1.0) : absents, le formulaire garde son apparence d'origine.
+    var themeJs = bundles.themeJs || '';
+    var themeDefJs = bundles.themeDefJs || '';
     var engineJs = bundles.engineJs || '';
     var cssText = bundles.cssText || DEFAULT_CSS || '';
-    var formDefJson = JSON.stringify(formDef || {});
-    var title = (formDef && (formDef.title || formDef.id)) || 'Formulaire';
+    var formDefJson = jsonPourScript(formDef || {});
+    var title = echapperHtml((formDef && (formDef.title || formDef.id)) || 'Formulaire');
 
     var bootstrap = [
       bridgeJs,
       typesJs,
       attachmentsJs,
       sessionContextJs,
+      carteJs,
+      dessinJs,
+      referentielJs,
+      formatsJs,
+      enrichirJs,
+      saisiesJs,
+      conditionsJs,
+      limitesJs,
+      themeJs,
+      themeDefJs,
       engineJs,
       '(function () {',
       '  window.__FORM_DEF__ = ' + formDefJson + ';',
@@ -99,6 +150,10 @@
       '      }, {})]',
       '    ]);',
       '  }',
+    // Le hook d'essai de bout en bout (téléversement sur la page publiée) n'existe que si on le demande : sans
+    // cela, tout autre widget de la même page pourrait, par postMessage, faire écrire une ligne et un fichier
+    // avec les droits du formulaire.
+    ].concat(bundles.e2e ? [
       '  function runRuntimeE2EUpload() {',
       '    try {',
       '      var def = window.__FORM_DEF__;',
@@ -132,24 +187,62 @@
       '      try { ev.source && ev.source.postMessage({ type: "grist-forms-runtime-e2e-result", result: result }, "*"); } catch (e2) {}',
       '      console.log("[runtime-e2e]", result);',
       '    });',
-      '  });',
+      '  });'
+    ] : []).concat([
+      '  function monter(valeurs) {',
+      "    var cible = document.getElementById('app');",
+      '    if (!cible) return;',
+      '    window.FormEngine.mount(cible, window.__FORM_DEF__, {',
+      '      submit: submit,',
+      '      values: valeurs || {},',
+      '      brouillon: true,',
+      '      get editRowId() { return editRowId; },',
+      '      getAccessToken: function (o) { return window.grist.docApi.getAccessToken(o); },',
+      '      loadTable: window.GristBridge && window.GristBridge.loadTable',
+      '        ? function (t) { return window.GristBridge.loadTable(t); } : null',
+      '    });',
+      '  }',
+      // Le thème du document, s'il en porte un : lu (jamais écrit), posé sur la page, puis le formulaire se monte. Une lecture qui
+      // tarde ne retient personne : au bout d'une seconde et demie, le formulaire s'ouvre avec son apparence d'origine.
+      '  function habiller(suite) {',
+      '    var T = window.FormThemeDef;',
+      '    if (!T) { suite(); return; }',
+      '    var fini = false;',
+      '    function fin() { if (fini) return; fini = true; suite(); }',
+      '    setTimeout(fin, 1500);',
+      '    try {',
+      // `habiller` pose le thème, et dans le mode « grist » suit le thème de Grist à chaud (la personne peut en changer dans le même document).
+      '      T.habiller(document.documentElement, window.grist && window.grist.docApi, { def: window.__FORM_DEF__ }).then(fin, fin);',
+      '    } catch (eTheme) { fin(); }',
+      '  }',
       '  function boot() {',
       '    try {',
       "      if (window.grist && window.grist.ready) { window.grist.ready({ requiredAccess: 'full' }); }",
-      '      if (window.grist && window.grist.onRecord) {',
-      '        window.grist.onRecord(function (rec) { editRowId = rec && rec.id ? rec.id : null; });',
-      '      }',
       "      var mount = document.getElementById('app');",
       '      if (!window.FormEngine || !window.FormEngine.mount) {',
       "        if (mount) mount.textContent = 'Runtime indisponible (FormEngine non charge).';",
       '        return;',
       '      }',
-      '      window.FormEngine.mount(mount, window.__FORM_DEF__, {',
-      '        submit: submit,',
-      '        get editRowId() { return editRowId; },',
-      '        getAccessToken: function (o) { return window.grist.docApi.getAccessToken(o); },',
-      '        loadTable: window.GristBridge && window.GristBridge.loadTable',
-      '          ? function (t) { return window.GristBridge.loadTable(t); } : null',
+      // Une vue « Remplir » AJOUTE une ligne. Elle ne corrige celle du curseur
+      // que si le formulaire le demande, et alors elle l'affiche d'abord :
+      // suivre le curseur en silence faisait écraser la ligne 1 par une
+      // soumission que le bouton annonçait comme un envoi (mesuré le
+      // 18/09/2026 en Grist réel).
+      '      habiller(function () {',
+      '      if (window.__FORM_DEF__.editerLigneSelectionnee && window.grist && window.grist.onRecord) {',
+      '        var dernier = null;',
+      '        window.grist.onRecord(function (rec) {',
+      '          var id = rec && rec.id ? rec.id : null;',
+      '          if (id === dernier) return;',
+      '          dernier = id;',
+      '          editRowId = id;',
+      '          monter(id ? window.FormEngine.valuesFromRecord(window.__FORM_DEF__, rec) : {});',
+      '        });',
+      '        if (window.grist.onNewRecord) {',
+      '          window.grist.onNewRecord(function () { dernier = null; editRowId = null; monter({}); });',
+      '        }',
+      '      }',
+      '      monter({});',
       '      });',
       '    } catch (err) {',
       "      var mountErr = document.getElementById('app');",
@@ -162,7 +255,10 @@
       "    document.addEventListener('DOMContentLoaded', boot);",
       '  } else { boot(); }',
       '})();'
-    ].join('\n');
+    ]).join('\n');
+    // Aucun module embarqué ne doit pouvoir fermer la balise script : un `</script` écrit dans un commentaire ou
+    // une chaîne devient `<\/script`, équivalent pour le moteur JavaScript.
+    bootstrap = sanitizeJsForScriptTag(bootstrap);
 
     return [
       '<!DOCTYPE html>',

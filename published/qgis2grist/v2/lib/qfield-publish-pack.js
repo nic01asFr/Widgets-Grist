@@ -92,8 +92,9 @@
 
   function resolveGristFormsBaseUrl(widgetBaseUrl) {
     const base = String(widgetBaseUrl || '').replace(/\/?$/, '/');
-    if (/\/qgis2grist\/$/i.test(base)) {
-      return base.replace(/qgis2grist\/$/i, 'grist_forms/');
+    // Widget publie : .../qgis2grist/ (v1) ou .../qgis2grist/v2/ (v2) ; Form Builder est un dossier frere de qgis2grist.
+    if (/\/qgis2grist\/(v2\/)?$/i.test(base)) {
+      return base.replace(/qgis2grist\/(v2\/)?$/i, 'grist_forms/');
     }
     return base.replace(/\/?$/, '/') + '../grist_forms/';
   }

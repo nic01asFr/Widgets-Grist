@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>qgis2grist — widget Grist</title>
-<meta name="description" content="Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 rend en MapLibre et produit un Scene Manifest — ce qu&#39;Atlas sait relire.">
+<meta name="description" content="Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 affiche la carte avec le composant d&#39;Atlas (MapLibre en repli), reprend le thème du document Grist et produit un Scene Manifest — ce qu&#39;Atlas sait relire.">
 <link rel="canonical" href="https://nic01asfr.github.io/Widgets-Grist/w/qgis2grist/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Widgets Grist">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/qgis2grist/">
 <meta property="og:title" content="qgis2grist — widget Grist">
-<meta property="og:description" content="Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 rend en MapLibre et produit un Scene Manifest — ce qu&#39;Atlas sait relire.">
+<meta property="og:description" content="Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 affiche la carte avec le composant d&#39;Atlas (MapLibre en repli), reprend le thème du document Grist et produit un Scene Manifest — ce qu&#39;Atlas sait relire.">
 <meta property="og:image" content="https://nic01asfr.github.io/Widgets-Grist/w/qgis2grist/apercu.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="qgis2grist — widget Grist">
-<meta name="twitter:description" content="Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 rend en MapLibre et produit un Scene Manifest — ce qu&#39;Atlas sait relire.">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"qgis2grist","description":"Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 rend en MapLibre et produit un Scene Manifest — ce qu'Atlas sait relire.","url":"https://nic01asfr.github.io/Widgets-Grist/w/qgis2grist/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/qgis2grist","dateModified":"2026-08-04"}</script>
+<meta name="twitter:description" content="Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 affiche la carte avec le composant d&#39;Atlas (MapLibre en repli), reprend le thème du document Grist et produit un Scene Manifest — ce qu&#39;Atlas sait relire.">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"qgis2grist","description":"Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 affiche la carte avec le composant d'Atlas (MapLibre en repli), reprend le thème du document Grist et produit un Scene Manifest — ce qu'Atlas sait relire.","url":"https://nic01asfr.github.io/Widgets-Grist/w/qgis2grist/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/qgis2grist","dateModified":"2026-11-09"}</script>
 <style>
 :root { --papier: #F8FAFC; --surface: #FFFFFF; --encre: #1E293B; --plume: #64748B; --filet: #E2E8F0; --accent: #3E5DE7; }
 
@@ -115,13 +115,13 @@ section { margin: 0 0 3rem; }
   <a class="retour" href="../../">← Tous les widgets</a>
   <p class="eyebrow">Widget Grist</p>
   <h1>qgis2grist</h1>
-  <p class="chapeau">Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 rend en MapLibre et produit un Scene Manifest — ce qu&#39;Atlas sait relire.</p>
+  <p class="chapeau">Un projet QGIS devient un document Grist : les couches, leurs attributs et leur symbologie sont importés, le schéma des tables est déduit de la donnée. La v2 affiche la carte avec le composant d&#39;Atlas (MapLibre en repli), reprend le thème du document Grist et produit un Scene Manifest — ce qu&#39;Atlas sait relire.</p>
   
   <div class="tags"><span class="tag">Import</span><span class="tag">QGIS</span><span class="tag">Géomatique</span></div>
   <div class="faits">
     <span><b>2</b> widgets</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span>Mis à jour il y a 3 mois</span>
+    <span><span class="vif"></span>Mis à jour aujourd&#39;hui</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="https://nic01asFr.github.io/Widgets-Grist/qgis2grist/v2/" target="_blank" rel="noopener">Ouvrir le widget</a>
@@ -142,7 +142,10 @@ section { margin: 0 0 3rem; }
       <li><b>Plusieurs formats d&#39;entrée</b> — export qgis2web, projet QGZ, paquet QField, GeoPackage — le contenu est reconnu et déplié.</li>
       <li><b>Schéma déduit</b> — les tables et leurs colonnes sont créées d&#39;après les champs rencontrés, sans les décrire à la main.</li>
       <li><b>La symbologie suit</b> — les règles de couleur et de classification du projet QGIS sont converties, pas perdues à l&#39;import.</li>
-      <li><b>Deux versions</b> — la v1 rend en Leaflet ; la v2 en MapLibre, avec Scene Manifest et contrôles — ce qu&#39;Atlas sait relire.</li>
+      <li><b>Une carte qui suit votre thème</b> — la v2 utilise la carte d&#39;Atlas, aux couleurs du thème du document ou de l&#39;instance Grist ; le style du projet QGIS garde la priorité.</li>
+      <li><b>Vues enregistrées</b> — couches visibles, filtres et cadrage se retrouvent au rechargement.</li>
+      <li><b>Saisie terrain</b> — un paquet QField devient des formulaires Grist, avec des listes liées lisibles ; « Publier le pack » crée les pages Carte, Terrain et saisie.</li>
+      <li><b>Deux versions</b> — la v1 reste disponible en Leaflet ; la v2 ajoute le Scene Manifest et les contrôles — ce qu&#39;Atlas sait relire.</li>
     </ul>
 
   </section>

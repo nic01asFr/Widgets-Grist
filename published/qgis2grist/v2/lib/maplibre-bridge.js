@@ -10,18 +10,9 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const BASEMAP = {
-    version: 8,
-    sources: {
-      carto: {
-        type: 'raster',
-        tiles: ['https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png'],
-        tileSize: 256,
-        attribution: '© OSM © CARTO',
-      },
-    },
-    layers: [{ id: 'carto-base', type: 'raster', source: 'carto' }],
-  };
+  // Fond de carte : le meme style vectoriel que le composant Atlas (lib/fonds-base.js, STYLE_BASE_URL), sans cle.
+  // L'ancien fond raster Carto affichait « API KEY REQUIRED ». L'attribution vient du style lui-meme.
+  const BASEMAP = 'https://tiles.openfreemap.org/styles/liberty';
 
   function sourceId(tableName) {
     return 'src-' + String(tableName).replace(/[^a-zA-Z0-9_-]/g, '_');
