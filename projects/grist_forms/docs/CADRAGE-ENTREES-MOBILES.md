@@ -186,10 +186,10 @@ Règles :
 
 | Hôte | Capacités | Services | Remarque |
 |---|---|---|---|
-| Page dans Grist (iframe) | voir §9 : à mesurer | aucun d'office | Grist ne délègue à l'iframe que `clipboard-write` (lu dans `WidgetFrame.ts`) |
+| Page dans Grist (iframe) | **aucune** de capteur (mesuré, §9.1) | aucun d'office | Grist ne délègue à l'iframe que `clipboard-write` : position et micro refusés, tout retombe sur le repli |
 | Page hors Grist | oui (HTTPS, page de plein droit) | à la charge de la page | pièces jointes impossibles (limite connue) |
 | PWA | oui | à la charge de la PWA | hébergement et coffre à décider |
-| Application Atlas (Capacitor) | plugins natifs à ajouter (aujourd'hui **aucun plugin**) | `CapacitorHttp` + clés saisies par la personne | chantier Atlas |
+| Application mobile (Atlas, TaskFlow ; Capacitor) | paquet partagé de plugins natifs (aujourd'hui **aucun plugin** dans l'application Atlas) | `CapacitorHttp` vers un point d'accès de l'équipe, **jeton révocable, aucune clé sur l'appareil** (D8 bis) | lot 5, go séparé de Nicolas |
 | Agent (WebMCP, CLI, MCP) | aucune | aucun | un agent n'a pas de micro : il passe la valeur directement |
 
 ---
