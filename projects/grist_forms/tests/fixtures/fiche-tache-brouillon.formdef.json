@@ -1,0 +1,51 @@
+{
+  "manifest_version": "1.0.0",
+  "id": "fiche-tache-brouillon",
+  "title": "Fiche de tâche (brouillon d'essai)",
+  "description": "Brouillon de lecture, jamais publié : les champs de la fiche de tâche de TaskFlow qui se disent directement en FormDef. Voir docs/COMPARAISON-FICHE-TACHE-FORMDEF.md.",
+  "classification": "interne",
+  "tableId": "Tasks",
+  "composeMode": "bind",
+  "editerLigneSelectionnee": true,
+  "sections": [
+    {
+      "id": "essentiel",
+      "label": "Essentiel",
+      "fields": [
+        { "colId": "type", "label": "Type", "type": "Choice", "widget": "radio", "required": true, "options": { "choices": ["tache", "jalon", "reunion"] } },
+        { "colId": "titre", "label": "Titre", "type": "Text", "widget": "text", "required": true },
+        { "colId": "statut", "label": "Statut", "type": "Choice", "widget": "select" },
+        {
+          "colId": "priorite", "label": "Priorité", "type": "Choice", "widget": "radio",
+          "options": { "choices": ["1", "2", "3", "4"] },
+          "condition": { "field": "type", "operator": "!=", "value": "reunion" }
+        },
+        { "colId": "dateDebut", "label": "Début", "type": "Date", "widget": "date" },
+        {
+          "colId": "dateEcheance", "label": "Échéance", "type": "Date", "widget": "date",
+          "condition": { "field": "type", "operator": "!=", "value": "jalon" }
+        },
+        { "colId": "projet", "label": "Projet", "type": "Ref:Projects", "widget": "select", "options": { "refTable": "Projects", "visibleCol": "nom" } },
+        { "colId": "assignees", "label": "Assignés", "type": "RefList:Team", "widget": "multiselect", "options": { "refTable": "Team", "visibleCol": "nom" } }
+      ]
+    },
+    {
+      "id": "temps",
+      "label": "Temps",
+      "condition": { "field": "type", "operator": "==", "value": "tache" },
+      "fields": [
+        { "colId": "estimationH", "label": "Estimé (h)", "type": "Numeric", "widget": "number", "options": { "step": 0.5 } },
+        { "colId": "tempsPasse", "label": "Passé (h)", "type": "Numeric", "widget": "number", "options": { "step": 0.5 } },
+        { "colId": "progression", "label": "Progression (%)", "type": "Int", "widget": "number", "options": { "step": 5 } }
+      ]
+    },
+    {
+      "id": "detail",
+      "label": "Description",
+      "fields": [
+        { "colId": "description", "label": "Description", "type": "Text", "widget": "textarea" }
+      ]
+    }
+  ],
+  "choices": {}
+}

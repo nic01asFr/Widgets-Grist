@@ -66,8 +66,25 @@ Appkit propose un port optionnel `options.formulaires.<id>.crochets = { exclure(
 - Écriture d'une liste de références sur `Tasks` : non testée.
 - Hors ligne et conflits d'écriture : non définis, relèvent de l'hôte (APK, Atlas).
 
-## 6. Suite proposée
+## 6. Le brouillon d'essai (fait le 09/11/2026)
 
-1. Écrire un brouillon de FormDef pour la fiche, validé contre le schéma, avec les champs de classe **D**. Il sert de jeu d'essai et montre ce qui manque réellement.
-2. Reprendre les classes **E** une par une avec appkit, pour décider si chacune va dans un crochet de l'hôte ou dans le moteur.
+Fichier : `projects/grist_forms/tests/fixtures/fiche-tache-brouillon.formdef.json`. Table cible `Tasks`, mode `bind`, `editerLigneSelectionnee` vrai (la fiche corrige la ligne choisie). Il porte les champs de classe **D** : type, titre, statut, priorité, début, échéance, projet, assignés, estimé, passé, progression, description. Les conditions reprennent le pilotage par le type : priorité absente pour une réunion, échéance absente pour un jalon, section « Temps » seulement pour une tâche.
+
+Résultat de `forms_valider_formdef` (commande pure du registre, rien écrit) :
+
+- `conforme : true`, aucun écart au contrat `formdef-1.0`.
+- `plan_realisable : false`, avec un seul avertissement : **« Champ statut : choices manquants pour Choice »**. C'est exactement le manque n° 1 (statuts tirés de la configuration du document), vu par le validateur. Le brouillon a volontairement laissé `statut` sans liste, pour ne pas inventer des valeurs que je ne connais pas.
+
+Opérateurs de condition utilisés (`==`, `!=`) : présents dans `shared/conditions.js`. Les noms de tables (`Tasks`, `Projects`, `Team`) sont lus dans `kanban.html` ; les colonnes `nom` des deux tables liées aussi.
+
+Trois constats en plus de la comparaison :
+
+1. **Statuts : un chemin existe côté dérivation.** `formdef-from-table.js` lit les choix d'une colonne Choice dans ses `widgetOptions` quand il dérive un FormDef d'une table. Un FormDef dérivé de `Tasks` aurait donc les statuts de la configuration du document. Cela ne dit pas lesquels sont « terminaux » (fait, annulé) : ce sens reste à l'hôte. Et je ne sais pas si le widget `formulaire` d'appkit dérive de la même façon.
+2. **Valeur et libellé.** Selon le schéma, `choices` est une liste de chaînes : la priorité serait offerte comme « 1 » à « 4 » et le type comme « tache », « jalon », « reunion », pas comme « Critique » ou « Tâche ». Je n'ai pas vérifié si une option de libellé existe ; à défaut, c'est un manque de plus.
+3. **Pas de widget couleur, pas de curseur.** La liste des widgets reconnus (text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo) n'en a pas. La progression est dite en nombre avec un pas de 5, pas en curseur avec crans ; la couleur n'est pas dite.
+
+## 7. Suite proposée
+
+1. Reprendre les classes **E** une par une avec appkit, pour décider si chacune va dans un crochet de l'hôte ou dans le moteur. Ordre : statuts, lecture seule par champ et par ligne, références sans cycle.
+2. Vérifier les deux points laissés ouverts : un libellé distinct de la valeur dans `choices`, et la dérivation des choix par le widget d'appkit.
 3. Ne rien changer aux widgets publiés de TaskFlow.
