@@ -13,7 +13,7 @@ Deux rendus de FormDef existent : le moteur de Form Builder et le widget `formul
 ## 2. Forme du module
 
 - **Un seul fichier source** : `projects/grist_forms/shared/noyau-saisies.js`, en enveloppe UMD (`module.exports` sous Node, `NoyauSaisies` global dans une page), **sans aucun import**.
-- **Sortie pour le kit** : le kit est en ESM. Une **seconde sortie `.mjs` générée** depuis la même source par un petit script (même principe que la copie de `generer-skill-commun.js`), avec un test qui échoue si la copie n'est pas à jour. La copie vers le kit est **mécanique et faite par appkit** ; je n'écris pas dans son arbre.
+- **Sortie pour le kit** : le kit est en ESM. Une **seconde sortie `.mjs` générée** depuis la même source par un petit script (même principe que la copie de `generer-skill-commun.js`), avec un test qui échoue si la copie n'est pas à jour. La copie vers le kit est **mécanique et faite par appkit** ; je n'écris pas dans son arbre. Conditions posées par appkit, reprises : **ESM pur**, sans import ni effet de bord à l'import ; **exports nommés identiques** à ceux de l'UMD ; bannière de licence d'une ligne conservée ; **sortie déterministe** (fins de ligne LF, aucune date) ; test de fraîcheur côté `grist_forms` ; la sortie doit passer sa vérification de publiabilité (aucun nom d'organisation ni de projet interne).
 - **Tout ce qui dépend de l'environnement est injecté** : horloge, attente, signal d'annulation. Aucune lecture de `Date.now`, `setTimeout`, `fetch` dans le noyau.
 - **Aucune exception pour un cas attendu** : tout échec de service se rend en `{ ok: false, erreur }`.
 - **Source de vérité côté `grist_forms`**, le kit copie. La licence du kit est **MIT** (confirmé par Nicolas le 09/11/2026) : ce n'est plus un blocage, et le code du kit peut être repris tel quel quand il convient, à condition de passer par sa vérification de publiabilité. Je garde la source ici parce que le noyau est celui des deux rendus, pas du seul kit. Toute publication reste soumise à l'accord de Nicolas.
@@ -53,21 +53,23 @@ Règles :
 - **Réessai** : `reseau`, `delai`, `limite`, `vide` se réessaient ; `droits` et `forme` **jamais** ; `annulee` jamais et n'est pas un échec. `reessayerApres` (secondes) l'emporte sur le délai calculé, plafonné.
 - **Annulation** : si le `signal` est levé, résultat `annulee`, aucun réessai.
 - **Message assaini** : le message d'erreur rendu ne contient ni clé, ni jeton, ni adresse. Deux gardes : les **secrets connus de l'appelant** (la clé et l'adresse que la personne a saisies, passés en option `secrets`) sont retirés **à l'identique**, et les motifs d'URL, `Bearer …` et longues chaînes opaques sont remplacés dans tous les cas. Un test le garantit sur des entrées piégées, y compris une clé et une adresse reprises dans le message d'un service.
-- Politique par défaut **proposée** : 3 tentatives au total, délai de base 500 ms doublé, plafond 8 s, `reessayerApres` plafonné à 30 s. À aligner avec les valeurs du kit (question Q1).
-- `genreDepuisStatut(statut)` est exporté pour les adaptateurs d'hôte : 401, 403 → `droits` ; 429 → `limite` ; 408, 504 → `delai` ; 400, 413, 422 et tout autre 4xx → `forme` ; 5xx ou absence de statut → `reseau` ; 200 sans contenu → `vide`.
-- `phrase(genre)` rend la phrase courante à afficher, la même dans les deux rendus. `vide` se dit « rien reconnu », pas comme une panne.
-- `avertissementSortant(service)` rend la clé d'avertissement à montrer : aucune si `sortant: 'local'`, sinon (`'tiers'` ou absent) l'avertissement « les données quittent l'appareil ».
+- **Politique par défaut, alignée sur le kit, qui l'a mesurée** (moteur de lecture : réponses vides aléatoires passées au réessai espacé) : **4 essais au total**, le premier compris, attentes de **500, 1500 et 4000 ms**, sans doublement. Une attente `reessayerApres` demandée par le service est vécue jusqu'à **30 s** ; au-delà, on ne bloque pas la personne : `limite` est rendu avec le délai conseillé.
+- **Formes acceptées d'un service** : celle du contrat (`{ ok, … }`), celle du transport du kit (`{ statut, valeurs?, anomalies?, vide?, reessayerApres? }`), ou une exception. Une exception est un `reseau` ; une `AbortError` ou un signal levé est `annulee`.
+- `genreDepuisStatut(statut)` est exporté pour les adaptateurs d'hôte : 401, 403 → `droits` ; 429 → `limite` ; 408, 504 → `delai` ; 400, 413, 422 et tout autre 4xx → `forme` ; **tout statut 1xx ou 3xx → `forme`** ; 5xx, **statut absent ou non numérique** → `reseau`. Une réponse 2xx n'est `vide` que si **le transport la marque vide** : le noyau ne le déduit jamais du corps, dont la forme est celle du fournisseur.
+- `phrase(genre, { sujet })` rend la phrase courante, **une seule source** pour les deux rendus ; le kit recopiera ces phrases à la place des siennes dans un lot d'alignement. `sujet` nomme ce que fait le service (« le service de lecture », « le service de transcription » ; par défaut « le service »). `vide` se dit « rien reconnu », pas comme une panne.
+- `avertissementSortant(service)` rend ce qu'il faut montrer avant l'envoi : rien si `sortant: 'local'`, sinon (`'tiers'` ou absent) l'avertissement « les données quittent l'appareil » **avec le nom du service** (son nom d'hôte, jamais l'adresse complète ni la clé), puisque c'est la personne qui le choisit. L'adaptateur fournit ce nom.
 
-### 4.3 `verifierValeurs(valeurs, champsVises)` : ce qu'un service propose
+### 4.3 `verifierValeurs(valeurs, champsVises, normaliser)` : ce qu'un service propose
 
 Entrée : `valeurs` rendues par `extraire`, et la description des champs visés `{ colId, type, options: { choices? } }`.
 Sortie : `{ valeurs, anomalies }`, la forme commune avec le kit.
 
 Règles :
-- Une valeur conforme au type et aux choix passe dans `valeurs`.
-- **Rien n'est écarté en silence** : une valeur hors liste, non numérique, ou pour un champ qui n'est pas visé devient `{ champ, valeur, raison }` dans `anomalies`, la **valeur brute conservée**. `raison` : `hors-liste`, `non-numerique`, `champ-non-vise`, `type-non-pris-en-charge`.
+- **Pas de troisième normaliseur.** Le moteur de lecture documentaire a déjà `normaliser(resultats, champs)` (`projects/lecture_documentaire/shared/champs.js`, UMD pur, 102 tests, éprouvé sur documents réels). `verifierValeurs` n'en réécrit rien : il **traduit les champs du FormDef** vers cette déclaration (`Text` → `texte`, `Int` → `entier`, `Numeric` → `reel`, `Bool` → `booleen`, `Date` → `date`, `Choice` → `choix` avec ses valeurs) et **délègue**. Le normaliseur est **injecté** par l'appelant (le noyau reste sans import) ; le choix du normaliseur de référence est à confirmer avec l'agent qui le porte.
+- **Forme des anomalies reprise telle quelle** : `{ champ, quoi, brut, grave }`, la forme déjà employée par ce normaliseur et par le kit, et non une forme à moi. La **valeur brute est conservée** dans `brut`.
+- **Rien n'est écarté en silence** : une valeur illisible, hors liste ou hors bornes devient une anomalie.
 - **`null` n'est pas `[]` ni `''`** : un champ non lu vaut `null` et n'est jamais compté comme lu vide ni rempli.
-- Les types de référence (`Ref`, `RefList`) ne sont pas vérifiables sans lecture de la table : première version → anomalie `type-non-pris-en-charge` ; à ouvrir plus tard avec le référentiel (question Q3).
+- Types non couverts par ce normaliseur (`DateTime`, `ChoiceList`, `Ref`, `RefList`, pièces jointes) : **anomalie « type non pris en charge »** dans la première version. Côté kit, les champs de rôle de référence, la clé et les pièces jointes ne sont de toute façon pas extractibles (refusés à la validation). Une fonction de résolution injectée plus tard serait un ajout, pas une rupture.
 
 ### 4.4 `appliquerDecision(etat, decision)` : l'état d'une suggestion
 
@@ -105,6 +107,8 @@ Règles communes :
 - **Limite connue, non mesurée** : depuis un navigateur, ces appels peuvent être **refusés par la politique d'origine croisée** du service (certains services exigent un en-tête particulier, un service local exige d'autoriser l'origine). Dans l'application native, `CapacitorHttp` contourne ce point. C'est une **mesure à faire** avant de promettre les services dans une PWA.
 - Vecteurs communs : une requête attendue et une réponse type par format, plus des réponses d'échec par statut.
 
+**Conversation avec appel d'outils (besoin de l'assistant de TaskFlow).** C'est un troisième usage, distinct de `extraire` et `transcrire`. Proposition : le module d'adaptateurs porte la **traduction de format** d'un service `converser` (messages et description des outils vers les « tools » de l'API compatible OpenAI ou le `tool_use` d'Anthropic Messages, et retour vers une forme neutre : un texte, ou des appels d'outils `{ id, nom, arguments }`), avec les mêmes erreurs typées. La **logique de l'assistant** (descripteurs d'outils dérivés de l'application, répartiteur, règle « une écriture demandée est une proposition que la personne confirme ») reste au module assistant du kit, qui reçoit le modèle comme transport injecté. **Hors lots 1 à 3**, soumis à l'accord d'appkit sur la forme neutre et au go de Nicolas pour l'assistant.
+
 ## 5. Vecteurs de test communs
 
 Dossier `projects/grist_forms/tests/fixtures/noyau-saisies/`, un fichier JSON par fonction : une liste de cas `{ nom, entree, attendu }`. Ils sont la **copie neutre régénérable** que le kit reçoit avec le module et rejoue. Couverture minimale :
@@ -126,12 +130,17 @@ Les vecteurs d'erreur du kit (déjà codés contre le moteur de son côté) sont
 - **Hôtes** (Atlas, application TaskFlow, PWA) : leurs adaptateurs s'écrivent contre `hote-capacites-0.1` et utilisent `genreDepuisStatut` ; le paquet partagé de la couche native (D8 bis) peut embarquer ces vecteurs pour tester ses faux capteurs.
 - **Registre de commandes** : `resoudreSaisie` et `verifierValeurs` étant pures, elles peuvent devenir des commandes sans écriture (par exemple `forms_besoins_hote`, prévue au lot 4) : un agent pourrait demander ce qu'un FormDef exige d'un hôte.
 
-## 7. Questions ouvertes, à poser à appkit
+## 7. Réponses d'appkit (09/11/2026) et ce qui reste ouvert
 
-- **Q1.** Quelles sont les valeurs par défaut de réessai du module d'extraction du kit (tentatives, délai de base, plafonds) ? Si elles existent déjà, je les reprends au lieu des miennes.
-- **Q2.** Le transport du kit rend-il `{ erreur }` ou lève-t-il une exception ? Le wrapper `appelerService` doit accepter la forme que les hôtes produisent réellement.
-- **Q3.** Pour les types de référence dans `verifierValeurs`, préfères-tu que le noyau reste sans référence (anomalie) ou qu'il reçoive une fonction de résolution injectée par l'hôte ?
-- **Q4.** La seconde sortie `.mjs` générée, avec un test de fraîcheur, convient-elle au kit tel quel ?
+Relecture faite par appkit, sur son code et non sur un essai commun : la spec lui convient.
+
+- **Q1, réessai** : valeurs du kit adoptées (§4.2) : 4 essais, 500/1500/4000 ms, plafond de 30 s.
+- **Q2, transport** : il rend `{ statut, valeurs?, anomalies?, vide?, reessayerApres? }` ou lève ; `appelerService` accepte ces formes. Table des statuts corrigée (1xx et 3xx → `forme` ; statut absent → `reseau` ; `vide` marqué par le transport).
+- **Q3, références** : anomalie « type non pris en charge » en première version, accepté.
+- **Q4, sortie `.mjs`** : acceptée aux conditions reprises au §2 ; appkit la range dans `kit/extraction/` avec une copie neutre des vecteurs régénérée par script.
+- **Deux normaliseurs** : `verifierValeurs` délègue au normaliseur du moteur de lecture documentaire (§4.3). **À confirmer avec l'agent qui le porte** : qu'il reste le normaliseur de référence, la forme des anomalies, et la manière de le livrer au noyau (injection, retenue ici, ou copie mécanique). Ce module vit aujourd'hui sur une branche qui n'est pas fusionnée.
+- **Erreur dans le kit** : l'erreur y reste la classe `ErreurExtraction` (exception) ; son adaptateur traduit la forme `{ ok: false, erreur }`. Pas de conflit.
+- **Ouvert, hors de cette spec** : forme neutre de `converser` (§4.6), mesure de l'origine croisée depuis un navigateur, stockage sécurisé de la clé côté hôte.
 
 ## 8. Ce qui reste hors de la spec
 
