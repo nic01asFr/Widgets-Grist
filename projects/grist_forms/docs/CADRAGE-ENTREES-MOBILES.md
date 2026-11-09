@@ -212,6 +212,8 @@ Règles :
 
 **Dette à ne pas aggraver (catalogue §6.7).** Quatre de ces modules recopient la liste des saisies. On n'ajoute pas une cinquième copie : la table « widget → type → capacité → repli » vit à **un** endroit (`saisies.js`, ou un petit registre dédié) et les autres la lisent. C'est un prérequis du lot 1, pas un embellissement.
 
+**État du code au 09/11/2026 (local, non poussé).** Le moteur rend les quatre saisies en repli (`photo`, `audio`, `voix`, `scan`), lit `options.libelles`, relit les fichiers de photo et d'audio. Constat à retenir : un champ `photo` s'affichait déjà comme un champ fichier par repli de type, mais ses fichiers étaient relus comme une chaîne vide, donc **la photo n'arrivait jamais à l'envoi** ; c'est corrigé et testé. **Le schéma `formdef-1.0` ne change que par la description de `widget`**, qui doit lister les widgets que le moteur rend (test `tests/contrat.test.js`) : aucune propriété n'est ajoutée. Conséquence voulue par le garde-fou `scripts/schemas.test.js` : la copie publiée doit rester identique à la source, donc ce test **est rouge tant qu'on n'a pas republié** `published/schemas/formdef-1.0.schema.json` et son index. Ne pas fusionner cette branche dans `main` sans cette republication, qui demande l'accord explicite de Nicolas.
+
 **Compatibilité de ce qui est déjà publié.** Les formulaires publiés embarquent un moteur figé : ils ne changent pas. Seule une remise en ligne en prend un nouveau. Un formulaire publié avec un moteur ancien et un FormDef récent retombe sur les replis.
 
 ---

@@ -31,8 +31,10 @@ describe('un FormDef avec des saisies mobiles reste un FormDef formdef-1.0', () 
   it('valide contre le schéma formdef-1.0 SANS que le schéma change', () => {
     // Un FormDef avec voix, audio, scan, photo, capacite, extraction et libelles est conforme tel quel.
     assert.deepEqual(Valider.valider(sample, schema, schema), []);
-    // Et le schéma n'a pas bougé : il reste identique à celui de la branche principale.
+    // Le schéma ne change que par sa DESCRIPTION de `widget`, qui liste les quatre saisies ; sa structure est celle de
+    // la branche principale. Aucune propriété n'est ajoutée : `widget` et `options` accueillent déjà tout.
     assert.equal(schema.definitions.field.additionalProperties, false);
+    assert.match(schema.definitions.field.properties.widget.description, /photo, audio, voix, scan/);
     // `widget` est un texte libre : un widget inconnu d'un moteur ancien retombe sur celui du type Grist.
     assert.equal(schema.definitions.field.properties.widget.type, 'string');
     // `options` accepte toute clé : capacite, extraction et libelles n'ont pas besoin du schéma.

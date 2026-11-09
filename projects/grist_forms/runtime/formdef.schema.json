@@ -403,7 +403,7 @@
         },
         "widget": {
           "type": "string",
-          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, pastilles, etiquettes, curseur, compteur, heure, couleur, groupe (une liste de lignes a repeter : voir `options.champs`). Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
+          "description": "Comment la question se pose. Reconnus : text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo, dessin, pastilles, etiquettes, curseur, compteur, heure, couleur, groupe (une liste de lignes a repeter : voir `options.champs`), photo, audio, voix, scan (saisies mobiles : sans la capacité que l'hôte déclare, photo et audio retombent sur un champ fichier, voix sur une zone de texte, scan sur un champ texte). Un widget inconnu retombe sur celui que son type Grist appelle : une copie figée du formulaire reste remplissable."
         },
         "required": {
           "type": "boolean",
