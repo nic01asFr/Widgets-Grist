@@ -42,6 +42,24 @@
       "type": "boolean",
       "description": "La vue publiée corrige la ligne sous le curseur (préremplie) au lieu d'en ajouter une. Défaut : faux."
     },
+    "extraction": {
+      "type": "object",
+      "description": "Valeur par défaut des champs « voix » qui lisent un texte pour en tirer des propositions : la consigne et les champs qui peuvent les recevoir. Un champ « voix » la surcharge par options.extraction. La consigne dit quoi chercher, jamais où l'envoyer : ni clé, ni adresse, ni nom de modèle.",
+      "additionalProperties": false,
+      "properties": {
+        "consigne": {
+          "type": "string",
+          "description": "Ce qu'il faut relever dans le texte"
+        },
+        "champs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Les colId du formulaire qui peuvent recevoir une proposition"
+        }
+      }
+    },
     "branding": {
       "type": "object",
       "description": "Logo / images Accueil et Fin",

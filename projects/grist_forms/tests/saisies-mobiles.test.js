@@ -27,7 +27,7 @@ describe('un FormDef avec des saisies mobiles reste un FormDef formdef-1.0', () 
     { colId: 'code', label: 'Code lu', type: 'Text', widget: 'scan' },
     { colId: 'vue', label: 'Photos', type: 'Attachments', widget: 'photo' },
     { colId: 'pos', label: 'Position', type: 'Text', widget: 'geo', options: { capacite: 'position' } }
-  ]);
+  ], { extraction: { consigne: 'Tu relèves une visite d\'ouvrage.', champs: ['lieu', 'urgence'] } });
   it('valide contre le schéma formdef-1.0 SANS que le schéma change', () => {
     // Un FormDef avec voix, audio, scan, photo, capacite, extraction et libelles est conforme tel quel.
     assert.deepEqual(Valider.valider(sample, schema, schema), []);
@@ -39,6 +39,15 @@ describe('un FormDef avec des saisies mobiles reste un FormDef formdef-1.0', () 
     assert.equal(schema.definitions.field.properties.widget.type, 'string');
     // `options` accepte toute clé : capacite, extraction et libelles n'ont pas besoin du schéma.
     assert.equal(schema.definitions.field.properties.options.additionalProperties, true);
+  });
+  it('extraction au niveau du formulaire : acceptée par le schéma, mais pas une clé inconnue dedans', () => {
+    assert.deepEqual(Valider.valider(sample, schema, schema), []);
+    const mauvais = JSON.parse(JSON.stringify(sample));
+    mauvais.extraction.modele = 'gpt';
+    assert.ok(Valider.valider(mauvais, schema, schema).length > 0, 'une propriété inconnue de extraction est refusée');
+    const typeFaux = JSON.parse(JSON.stringify(sample));
+    typeFaux.extraction.champs = 'lieu';
+    assert.ok(Valider.valider(typeFaux, schema, schema).length > 0, 'champs doit être une liste');
   });
   it('le FormDef d\'exemple est conforme aux règles des saisies mobiles', () => {
     assert.deepEqual(Mobiles.validerSaisiesMobiles(sample), { conforme: true, ecarts: [] });
