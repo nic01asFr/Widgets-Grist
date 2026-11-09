@@ -3,6 +3,8 @@
   // Ne pas prendre la branche CommonJS dans l'iframe custom-widget-builder
   // (certains hôtes exposent `module` sans `require` résolvable).
   var asNode = typeof process !== 'undefined' && process.versions && process.versions.node;
+  // Les modules des saisies mobiles sont optionnels : une copie embarquée du moteur qui ne les a pas ne casse pas.
+  var optionnel = function (chemin) { try { return require(chemin); } catch (e) { return undefined; } };
   if (asNode && typeof module === 'object' && module.exports) {
     module.exports = factory(
       require('../shared/types.js'),
@@ -14,18 +16,78 @@
       require('../shared/saisies.js'),
       require('../shared/conditions.js'),
       require('../shared/theme.js'),
-      require('../shared/limites.js')
+      require('../shared/limites.js'),
+      optionnel('../shared/noyau-saisies.js'),
+      optionnel('../shared/hote-capacites.js')
     );
   } else if (typeof define === 'function' && define.amd) {
-    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies', '../shared/conditions', '../shared/theme', '../shared/limites'], factory);
+    define(['../shared/types', '../shared/attachments', '../shared/session-context', '../shared/referentiel', '../shared/formats', '../shared/enrichir', '../shared/saisies', '../shared/conditions', '../shared/theme', '../shared/limites', '../shared/noyau-saisies', '../shared/hote-capacites'], factory);
   } else {
-    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies, root.FormConditions, root.FormTheme, root.FormLimites);
+    root.FormEngine = factory(root.FormTypes, root.FormAttachments, root.SessionContext, root.FormReferentiel, root.FormFormats, root.FormEnrichir, root.FormSaisies, root.FormConditions, root.FormTheme, root.FormLimites, root.NoyauSaisies, root.HoteCapacites);
   }
-}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies, Conditions, Theme, Limites) {
+}(typeof self !== 'undefined' ? self : this, function (Types, Attachments, SessionContext, Referentiel, Formats, Enrichir, Saisies, Conditions, Theme, Limites, NoyauSaisies, HoteCapacites) {
   'use strict';
 
   Attachments = Attachments || {};
   SessionContext = SessionContext || {};
+
+  /**
+   * Le noyau des saisies mobiles et le contrat d'hôte, s'ils sont là. Sans eux, ou sans `hote`, tout reste en repli :
+   * un formulaire s'ouvre comme avant.
+   */
+  function globalCourant() { return typeof self !== 'undefined' ? self : (typeof window !== 'undefined' ? window : null); }
+  function noyauApi() {
+    if (NoyauSaisies && NoyauSaisies.resoudreSaisie) return NoyauSaisies;
+    var g = globalCourant();
+    return g && g.NoyauSaisies && g.NoyauSaisies.resoudreSaisie ? g.NoyauSaisies : null;
+  }
+  function hoteApi() {
+    if (HoteCapacites && HoteCapacites.validerHote) return HoteCapacites;
+    var g = globalCourant();
+    return g && g.HoteCapacites && g.HoteCapacites.validerHote ? g.HoteCapacites : null;
+  }
+
+  /**
+   * Un enregistreur sonore avec les API du navigateur, ou `null` s'il n'y en a pas. Un hôte natif fournit le sien par
+   * `capteurs.audio` : même forme, `demarrer()` rend un enregistrement qu'on arrête (`arreter()` rend `{ blob, secondes }`).
+   */
+  function capteurAudioNavigateur() {
+    var g = globalCourant() || (typeof globalThis !== 'undefined' ? globalThis : null);
+    var nav = g && g.navigator;
+    if (!nav || !nav.mediaDevices || typeof nav.mediaDevices.getUserMedia !== 'function' || typeof g.MediaRecorder === 'undefined') return null;
+    return {
+      demarrer: function () {
+        return nav.mediaDevices.getUserMedia({ audio: true }).then(function (flux) {
+          var morceaux = [];
+          var rec = new g.MediaRecorder(flux);
+          var debut = Date.now();
+          rec.ondataavailable = function (e) { if (e && e.data && e.data.size) morceaux.push(e.data); };
+          var fini = new Promise(function (resolve) {
+            rec.onstop = function () {
+              if (flux && typeof flux.getTracks === 'function') flux.getTracks().forEach(function (t) { t.stop(); });
+              resolve({ blob: new g.Blob(morceaux, { type: rec.mimeType || 'audio/webm' }), secondes: (Date.now() - debut) / 1000 });
+            };
+          });
+          rec.start();
+          return {
+            arreter: function () { if (rec.state !== 'inactive') rec.stop(); return fini; },
+            annuler: function () { rec.ondataavailable = null; if (rec.state !== 'inactive') rec.stop(); }
+          };
+        });
+      }
+    };
+  }
+
+  /** Une attente que le signal d'annulation interrompt : celle que le noyau demande pour espacer ses réessais. */
+  function attendreMs(ms, signal) {
+    return new Promise(function (resolve, reject) {
+      if (signal && signal.aborted) { reject(Object.assign(new Error('annulée'), { name: 'AbortError' })); return; }
+      var minuteur = setTimeout(resolve, ms);
+      if (signal && typeof signal.addEventListener === 'function') {
+        signal.addEventListener('abort', function () { clearTimeout(minuteur); reject(Object.assign(new Error('annulée'), { name: 'AbortError' })); });
+      }
+    });
+  }
 
   /**
    * Le module des référentiels, s'il est là.
@@ -1550,6 +1612,30 @@
     return copie;
   }
 
+  /**
+   * Une dictée : la zone de texte ordinaire, plus un bouton qui enregistre et le dit. Le texte rendu par le service
+   * s'ajoute à ce qui est déjà écrit pour que la personne le relise et le corrige : rien n'est écrasé. L'avertissement
+   * dit, avant l'envoi, que la voix quitte l'appareil et nomme le service.
+   */
+  function renderVoixDirecte(field, value, etat, avertissement) {
+    var id = fieldId(field);
+    var val = value == null ? '' : value;
+    var reqAttr = field.required ? ' required' : '';
+    var enCours = etat.phase === 'ecoute';
+    var occupe = etat.phase === 'envoi';
+    var libelle = enCours ? 'Arrêter la dictée' : (occupe ? 'Transcription en cours…' : 'Dicter');
+    return '<div class="fr-input-group fr-voix" data-colid="' + escapeHtml(field.colId) + '" data-widget="voix" data-voix="1">' +
+      renderLabel(field, id) +
+      '<textarea class="fr-input" id="' + id + '" name="' + escapeHtml(field.colId) + '"' + reqAttr + placeholderAttr(field) + '>' +
+      escapeHtml(val) + '</textarea>' +
+      '<p class="fr-voix__commandes">' +
+      '<button type="button" class="fr-btn fr-btn--secondary fr-btn--sm" data-voix-action="basculer" aria-pressed="' +
+      (enCours ? 'true' : 'false') + '"' + (occupe ? ' disabled' : '') + '>' + libelle + '</button> ' +
+      '<span class="fr-hint-text" data-voix-etat role="status" aria-live="polite">' + escapeHtml(etat.message || '') + '</span></p>' +
+      (avertissement ? '<p class="fr-hint-text fr-voix__sortant">' + escapeHtml(avertissement.phrase) + '</p>' : '') +
+      '</div>';
+  }
+
   function renderFile(field, value, widget) {
     var id = fieldId(field);
     var reqAttr = field.required ? ' required' : '';
@@ -2695,6 +2781,11 @@
     var submitting = false;
     var submitError = '';
     var refRecords = bridge.refRecords || {};
+    // Saisies mobiles : ce que l'hôte offre, les capacités que la personne a refusées, l'état de chaque dictée.
+    var hote = bridge.hote || null;
+    var capteurs = bridge.capteurs || null;
+    var refusCapacites = [];
+    var dictees = {};
 
     // -- Brouillon (voir plus haut) : proposé au chargement, gardé à chaque changement, effacé à l'envoi --
     var stockageB = stockageDeBrouillon(bridge, formDef);
@@ -3263,7 +3354,7 @@
         var opts = resolveOptionsForField(f);
         var html = verrouilles.indexOf(f.colId) !== -1
           ? renderVerrouille(f, values[f.colId], libellesVerrou[f.colId])
-          : renderFieldHtml(f, values, opts, formDef);
+          : (rendreDictee(f, opts) || renderFieldHtml(f, values, opts, formDef));
         if (errorFields.indexOf(f.colId) !== -1) {
           // > **Le message doit tenir a sa question.** Pose seul entre deux
           // > blocs, il flotte : on le lit au-dessus de la question suivante et
@@ -3403,6 +3494,114 @@
       }(blocs[i]));
     }
 
+    function capteurAudio() { return (capteurs && capteurs.audio) || capteurAudioNavigateur(); }
+
+    /**
+     * Le rendu d'une question `voix` selon ce que l'hôte offre : directe (micro, capteur et service de transcription),
+     * sinon `null` pour la zone de texte ordinaire. Sans transcription, un enregistrement n'aurait nulle part où aller
+     * dans une colonne de texte : la dictée reste du repli. Un message de la dictée se montre aussi en repli.
+     */
+    function rendreDictee(f, opts) {
+      if (!hote || f.widget !== 'voix') return null;
+      var N = noyauApi();
+      if (!N) return null;
+      var info = N.resoudreSaisie(f, hote, refusCapacites);
+      var d = dictees[f.colId];
+      if (info.mode === 'direct' && info.transcription && capteurAudio()) {
+        return renderVoixDirecte(f, values[f.colId], d || { phase: 'repos' }, N.avertissementSortant(hote.services.transcrire));
+      }
+      if (d && d.message) {
+        return renderFieldHtml(f, values, opts, formDef) + '<p class="fr-hint-text" role="status">' + escapeHtml(d.message) + '</p>';
+      }
+      return null;
+    }
+
+    function arreterDictee(colId) {
+      var d = dictees[colId];
+      if (d && d.minuteur) { clearTimeout(d.minuteur); d.minuteur = null; }
+      if (d && d.enregistrement && d.phase === 'ecoute') {
+        d.phase = 'envoi';
+        d.message = '';
+        var enregistrement = d.enregistrement;
+        d.enregistrement = null;
+        planifierRendu();
+        enregistrement.arreter().then(function (res) { transcrireDictee(colId, res); }, function () {
+          d.phase = 'repos'; d.message = 'L’enregistrement a échoué. Écrivez le texte.'; if (!demonte) planifierRendu();
+        });
+      }
+    }
+
+    function transcrireDictee(colId, res) {
+      var N = noyauApi();
+      var d = dictees[colId];
+      if (!N || !d || demonte) return;
+      var champ = null;
+      (formDef.sections || []).forEach(function (sec) { (sec.fields || []).forEach(function (f) { if (f.colId === colId) champ = f; }); });
+      var limites = N.controlerLimites({ type: 'audio', octets: res && res.blob ? res.blob.size : undefined, secondes: res ? res.secondes : undefined }, hote.limites);
+      if (!limites.ok) { d.phase = 'repos'; d.message = limites.erreur.message; planifierRendu(); return; }
+      var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+      d.controle = ctrl;
+      N.appelerService(hote.services.transcrire, res.blob, {
+        signal: ctrl ? ctrl.signal : undefined, attendre: attendreMs, sujet: 'le service de transcription'
+      }).then(function (r) {
+        if (demonte) return;
+        d.controle = null;
+        d.phase = 'repos';
+        if (r.ok) {
+          var texte = r.valeur && typeof r.valeur.texte === 'string' ? r.valeur.texte.trim() : '';
+          if (!texte) { d.message = N.phrase('vide'); }
+          else {
+            // Ajouté à ce qui est déjà écrit, jamais à sa place : la personne relit, corrige, efface si elle veut.
+            var deja = values[colId] == null ? '' : String(values[colId]);
+            values[colId] = deja.trim() ? deja.replace(/\s+$/, '') + ' ' + texte : texte;
+            d.message = 'Texte ajouté : relisez-le et corrigez-le si besoin.';
+          }
+        } else {
+          d.message = r.erreur.genre === 'annulee' ? '' : N.phrase(r.erreur.genre, { sujet: 'le service de transcription' });
+        }
+        planifierRendu();
+      });
+    }
+
+    function basculerDictee(colId) {
+      var N = noyauApi();
+      var capteur = capteurAudio();
+      if (!N || !capteur) return;
+      var d = dictees[colId] || (dictees[colId] = { phase: 'repos', message: '' });
+      if (d.phase === 'ecoute') { arreterDictee(colId); return; }
+      if (d.phase !== 'repos') return;
+      // Ce que la personne vient de taper reste : on le reprend de l'écran avant de redessiner.
+      var zone = rootEl.querySelector('[name="' + colId + '"]');
+      if (zone && typeof zone.value === 'string') values[colId] = zone.value;
+      d.message = '';
+      capteur.demarrer().then(function (enregistrement) {
+        if (demonte) { if (enregistrement.annuler) enregistrement.annuler(); return; }
+        d.enregistrement = enregistrement;
+        d.phase = 'ecoute';
+        var max = hote && hote.limites && typeof hote.limites.audioSecondes === 'number' ? hote.limites.audioSecondes : 120;
+        d.minuteur = setTimeout(function () { arreterDictee(colId); }, max * 1000);
+        planifierRendu();
+      }, function (err) {
+        d.phase = 'repos';
+        // Un refus de la personne se retient pour la séance : la dictée devient du repli, on ne redemande pas.
+        refusCapacites.push('micro');
+        d.message = err && /NotAllowed|Security|Permission/i.test(String(err.name || err.message))
+          ? 'L’accès au micro est refusé. Écrivez le texte.'
+          : 'Le micro n’est pas disponible. Écrivez le texte.';
+        if (!demonte) planifierRendu();
+      });
+    }
+
+    function brancherDictee() {
+      var blocs = rootEl.querySelectorAll('[data-voix="1"]');
+      for (var i = 0; i < blocs.length; i++) (function (bloc) {
+        var bouton = bloc.querySelector('[data-voix-action="basculer"]');
+        if (bouton && typeof bouton.addEventListener === 'function') {
+          bouton.addEventListener('click', function () { basculerDictee(bloc.getAttribute('data-colid')); });
+        }
+      }(blocs[i]));
+    }
+
     /** Un compteur monte et descend d'un pas, sans sortir de ses bornes. */
     function brancherCompteurs() {
       var blocs = rootEl.querySelectorAll('[data-widget="compteur"]');
@@ -3451,6 +3650,7 @@
       brancherPlafonds();
       brancherCurseurs();
       brancherCompteurs();
+      brancherDictee();
       brancherEtiquettes(fields);
       brancherClassements(fields);
       brancherPositions(fields);
@@ -4240,6 +4440,14 @@
         try { if (cartes[k] && cartes[k].vue && cartes[k].vue.detruire) cartes[k].vue.detruire(); } catch (e) { /* déjà parti */ }
       });
       cartes = {};
+      // Une dictée en route : on libère le micro et le minuteur, on annule l'envoi. Rien ne doit survivre au formulaire.
+      Object.keys(dictees).forEach(function (k) {
+        var d = dictees[k];
+        if (d.minuteur) { clearTimeout(d.minuteur); d.minuteur = null; }
+        if (d.enregistrement && typeof d.enregistrement.annuler === 'function') { try { d.enregistrement.annuler(); } catch (e) { /* déjà arrêté */ } }
+        d.enregistrement = null;
+        if (d.controle && typeof d.controle.abort === 'function') { try { d.controle.abort(); } catch (e) { /* déjà fini */ } }
+      });
       Object.keys(dessins).forEach(function (k) {
         try { if (dessins[k] && dessins[k].vue && dessins[k].vue.detruire) dessins[k].vue.detruire(); } catch (e) { /* déjà parti */ }
       });
@@ -4392,6 +4600,18 @@
     var client = options.client || null;
     var contexte = options.contexte && typeof options.contexte === 'object' ? options.contexte : null;
 
+    // L'hôte (contrat `hote-capacites-0.1`) : ce qu'il sait faire. Absent, ou non conforme, il vaut « rien » : tout
+    // retombe sur le repli, comme avant. Un hôte non conforme est dit une fois, pas écouté à moitié.
+    var hote = null;
+    if (options.hote !== undefined && options.hote !== null) {
+      var contratHote = hoteApi();
+      if (contratHote) {
+        var verdict = contratHote.validerHote(options.hote);
+        if (verdict.conforme) hote = options.hote;
+        else journaliser('avertissement', 'hote-non-conforme', 'L’hôte déclaré ne respecte pas hote-capacites-0.1 : il est ignoré, les saisies mobiles restent en repli.', { ecarts: verdict.ecarts });
+      }
+    }
+
     // Un contexte fourni par l'hôte écarte la sonde de `mount` (elle irait
     // relire l'identité ailleurs) : on résout alors l'identité nous-mêmes,
     // plus bas, sans écraser ce que l'hôte a dit.
@@ -4401,6 +4621,8 @@
     if (options.ligne != null) pont.editRowId = options.ligne;
     if (typeof options.surEnvoi === 'function') pont.surEnvoi = options.surEnvoi;
     if (contexte) pont.context = Object.assign({}, contexte);
+    if (hote) pont.hote = hote;
+    if (options.capteurs && typeof options.capteurs === 'object') pont.capteurs = options.capteurs;
 
     var themeRes = appliquerTheme(conteneur, options.theme);
     var themePose = themeRes.posees;
