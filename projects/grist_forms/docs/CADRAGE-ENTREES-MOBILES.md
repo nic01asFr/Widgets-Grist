@@ -293,6 +293,25 @@ Ce qui suit est **à mesurer**, pas à supposer. Chaque ligne a un protocole cou
 
 Les mesures M1 à M4 se font en Grist réel (document de test, pas un document de la personne) et ne demandent aucun code de production.
 
+### 9.1 Résultats du lot 0 (09/11/2026), sur ordinateur
+
+Méthode : une page de sonde jetable, hors dépôt, qui interroge la politique d'autorisations, tente la position et le micro et relève les API présentes. Navigateur : Chrome 156 piloté (profil temporaire, aucune autorisation accordée), Windows. Grist réel : instance publique, version 1.7.22, **document jetable anonyme** créé pour l'essai, sans donnée de personne. La sonde y est servie par un serveur local en HTTP sur `localhost`.
+
+| # | Résultat | Mesuré ou lu |
+|---|---|---|
+| **M1** | **Position refusée dans un widget Grist.** L'iframe du widget porte `allow="clipboard-write"` et rien d'autre, sans attribut `sandbox`. Politique d'autorisations relevée dans l'iframe : `clipboard-write` seule. `getCurrentPosition` échoue : « Geolocation has been disabled in this document by permissions policy » | **Mesuré en Grist réel** ; confirme la lecture de `WidgetFrame.ts` |
+| **M3** | **Micro refusé dans un widget Grist** : `getUserMedia({audio})` rejette `NotAllowedError`, état de permission `denied`. Même état `denied` lu pour la caméra (`getUserMedia` vidéo non essayé) | **Mesuré en Grist réel** |
+| M1/M3 (témoin) | Dans un iframe d'origine croisée muni de `allow="geolocation; microphone; camera"`, les trois passent à `prompt` : la personne serait interrogée. Ce n'est donc pas une limite du navigateur, c'est ce que Grist ne délègue pas | Mesuré sur un iframe de test, pas en Grist |
+| **M6** (ordinateur) | En page de plein droit sur `127.0.0.1` (contexte sécurisé) : politique `geolocation`, `camera`, `microphone` permises, état `prompt`. `MediaRecorder` offre `audio/webm;codecs=opus`, `audio/webm`, `audio/mp4`. **`BarcodeDetector` absent** (Chrome Windows) : le scan de codes ne peut pas s'appuyer dessus sur ordinateur | Mesuré |
+| **M5** (partiel) | `SpeechRecognition` (préfixé) est présent. Non mesuré : si elle fonctionne **hors ligne** ou passe par un service distant. Je ne la compte donc pas comme transcription locale | Présence seulement |
+| **M7** | **Un enregistrement de 60 s pèse environ 0,9 Mo** (Opus par défaut, bruit blanc, cas défavorable pour un codec ; 0,16 Mo à 24 kbit/s ; `audio/mp4` 0,93 Mo), soit près de dix fois moins que la limite de 10 Mo par pièce jointe. Extrapolé de 8 s. **Photo non mesurée** (téléphone requis) | Audio mesuré, photo non mesurée |
+| **M8** | L'application Atlas (`packages/atlas-app`, branche principale) ne dépend que de `@capacitor/android` et `@capacitor/core`, avec `CapacitorHttp` activé. **Aucun plugin** : ni caméra, ni position, ni micro, ni stockage sécurisé | Lu dans `package.json` et `capacitor.config.json` |
+| M2, M4 | `capture` sur un `<input type=file>` : l'attribut n'est pas reflété par Chrome ordinateur ; son effet sur Android et iOS n'est pas mesurable d'ici | **Non mesuré** : appareil requis |
+
+**Ce qui n'est pas mesuré, et ne peut pas l'être d'ici** : tout appareil réel (Android, iOS), le comportement d'une WebView Capacitor sans plugin, le poids d'une photo de téléphone, `SpeechRecognition` hors ligne, `BarcodeDetector` sur mobile.
+
+**Conséquences, tirées par Form Builder (D15)** : dans un widget Grist, les capacités `position` et `voix` en direct **ne sont pas disponibles** et la caméra en flux non plus ; l'hôte « widget Grist » ne les déclare donc pas, et chaque champ retombe sur son repli (saisie au clavier, sélecteur de fichier). Le contrat d'hôte n'a pas à changer : il prévoyait déjà ce cas. La valeur des saisies mobiles se joue dans les hôtes qui les déclarent : application native, PWA, page hors Grist. Photo et audio par sélecteur de fichier restent possibles dans Grist si M2 et M4 le confirment sur appareil.
+
 ---
 
 ## 10. Sécurité, vie privée, accessibilité
