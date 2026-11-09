@@ -251,6 +251,19 @@ Trois livrables **réutilisables sans Form Builder** :
 
 ---
 
+### 8.1 Deux rendus de FormDef : ce que dit appkit (09/11/2026, lu dans son code, rien essayé)
+
+Il existe deux rendus de FormDef : le moteur de Form Builder (`runtime/engine.js`, une page) et le widget `formulaire` du kit d'appkit (modules `.mjs`, avec son thème, son accessibilité et sa file d'écriture). Trois options étaient posées pour les saisies mobiles : **A** une copie par rendu, **B** le widget d'appkit consomme mon moteur, **C** un noyau commun de saisies que chaque rendu appelle.
+
+- **B est écartée côté appkit** : le moteur est une page, le rendu d'appkit a ses propres garanties.
+- **A a un coût de dérive** : la sémantique des cascades et du référentiel existe déjà en deux copies, et trois saisies de plus, chacune avec ses genres d'échec et son repli, doubleraient la surface qui peut diverger.
+- **C est la recommandation commune d'appkit et de Form Builder**, sous réserve de la décision de Nicolas. Un noyau **pur** (capture, appel au service, genres d'échec, repli), un rendu et un geste par projet.
+- **Une saisie est à moitié isolable chez appkit.** La logique (`analyser`) est pure et sans DOM, par type logique. L'interface est liée au montage (un cas de rendu par composant, une écoute d'événements par racine). Voix, scan et photo = un noyau pur plus un rendu et un geste dans chaque montage.
+- **Forme du partage** : module pur, sans import, copié mécaniquement dans chaque projet avec des **vecteurs de test communs**. Le kit n'importe jamais depuis `grist_forms`, ni l'inverse. Contraintes : le kit est en ESM, le moteur en scripts classiques (enveloppe UMD ou deux sorties) ; la licence du kit n'est pas tranchée, donc **la source de vérité vit côté `grist_forms`** et se copie vers le kit, jamais l'inverse.
+- **Additif chez appkit sous condition** : un nouveau composant sur un type logique existant l'est ; un nouveau **type logique** ne l'est pas (grammaire fermée à douze types, un test exige une règle d'analyse par type). Voix vers texte et position vers texte ou WKT : possibles. Photo ou scan **en pièce jointe** : le type `piece-jointe` est refusé aujourd'hui et le catalogue d'écriture du kit n'envoie aucun fichier à Grist. C'est **un trou du kit**, pas un composant à ajouter. Photo vers texte lu ou vers un choix classé : possible, c'est de la lecture.
+- **Précédents** : `referentiel.mjs` est une saisie adossée à un service (module pur, transport injecté, genres d'échec nommés, repli en texte libre). `kit/extraction` a le motif « appel de service » (transport injecté, six genres d'erreur, proposition toujours « propose », double en mémoire). Appkit suggère qu'il serve de base au noyau commun.
+- **Tension à lever** : appkit demande à la fois que la source de vérité vive côté `grist_forms` et suggère de partir de `kit/extraction`. La licence du kit n'étant pas tranchée, la seconde idée ne peut valoir que comme **modèle** (vocabulaire d'erreur, forme `{ valeurs, anomalies }`, transport injecté), pas comme code copié vers `grist_forms`. À confirmer avec Nicolas.
+
 ## 9. Mesures à faire avant d'écrire du code
 
 Ce qui suit est **à mesurer**, pas à supposer. Chaque ligne a un protocole court et une issue (décide le repli ou l'hôte).
