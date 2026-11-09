@@ -83,6 +83,14 @@ Trois constats en plus de la comparaison :
 2. **Valeur et libellé.** Selon le schéma, `choices` est une liste de chaînes : la priorité serait offerte comme « 1 » à « 4 » et le type comme « tache », « jalon », « reunion », pas comme « Critique » ou « Tâche ». Je n'ai pas vérifié si une option de libellé existe ; à défaut, c'est un manque de plus.
 3. **Pas de widget couleur, pas de curseur.** La liste des widgets reconnus (text, textarea, number, checkbox, date, datetime, select, radio, multiselect, likert, echelle, file, ouinon, classement, geo) n'en a pas. La progression est dite en nombre avec un pas de 5, pas en curseur avec crans ; la couleur n'est pas dite.
 
+### Réponses d'appkit aux trois constats (09/11/2026, lues dans son code, pas essayées dans un rendu réel)
+
+1. **Dérivation des choix : non.** Le widget `formulaire` d'appkit ne lit pas les options de la colonne Grist. Il lit les choix du FormDef (`options.choices`, sinon `formdef.choices[colId]`) et les restreint à ceux que son modèle déclare ; sans l'un ni l'autre, un champ de choix devient un champ texte. Il lira les choix de la colonne seulement si le FormDef les contient déjà (ce que fait `formdef-from-table.js`). Pour les statuts d'un document, la voie est le crochet `choix` injecté par l'hôte.
+2. **Valeur et libellé : confirmé.** `choices` est lu comme des chaînes dont la clé est le libellé. Un libellé distinct n'existe que si le modèle d'appkit le déclare, ou si l'hôte le donne par le crochet (`[{ cle, libelle }]`).
+3. **Widgets : confirmé.** Appkit reconnaît text, textarea, number, checkbox, ouinon, date, datetime, select, radio, multiselect, referentiel, geo, file. Ni couleur ni curseur. Il ne reconnaît pas likert, echelle ni classement, que Form Builder connaît.
+
+**Fait nouveau.** Appkit a codé dans son rendu (pas dans le moteur de Form Builder) le port optionnel `crochets` : `{ choix, exclure, lectureSeule }`, injecté par l'hôte, sans changer le contrat FormDef. Détail chez lui : `projects/appkit/docs/DECISIONS.md`, entrée du 09/11/2026. Les trois besoins de la fiche tâche y trouvent donc une réponse dans le rendu qui servira à TaskFlow ; le moteur de Form Builder n'a pas à les porter tant qu'aucun autre hôte ne les demande.
+
 ## 7. Suite proposée
 
 1. Reprendre les classes **E** une par une avec appkit, pour décider si chacune va dans un crochet de l'hôte ou dans le moteur. Ordre : statuts, lecture seule par champ et par ligne, références sans cycle.
