@@ -638,11 +638,36 @@
     return { value: o, label: o };
   }
 
+  /**
+   * Un libellé distinct de la valeur : `options.libelles` = { valeur: libellé }.
+   *
+   * Même ordre de priorité que le rendu du kit d'appkit, pour que les deux rendus s'accordent : un libellé que
+   * l'option porte déjà (`{ value, label }`) l'emporte, puis `options.libelles`, puis la valeur elle-même. La valeur
+   * écrite ne change jamais : seul l'affichage. Une forme inutilisable, un libellé non texte ou vide : ignoré. Sans
+   * effet sur une référence, dont les libellés viennent de la table liée.
+   */
+  function appliquerLibelles(field, options) {
+    var lib = field && field.options && field.options.libelles;
+    if (!lib || typeof lib !== 'object' || Array.isArray(lib) || typeRef(field.type)) return options;
+    return options.map(function (o) {
+      if (o.label !== o.value) return o;
+      var cle = String(o.value);
+      if (!Object.prototype.hasOwnProperty.call(lib, cle)) return o;
+      var l = lib[cle];
+      if (typeof l !== 'string' || !l.trim()) return o;
+      var n = { value: o.value, label: l };
+      if (o.disabled) n.disabled = true;
+      return n;
+    });
+  }
+
   function resolveOptions(field, optionsList) {
-    if (Array.isArray(optionsList)) return optionsList.map(normalizeOption);
+    var base;
     var raw = field && field.options && field.options.choices;
-    if (Array.isArray(raw)) return raw.map(normalizeOption);
-    return [];
+    if (Array.isArray(optionsList)) base = optionsList.map(normalizeOption);
+    else if (Array.isArray(raw)) base = raw.map(normalizeOption);
+    else return [];
+    return appliquerLibelles(field, base);
   }
 
   function sameValue(a, b) {
