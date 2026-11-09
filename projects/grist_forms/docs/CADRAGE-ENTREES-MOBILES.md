@@ -322,6 +322,18 @@ Les mesures M1 à M4 se font en Grist réel (document de test, pas un document d
 | D8 | Qui porte les plugins natifs et le coffre à clés | Atlas (hôte) ; Form Builder ne fournit que le crochet |
 | D9 | Deux rendus de FormDef (moteur de Form Builder, widget `formulaire` d'appkit) : comment ajouter les saisies mobiles | **Option C, tranchée le 09/11/2026 :** un noyau pur partagé (capture, appel au service, genres d'échec, repli) avec vecteurs de test communs, un rendu et un geste par projet. Source de vérité côté `grist_forms`, copie mécanique vers le kit, jamais l'inverse. Les options A (une copie par rendu) et B (appkit consomme le moteur) sont écartées. Réserve : tant que la licence du kit n'est pas tranchée, rien n'est copié du kit vers `grist_forms` ; le module d'extraction du kit ne sert que de modèle (vocabulaire d'erreur, forme `{ valeurs, anomalies }`, transport injecté) |
 
+**Décisions prises par Form Builder le 09/11/2026**, sur délégation de Nicolas (« prends toutes les décisions que tu juges optimales pour FormDef, Form Builder, nos widgets et les clients futurs ; demande aux agents concernés pour celles que tu ne peux pas prendre, puis à moi »). La délégation ne couvre pas la publication ni le push : ils restent soumis à son accord explicite.
+
+| # | Décision | Pourquoi |
+|---|---|---|
+| D10 | **Forme du noyau commun de saisies** : un seul fichier source dans `projects/grist_forms/shared/`, en enveloppe UMD (acceptée par le moteur en scripts classiques et par le kit en ESM), pur, sans import, transport, horloge et minuteur injectés par l'hôte, genres d'échec nommés comme dans le contrat d'hôte. Vecteurs de test communs dans `tests/fixtures/` (copie neutre régénérable, jamais éditée à la main) | Prolonge D9 et la contrainte de format relevée par appkit ; le précédent `referentiel.mjs` côté kit montre que la forme tient |
+| D11 | **Ordre** : lot 0 (mesures) d'abord, puis une spec du noyau sans code montrée à appkit, puis le lot 1 (schéma, contrat d'hôte, validateur) en branche locale. Rien n'est publié ni poussé sans accord explicite. Pas d'attente de l'application TaskFlow : le noyau et le contrat servent déjà tels quels | Le lot 0 peut invalider le repli ; le lot 1 est additif et réversible tant qu'il reste local |
+| D12 | **Crochets `choix`, `exclure`, `lectureSeule`** : pas portés dans le moteur de Form Builder tant qu'aucun client ne les demande. La référence est celle du rendu d'appkit ; si on les porte un jour, même forme | Un seul client (TaskFlow) les demande, et il passe par le rendu d'appkit |
+| D13 | **Photo et scan en pièce jointe** : FormDef inchangé (`photo` reste du type Attachments, alias riche de `file`). Le manque est celui du kit (écrire un fichier dans Grist), à traiter par appkit. En attendant, repli sur la lecture en texte ou sur le sélecteur de fichier | Ne pas déformer le contrat pour un manque d'un hôte |
+| D14 | **Hors ligne et conflits d'écriture** : hors du contrat FormDef. Le kit a déjà sa règle (base lue, conflit jamais écrasé en silence) ; les saisies mobiles n'y ajoutent rien | Séparer ce que le formulaire dit de la façon dont l'hôte écrit |
+
+**À demander avant de trancher** : (Q1) un libellé distinct de la valeur dans les choix (`options.libelles`, additif) : appkit et Atlas-BI lisent les FormDef ; (Q2) D8 si les APK d'Atlas et de TaskFlow sont séparés : couche native à fournir une fois ou deux : Atlas-BI et appkit, puis Nicolas ; (Q3) licence du kit et sens de la copie du noyau : Nicolas avec appkit.
+
 ---
 
 ## 12. Lots et ordre
