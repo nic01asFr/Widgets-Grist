@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Sonde externe (jetable)</title></head>
+<body>
+<h3>Iframe façon Grist : allow="clipboard-write" seulement</h3>
+<iframe id="a" src="http://localhost:8541/sonde.html" allow="clipboard-write" style="width:600px;height:200px"></iframe>
+<h3>Iframe comparatif : capacités déléguées</h3>
+<iframe id="b" src="http://localhost:8541/sonde.html" allow="geolocation; microphone; camera; clipboard-write" style="width:600px;height:200px"></iframe>
+<pre id="res"></pre>
+<script>
+var recus = {};
+window.addEventListener('message', function (e) {
+  if (!e.data || !e.data.sonde) return;
+  var cle = e.source === document.getElementById('a').contentWindow ? 'grist_like' : 'delegue';
+  recus[cle] = e.data.sonde;
+  document.getElementById('res').textContent = JSON.stringify(recus, null, 1);
+  if (recus.grist_like && recus.delegue) document.title = 'EXTERNE-TERMINEE';
+});
+</script></body></html>

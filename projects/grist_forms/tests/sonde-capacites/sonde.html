@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Sonde de capacites (jetable)</title></head>
+<body>
+<pre id="sortie">mesure en cours...</pre>
+<input id="fichier-photo" type="file" accept="image/*" capture="environment">
+<input id="fichier-audio" type="file" accept="audio/*" capture>
+<pre id="fichiers"></pre>
+<script>
+// Sur appareil : ce que le sélecteur système renvoie (M2, M4) et le poids réel d'une photo ou d'un enregistrement (M7).
+['fichier-photo', 'fichier-audio'].forEach(function (id) {
+  document.getElementById(id).addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    document.getElementById('fichiers').textContent += id + ' : ' + f.name + ' | ' + f.type + ' | ' + f.size + ' octets (' + (f.size / 1048576).toFixed(2) + ' Mo)\n';
+  });
+});
+(async function () {
+  var r = { url: location.href, origine: location.origin, secure: window.isSecureContext, iframe: window !== window.top };
+  var pol = document.permissionsPolicy || document.featurePolicy;
+  try { r.politique = pol ? pol.allowedFeatures().filter(function (f) { return /geoloc|microph|camera|clipboard|display|fullscreen|autoplay/.test(f); }) : 'indisponible'; } catch (e) { r.politique = 'erreur ' + e.message; }
+  r.geolocation_api = 'geolocation' in navigator;
+  r.mediaDevices = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  r.SpeechRecognition = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  r.BarcodeDetector = typeof window.BarcodeDetector;
+  if (window.BarcodeDetector && BarcodeDetector.getSupportedFormats) { try { r.codes = await BarcodeDetector.getSupportedFormats(); } catch (e) { r.codes = 'erreur ' + e.message; } }
+  r.MediaRecorder = typeof window.MediaRecorder;
+  if (window.MediaRecorder) r.formats_audio = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'].filter(function (t) { return MediaRecorder.isTypeSupported(t); });
+  r.attribut_capture = 'capture' in document.getElementById('fichier-photo');
+  async function etat(nom) { try { return (await navigator.permissions.query({ name: nom })).state; } catch (e) { return 'erreur ' + e.name; } }
+  r.permission = { geolocation: await etat('geolocation'), microphone: await etat('microphone'), camera: await etat('camera') };
+  function avecDelai(p, ms) { return Promise.race([p, new Promise(function (res) { setTimeout(function () { res({ delai: ms }); }, ms); })]); }
+  r.essai_position = await avecDelai(new Promise(function (res) {
+    if (!navigator.geolocation) return res({ erreur: 'pas d\'API' });
+    navigator.geolocation.getCurrentPosition(function (p) { res({ ok: true, precision: p.coords.accuracy }); }, function (e) { res({ erreur: e.code, message: e.message }); }, { timeout: 4000 });
+  }), 5000);
+  r.essai_micro = await avecDelai((async function () {
+    if (!r.mediaDevices) return { erreur: 'pas d\'API' };
+    try { var s = await navigator.mediaDevices.getUserMedia({ audio: true }); s.getTracks().forEach(function (t) { t.stop(); }); return { ok: true }; }
+    catch (e) { return { erreur: e.name, message: e.message }; }
+  })(), 5000);
+  var texte = JSON.stringify(r, null, 2);
+  document.getElementById('sortie').textContent = texte;
+  document.title = 'SONDE-TERMINEE';
+  try { window.parent.postMessage({ sonde: r }, '*'); } catch (e) { /* sans importance */ }
+})();
+</script></body></html>

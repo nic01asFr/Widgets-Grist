@@ -314,6 +314,23 @@ Méthode : une page de sonde jetable, hors dépôt, qui interroge la politique d
 
 ---
 
+### 9.2 Protocole sur appareil (à lancer quand un téléphone sera branché)
+
+Décidé avec Nicolas le 09/11/2026 : ces mesures se font quand un téléphone est connecté. La sonde est prête dans `tests/sonde-capacites/` (voir son `LISEZ-MOI.md`). Les étapes ci-dessous sont l'état de ma connaissance, à vérifier au moment : je ne les ai pas encore jouées.
+
+| Mesure | Android | iOS |
+|---|---|---|
+| Accès à la sonde | Débogage USB activé, `adb reverse tcp:8541 tcp:8541`, ouvrir `http://localhost:8541/sonde.html` dans Chrome (`localhost` est un contexte sécurisé) ; lecture à distance par `chrome://inspect` | `localhost` du téléphone n'est pas l'ordinateur : il faut une adresse HTTPS joignable (tunnel ou certificat local). Safari exige un contexte sécurisé pour le micro et la position |
+| M2, M4 | Toucher les deux champs fichier : le système propose-t-il l'appareil photo, l'enregistreur ? La page affiche nom, type et poids | idem |
+| M1, M3, M6 hors Grist | Lire le résultat JSON de la page (autorisations accordées à la main) | idem |
+| M1, M3 dans Grist | Ajouter la sonde en widget « URL personnalisée » dans un document jetable (adresse HTTPS requise sur iOS) | idem |
+| M5 | Présence de `SpeechRecognition` ; test hors ligne (mode avion) à ajouter à la sonde | idem (préfixe `webkit`) |
+| M6 | Présence de `BarcodeDetector` et formats pris en charge | probablement absent : à mesurer |
+| M7 | Poids d'une photo prise par `capture` et d'un enregistrement de 60 s | idem |
+| WebView Capacitor sans plugin | Construire un APK de débogage minimal dont la page est la sonde ; relever autorisations demandées et résultats. **Demande une construction Android : à décider avec Atlas-BI** | Hors périmètre actuel (l'application n'est construite que pour Android) |
+
+À ajouter à la sonde avant ce jour : un essai de `SpeechRecognition` en mode avion, et la lecture des formats de `BarcodeDetector.getSupportedFormats()` déjà prévue. Rien d'autre à écrire.
+
 ## 10. Sécurité, vie privée, accessibilité
 
 - **Données personnelles.** Une voix, une photo de personne, une position sont des données personnelles. L'hôte informe, la personne consent (la demande d'autorisation du navigateur ne suffit pas pour un service distant). Rien ne part vers un service sans que la personne l'ait déclenché.
