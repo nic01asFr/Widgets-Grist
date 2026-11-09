@@ -16,7 +16,7 @@ Deux rendus de FormDef existent : le moteur de Form Builder et le widget `formul
 - **Sortie pour le kit** : le kit est en ESM. Une **seconde sortie `.mjs` générée** depuis la même source par un petit script (même principe que la copie de `generer-skill-commun.js`), avec un test qui échoue si la copie n'est pas à jour. La copie vers le kit est **mécanique et faite par appkit** ; je n'écris pas dans son arbre.
 - **Tout ce qui dépend de l'environnement est injecté** : horloge, attente, signal d'annulation. Aucune lecture de `Date.now`, `setTimeout`, `fetch` dans le noyau.
 - **Aucune exception pour un cas attendu** : tout échec de service se rend en `{ ok: false, erreur }`.
-- **Source de vérité côté `grist_forms`** (la licence du kit n'est pas tranchée) ; le kit copie, jamais l'inverse.
+- **Source de vérité côté `grist_forms`**, le kit copie. La licence du kit est **MIT** (confirmé par Nicolas le 09/11/2026) : ce n'est plus un blocage, et le code du kit peut être repris tel quel quand il convient, à condition de passer par sa vérification de publiabilité. Je garde la source ici parce que le noyau est celui des deux rendus, pas du seul kit. Toute publication reste soumise à l'accord de Nicolas.
 
 ## 3. Vocabulaire fermé (constantes exportées)
 
@@ -52,7 +52,7 @@ Règles :
 - Toute exception ou tout rejet du service est **normalisé** en erreur typée ; un échec sans statut ni indication est un `reseau`.
 - **Réessai** : `reseau`, `delai`, `limite`, `vide` se réessaient ; `droits` et `forme` **jamais** ; `annulee` jamais et n'est pas un échec. `reessayerApres` (secondes) l'emporte sur le délai calculé, plafonné.
 - **Annulation** : si le `signal` est levé, résultat `annulee`, aucun réessai.
-- **Message assaini** : le message d'erreur rendu ne contient ni clé, ni jeton, ni adresse (motifs d'URL, `Bearer …`, longues chaînes opaques remplacés). Un test le garantit sur des entrées piégées.
+- **Message assaini** : le message d'erreur rendu ne contient ni clé, ni jeton, ni adresse. Deux gardes : les **secrets connus de l'appelant** (la clé et l'adresse que la personne a saisies, passés en option `secrets`) sont retirés **à l'identique**, et les motifs d'URL, `Bearer …` et longues chaînes opaques sont remplacés dans tous les cas. Un test le garantit sur des entrées piégées, y compris une clé et une adresse reprises dans le message d'un service.
 - Politique par défaut **proposée** : 3 tentatives au total, délai de base 500 ms doublé, plafond 8 s, `reessayerApres` plafonné à 30 s. À aligner avec les valeurs du kit (question Q1).
 - `genreDepuisStatut(statut)` est exporté pour les adaptateurs d'hôte : 401, 403 → `droits` ; 429 → `limite` ; 408, 504 → `delai` ; 400, 413, 422 et tout autre 4xx → `forme` ; 5xx ou absence de statut → `reseau` ; 200 sans contenu → `vide`.
 - `phrase(genre)` rend la phrase courante à afficher, la même dans les deux rendus. `vide` se dit « rien reconnu », pas comme une panne.
@@ -82,6 +82,28 @@ Règles :
 ### 4.5 `controlerLimites(piece, limites)` : limites d'une pièce
 
 `piece = { type: 'audio' | 'photo', octets, secondes? }`, `limites` du contrat (`audioSecondes`, `photoOctets`). Hors limite → `{ ok: false, erreur: { genre: 'forme', message } }` ; sinon `{ ok: true }`. Mesure disponible : 60 s d'audio pèsent environ 0,9 Mo, donc la limite de 10 Mo de Grist n'est pas le facteur limitant pour l'audio ; la photo n'est pas mesurée.
+
+### 4.6 Module frère `adaptateurs-services` : les formats d'API standards
+
+**Décision de Nicolas le 09/11/2026 :** pas de point d'accès central. **Chaque personne renseigne dans les réglages l'adresse et la clé du service de son choix** ; l'application couvre les formats d'API standards. Conséquence : un service du contrat (`transcrire`, `extraire`) est **construit par l'hôte à partir de ce que la personne a saisi**, au moyen d'un adaptateur. Les adaptateurs servent à tous les hôtes qui acceptent une adresse et une clé (les deux applications, une PWA) : ils ne vont donc **ni dans le noyau** (qui reste sans réseau) **ni dans chaque hôte**, mais dans un **second module pur de la même forme** (UMD, sans import, transport injecté), destiné au paquet partagé de la couche native (D8 bis).
+
+Un adaptateur prend `{ adresse, cle, modele? }` fournis **par l'hôte au moment de l'appel** et un transport `appeler` de la forme de `fetch`. Il **construit la requête**, **lit la réponse** et **range tout échec dans les sept genres**. Il ne stocke rien et ne garde ni clé ni adresse.
+
+Périmètre minimal proposé par TaskFlow, que je reprends à corriger avec les hôtes :
+
+| Format | `transcrire` | `extraire` | Remarque |
+|---|---|---|---|
+| Compatible OpenAI | oui (transcription audio) | oui (conversation) | couvre aussi les services qui copient ce format |
+| Anthropic Messages | **non** (pas de point d'accès audio) : le service est absent, la voix retombe sur l'enregistrement seul | oui | pas de mode JSON natif : consigne de format puis lecture tolérante ; illisible → `forme` |
+| Local de type Ollama | à confirmer | oui | |
+
+Règles communes :
+- **`sortant`** se déduit de l'adresse : `local` seulement pour une adresse de bouclage (`localhost`, `127.0.0.0/8`, `::1`), où les données ne quittent vraiment pas l'appareil ; toute autre adresse est `tiers`, même sur le réseau local, par prudence.
+- **HTTPS obligatoire** sauf adresse de bouclage : sinon `forme`, sans appel.
+- **La clé n'est envoyée qu'à l'adresse saisie**, jamais ailleurs ; ni la clé ni l'adresse n'apparaissent dans un message (§4.2).
+- **Sortie d'un modèle = contenu non fiable** : passe par `verifierValeurs` avant toute proposition.
+- **Limite connue, non mesurée** : depuis un navigateur, ces appels peuvent être **refusés par la politique d'origine croisée** du service (certains services exigent un en-tête particulier, un service local exige d'autoriser l'origine). Dans l'application native, `CapacitorHttp` contourne ce point. C'est une **mesure à faire** avant de promettre les services dans une PWA.
+- Vecteurs communs : une requête attendue et une réponse type par format, plus des réponses d'échec par statut.
 
 ## 5. Vecteurs de test communs
 
@@ -113,4 +135,4 @@ Les vecteurs d'erreur du kit (déjà codés contre le moteur de son côté) sont
 
 ## 8. Ce qui reste hors de la spec
 
-Rendu des gestes et des cartes de suggestion ; capture réelle (hôte) ; stockage et envoi du jeton ; point d'accès aux services ; écriture des pièces jointes dans Grist (trou du kit) ; hors ligne et conflits ; robustesse des capteurs en WebView (mesure sur appareil à faire).
+Rendu des gestes et des cartes de suggestion ; capture réelle (hôte) ; stockage sécurisé de la clé et écran de réglages « Services » (hôte) ; écriture des pièces jointes dans Grist (trou du kit) ; hors ligne et conflits ; robustesse des capteurs en WebView (mesure sur appareil à faire).
