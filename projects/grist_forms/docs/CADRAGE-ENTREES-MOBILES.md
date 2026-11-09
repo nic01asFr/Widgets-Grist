@@ -308,6 +308,7 @@ Les mesures M1 à M4 se font en Grist réel (document de test, pas un document d
 | D6 | Tracer qu'une valeur vient d'une suggestion | non par défaut ; colonne annexe optionnelle `options.sourceCol` plus tard |
 | D7 | Mode hors Grist : refuser `photo`/`audio` ou les dégrader | dégrader en texte/lien avec message dans le compositeur, refuser à la génération si la question est obligatoire |
 | D8 | Qui porte les plugins natifs et le coffre à clés | Atlas (hôte) ; Form Builder ne fournit que le crochet |
+| D9 | Deux rendus de FormDef (moteur de Form Builder, widget `formulaire` d'appkit) : comment ajouter les saisies mobiles | **Option C, tranchée le 09/11/2026 :** un noyau pur partagé (capture, appel au service, genres d'échec, repli) avec vecteurs de test communs, un rendu et un geste par projet. Source de vérité côté `grist_forms`, copie mécanique vers le kit, jamais l'inverse. Les options A (une copie par rendu) et B (appkit consomme le moteur) sont écartées. Réserve : tant que la licence du kit n'est pas tranchée, rien n'est copié du kit vers `grist_forms` ; le module d'extraction du kit ne sert que de modèle (vocabulaire d'erreur, forme `{ valeurs, anomalies }`, transport injecté) |
 
 ---
 
