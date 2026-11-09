@@ -3549,7 +3549,6 @@
       (formDef.sections || []).forEach(function (sec) { (sec.fields || []).forEach(function (f) { if (f.colId === colId) trouve = f; }); });
       return trouve;
     }
-    function libelleDe(colId) { var f = champDe(colId); return f && f.label ? f.label : colId; }
 
     /**
      * Ce que la lecture d'un texte demande : une consigne et des champs qui peuvent recevoir une proposition (ceux du
