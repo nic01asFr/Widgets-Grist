@@ -264,6 +264,18 @@ Il existe deux rendus de FormDef : le moteur de Form Builder (`runtime/engine.js
 - **Précédents** : `referentiel.mjs` est une saisie adossée à un service (module pur, transport injecté, genres d'échec nommés, repli en texte libre). `kit/extraction` a le motif « appel de service » (transport injecté, six genres d'erreur, proposition toujours « propose », double en mémoire). Appkit suggère qu'il serve de base au noyau commun.
 - **Tension à lever** : appkit demande à la fois que la source de vérité vive côté `grist_forms` et suggère de partir de `kit/extraction`. La licence du kit n'étant pas tranchée, la seconde idée ne peut valoir que comme **modèle** (vocabulaire d'erreur, forme `{ valeurs, anomalies }`, transport injecté), pas comme code copié vers `grist_forms`. À confirmer avec Nicolas.
 
+### 8.2 TaskFlow dans une application mobile : un hôte de plus, et D8 à revoir (09/11/2026)
+
+Nicolas a précisé la cible de TaskFlow : toute la suite (Kanban, Gantt, calendrier, plan de charge, feuille de temps, organigramme, portefeuilles, tableau de bord) dans une **application mobile (APK) construite avec appkit**, avec un assistant personnel intégré, en parallèle de TaskFlow actuel et sans le toucher. Cadre chez l'agent TaskFlow : `projects/appkit/apps/taskflow/`.
+
+Conséquences pour ce cadrage, **non décidées** :
+
+- **Un hôte de plus** au tableau du §5 : l'APK de TaskFlow (coque appkit dans Capacitor). Il fournirait les capacités et les services au noyau partagé de D9.
+- **D8 est à revoir.** Elle disait : Atlas porte les plugins natifs et le coffre à clés. Si les APK d'Atlas et de TaskFlow sont séparés (lecture d'Atlas-BI, non tranchée par Nicolas), cette couche est à fournir deux fois ou à mettre en commun. L'APK d'Atlas n'a aujourd'hui aucun plugin natif.
+- **Pièces jointes.** Photo et scan en pièce jointe supposent que le kit sache écrire un fichier dans Grist, ce qu'il ne fait pas (trou signalé par appkit). Le REST authentifié ne marche qu'en APK (mesuré par Atlas-BI).
+- **Hors ligne et conflits.** Hors du périmètre de ce cadrage, mais le kit a déjà une règle : un ordre d'écriture porte les valeurs lues, un conflit n'écrase jamais en silence. Les saisies mobiles n'ont rien à y ajouter.
+- **Mesure à ajouter au lot 0.** Caméra, micro et position dans une WebView Capacitor sans plugin : non mesurés, et non mesurables d'ici (appareil requis).
+
 ## 9. Mesures à faire avant d'écrire du code
 
 Ce qui suit est **à mesurer**, pas à supposer. Chaque ligne a un protocole court et une issue (décide le repli ou l'hôte).
