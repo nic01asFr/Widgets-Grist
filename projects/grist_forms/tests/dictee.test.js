@@ -252,17 +252,20 @@ describe('ce qui peut mal tourner se dit, et la personne écrit', () => {
   });
   it('le service échoue sur le réseau : réessayé, puis dit', async () => {
     const { hote, appels } = hoteAvec({ statut: 503 });
-    const { root } = await dicter(hote, faussesCaptures().capteurs);
-    // Quatre essais au total, espacés de 500, 1500 et 4000 ms : on n'attend pas, on vérifie le premier et l'état.
+    const { root, h } = await dicter(hote, faussesCaptures().capteurs);
+    // Quatre essais au total, espacés de 500, 1500 et 4000 ms : on n'attend pas les six secondes, on vérifie le
+    // premier essai, puis on démonte, ce qui interrompt l'attente des réessais.
     assert.ok(appels.length >= 1);
     assert.match(root.innerHTML, /Transcription en cours|ne répond pas/);
+    h.demonter();
   });
   it('AUCUNE clé, adresse ni jeton ne ressort du formulaire, même si le service les met dans son message', async () => {
     const secret = 'sk-test-0123456789abcdefghij';
     const { hote } = hoteAvec(() => { throw new Error('401 pour https://api.exemple.test/v1 avec ' + secret); });
-    const { root } = await dicter(hote, faussesCaptures().capteurs);
+    const { root, h } = await dicter(hote, faussesCaptures().capteurs);
     assert.ok(!root.innerHTML.includes(secret));
     assert.ok(!root.innerHTML.includes('https://api.exemple.test/v1'));
+    h.demonter(); // l'erreur réseau se réessaie : on coupe l'attente plutôt que d'attendre six secondes
   });
 });
 
@@ -275,6 +278,7 @@ describe('démonter pendant une dictée', () => {
     h.demonter();
     await laisser(6);
     assert.equal(appels.length, 0);
+    assert.equal(cap.j.annule, 1, 'l\'enregistrement en cours est annulé, le micro libéré');
   });
   it('démonté avant que le micro réponde : l\'enregistrement est annulé', async () => {
     const { hote } = hoteAvec({ texte: 'x' });
@@ -284,6 +288,47 @@ describe('démonter pendant une dictée', () => {
     h.demonter();
     await laisser(6);
     assert.equal(cap.j.annule, 1);
+  });
+});
+
+describe('démonter pendant l\'envoi ou l\'arrêt', () => {
+  it('le signal donné au service est un vrai signal, et le démontage le lève', async () => {
+    const { hote, appels } = hoteAvec(() => new Promise(() => { /* ne répond jamais */ }));
+    const cap = faussesCaptures();
+    const { root, h } = monter({ hote, capteurs: cap.capteurs });
+    bouton(root).dispatchEvent('click'); await laisser();
+    bouton(root).dispatchEvent('click'); await laisser();
+    const signal = appels[0].opt.signal;
+    assert.equal(typeof signal.aborted, 'boolean');
+    assert.equal(signal.aborted, false);
+    h.demonter();
+    assert.equal(signal.aborted, true, 'l\'envoi en cours est annulé');
+  });
+  it('démonté pendant l\'arrêt de l\'enregistrement : le service n\'est pas appelé', async () => {
+    const { hote, appels } = hoteAvec({ texte: 'x' });
+    let finir;
+    const capteurs = { audio: { demarrer: async () => ({
+      arreter: () => new Promise((r) => { finir = () => r({ blob: { size: 10 }, secondes: 2 }); }),
+      annuler: () => {}
+    }) } };
+    const { root, h } = monter({ hote, capteurs });
+    bouton(root).dispatchEvent('click'); await laisser();
+    bouton(root).dispatchEvent('click'); await laisser();
+    h.demonter();
+    finir(); await laisser(6);
+    assert.equal(appels.length, 0);
+  });
+  it('démonté pendant la transcription : le texte qui arrive après n\'est pas écrit', async () => {
+    let finir;
+    const attente = new Promise((r) => { finir = r; });
+    const { hote } = hoteAvec(() => attente.then(() => ({ texte: 'trop tard' })));
+    const cap = faussesCaptures();
+    const { root, h } = monter({ hote, capteurs: cap.capteurs });
+    bouton(root).dispatchEvent('click'); await laisser();
+    bouton(root).dispatchEvent('click'); await laisser();
+    h.demonter();
+    finir(); await laisser(6);
+    assert.ok(!h.valeurs().constat, 'rien n\'est écrit dans un formulaire démonté');
   });
 });
 
