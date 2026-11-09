@@ -81,7 +81,15 @@ describe('AUCUN SECRET dans le contrat d\'hôte', () => {
       const r = Hote.validerHote(h);
       assert.equal(r.conforme, false);
       assert.match(r.ecarts.join(' '), new RegExp('hote\\.' + nom));
+      // Refusée comme SECRET, pas seulement comme propriété inconnue : c'est ce message-là qui compte.
+      assert.match(r.ecarts.join(' '), /ni clé, ni jeton, ni adresse, ni nom de modèle/);
     });
+  });
+  it('« url » et « uri » imbriquées dans un service sont refusées comme secrets', () => {
+    const h = hoteValide(); h.services.transcrire.url = 'https://x.example'; h.services.extraire.uri = 'x';
+    const e = Hote.validerHote(h).ecarts.join(' | ');
+    assert.match(e, /services\.transcrire\.url : un contrat d'hôte ne porte ni clé/);
+    assert.match(e, /services\.extraire\.uri : un contrat d'hôte ne porte ni clé/);
   });
   it('refusée dans un service, où l\'hôte serait tenté de la mettre', () => {
     const h = hoteValide(); h.services.transcrire.cle = 'sk-test-123'; h.services.extraire.adresse = 'https://x.example';
@@ -126,6 +134,13 @@ describe('declaration : la part qu\'on peut journaliser ou publier', () => {
     assert.ok(!texte.includes('appeler'));
     assert.deepEqual(d.capacites, hoteValide().capacites);
     assert.deepEqual(d.services.transcrire, { sortant: 'tiers', nom: 'api.exemple.test' });
+  });
+  it('les capacités et limites inconnues ou secrètes sont écartées de la déclaration', () => {
+    const h = hoteValide();
+    h.capacites.token = true; h.capacites.telepathie = true; h.limites.modele = 4; h.limites.videoSecondes = 9;
+    const d = Hote.declaration(h);
+    assert.deepEqual(Object.keys(d.capacites).sort(), Object.keys(hoteValide().capacites).sort());
+    assert.deepEqual(Object.keys(d.limites).sort(), ['audioSecondes', 'photoOctets']);
   });
   it('un service sans indication de sortie est déclaré tiers, par prudence', () => {
     const d = Hote.declaration({ contrat: Hote.CONTRAT, services: { extraire: { appeler } } });
