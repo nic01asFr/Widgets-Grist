@@ -34,25 +34,51 @@
   }
 
   /** Colonne affichée pour un Ref — 1er Texte du layout QField parent. */
-  function inferVisibleCol(refTargetTable, importedLayerData, tableNameRemap) {
-    const parent = resolveLayerByTable(refTargetTable, importedLayerData, tableNameRemap);
-    if (!parent?.fields?.length) return null;
-    const byName = {};
-    for (const f of parent.fields) byName[f.name] = f;
-    for (const name of (parent._formFieldOrder || [])) {
-      const f = byName[name];
-      if (!f || f.gType !== 'Text') continue;
-      if (/^uuid$|_uuid$|^id$|_id$/i.test(f.name)) continue;
-      return f.name;
-    }
-    for (const f of parent.fields) {
-      if (f.gType !== 'Text') continue;
-      if (/^uuid$|_uuid$|^id$|_id$/i.test(f.name)) continue;
-      return f.name;
-    }
-    return null;
-  }
-
+  // Noms de colonnes qui portent un libelle lisible, par ordre de preference (listes de valeurs QGEP : value_fr, value_en...).
+  const COLONNES_LIBELLE = ['value_fr', 'libelle', 'label', 'nom', 'name', 'value_en', 'title', 'titre', 'designation', 'description'];
+
+  /** La colonne porte-t-elle au moins une valeur non vide dans les entites lues ? (sans donnees connues : on ne sait pas, donc oui) */
+  function aDesValeurs(parent, field) {
+    const feats = parent && parent.features;
+    if (!Array.isArray(feats) || !feats.length) return true;
+    const cles = [field._rawKey, field.name].filter(Boolean);
+    for (let i = 0; i < feats.length && i < 200; i++) {
+      const p = (feats[i] && (feats[i].properties || feats[i])) || {};
+      for (const k of cles) { const v = p[k]; if (v !== null && v !== undefined && String(v).trim() !== '') return true; }
+    }
+    return false;
+  }
+
+  /**
+   * La colonne qui s'affiche dans une liste deroulante : un libelle lisible (value_fr, name...) qui porte des valeurs,
+   * sinon la premiere colonne texte non technique qui en porte. Une colonne vide (fid des tables QGEP) rendrait la liste
+   * illisible : Grist y afficherait des numeros de ligne.
+   */
+  function inferVisibleCol(refTargetTable, importedLayerData, tableNameRemap) {
+    const parent = resolveLayerByTable(refTargetTable, importedLayerData, tableNameRemap);
+    if (!parent?.fields?.length) return null;
+    const byName = {};
+    for (const f of parent.fields) byName[f.name] = f;
+    const technique = (n) => /^uuid$|_uuid$|^id$|_id$|^fid$/i.test(n);
+    for (const n of COLONNES_LIBELLE) {
+      const f = byName[n];
+      if (f && f.gType === 'Text' && aDesValeurs(parent, f)) return f.name;
+    }
+    for (const name of (parent._formFieldOrder || [])) {
+      const f = byName[name];
+      if (!f || f.gType !== 'Text' || technique(f.name)) continue;
+      if (aDesValeurs(parent, f)) return f.name;
+    }
+    for (const f of parent.fields) {
+      if (f.gType !== 'Text' || technique(f.name)) continue;
+      if (aDesValeurs(parent, f)) return f.name;
+    }
+    for (const f of parent.fields) {
+      if (f.gType === 'Text' && !technique(f.name)) return f.name;
+    }
+    return null;
+  }
+
   function isDuplicateIdField(field, byName) {
     const m = /^(.+)_id$/i.exec(field.name);
     if (!m) return false;
@@ -70,9 +96,24 @@
     return false;
   }
 
+  /**
+   * La colonne est-elle vraiment de type `Attachments` dans Grist ?
+   *
+   * Un champ « ressource externe » de QField ne l'implique pas : l'import
+   * laisse ces colonnes en texte, ou elles portent le chemin de la photo sur
+   * l'appareil (`DCIM/batiment_12.jpg`). Promettre un champ fichier sur une
+   * colonne texte ferait ecrire `"[1]"` — une liste d'identifiants rendue en
+   * chaine, qui ne designe rien — apres avoir efface le chemin. Le formulaire
+   * montre donc ce que la colonne porte reellement, tant que l'import ne sait
+   * pas creer la colonne en pieces jointes.
+   */
+  function estPieceJointe(field) {
+    return (field.gType || 'Text') === 'Attachments';
+  }
+
   function widgetForField(field) {
     const g = field.gType || 'Text';
-    if (field._externalResource || g === 'Attachments') return 'file';
+    if (estPieceJointe(field)) return 'file';
     if (g === 'Bool') return 'checkbox';
     if (g === 'Choice') return 'select';
     if (g.startsWith('RefList')) return 'multiselect';
@@ -84,7 +125,7 @@
   }
 
   function gTypeForForm(field) {
-    if (field._externalResource) return 'Attachments';
+    if (estPieceJointe(field)) return 'Attachments';
     const g = field.gType || 'Text';
     if (g.startsWith('RefList:')) return 'RefList';
     if (g.startsWith('Ref:')) return 'Ref';
@@ -104,7 +145,7 @@
       const vis = inferVisibleCol(field._refTargetTable, importedLayerData, tableNameRemap);
       if (vis) opts.visibleCol = vis;
     }
-    if (field._externalResource) {
+    if (field._externalResource && estPieceJointe(field)) {
       opts.maxFiles = opts.maxFiles || 5;
       opts.accept = opts.accept || 'image/*';
     }
@@ -145,8 +186,24 @@
     return true;
   }
 
-  function layerToFormDef(layer, tableName, tableNameRemap, importedLayerData) {
-    const fields = orderedFields(layer).map(f => {
+  /**
+   * Une Ref dont la table cible n'a PAS ete importee (couche sans donnees, exclue) : l'import la garde en
+   * texte (une Ref vers une table absente rendrait tous les ajouts de lignes impossibles dans Grist). Le
+   * formulaire doit dire la meme chose : un champ texte, pas une liste deroulante vide.
+   * Sans information sur les couches importees, rien n'est degrade.
+   */
+  function refDegradee(field, tableNameRemap, importedLayerData) {
+    const cible = field && field._refTargetTable;
+    if (!cible || !importedLayerData || !Object.keys(importedLayerData).length) return false;
+    const reel = (tableNameRemap && tableNameRemap[cible]) || cible;
+    return !(importedLayerData[reel] || importedLayerData[cible]);
+  }
+
+  function layerToFormDef(layer, tableName, tableNameRemap, importedLayerData) {
+    const fields = orderedFields(layer).map(f0 => {
+      const f = refDegradee(f0, tableNameRemap, importedLayerData)
+        ? Object.assign({}, f0, { gType: 'Text', _refTargetTable: null, _refTargetField: null })
+        : f0;
       const entry = {
         colId: f.name,
         label: f.label || f.name,
@@ -165,7 +222,7 @@
       id: slugify(tid) + '-terrain',
       title: (layer.displayName || tid) + ' — saisie',
       description: 'Généré depuis formulaire QField/QGIS',
-      classification: 'cerema_internal',
+      classification: 'internal',
       successMessage: 'Enregistrement envoyé ✓',
       tableId: tid,
       composeMode: 'bind',

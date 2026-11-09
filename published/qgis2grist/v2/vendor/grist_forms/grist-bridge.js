@@ -12,8 +12,8 @@
  * Les deux exposent window.grist.docApi.{fetchTable, applyUserActions}; ce module
  * construit les helpers par-dessus ce plus petit dénominateur commun.
  *
- * C'est la brique « couche read/write Grist standard » de l'écosystème CEREMA :
- * c'est ce que <cerema-survey-form> (et tout widget Grist) embarque pour lire/écrire.
+ * C'est la brique « couche read/write Grist standard » : ce que tout widget
+ * de ce dépôt embarque pour lire et écrire dans un document.
  * L'échappement WAF (<script> -> \\u003c) et le découpage des gros lots (BatchSync)
  * vivent CÔTÉ SERVEUR (grist_coder.py) car les écritures navigateur passent en direct
  * par Grist (hors WAF) ; ce module ne porte donc que la DX client.
@@ -120,10 +120,24 @@
   // ['L',v1,v2] devient [['L',v1,v2]] = 1 cellule-liste, pas N lignes (sinon corruption
   // des champs multi-choix). NE PAS déléguer la mise en colonnaire à normalizeUserActions
   // qui ne peut pas distinguer « liste-cellule » de « N valeurs par ligne ».
+  //
+  // Rend la table à jour, comme avant ; et, quand Grist dit l'identifiant de la ligne ajoutée, le porte en
+  // `idCree` sur le tableau (non énumérable : rien d'autre ne change pour qui le parcourt). Le formulaire s'en
+  // sert pour relire SA ligne après l'envoi — sans cela, il devrait deviner laquelle est la sienne.
   function addRow(table, fields) {
     var cols = {};
     for (var k in fields) { if (Object.prototype.hasOwnProperty.call(fields, k)) cols[k] = [fields[k]]; }
-    return applyAndFetch([['BulkAddRecord', table, [null], cols]], table);
+    return applyUserActions([['BulkAddRecord', table, [null], cols]]).then(function (res) {
+      var id = res && !Array.isArray(res) && res.retValues ? res.retValues[0] : (Array.isArray(res) ? res[0] : null);
+      if (Array.isArray(id)) id = id[0];
+      // La relecture est au mieux : la ligne est ÉCRITE. Sous des règles d'accès « ajout seul » la table n'est pas
+      // lisible, et faire échouer l'envoi ici ferait croire à la personne que rien n'est parti : elle renverrait, et
+      // la ligne serait en double.
+      return fetchTable(table).then(util.toRows).then(function (rows) { return rows; }, function () { return []; }).then(function (rows) {
+        if (typeof id === 'number' && Array.isArray(rows)) Object.defineProperty(rows, 'idCree', { value: id, enumerable: false });
+        return rows;
+      });
+    });
   }
   function updateRow(table, id, fields) { return applyAndFetch([['UpdateRecord', table, id, fields]], table); }
   function deleteRow(table, id)         { return applyAndFetch([['RemoveRecord', table, id]], table); }
