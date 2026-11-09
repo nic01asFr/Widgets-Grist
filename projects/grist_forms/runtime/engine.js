@@ -1538,7 +1538,19 @@
     return 'Dessinez dans le cadre.';
   }
 
-  function renderFile(field, value) {
+  /**
+   * Les valeurs par défaut d'un widget d'usage (`photo`, `audio`) : des options de plus, que celles de l'auteur
+   * l'emportent toujours. Le champ de l'auteur n'est jamais modifié.
+   */
+  function avecParDefaut(field, defauts) {
+    var options = copierSimple(field.options || {});
+    Object.keys(defauts).forEach(function (k) { if (options[k] === undefined) options[k] = defauts[k]; });
+    var copie = copierSimple(field);
+    copie.options = options;
+    return copie;
+  }
+
+  function renderFile(field, value, widget) {
     var id = fieldId(field);
     var reqAttr = field.required ? ' required' : '';
     var accept = (field.options && field.options.accept) || '';
@@ -1568,10 +1580,19 @@
         '<label class="fr-btn fr-btn--secondary fr-btn--sm fr-upload-camera" for="' + id + '-camera">' +
         'Prendre une photo</label>'
       : '';
-    return '<div class="fr-upload-group" data-colid="' + escapeHtml(field.colId) + '" data-widget="file">' +
+    // Un enregistrement sonore : sur un appareil tactile, `capture` propose l'enregistreur du système plutôt que la
+    // galerie. Même nom que le champ fichier : les deux se lisent ensemble. L'effet de `capture` sur Android et iOS
+    // n'est pas mesuré (cadrage M4) ; sans effet, le sélecteur de fichiers reste là.
+    var micro = widget === 'audio' && prefereAppareilPhoto()
+      ? '<input class="fr-upload fr-upload--micro" type="file" id="' + id + '-micro" name="' +
+        escapeHtml(field.colId) + '" accept="audio/*" capture />' +
+        '<label class="fr-btn fr-btn--secondary fr-btn--sm fr-upload-camera" for="' + id + '-micro">' +
+        'Enregistrer un son</label>'
+      : '';
+    return '<div class="fr-upload-group" data-colid="' + escapeHtml(field.colId) + '" data-widget="' + (widget || 'file') + '">' +
       renderLabel(field, id) +
       '<input class="fr-upload" type="file" id="' + id + '" name="' + escapeHtml(field.colId) +
-      '" multiple' + acceptAttr + reqAttr + ' />' + camera + hint + '</div>';
+      '" multiple' + acceptAttr + reqAttr + ' />' + camera + micro + hint + '</div>';
   }
 
   /**
@@ -1865,6 +1886,11 @@
     likert: function (f, v) { return renderLikert(f, v); },
     echelle: function (f, v, opts, def) { return renderEchelle(f, v, opts, def); },
     file: function (f, v) { return renderFile(f, v); },
+    // Les saisies mobiles, sans aucune capacité : le repli. Ce que l'hôte offre en plus se pose par-dessus.
+    photo: function (f, v) { return renderFile(avecParDefaut(f, { accept: 'image/*' }), v, 'photo'); },
+    audio: function (f, v) { return renderFile(avecParDefaut(f, { accept: 'audio/*', maxFiles: 1 }), v, 'audio'); },
+    voix: function (f, v) { return renderTextLike(f, v, true); },
+    scan: function (f, v) { return renderTextLike(f, v, false); },
     ouinon: function (f, v) { return renderOuiNon(f, v); },
     classement: function (f, v, opts) { return renderClassement(f, v, opts); },
     geo: function (f, v, o, d, values) { return renderGeo(f, v, values); },
@@ -2250,7 +2276,7 @@
       for (var i = 0; i < checkedBoxes.length; i++) arr.push(checkedBoxes[i].value);
       return arr;
     }
-    if (field.widget === 'file' || field.widget === 'dessin') {
+    if (field.widget === 'file' || field.widget === 'dessin' || field.widget === 'photo' || field.widget === 'audio') {
       // Deux champs peuvent porter ce nom : la selection de fichiers et la
       // prise de vue. On lit les deux.
       var selecteur = 'input[type="file"][name="' + field.colId + '"]';
