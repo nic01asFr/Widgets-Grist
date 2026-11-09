@@ -1,0 +1,114 @@
+{
+  "fonction": "genreDepuisStatut",
+  "note": "null = réussite (2xx) : pas d'erreur. `vide` n'est jamais déduit du statut ni du corps : c'est le transport qui le marque.",
+  "cas": [
+    {
+      "statut": 401,
+      "genre": "droits"
+    },
+    {
+      "statut": 403,
+      "genre": "droits"
+    },
+    {
+      "statut": 429,
+      "genre": "limite"
+    },
+    {
+      "statut": 408,
+      "genre": "delai"
+    },
+    {
+      "statut": 504,
+      "genre": "delai"
+    },
+    {
+      "statut": 400,
+      "genre": "forme"
+    },
+    {
+      "statut": 404,
+      "genre": "forme"
+    },
+    {
+      "statut": 413,
+      "genre": "forme"
+    },
+    {
+      "statut": 422,
+      "genre": "forme"
+    },
+    {
+      "statut": 418,
+      "genre": "forme"
+    },
+    {
+      "statut": 100,
+      "genre": "forme"
+    },
+    {
+      "statut": 199,
+      "genre": "forme"
+    },
+    {
+      "statut": 301,
+      "genre": "forme"
+    },
+    {
+      "statut": 302,
+      "genre": "forme"
+    },
+    {
+      "statut": 399,
+      "genre": "forme"
+    },
+    {
+      "statut": 500,
+      "genre": "reseau"
+    },
+    {
+      "statut": 502,
+      "genre": "reseau"
+    },
+    {
+      "statut": 503,
+      "genre": "reseau"
+    },
+    {
+      "statut": 599,
+      "genre": "reseau"
+    },
+    {
+      "statut": 200,
+      "genre": null
+    },
+    {
+      "statut": 204,
+      "genre": null
+    },
+    {
+      "statut": 299,
+      "genre": null
+    },
+    {
+      "statut": null,
+      "genre": "reseau"
+    },
+    {
+      "statut": "NaN",
+      "genre": "reseau"
+    },
+    {
+      "statut": "abc",
+      "genre": "reseau"
+    },
+    {
+      "statut": "",
+      "genre": "reseau"
+    },
+    {
+      "statut": "429",
+      "genre": "limite"
+    }
+  ]
+}

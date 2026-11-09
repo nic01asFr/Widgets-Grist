@@ -1,0 +1,115 @@
+{
+  "fonction": "assainirMessage",
+  "note": "Aucun message ne porte de clé, de jeton ni d'adresse. `absent` : chaînes qui ne doivent PAS ressortir. Les valeurs ressemblant à des clés sont fictives.",
+  "cas": [
+    {
+      "nom": "clé saisie reprise dans le message du service",
+      "message": "Incorrect API key provided: sk-live-ABC123def456",
+      "secrets": [
+        "sk-live-ABC123def456"
+      ],
+      "absent": [
+        "sk-live-ABC123def456"
+      ]
+    },
+    {
+      "nom": "adresse saisie reprise en entier",
+      "message": "connect ECONNREFUSED https://llm.exemple.test/v1/chat",
+      "secrets": [
+        "https://llm.exemple.test/v1"
+      ],
+      "absent": [
+        "llm.exemple.test"
+      ]
+    },
+    {
+      "nom": "nom d'hôte seul d'une adresse saisie",
+      "message": "getaddrinfo ENOTFOUND llm.exemple.test",
+      "secrets": [
+        "https://llm.exemple.test/v1"
+      ],
+      "absent": [
+        "llm.exemple.test"
+      ]
+    },
+    {
+      "nom": "jeton Bearer sans secret connu",
+      "message": "401 : Authorization failed for Bearer abc.def-ghi_123",
+      "secrets": [],
+      "absent": [
+        "abc.def-ghi_123"
+      ]
+    },
+    {
+      "nom": "clé affectée dans un en-tête",
+      "message": "x-api-key: 9f8e7d6c5b4a",
+      "secrets": [],
+      "absent": [
+        "9f8e7d6c5b4a"
+      ]
+    },
+    {
+      "nom": "URL sans secret connu",
+      "message": "fetch failed http://192.168.1.50:11434/api/chat",
+      "secrets": [],
+      "absent": [
+        "192.168.1.50",
+        "11434",
+        "api/chat"
+      ]
+    },
+    {
+      "nom": "adresse IP nue",
+      "message": "timeout vers 10.0.0.12:8080",
+      "secrets": [],
+      "absent": [
+        "10.0.0.12"
+      ]
+    },
+    {
+      "nom": "localhost avec port",
+      "message": "ECONNREFUSED localhost:11434",
+      "secrets": [],
+      "absent": [
+        "localhost",
+        "11434"
+      ]
+    },
+    {
+      "nom": "longue chaîne opaque",
+      "message": "invalid token AbCdEfGhIjKlMnOpQrStUvWxYz0123456789",
+      "secrets": [],
+      "absent": [
+        "AbCdEfGhIjKlMnOpQrStUvWxYz0123456789"
+      ]
+    },
+    {
+      "nom": "clé encodée dans une URL",
+      "message": "GET /v1?key=a%2Bb%2Fc%3D failed",
+      "secrets": [
+        "a+b/c="
+      ],
+      "absent": [
+        "a%2Bb%2Fc%3D"
+      ]
+    },
+    {
+      "nom": "message sans rien de sensible : intact",
+      "message": "Le service ne répond pas.",
+      "secrets": [
+        "sk-zzz-111"
+      ],
+      "absent": [],
+      "egal": "Le service ne répond pas."
+    },
+    {
+      "nom": "message absent",
+      "message": null,
+      "secrets": [
+        "sk-zzz-111"
+      ],
+      "absent": [],
+      "egal": ""
+    }
+  ]
+}

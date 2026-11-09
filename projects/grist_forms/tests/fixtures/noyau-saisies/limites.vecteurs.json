@@ -1,0 +1,124 @@
+{
+  "fonction": "controlerLimites",
+  "cas": [
+    {
+      "nom": "audio dans la limite",
+      "entree": {
+        "piece": {
+          "type": "audio",
+          "secondes": 60,
+          "octets": 900000
+        },
+        "limites": {
+          "audioSecondes": 120
+        }
+      },
+      "attendu": {
+        "ok": true
+      }
+    },
+    {
+      "nom": "audio trop long",
+      "entree": {
+        "piece": {
+          "type": "audio",
+          "secondes": 121
+        },
+        "limites": {
+          "audioSecondes": 120
+        }
+      },
+      "attendu": {
+        "ok": false,
+        "genre": "forme"
+      }
+    },
+    {
+      "nom": "audio à la limite exacte : permis",
+      "entree": {
+        "piece": {
+          "type": "audio",
+          "secondes": 120
+        },
+        "limites": {
+          "audioSecondes": 120
+        }
+      },
+      "attendu": {
+        "ok": true
+      }
+    },
+    {
+      "nom": "photo trop lourde",
+      "entree": {
+        "piece": {
+          "type": "photo",
+          "octets": 10485761
+        },
+        "limites": {
+          "photoOctets": 10485760
+        }
+      },
+      "attendu": {
+        "ok": false,
+        "genre": "forme"
+      }
+    },
+    {
+      "nom": "photo à la limite exacte : permise",
+      "entree": {
+        "piece": {
+          "type": "photo",
+          "octets": 10485760
+        },
+        "limites": {
+          "photoOctets": 10485760
+        }
+      },
+      "attendu": {
+        "ok": true
+      }
+    },
+    {
+      "nom": "sans limites : tout passe",
+      "entree": {
+        "piece": {
+          "type": "photo",
+          "octets": 999999999
+        }
+      },
+      "attendu": {
+        "ok": true
+      }
+    },
+    {
+      "nom": "audio : la limite de la photo ne s'applique pas",
+      "entree": {
+        "piece": {
+          "type": "audio",
+          "octets": 50000000
+        },
+        "limites": {
+          "photoOctets": 1000
+        }
+      },
+      "attendu": {
+        "ok": true
+      }
+    },
+    {
+      "nom": "mesure absente : pas de refus",
+      "entree": {
+        "piece": {
+          "type": "photo"
+        },
+        "limites": {
+          "photoOctets": 1000
+        }
+      },
+      "attendu": {
+        "ok": true
+      }
+    }
+  ]
+}

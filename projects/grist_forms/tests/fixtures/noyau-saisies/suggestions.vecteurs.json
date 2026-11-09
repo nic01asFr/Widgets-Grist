@@ -1,0 +1,185 @@
+{
+  "fonction": "proposer / appliquerDecision",
+  "note": "Une extraction ne fait que proposer : elle n'écrit jamais. `null` n'est pas une valeur lue.",
+  "proposer": [
+    {
+      "nom": "valeur lue, champ vide",
+      "entree": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": null
+      },
+      "attendu": {
+        "etat": "propose",
+        "ecrase": false
+      }
+    },
+    {
+      "nom": "valeur lue, champ déjà rempli : ecrase",
+      "entree": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": "Quai sud"
+      },
+      "attendu": {
+        "etat": "propose",
+        "ecrase": true
+      }
+    },
+    {
+      "nom": "champ rempli de blancs : pas d'écrasement",
+      "entree": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": "   "
+      },
+      "attendu": {
+        "etat": "propose",
+        "ecrase": false
+      }
+    },
+    {
+      "nom": "liste vide actuelle : pas d'écrasement",
+      "entree": {
+        "colId": "tags",
+        "proposee": [
+          "a"
+        ],
+        "actuelle": []
+      },
+      "attendu": {
+        "etat": "propose",
+        "ecrase": false
+      }
+    },
+    {
+      "nom": "valeur non lue (null) : aucune suggestion",
+      "entree": {
+        "colId": "lieu",
+        "proposee": null,
+        "actuelle": "x"
+      },
+      "attendu": null
+    },
+    {
+      "nom": "valeur absente : aucune suggestion",
+      "entree": {
+        "colId": "lieu",
+        "actuelle": "x"
+      },
+      "attendu": null
+    },
+    {
+      "nom": "valeur lue vide mais présente : proposée, c'est une valeur",
+      "entree": {
+        "colId": "note",
+        "proposee": "",
+        "actuelle": null
+      },
+      "attendu": {
+        "etat": "propose"
+      }
+    },
+    {
+      "nom": "zéro est une valeur",
+      "entree": {
+        "colId": "n",
+        "proposee": 0,
+        "actuelle": null
+      },
+      "attendu": {
+        "etat": "propose"
+      }
+    }
+  ],
+  "decisions": [
+    {
+      "nom": "accepter écrit la valeur proposée",
+      "suggestion": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": null
+      },
+      "decision": {
+        "type": "accepter"
+      },
+      "attendu": {
+        "etat": "acceptee",
+        "ecrire": {
+          "colId": "lieu",
+          "valeur": "Pont nord"
+        },
+        "ignoree": false
+      }
+    },
+    {
+      "nom": "modifier écrit la valeur de la personne",
+      "suggestion": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": null
+      },
+      "decision": {
+        "type": "modifier",
+        "valeur": "Pont est"
+      },
+      "attendu": {
+        "etat": "modifiee",
+        "ecrire": {
+          "colId": "lieu",
+          "valeur": "Pont est"
+        },
+        "ignoree": false
+      }
+    },
+    {
+      "nom": "modifier en vidant revient à refuser",
+      "suggestion": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": null
+      },
+      "decision": {
+        "type": "modifier",
+        "valeur": ""
+      },
+      "attendu": {
+        "etat": "refusee",
+        "ecrire": null,
+        "ignoree": false
+      }
+    },
+    {
+      "nom": "refuser n'écrit rien",
+      "suggestion": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": "Quai sud"
+      },
+      "decision": {
+        "type": "refuser"
+      },
+      "attendu": {
+        "etat": "refusee",
+        "ecrire": null,
+        "ignoree": false
+      }
+    },
+    {
+      "nom": "décision inconnue : ignorée, la suggestion reste proposée",
+      "suggestion": {
+        "colId": "lieu",
+        "proposee": "Pont nord",
+        "actuelle": null
+      },
+      "decision": {
+        "type": "deviner"
+      },
+      "attendu": {
+        "etat": "propose",
+        "ecrire": null,
+        "ignoree": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,428 @@
+{
+  "fonction": "resoudreSaisie",
+  "note": "Entrée : champ, hote, refus. Attendu : sous-ensemble du résultat. `__appeler` marque un service dont la fonction `appeler` est fournie par le banc. Copie neutre régénérable, jamais éditée à la main dans un projet qui la reçoit.",
+  "cas": [
+    {
+      "nom": "voix, hôte absent : repli textarea",
+      "entree": {
+        "champ": {
+          "widget": "voix"
+        }
+      },
+      "attendu": {
+        "geste": "voix",
+        "mode": "repli",
+        "raison": "hote-absent",
+        "widgetRepli": "textarea",
+        "capacite": "micro"
+      }
+    },
+    {
+      "nom": "voix, micro absent : repli",
+      "entree": {
+        "champ": {
+          "widget": "voix"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": false,
+            "position": false
+          }
+        }
+      },
+      "attendu": {
+        "mode": "repli",
+        "raison": "capacite-absente",
+        "widgetRepli": "textarea"
+      }
+    },
+    {
+      "nom": "voix, micro disponible, sans service transcrire",
+      "entree": {
+        "champ": {
+          "widget": "voix"
+        },
+        "hote": {
+          "capacites": {
+            "micro": true
+          }
+        }
+      },
+      "attendu": {
+        "mode": "direct",
+        "raison": null,
+        "transcription": false
+      }
+    },
+    {
+      "nom": "voix, micro disponible, service transcrire fourni",
+      "entree": {
+        "champ": {
+          "widget": "voix"
+        },
+        "hote": {
+          "capacites": {
+            "micro": true
+          },
+          "services": {
+            "transcrire": {
+              "__appeler": true
+            }
+          }
+        }
+      },
+      "attendu": {
+        "mode": "direct",
+        "transcription": true
+      }
+    },
+    {
+      "nom": "voix, micro refusé à l'exécution",
+      "entree": {
+        "champ": {
+          "widget": "voix"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        },
+        "refus": [
+          "micro"
+        ]
+      },
+      "attendu": {
+        "mode": "repli",
+        "raison": "capacite-refusee",
+        "widgetRepli": "textarea"
+      }
+    },
+    {
+      "nom": "audio, micro disponible",
+      "entree": {
+        "champ": {
+          "widget": "audio"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        }
+      },
+      "attendu": {
+        "geste": "audio",
+        "mode": "direct",
+        "capacite": "micro"
+      }
+    },
+    {
+      "nom": "audio, repli sur file",
+      "entree": {
+        "champ": {
+          "widget": "audio"
+        }
+      },
+      "attendu": {
+        "mode": "repli",
+        "widgetRepli": "file"
+      }
+    },
+    {
+      "nom": "photo, caméra disponible",
+      "entree": {
+        "champ": {
+          "widget": "photo"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        }
+      },
+      "attendu": {
+        "geste": "photo",
+        "mode": "direct",
+        "capacite": "camera"
+      }
+    },
+    {
+      "nom": "photo, caméra refusée : repli file",
+      "entree": {
+        "champ": {
+          "widget": "photo"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        },
+        "refus": [
+          "camera"
+        ]
+      },
+      "attendu": {
+        "mode": "repli",
+        "raison": "capacite-refusee",
+        "widgetRepli": "file"
+      }
+    },
+    {
+      "nom": "scan : la capacité est scanner, pas camera",
+      "entree": {
+        "champ": {
+          "widget": "scan"
+        },
+        "hote": {
+          "capacites": {
+            "camera": true,
+            "scanner": false
+          }
+        }
+      },
+      "attendu": {
+        "mode": "repli",
+        "raison": "capacite-absente",
+        "capacite": "scanner",
+        "widgetRepli": "text"
+      }
+    },
+    {
+      "nom": "scan, scanner disponible",
+      "entree": {
+        "champ": {
+          "widget": "scan"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        }
+      },
+      "attendu": {
+        "mode": "direct",
+        "capacite": "scanner"
+      }
+    },
+    {
+      "nom": "geo = position, position disponible",
+      "entree": {
+        "champ": {
+          "widget": "geo"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        }
+      },
+      "attendu": {
+        "geste": "position",
+        "mode": "direct",
+        "capacite": "position"
+      }
+    },
+    {
+      "nom": "geo, position absente : repli geo sans position",
+      "entree": {
+        "champ": {
+          "widget": "geo"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": false,
+            "position": false
+          }
+        }
+      },
+      "attendu": {
+        "mode": "repli",
+        "raison": "capacite-absente",
+        "widgetRepli": "geo"
+      }
+    },
+    {
+      "nom": "widget sans geste, sans capacité : rien à résoudre",
+      "entree": {
+        "champ": {
+          "widget": "text"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        }
+      },
+      "attendu": {
+        "geste": null,
+        "mode": "direct",
+        "raison": "aucun-geste"
+      }
+    },
+    {
+      "nom": "capacité inconnue dans les options : ignorée, jamais une erreur",
+      "entree": {
+        "champ": {
+          "widget": "voix",
+          "options": {
+            "capacite": "telepathie"
+          }
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        }
+      },
+      "attendu": {
+        "mode": "direct",
+        "capacite": "micro"
+      }
+    },
+    {
+      "nom": "options.capacite l'emporte sur celle du widget",
+      "entree": {
+        "champ": {
+          "widget": "photo",
+          "options": {
+            "capacite": "scanner"
+          }
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1",
+          "capacites": {
+            "camera": true,
+            "micro": true,
+            "position": true,
+            "orientation": false,
+            "scanner": true
+          },
+          "services": {
+            "transcrire": {
+              "sortant": "tiers"
+            }
+          }
+        }
+      },
+      "attendu": {
+        "capacite": "scanner",
+        "mode": "direct"
+      }
+    },
+    {
+      "nom": "hôte sans objet capacites : hôte absent",
+      "entree": {
+        "champ": {
+          "widget": "photo"
+        },
+        "hote": {
+          "contrat": "hote-capacites-0.1"
+        }
+      },
+      "attendu": {
+        "mode": "repli",
+        "raison": "hote-absent"
+      }
+    },
+    {
+      "nom": "capacité à la chaîne 'true' : pas disponible",
+      "entree": {
+        "champ": {
+          "widget": "photo"
+        },
+        "hote": {
+          "capacites": {
+            "camera": "true"
+          }
+        }
+      },
+      "attendu": {
+        "mode": "repli",
+        "raison": "capacite-absente"
+      }
+    }
+  ]
+}
