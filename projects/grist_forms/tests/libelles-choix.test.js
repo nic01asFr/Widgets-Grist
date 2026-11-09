@@ -68,6 +68,16 @@ describe('options.libelles : ce qu\'on ignore, sans lever', () => {
       assert.deepEqual(libellesAffiches(rendu(lib)).filter(Boolean).slice(-4), ['1', '2', '3', '4']);
     });
   });
+  it('un tableau dont les indices tombent sur les valeurs n\'est pas un dictionnaire : ignoré', () => {
+    const lib = ['zéro', 'Critique', 'Haute', 'Moyenne', 'Basse'];
+    const affiches = libellesAffiches(rendu(lib)).join(' | ');
+    assert.ok(!affiches.includes('Critique') && !affiches.includes('Haute'), affiches);
+  });
+  it('un dictionnaire hérité d\'un prototype n\'est pas lu : seules les propriétés propres comptent', () => {
+    const herite = Object.create({ 1: 'Hérité', 2: 'Hérité aussi' });
+    const affiches = libellesAffiches(rendu(herite)).join(' | ');
+    assert.ok(!affiches.includes('Hérité'), affiches);
+  });
   it('une clé qui n\'est pas une valeur du choix est sans effet', () => {
     assert.deepEqual(libellesAffiches(rendu({ 9: 'Inconnue' })).filter(Boolean).slice(-4), ['1', '2', '3', '4']);
   });
@@ -92,6 +102,11 @@ describe('options.libelles : priorité', () => {
     const html = Engine.renderFieldHtml(f, {}, [{ value: 1, label: 'Refonte' }, { value: 2, label: 'Mobile' }]);
     assert.ok(html.includes('Refonte'));
     assert.ok(!html.includes('Ignoré'));
+  });
+  it('une référence dont le libellé égale la valeur n\'est pas remplacée : libelles ne vaut que pour les choix', () => {
+    const f = { colId: 'r', label: 'R', type: 'RefList:Projects', widget: 'multiselect', options: { libelles: { 7: 'Ignoré' } } };
+    const html = Engine.renderFieldHtml(f, {}, [7, 8]);
+    assert.ok(!html.includes('Ignoré'), 'une référence ne prend pas de libellé de libelles');
   });
   it('la liste d\'options passée au rendu reçoit aussi les libellés', () => {
     const f = { colId: 'p', label: 'P', type: 'Choice', widget: 'select', options: { libelles: { a: 'Alpha' } } };
