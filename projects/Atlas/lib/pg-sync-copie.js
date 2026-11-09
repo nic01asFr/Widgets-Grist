@@ -22,7 +22,7 @@ import { planImportPg } from './pg-import.js?v=20261109a';
  */
 export function planCopie({ lecture, table, decl, url, connexion, nom, tables = [] }) {
   if (lecture.tronque) {
-    return { ok: false, erreur: 'La table est trop grande pour une copie complète (résultat tronqué) : une synchronisation compare toutes les lignes.' };
+    return { ok: false, erreur: 'La table est trop grande pour une copie complète (plus de 50 000 lignes, ou une passerelle sans lecture par pages) : une synchronisation compare toutes les lignes.' };
   }
   const lignes = (lecture.lignes || []).filter((l) => l.actif !== false); // une ligne désactivée dans PostgreSQL n'a pas de copie
   if (!lignes.length) return { ok: false, erreur: 'La table ne contient aucune ligne active : rien à copier.' };

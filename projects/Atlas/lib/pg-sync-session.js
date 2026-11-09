@@ -21,13 +21,14 @@ import {
 } from './pg-sync.js?v=20261109a';
 import { convertir, centre } from './pg-import.js?v=20261109a';
 import { adresseAdmisePg } from './pg-acces.js?v=20261109a';
+import { lireTout, LIMITE_PAGE, LIMITE_TOTALE } from './pg-lecture.js?v=20261109a';
 
 export const TABLE_COPIES = 'Atlas_PgSyncCopies';
 const COLONNES_COPIES = Object.freeze([
   Object.freeze({ id: 'table_grist', type: 'Text', label: 'table_grist' }),
   Object.freeze({ id: 'config', type: 'Text', label: 'config' }),
 ]);
-export const LIMITE_LECTURE = 10000;
+export const LIMITE_LECTURE = LIMITE_PAGE; // une page ; la table entière peut aller jusqu'à LIMITE_TOTALE lignes (pg-lecture)
 const ACTIONS_PAR_LOT = 200;
 
 export class ErreurSync extends Error {
@@ -145,9 +146,12 @@ export async function lireEtats({ docApi, config, client }) {
     }
   }
 
-  const lecture = await client.commande('pg_gateway_lire', { connexion: config.connexion, schema: config.schema, table: config.table, limite: LIMITE_LECTURE });
+  const lecture = await lireTout(client, { connexion: config.connexion, schema: config.schema, table: config.table }, { page: LIMITE_PAGE, total: LIMITE_TOTALE });
   if (lecture.tronque) {
-    throw new ErreurSync(`La table PostgreSQL dépasse ${LIMITE_LECTURE} lignes : une comparaison complète est impossible.`, 'table_trop_grande');
+    throw new ErreurSync(
+      `La table PostgreSQL dépasse ${LIMITE_TOTALE} lignes (ou la passerelle ne sait pas les lire page par page) : une comparaison complète est impossible.`,
+      'table_trop_grande',
+    );
   }
   const pgLignes = lecture.lignes.map((l) => ({ cle: l.cle, version: l.version, actif: l.actif, valeurs: l.valeurs }));
   return { gristLignes, pgLignes, snapshots, snapshotsParCle };

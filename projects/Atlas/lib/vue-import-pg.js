@@ -22,11 +22,12 @@ import { creerAccesPg } from './pg-acces.js?v=20261109a';
 import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261109a';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
-import { ouvrirEdition } from './vue-edition-pg.js?v=20261109e';
+import { ouvrirEdition } from './vue-edition-pg.js?v=20261109f';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
-import { planCopie } from './pg-sync-copie.js?v=20261109a';
-import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109a';
-import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261109b';
+import { planCopie } from './pg-sync-copie.js?v=20261109f';
+import { lireTout } from './pg-lecture.js?v=20261109a';
+import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109f';
+import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261109f';
 
 const CLE_URL = 'atlas.pg.url';
 const STYLE_ALERTE = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #d9a21b;background:rgba(217,162,27,.12);border-radius:4px';
@@ -445,7 +446,7 @@ export async function ouvrirImportPg(hote) {
     try {
       const t = etat.table;
       const cible = { connexion: etat.connexion, schema: t.schema, table: t.table };
-      const lecture = await client.commande('pg_gateway_lire', { ...cible, limite: etat.limiteMax || 10000 });
+      const lecture = await lireTout(client, cible, { page: etat.limiteMax || 10000 });
       const meta = await client.commande('pg_gateway_table', cible);
       const plan = planCopie({ lecture, table: meta, decl: etat.modifiable, url: etat.url, connexion: etat.connexion, nom: etat.nom || t.table, tables: await hote.tables() });
       if (!plan.ok) throw new Error(plan.erreur);

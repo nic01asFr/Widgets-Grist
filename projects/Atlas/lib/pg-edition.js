@@ -13,7 +13,7 @@
  *    actuelle ; la personne relit la ligne et recommence.
  */
 
-export const STATUTS = Object.freeze(['ok', 'conflit', 'introuvable', 'refuse', 'erreur', 'non_applique']);
+export const STATUTS = Object.freeze(['ok', 'conflit', 'introuvable', 'refuse', 'erreur', 'non_applique', 'annule']);
 
 /** Les colonnes proposées à la saisie, avec leur type Grist et la valeur actuelle. */
 export function champsEditables({ decl, table, valeurs = {} }) {

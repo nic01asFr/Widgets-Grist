@@ -66,7 +66,12 @@ class FauxPg {
       const lignes = [...this.lignes.values()].sort((a, b) => a.id - b.id).map((l) => ({
         cle: { id: l.id }, valeurs: { type: l.type, cout: l.cout, date_intervention: l.date_intervention, geom: l.geom }, version: l.version, actif: l.actif,
       }));
-      return { lignes, nb_lignes: lignes.length, tronque: this.tronque };
+      // Comme la vraie passerelle : `limite` lignes par page dans l'ordre de la clé, `decalage` pour la suite, `suivant` tant qu'il en reste.
+      const debut = corps.decalage || 0;
+      const fin = debut + (corps.limite || lignes.length);
+      const page = lignes.slice(debut, fin);
+      const reste = lignes.length > fin;
+      return { lignes: page, nb_lignes: page.length, tronque: this.tronque || reste, ...(reste ? { suivant: fin } : {}) };
     }
     if (nom !== 'pg_gateway_ecrire') throw new Error('commande inconnue ' + nom);
     if (this.panne) throw new Error('Passerelle injoignable');
@@ -400,6 +405,18 @@ describe('synchroniser : quand le monde bouge ou casse pendant l’application',
     const c = await monterCopie();
     c.pg.tronque = true;
     await assert.rejects(comparer({ docApi: c.grist, config: c.config, client: c.pg }), (e) => e.code === 'table_trop_grande');
+  });
+
+  it('une table de plus d’une page se compare en entier, page après page', async () => {
+    const c = await monterCopie();
+    for (let i = 0; i < 10100; i++) c.pg.ajouter({ type: `n${i}` });
+    c.pg.appels.length = 0; // la lecture de la mise en place n'est pas celle qu'on compte
+    const { etats } = await comparer({ docApi: c.grist, config: c.config, client: c.pg });
+    assert.equal(etats.pgLignes.length, c.pg.lignes.size, 'aucune ligne perdue entre deux pages');
+    const lectures = c.pg.appels.filter((a) => a.nom === 'pg_gateway_lire');
+    assert.equal(lectures.length, 2, 'deux pages');
+    assert.equal('decalage' in lectures[0].corps, false);
+    assert.equal(lectures[1].corps.decalage, 10000);
   });
 
   it('un refus de PostgreSQL (contrainte) est rapporté avec sa cause et ne fabrique pas de « vu »', async () => {

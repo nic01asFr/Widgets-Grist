@@ -21,7 +21,7 @@ import { creerClientPg, texteErreur } from './pg-passerelle.js?v=20261109a';
 import {
   champsEditables, texteDeValeur, valeursModifiees, operationModifier, operationInserer, operationEtat, pointGeoJSON,
   droitsFiche, insertionPossible, interpreter, cleDeFeature, lireCle,
-} from './pg-edition.js?v=20261109a';
+} from './pg-edition.js?v=20261109f';
 
 const STYLE_REFUS = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #c0392b;background:rgba(192,57,43,.1);border-radius:4px';
 const STYLE_OK = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #2e8b57;background:rgba(46,139,87,.1);border-radius:4px';
