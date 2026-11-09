@@ -3402,6 +3402,7 @@
         var html = verrouilles.indexOf(f.colId) !== -1
           ? renderVerrouille(f, values[f.colId], libellesVerrou[f.colId])
           : (rendreDictee(f, opts) || renderFieldHtml(f, values, opts, formDef));
+        html = adapterPosition(f, html);
         html += rendreProposition(f);
         if (errorFields.indexOf(f.colId) !== -1) {
           // > **Le message doit tenir a sa question.** Pose seul entre deux
@@ -3543,6 +3544,24 @@
     }
 
     function capteurAudio() { return (capteurs && capteurs.audio) || capteurAudioNavigateur(); }
+
+    /**
+     * « Utiliser ma position » selon l'hôte. Seulement quand un hôte est passé : sans lui, le bouton reste comme il a
+     * toujours été (un formulaire existant ne change pas). Un hôte qui ne déclare pas la position, ou dont la personne
+     * l'a refusée, n'a pas de bouton qui échouerait : le point se place sur la carte, par une adresse, ou à la main.
+     * Dans un widget Grist, l'iframe refuse la position (mesuré) : c'est le cas qu'on évite de promettre.
+     */
+    function adapterPosition(f, html) {
+      if (!hote || f.widget !== 'geo') return html;
+      var N = noyauApi();
+      if (!N) return html;
+      var info = N.resoudreSaisie(f, hote, refusCapacites);
+      if (info.mode !== 'repli') return html;
+      var bouton = '<button type="button" class="fr-btn fr-btn--secondary fr-geo__ici">Utiliser ma position</button>';
+      if (html.indexOf(bouton) === -1) return html;
+      var raison = info.raison === 'capacite-refusee' ? 'Vous avez refusé la position de l’appareil.' : 'La position de l’appareil n’est pas disponible ici.';
+      return html.split(bouton).join('').replace('<p class="fr-hint-text fr-geo__etat"', '<p class="fr-hint-text fr-geo__sans-position">' + raison + '</p><p class="fr-hint-text fr-geo__etat"');
+    }
 
     function champDe(colId) {
       var trouve = null;
@@ -4496,6 +4515,8 @@
               champ.dispatchEvent(new Event('change', { bubbles: true }));
             }
           }, function () {
+            // Avec un hôte, un refus se retient pour la séance : au prochain affichage, plus de bouton qui échouerait.
+            if (hote && refusCapacites.indexOf('position') === -1) refusCapacites.push('position');
             // Le refus ne fait pas oublier ce que l'on sait du point d\u00e9j\u00e0 pos\u00e9.
             var garde = values['__enrichi_' + bloc.getAttribute('data-colid')];
             if (etat) etat.textContent = 'Position refus\u00e9e ou indisponible \u2014 vous pouvez la saisir \u00e0 la main.' + (garde ? ' ' + garde : '');

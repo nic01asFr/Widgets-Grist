@@ -91,6 +91,16 @@ function parseHtml(html) {
 }
 
 function matchesSimple(el, simple) {
+  // Des classes, tout au début : `.fr-geo__ici`, `button.fr-btn`. Les points d'une valeur entre guillemets
+  // (name="couleurs[0].nom") ne sont pas des classes : on ne lit que ce qui suit directement la balise.
+  var classes = [];
+  var tete = /^([a-zA-Z0-9]*)((?:\.[a-zA-Z0-9_-]+)+)(.*)$/.exec(simple.trim());
+  if (tete) {
+    tete[2].split('.').forEach(function (c) { if (c) classes.push(c); });
+    simple = tete[1] + tete[3];
+    var posees = (el.getAttribute('class') || '').split(/\s+/);
+    for (var ci = 0; ci < classes.length; ci++) if (posees.indexOf(classes[ci]) === -1) return false;
+  }
   // Une valeur entre guillemets peut contenir des crochets (name="couleurs[0].nom").
   var m = /^([a-zA-Z0-9]*)((?:\[(?:[^\]"]|"[^"]*")+\])*)(:checked)?$/.exec(simple.trim());
   if (!m) return false;
