@@ -13,7 +13,7 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
-## Non publié — démarrage sans clignotement : marque neutre par défaut, thème avant les données
+## 1.45.0 — démarrage sans clignotement : marque neutre, thème avant les données, apparence d'origine de l'instance Grist DINUM (10/11/2026)
 
 - **Marque : neutre par défaut, partout.** Sans `?marque=`, ni glyphe ni nom : le nom du projet seul (widget Grist, application installée, démo web seule). Le choix est fait dans le script de tête de page : le logo n'apparaît plus pour disparaître ensuite (avant, la règle « pas de logo en widget » n'arrivait à la fin du démarrage). `?marque=icone` rend le glyphe seul, `?marque=atlas` le glyphe et le nom : inchangés.
 - **Le menu principal garde son indice sans marque** (application connectée) : un chevron suit le nom du projet, et le bouton de menu de la carte montre trois traits au lieu du glyphe.

@@ -11,21 +11,21 @@
  * retire et `init()` prend le relais.
  */
 
-import { capacites, creerClient } from './data-client.js?v=1.44.0';
-import { installerAdaptateur } from './grist-adapter.js?v=1.44.0';
-import { habillerHorsLigne, stockageParDefaut, scenesPreparees } from './hors-ligne.js?v=1.44.0';
-import { listerScenesAtlas, lireMiniature } from './decouverte.js?v=1.44.0';
+import { capacites, creerClient } from './data-client.js?v=1.45.0';
+import { installerAdaptateur } from './grist-adapter.js?v=1.45.0';
+import { habillerHorsLigne, stockageParDefaut, scenesPreparees } from './hors-ligne.js?v=1.45.0';
+import { listerScenesAtlas, lireMiniature } from './decouverte.js?v=1.45.0';
 import {
   ClientLocal, estIdLocal, idDepuisDocument, idDocumentLocal, lireSceneLocale, scenesLocales, creerSceneLocale,
   supprimerSceneLocale, resumerScene, cleEnvoi,
-} from './scene-locale.js?v=1.44.0';
-import { listerEspacesEditables, nomParDefaut, sceneNeuve, planEnvoi, journalVide, envoyerScene } from './creer-document.js?v=1.44.0';
+} from './scene-locale.js?v=1.45.0';
+import { listerEspacesEditables, nomParDefaut, sceneNeuve, planEnvoi, journalVide, envoyerScene } from './creer-document.js?v=1.45.0';
 import {
   ECRANS, ecranInitial, validerConfig, lireConfig, ecrireConfig, changerConnexion,
   depuis, situer, peutChangerDeScene, quitterScene,
   memoriserScenes, lireScenesMemorisees, offreApplication, phrasePreparation, phraseProgres,
   libelleRole, trierScenes, filtrerScenes, lirePrefsListe, ecrirePrefsListe, TRIS, FILTRES,
-} from './hote.js?v=1.44.0';
+} from './hote.js?v=1.45.0';
 
 export const VERSION = '1.0.0';
 
@@ -38,6 +38,11 @@ const CSS = `
 .hote-marque { display: flex; align-items: center; gap: .55rem;
   font-family: var(--serif, Georgia, serif); font-size: 1.35rem;
   color: var(--ink, #1F1B14); margin-bottom: .3rem; }
+/* La marque suit le réglage de la page (?marque=, défaut « aucune ») et les couleurs de la charte, comme l'en-tête de l'application. */
+.hote-logo-corps { fill: var(--accent, #3e5de7); }
+.hote-logo-trait { stroke: var(--surface, #fbfcfd); }
+html[data-marque="aucune"] .hote-marque { display: none; }
+html[data-marque="icone"] .hote-marque span { display: none; }
 .hote h2 { font-family: var(--serif, Georgia, serif); font-weight: 500;
   font-size: 1.5rem; line-height: 1.2; margin: 0; color: var(--ink, #1F1B14); }
 .hote p { margin: 0; font-size: .95rem; line-height: 1.55; color: var(--muted, #7A6F5E); }
@@ -202,7 +207,7 @@ const IC = {
 
 const MARQUE = `<div class="hote-marque">
   <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-    <path d="M4 24 16 6l12 18-12 4z" fill="#C44536"/><path d="M16 6v22" stroke="#F4EFE3" stroke-width="1.2"/>
+    <path class="hote-logo-corps" d="M4 24 16 6l12 18-12 4z"/><path class="hote-logo-trait" d="M16 6v22" stroke-width="1.2"/>
   </svg><span>Atlas</span></div>`;
 
 /**
