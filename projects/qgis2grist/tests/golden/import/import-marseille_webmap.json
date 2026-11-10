@@ -1,0 +1,6455 @@
+{
+ "versionFormat": 1,
+ "scenario": "marseille_webmap",
+ "fixture": "marseille4e_webmap_html",
+ "erreur": null,
+ "etatFinal": "importing",
+ "nbAppelsApplyUserActions": 15,
+ "appels": [
+  {
+   "appel": 0,
+   "actions": [
+    [
+     "AddTable",
+     "Batiments_4eme",
+     [
+      {
+       "id": "fid",
+       "type": "Int"
+      },
+      {
+       "id": "gml_id",
+       "type": "Text"
+      },
+      {
+       "id": "cleabs",
+       "type": "Text"
+      },
+      {
+       "id": "nature",
+       "type": "Text"
+      },
+      {
+       "id": "usage_1",
+       "type": "Text"
+      },
+      {
+       "id": "construction_legere",
+       "type": "Bool"
+      },
+      {
+       "id": "etat_de_l_objet",
+       "type": "Text"
+      },
+      {
+       "id": "date_creation",
+       "type": "Text"
+      },
+      {
+       "id": "date_modification",
+       "type": "Text"
+      },
+      {
+       "id": "date_de_confirmation",
+       "type": "Text"
+      },
+      {
+       "id": "methode_d_acquisition_planimetrique",
+       "type": "Text"
+      },
+      {
+       "id": "methode_d_acquisition_altimetrique",
+       "type": "Text"
+      },
+      {
+       "id": "precision_planimetrique",
+       "type": "Numeric"
+      },
+      {
+       "id": "precision_altimetrique",
+       "type": "Numeric"
+      },
+      {
+       "id": "hauteur",
+       "type": "Numeric"
+      },
+      {
+       "id": "altitude_minimale_sol",
+       "type": "Numeric"
+      },
+      {
+       "id": "altitude_maximale_toit",
+       "type": "Numeric"
+      },
+      {
+       "id": "altitude_maximale_sol",
+       "type": "Int"
+      },
+      {
+       "id": "origine_du_batiment",
+       "type": "Text"
+      },
+      {
+       "id": "identifiants_rnb",
+       "type": "Text"
+      },
+      {
+       "id": "color",
+       "label": "_color",
+       "type": "Text"
+      },
+      {
+       "id": "date_d_apparition",
+       "type": "Text"
+      },
+      {
+       "id": "nombre_de_logements",
+       "type": "Int"
+      },
+      {
+       "id": "nombre_d_etages",
+       "type": "Int"
+      },
+      {
+       "id": "materiaux_des_murs",
+       "type": "Text"
+      },
+      {
+       "id": "materiaux_de_la_toiture",
+       "type": "Text"
+      },
+      {
+       "id": "appariement_fichiers_fonciers",
+       "type": "Text"
+      },
+      {
+       "id": "usage_2",
+       "type": "Text"
+      },
+      {
+       "id": "altitude_minimale_toit",
+       "type": "Numeric"
+      },
+      {
+       "id": "geometry_json",
+       "label": "GeoJSON",
+       "type": "Text"
+      },
+      {
+       "id": "centroid_lat",
+       "label": "Centroid Lat",
+       "type": "Numeric"
+      },
+      {
+       "id": "centroid_lon",
+       "label": "Centroid Lon",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 1,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Batiments_4eme",
+     "nbLignes": 775,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "fid",
+      "gml_id",
+      "cleabs",
+      "nature",
+      "usage_1",
+      "construction_legere",
+      "etat_de_l_objet",
+      "date_creation",
+      "date_modification",
+      "date_de_confirmation",
+      "methode_d_acquisition_planimetrique",
+      "methode_d_acquisition_altimetrique",
+      "precision_planimetrique",
+      "precision_altimetrique",
+      "hauteur",
+      "altitude_minimale_sol",
+      "altitude_maximale_toit",
+      "altitude_maximale_sol",
+      "origine_du_batiment",
+      "identifiants_rnb",
+      "color",
+      "date_d_apparition",
+      "nombre_de_logements",
+      "nombre_d_etages",
+      "materiaux_des_murs",
+      "materiaux_de_la_toiture",
+      "appariement_fichiers_fonciers",
+      "usage_2",
+      "altitude_minimale_toit",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "altitude_maximale_sol": {
+       "n": 775,
+       "premieres": [
+        64,
+        92,
+        67
+       ],
+       "empreinte": "51e5e12aea9084ee-1bw"
+      },
+      "altitude_maximale_toit": {
+       "n": 775,
+       "premieres": [
+        69.5,
+        98,
+        69.7
+       ],
+       "empreinte": "f45f83f37b2170d6-28o"
+      },
+      "altitude_minimale_sol": {
+       "n": 775,
+       "premieres": [
+        59.7,
+        90.7,
+        64.6
+       ],
+       "empreinte": "a0c2074af4956129-28w"
+      },
+      "altitude_minimale_toit": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "4736fa4731762029-280"
+      },
+      "appariement_fichiers_fonciers": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "902231fe34b8ed51-3ag"
+      },
+      "centroid_lat": {
+       "n": 775,
+       "premieres": [
+        43.310673,
+        43.309243,
+        43.311415
+       ],
+       "empreinte": "4d3c4ba1053c9b17-9kb"
+      },
+      "centroid_lon": {
+       "n": 775,
+       "premieres": [
+        5.405695,
+        5.410796,
+        5.406047
+       ],
+       "empreinte": "9100faf79481d0f7-949"
+      },
+      "cleabs": {
+       "n": 775,
+       "premieres": [
+        "BATIMENT0000000219880140",
+        "BATIMENT0000000219880147",
+        "BATIMENT0000000219880153"
+       ],
+       "empreinte": "f87824557b1d0b72-fjq"
+      },
+      "color": {
+       "n": 775,
+       "premieres": [
+        "#fdbb84",
+        "#fff5f0",
+        "#fff5f0"
+       ],
+       "empreinte": "bccb232a96b27956-5dr"
+      },
+      "construction_legere": {
+       "n": 775,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "98bc0f7b4f8ed548-lj"
+      },
+      "date_creation": {
+       "n": 775,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2009, 3, 23, 16, 40, 23, 273, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2009, 3, 23, 16, 40, 23, 273, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2009, 3, 23, 16, 40, 23, 273, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "88794d9ef10e989f-1d22"
+      },
+      "date_d_apparition": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "4ab7a812304be450-a1g"
+      },
+      "date_de_confirmation": {
+       "n": 775,
+       "premieres": [
+        "PyQt5.QtCore.QDate(2009, 7, 1)",
+        "PyQt5.QtCore.QDate(2009, 7, 1)",
+        "PyQt5.QtCore.QDate(2009, 7, 1)"
+       ],
+       "empreinte": "c8435f2e931c411d-2zw"
+      },
+      "date_modification": {
+       "n": 775,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2017, 12, 13, 13, 38, 36, 757, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2023, 6, 8, 8, 31, 5, 607, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2017, 12, 13, 13, 38, 36, 757, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "0a57b6fddf2e2e21-1a7z"
+      },
+      "etat_de_l_objet": {
+       "n": 775,
+       "premieres": [
+        "En service",
+        "En service",
+        "En service"
+       ],
+       "empreinte": "ce369b1b455e90d0-76c"
+      },
+      "fid": {
+       "n": 775,
+       "premieres": [
+        1,
+        2,
+        3
+       ],
+       "empreinte": "5a42750f4a08f127-1pl"
+      },
+      "fill_color": {
+       "n": 775,
+       "premieres": [
+        "#fdbb84",
+        "#fff5f0",
+        "#fff5f0"
+       ],
+       "empreinte": "bccb232a96b27956-5dr"
+      },
+      "geometry_json": {
+       "n": 775,
+       "premieres": [
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.40565,43.3107],[5.40564,43.31065],[5.40571,43.31064],[5.40571,43.31066],[5.40575,43.31066],[5.40576,43.31069],[5.40565,43.3107]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.41075,43.30927],[5.41074,43.30922],[5.41086,43.3092],[5.41088,43.30925],[5.41075,43.30927]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.40604,43.31145],[5.40601,43.31138],[5.40606,43.31137],[5.40609,43.31144],[5.40604,43.31145]]]]}"
+       ],
+       "empreinte": "8e9d86ed06c04981-38ar"
+      },
+      "gml_id": {
+       "n": 775,
+       "premieres": [
+        "batiment.3122681",
+        "batiment.3122684",
+        "batiment.3122685"
+       ],
+       "empreinte": "cf0130d077d45b5a-ari"
+      },
+      "hauteur": {
+       "n": 775,
+       "premieres": [
+        6.1,
+        3.2,
+        4.3
+       ],
+       "empreinte": "40c61fad6cfa2458-1ww"
+      },
+      "identifiants_rnb": {
+       "n": 775,
+       "premieres": [
+        "CYVPXH76JSAQ/Y5NDMZA2E9E9",
+        "YXRWQY95V2Y4",
+        "PAV6F21X3KWW"
+       ],
+       "empreinte": "0bad94081fecb7b2-8tp"
+      },
+      "materiaux_de_la_toiture": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "99df985013a29e97-2e4"
+      },
+      "materiaux_des_murs": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "efd829134550c358-2e4"
+      },
+      "methode_d_acquisition_altimetrique": {
+       "n": 775,
+       "premieres": [
+        "Photogrammétrie",
+        "Photogrammétrie",
+        "Photogrammétrie"
+       ],
+       "empreinte": "3b4cb4108aa62912-amj"
+      },
+      "methode_d_acquisition_planimetrique": {
+       "n": 775,
+       "premieres": [
+        "Photogrammétrie",
+        "Photogrammétrie",
+        "Photogrammétrie"
+       ],
+       "empreinte": "2db2614e90795e77-dlt"
+      },
+      "nature": {
+       "n": 775,
+       "premieres": [
+        "Indifférenciée",
+        "Indifférenciée",
+        "Indifférenciée"
+       ],
+       "empreinte": "9cd9cbdd82ded2c0-apk"
+      },
+      "nombre_d_etages": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "210eb1f1a5e25936-1hz"
+      },
+      "nombre_de_logements": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "387e704eb60e136e-1jj"
+      },
+      "origine_du_batiment": {
+       "n": 775,
+       "premieres": [
+        "Imagerie aérienne",
+        "Imagerie aérienne",
+        "Imagerie aérienne"
+       ],
+       "empreinte": "9c2d08ebf1b31882-66a"
+      },
+      "precision_altimetrique": {
+       "n": 775,
+       "premieres": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "empreinte": "c857ad7c38dca658-11b"
+      },
+      "precision_planimetrique": {
+       "n": 775,
+       "premieres": [
+        2.5,
+        2.5,
+        2.5
+       ],
+       "empreinte": "a5de17a57ca02721-n3"
+      },
+      "usage_1": {
+       "n": 775,
+       "premieres": [
+        "Indifférencié",
+        "Indifférencié",
+        "Indifférencié"
+       ],
+       "empreinte": "bfef11c32d5813ca-8kb"
+      },
+      "usage_2": {
+       "n": 775,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "cb758ac654b3687d-3zw"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 2,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Batiments_4eme",
+     "nbLignes": 425,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "fid",
+      "gml_id",
+      "cleabs",
+      "nature",
+      "usage_1",
+      "construction_legere",
+      "etat_de_l_objet",
+      "date_creation",
+      "date_modification",
+      "date_de_confirmation",
+      "methode_d_acquisition_planimetrique",
+      "methode_d_acquisition_altimetrique",
+      "precision_planimetrique",
+      "precision_altimetrique",
+      "hauteur",
+      "altitude_minimale_sol",
+      "altitude_maximale_toit",
+      "altitude_maximale_sol",
+      "origine_du_batiment",
+      "identifiants_rnb",
+      "color",
+      "date_d_apparition",
+      "nombre_de_logements",
+      "nombre_d_etages",
+      "materiaux_des_murs",
+      "materiaux_de_la_toiture",
+      "appariement_fichiers_fonciers",
+      "usage_2",
+      "altitude_minimale_toit",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "altitude_maximale_sol": {
+       "n": 425,
+       "premieres": [
+        38,
+        38,
+        38
+       ],
+       "empreinte": "9b2fdc1919886bfe-o6"
+      },
+      "altitude_maximale_toit": {
+       "n": 425,
+       "premieres": [
+        64.7,
+        67.7,
+        69
+       ],
+       "empreinte": "d3be7f6f9b325a2b-185"
+      },
+      "altitude_minimale_sol": {
+       "n": 425,
+       "premieres": [
+        37.5,
+        37.9,
+        37.9
+       ],
+       "empreinte": "c8b0be60786d5e50-16k"
+      },
+      "altitude_minimale_toit": {
+       "n": 425,
+       "premieres": [
+        59.2,
+        65.7,
+        65.7
+       ],
+       "empreinte": "500d321618222e67-17x"
+      },
+      "appariement_fichiers_fonciers": {
+       "n": 425,
+       "premieres": [
+        null,
+        "C 0.9",
+        "C 0.4"
+       ],
+       "empreinte": "6f0e99c4f4428dfc-1u2"
+      },
+      "centroid_lat": {
+       "n": 425,
+       "premieres": [
+        43.300582,
+        43.300509,
+        43.30059
+       ],
+       "empreinte": "849714c33979c451-59g"
+      },
+      "centroid_lon": {
+       "n": 425,
+       "premieres": [
+        5.400198,
+        5.40022,
+        5.40009
+       ],
+       "empreinte": "9e323d7e4126b8da-51x"
+      },
+      "cleabs": {
+       "n": 425,
+       "premieres": [
+        "BATIMENT0000000258443265",
+        "BATIMENT0000000258443266",
+        "BATIMENT0000000258443267"
+       ],
+       "empreinte": "e66f4b912669e01c-8iy"
+      },
+      "color": {
+       "n": 425,
+       "premieres": [
+        "#e34a33",
+        "#7f2704",
+        "#7f2704"
+       ],
+       "empreinte": "3fa5d3be02676f2e-2y9"
+      },
+      "construction_legere": {
+       "n": 425,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "b8dac79dd0699b53-bt"
+      },
+      "date_creation": {
+       "n": 425,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2011, 5, 20, 6, 51, 42, 503, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2011, 5, 20, 6, 51, 42, 503, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2011, 5, 20, 6, 51, 42, 503, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "8719f4e6e4a59f6c-qw2"
+      },
+      "date_d_apparition": {
+       "n": 425,
+       "premieres": [
+        null,
+        "PyQt5.QtCore.QDate(1934, 1, 1)",
+        "PyQt5.QtCore.QDate(1937, 1, 1)"
+       ],
+       "empreinte": "773aca8e02dc892d-5oc"
+      },
+      "date_de_confirmation": {
+       "n": 425,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "96de7398feb1d548-1cu"
+      },
+      "date_modification": {
+       "n": 425,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2017, 10, 25, 11, 51, 57, 894, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2019, 4, 8, 6, 50, 57, 569, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2019, 4, 8, 6, 50, 57, 569, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "632cdb7ba012ae15-qnw"
+      },
+      "etat_de_l_objet": {
+       "n": 425,
+       "premieres": [
+        "En service",
+        "En service",
+        "En service"
+       ],
+       "empreinte": "1102065e691a2edf-3xo"
+      },
+      "fid": {
+       "n": 425,
+       "premieres": [
+        776,
+        777,
+        778
+       ],
+       "empreinte": "e51128ed33195cd2-150"
+      },
+      "fill_color": {
+       "n": 425,
+       "premieres": [
+        "#e34a33",
+        "#7f2704",
+        "#7f2704"
+       ],
+       "empreinte": "3fa5d3be02676f2e-2y9"
+      },
+      "geometry_json": {
+       "n": 425,
+       "premieres": [
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.40021,43.3006],[5.40024,43.30058],[5.4002,43.30055],[5.40017,43.30057],[5.40018,43.30058],[5.40018,43.30058],[5.4002,43.30059],[5.40021,43.3006]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.40017,43.30057],[5.40006,43.30048],[5.40018,43.3004],[5.40028,43.30047],[5.40029,43.30049],[5.4003,43.30049],[5.40029,43.30049],[5.40026,43.30051],[5.40025,43.3005],[5.40024,43.30051],[5.40021,43.30053],[5.40019,43.30054],[5.4002,43.30055],[5.40017,43.30057]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.40009,43.30065],[5.40008,43.30064],[5.40005,43.30062],[5.39999,43.30057],[5.39996,43.30055],[5.40006,43.30048],[5.40017,43.30057],[5.40018,43.30058],[5.40018,43.30058],[5.40014,43.30061],[5.40009,43.30065]]]]}"
+       ],
+       "empreinte": "034aff4539332ca3-1qov"
+      },
+      "gml_id": {
+       "n": 425,
+       "premieres": [
+        "batiment.9687138",
+        "batiment.9687139",
+        "batiment.9687140"
+       ],
+       "empreinte": "533d38b6af3c1cb5-5wi"
+      },
+      "hauteur": {
+       "n": 425,
+       "premieres": [
+        21.7,
+        27.8,
+        27.8
+       ],
+       "empreinte": "bd8ac44152bed524-11p"
+      },
+      "identifiants_rnb": {
+       "n": 425,
+       "premieres": [
+        "DVV3HJA2E71C",
+        "E3PBV5RJYGFE",
+        "JCNW5Z8YZ424"
+       ],
+       "empreinte": "5bea3dea6e0a6672-4ny"
+      },
+      "materiaux_de_la_toiture": {
+       "n": 425,
+       "premieres": [
+        null,
+        "40",
+        "49"
+       ],
+       "empreinte": "b573bddc9f4097a5-1b8"
+      },
+      "materiaux_des_murs": {
+       "n": 425,
+       "premieres": [
+        null,
+        "30",
+        "14"
+       ],
+       "empreinte": "cc14ee4c0be2d232-1b8"
+      },
+      "methode_d_acquisition_altimetrique": {
+       "n": 425,
+       "premieres": [
+        "Corrélation",
+        "Interpolation bâti BDTopo",
+        "Interpolation bâti BDTopo"
+       ],
+       "empreinte": "e2052b43be06310f-5gw"
+      },
+      "methode_d_acquisition_planimetrique": {
+       "n": 425,
+       "premieres": [
+        "BDParcellaire recalée",
+        "BDParcellaire recalée",
+        "BDParcellaire recalée"
+       ],
+       "empreinte": "fc32114604e80139-7g0"
+      },
+      "nature": {
+       "n": 425,
+       "premieres": [
+        "Indifférenciée",
+        "Indifférenciée",
+        "Indifférenciée"
+       ],
+       "empreinte": "04c1cafb913017b0-5dw"
+      },
+      "nombre_d_etages": {
+       "n": 425,
+       "premieres": [
+        null,
+        9,
+        9
+       ],
+       "empreinte": "de7e09f8bf5cfd83-sl"
+      },
+      "nombre_de_logements": {
+       "n": 425,
+       "premieres": [
+        null,
+        26,
+        23
+       ],
+       "empreinte": "8f8cac2baf0cf04b-tf"
+      },
+      "origine_du_batiment": {
+       "n": 425,
+       "premieres": [
+        "Cadastre",
+        "Cadastre",
+        "Cadastre"
+       ],
+       "empreinte": "5ca5d16de63970b3-3ab"
+      },
+      "precision_altimetrique": {
+       "n": 425,
+       "premieres": [
+        1,
+        2.5,
+        2.5
+       ],
+       "empreinte": "4caf3d3b8b6f299a-i3"
+      },
+      "precision_planimetrique": {
+       "n": 425,
+       "premieres": [
+        3,
+        3,
+        3
+       ],
+       "empreinte": "732f0035e3687770-bv"
+      },
+      "usage_1": {
+       "n": 425,
+       "premieres": [
+        "Indifférencié",
+        "Résidentiel",
+        "Résidentiel"
+       ],
+       "empreinte": "d26beeb3694a61a9-4n4"
+      },
+      "usage_2": {
+       "n": 425,
+       "premieres": [
+        null,
+        "Commercial et services",
+        "Commercial et services"
+       ],
+       "empreinte": "0f4caa92637684a9-2lb"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 3,
+   "actions": [
+    [
+     "AddTable",
+     "Limite_4eme_arr",
+     [
+      {
+       "id": "nom",
+       "type": "Text"
+      },
+      {
+       "id": "geometry_json",
+       "label": "GeoJSON",
+       "type": "Text"
+      },
+      {
+       "id": "centroid_lat",
+       "label": "Centroid Lat",
+       "type": "Numeric"
+      },
+      {
+       "id": "centroid_lon",
+       "label": "Centroid Lon",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 4,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Limite_4eme_arr",
+     "nbLignes": 1,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "nom",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 1,
+       "premieres": [
+        43.304107
+       ],
+       "empreinte": "c0cf80b80b783ec5-h"
+      },
+      "centroid_lon": {
+       "n": 1,
+       "premieres": [
+        5.397773
+       ],
+       "empreinte": "294f89ec83f7fa49-h"
+      },
+      "fill_color": {
+       "n": 1,
+       "premieres": [
+        "#000000"
+       ],
+       "empreinte": "e1ace83637659d88-9"
+      },
+      "geometry_json": {
+       "n": 1,
+       "premieres": [
+        "{\"type\":\"Polygon\",\"coordinates\":[[[5.38816,43.29553],[5.41127,43.29501],[5.41219,43.31698],[5.38907,43.31749],[5.38816,43.29553]]]}"
+       ],
+       "empreinte": "3bfd65e362cc251b-3v"
+      },
+      "nom": {
+       "n": 1,
+       "premieres": [
+        "Limite 4eme arrondissement"
+       ],
+       "empreinte": "2fb2ddd23e778093-s"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 5,
+   "actions": [
+    [
+     "AddTable",
+     "POI_4eme",
+     [
+      {
+       "id": "fid",
+       "type": "Int"
+      },
+      {
+       "id": "gml_id",
+       "type": "Text"
+      },
+      {
+       "id": "cleabs",
+       "type": "Text"
+      },
+      {
+       "id": "nature",
+       "type": "Text"
+      },
+      {
+       "id": "nature_detaillee",
+       "type": "Text"
+      },
+      {
+       "id": "importance",
+       "type": "Text"
+      },
+      {
+       "id": "etat_de_l_objet",
+       "type": "Text"
+      },
+      {
+       "id": "date_creation",
+       "type": "Text"
+      },
+      {
+       "id": "date_modification",
+       "type": "Text"
+      },
+      {
+       "id": "date_de_confirmation",
+       "type": "Text"
+      },
+      {
+       "id": "sources",
+       "type": "Text"
+      },
+      {
+       "id": "identifiants_sources",
+       "type": "Text"
+      },
+      {
+       "id": "methode_d_acquisition_planimetrique",
+       "type": "Text"
+      },
+      {
+       "id": "precision_planimetrique",
+       "type": "Numeric"
+      },
+      {
+       "id": "methode_d_acquisition_altimetrique",
+       "type": "Text"
+      },
+      {
+       "id": "precision_altimetrique",
+       "type": "Numeric"
+      },
+      {
+       "id": "hauteur",
+       "type": "Int"
+      },
+      {
+       "id": "color",
+       "label": "_color",
+       "type": "Text"
+      },
+      {
+       "id": "latitude",
+       "label": "Latitude",
+       "type": "Numeric"
+      },
+      {
+       "id": "longitude",
+       "label": "Longitude",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 6,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "POI_4eme",
+     "nbLignes": 11,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "fid",
+      "gml_id",
+      "cleabs",
+      "nature",
+      "nature_detaillee",
+      "importance",
+      "etat_de_l_objet",
+      "date_creation",
+      "date_modification",
+      "date_de_confirmation",
+      "sources",
+      "identifiants_sources",
+      "methode_d_acquisition_planimetrique",
+      "precision_planimetrique",
+      "methode_d_acquisition_altimetrique",
+      "precision_altimetrique",
+      "hauteur",
+      "color",
+      "latitude",
+      "longitude",
+      "fill_color"
+     ],
+     "colonnes": {
+      "cleabs": {
+       "n": 11,
+       "premieres": [
+        "CONSPONC0000002012602299",
+        "CONSPONC0000002012602303",
+        "CONSPONC0000000040301288"
+       ],
+       "empreinte": "10622dd51c714032-7y"
+      },
+      "color": {
+       "n": 11,
+       "premieres": [
+        "#377eb8",
+        "#e41a1c",
+        "#4daf4a"
+       ],
+       "empreinte": "7e97128d2d1a62a6-2r"
+      },
+      "date_creation": {
+       "n": 11,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2018, 8, 29, 11, 46, 57, 306, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2018, 8, 29, 11, 47, 19, 338, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "0a71fbafc6387b54-pm"
+      },
+      "date_de_confirmation": {
+       "n": 11,
+       "premieres": [
+        "PyQt5.QtCore.QDate(2026, 1, 7)",
+        "PyQt5.QtCore.QDate(2026, 1, 7)",
+        null
+       ],
+       "empreinte": "a3eaf7db287f7cfa-2s"
+      },
+      "date_modification": {
+       "n": 11,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2026, 3, 5, 14, 40, 47, 578, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2026, 3, 5, 14, 40, 47, 578, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2021, 3, 22, 21, 24, 38, 787, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "ddc919db69ea9e91-pb"
+      },
+      "etat_de_l_objet": {
+       "n": 11,
+       "premieres": [
+        "En service",
+        "En service",
+        "En service"
+       ],
+       "empreinte": "425431ba8a6a19f2-3o"
+      },
+      "fid": {
+       "n": 11,
+       "premieres": [
+        1,
+        2,
+        3
+       ],
+       "empreinte": "3c7b7b2022de58c8-d"
+      },
+      "fill_color": {
+       "n": 11,
+       "premieres": [
+        "#377eb8",
+        "#e41a1c",
+        "#4daf4a"
+       ],
+       "empreinte": "7e97128d2d1a62a6-2r"
+      },
+      "gml_id": {
+       "n": 11,
+       "premieres": [
+        "construction_ponctuelle.23448",
+        "construction_ponctuelle.35195",
+        "construction_ponctuelle.81713"
+       ],
+       "empreinte": "548a56b5c00698fb-9h"
+      },
+      "hauteur": {
+       "n": 11,
+       "premieres": [
+        20,
+        15,
+        null
+       ],
+       "empreinte": "446299c1de7330ab-14"
+      },
+      "identifiants_sources": {
+       "n": 11,
+       "premieres": [
+        "ANFR:1460802",
+        "ANFR:1388191",
+        null
+       ],
+       "empreinte": "1af12dd336a0830f-1s"
+      },
+      "importance": {
+       "n": 11,
+       "premieres": [
+        "5",
+        "5",
+        "5"
+       ],
+       "empreinte": "5fd89e00be53158b-x"
+      },
+      "latitude": {
+       "n": 11,
+       "premieres": [
+        43.307133,
+        43.297313,
+        43.311049
+       ],
+       "empreinte": "7fa70aca8c6b99ba-55"
+      },
+      "longitude": {
+       "n": 11,
+       "premieres": [
+        5.389385,
+        5.405752,
+        5.409368
+       ],
+       "empreinte": "8220334255e857ff-3v"
+      },
+      "methode_d_acquisition_altimetrique": {
+       "n": 11,
+       "premieres": [
+        "Photogrammétrie",
+        "Photogrammétrie",
+        "BDTopo"
+       ],
+       "empreinte": "65414552e4c5e64f-2y"
+      },
+      "methode_d_acquisition_planimetrique": {
+       "n": 11,
+       "premieres": [
+        "Photogrammétrie",
+        "Photogrammétrie",
+        "BDTopo"
+       ],
+       "empreinte": "65414552e4c5e64f-2y"
+      },
+      "nature": {
+       "n": 11,
+       "premieres": [
+        "Autre construction élevée",
+        "Antenne",
+        "Clocher"
+       ],
+       "empreinte": "6a8fa1203dfea050-3r"
+      },
+      "nature_detaillee": {
+       "n": 11,
+       "premieres": [
+        "Mât d'éclairage",
+        "Antenne-relais",
+        null
+       ],
+       "empreinte": "6f7130a0bd7eea2f-1x"
+      },
+      "precision_altimetrique": {
+       "n": 11,
+       "premieres": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "empreinte": "f62bf8292703f8c6-x"
+      },
+      "precision_planimetrique": {
+       "n": 11,
+       "premieres": [
+        2.5,
+        2.5,
+        2.5
+       ],
+       "empreinte": "755b03e1053374d6-x"
+      },
+      "sources": {
+       "n": 11,
+       "premieres": [
+        "ANFR 2026",
+        "ANFR 2026",
+        null
+       ],
+       "empreinte": "3d233e30d8d8bdb9-1m"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 7,
+   "actions": [
+    [
+     "AddTable",
+     "Voirie_4eme_clippee",
+     [
+      {
+       "id": "fid",
+       "type": "Int"
+      },
+      {
+       "id": "gml_id",
+       "type": "Text"
+      },
+      {
+       "id": "cleabs",
+       "type": "Text"
+      },
+      {
+       "id": "nature",
+       "type": "Text"
+      },
+      {
+       "id": "nom_collaboratif_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "nom_collaboratif_droite",
+       "type": "Text"
+      },
+      {
+       "id": "importance",
+       "type": "Text"
+      },
+      {
+       "id": "fictif",
+       "type": "Bool"
+      },
+      {
+       "id": "position_par_rapport_au_sol",
+       "type": "Text"
+      },
+      {
+       "id": "etat_de_l_objet",
+       "type": "Text"
+      },
+      {
+       "id": "date_creation",
+       "type": "Text"
+      },
+      {
+       "id": "date_modification",
+       "type": "Text"
+      },
+      {
+       "id": "methode_d_acquisition_planimetrique",
+       "type": "Text"
+      },
+      {
+       "id": "precision_planimetrique",
+       "type": "Numeric"
+      },
+      {
+       "id": "methode_d_acquisition_altimetrique",
+       "type": "Text"
+      },
+      {
+       "id": "precision_altimetrique",
+       "type": "Numeric"
+      },
+      {
+       "id": "nombre_de_voies",
+       "type": "Int"
+      },
+      {
+       "id": "largeur_de_chaussee",
+       "type": "Int"
+      },
+      {
+       "id": "itineraire_vert",
+       "type": "Bool"
+      },
+      {
+       "id": "prive",
+       "type": "Bool"
+      },
+      {
+       "id": "sens_de_circulation",
+       "type": "Text"
+      },
+      {
+       "id": "urbain",
+       "type": "Bool"
+      },
+      {
+       "id": "vitesse_moyenne_vl",
+       "type": "Int"
+      },
+      {
+       "id": "acces_vehicule_leger",
+       "type": "Text"
+      },
+      {
+       "id": "matieres_dangereuses_interdites",
+       "type": "Bool"
+      },
+      {
+       "id": "borne_debut_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "borne_debut_droite",
+       "type": "Text"
+      },
+      {
+       "id": "borne_fin_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "borne_fin_droite",
+       "type": "Text"
+      },
+      {
+       "id": "insee_commune_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "insee_commune_droite",
+       "type": "Text"
+      },
+      {
+       "id": "source_voie_ban_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "source_voie_ban_droite",
+       "type": "Text"
+      },
+      {
+       "id": "nom_voie_ban_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "nom_voie_ban_droite",
+       "type": "Text"
+      },
+      {
+       "id": "lieux_dits_ban_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "lieux_dits_ban_droite",
+       "type": "Text"
+      },
+      {
+       "id": "identifiant_voie_ban_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "identifiant_voie_ban_droite",
+       "type": "Text"
+      },
+      {
+       "id": "id_ban_odonyme_droite",
+       "type": "Text"
+      },
+      {
+       "id": "id_ban_odonyme_gauche",
+       "type": "Text"
+      },
+      {
+       "id": "color",
+       "label": "_color",
+       "type": "Text"
+      },
+      {
+       "id": "date_de_confirmation",
+       "type": "Text"
+      },
+      {
+       "id": "liens_vers_route_nommee",
+       "type": "Text"
+      },
+      {
+       "id": "cpx_classement_administratif",
+       "type": "Text"
+      },
+      {
+       "id": "cpx_toponyme_route_nommee",
+       "type": "Text"
+      },
+      {
+       "id": "acces_pieton",
+       "type": "Text"
+      },
+      {
+       "id": "sens_amenagement_cyclable_droit",
+       "type": "Text"
+      },
+      {
+       "id": "amenagement_cyclable_droit",
+       "type": "Text"
+      },
+      {
+       "id": "geometry_json",
+       "label": "GeoJSON",
+       "type": "Text"
+      },
+      {
+       "id": "centroid_lat",
+       "label": "Centroid Lat",
+       "type": "Numeric"
+      },
+      {
+       "id": "centroid_lon",
+       "label": "Centroid Lon",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 8,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Voirie_4eme_clippee",
+     "nbLignes": 679,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "fid",
+      "gml_id",
+      "cleabs",
+      "nature",
+      "nom_collaboratif_gauche",
+      "nom_collaboratif_droite",
+      "importance",
+      "fictif",
+      "position_par_rapport_au_sol",
+      "etat_de_l_objet",
+      "date_creation",
+      "date_modification",
+      "methode_d_acquisition_planimetrique",
+      "precision_planimetrique",
+      "methode_d_acquisition_altimetrique",
+      "precision_altimetrique",
+      "nombre_de_voies",
+      "largeur_de_chaussee",
+      "itineraire_vert",
+      "prive",
+      "sens_de_circulation",
+      "urbain",
+      "vitesse_moyenne_vl",
+      "acces_vehicule_leger",
+      "matieres_dangereuses_interdites",
+      "borne_debut_gauche",
+      "borne_debut_droite",
+      "borne_fin_gauche",
+      "borne_fin_droite",
+      "insee_commune_gauche",
+      "insee_commune_droite",
+      "source_voie_ban_gauche",
+      "source_voie_ban_droite",
+      "nom_voie_ban_gauche",
+      "nom_voie_ban_droite",
+      "lieux_dits_ban_gauche",
+      "lieux_dits_ban_droite",
+      "identifiant_voie_ban_gauche",
+      "identifiant_voie_ban_droite",
+      "id_ban_odonyme_droite",
+      "id_ban_odonyme_gauche",
+      "color",
+      "date_de_confirmation",
+      "liens_vers_route_nommee",
+      "cpx_classement_administratif",
+      "cpx_toponyme_route_nommee",
+      "acces_pieton",
+      "sens_amenagement_cyclable_droit",
+      "amenagement_cyclable_droit",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "acces_pieton": {
+       "n": 679,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "72030c3663ae761e-26j"
+      },
+      "acces_vehicule_leger": {
+       "n": 679,
+       "premieres": [
+        "Libre",
+        "Libre",
+        "Libre"
+       ],
+       "empreinte": "9c4acafa8f6cc41f-55v"
+      },
+      "amenagement_cyclable_droit": {
+       "n": 679,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "52798aa3d09edfe9-2b4"
+      },
+      "borne_debut_droite": {
+       "n": 679,
+       "premieres": [
+        "2",
+        "2",
+        "182"
+       ],
+       "empreinte": "a4a02332464bf1d5-22a"
+      },
+      "borne_debut_gauche": {
+       "n": 679,
+       "premieres": [
+        "1",
+        "1",
+        "169"
+       ],
+       "empreinte": "1f875571002661de-22f"
+      },
+      "borne_fin_droite": {
+       "n": 679,
+       "premieres": [
+        "20",
+        "18",
+        "202"
+       ],
+       "empreinte": "1cc989f9a8e28580-22a"
+      },
+      "borne_fin_gauche": {
+       "n": 679,
+       "premieres": [
+        "11",
+        "3",
+        "189"
+       ],
+       "empreinte": "213b5087e07fd39b-221"
+      },
+      "centroid_lat": {
+       "n": 679,
+       "premieres": [
+        43.29553,
+        43.29545,
+        43.295618
+       ],
+       "empreinte": "2184bd7dfdad28bb-8ce"
+      },
+      "centroid_lon": {
+       "n": 679,
+       "premieres": [
+        5.399521,
+        5.397876,
+        5.39717
+       ],
+       "empreinte": "968af5932f1d71dc-7o4"
+      },
+      "cleabs": {
+       "n": 679,
+       "premieres": [
+        "TRONROUT0000000040959451",
+        "TRONROUT0000000040959594",
+        "TRONROUT0000000040959734"
+       ],
+       "empreinte": "6be8f4181aa67c52-dme"
+      },
+      "color": {
+       "n": 679,
+       "premieres": [
+        "#ffa500",
+        "#1e78b4",
+        "#1e78b4"
+       ],
+       "empreinte": "d7f669e481fe7b36-4pr"
+      },
+      "cpx_classement_administratif": {
+       "n": 679,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "fb27d4f387f41bc6-286"
+      },
+      "cpx_toponyme_route_nommee": {
+       "n": 679,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "1c0ffafd3694d0af-2a2"
+      },
+      "date_creation": {
+       "n": 679,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "c32a1c679651c26d-17sk"
+      },
+      "date_de_confirmation": {
+       "n": 679,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "9a2e00d6d1bc737a-3qk"
+      },
+      "date_modification": {
+       "n": 679,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2023, 9, 9, 9, 15, 2, 959, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2026, 1, 31, 16, 15, 37, 292, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2023, 9, 9, 9, 15, 2, 959, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "8d7ff14793ad3855-14d5"
+      },
+      "etat_de_l_objet": {
+       "n": 679,
+       "premieres": [
+        "En service",
+        "En service",
+        "En service"
+       ],
+       "empreinte": "2836f32581fdf36d-6ac"
+      },
+      "fictif": {
+       "n": 679,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "1430f7b49caa0d25-iv"
+      },
+      "fid": {
+       "n": 679,
+       "premieres": [
+        1066,
+        1155,
+        1252
+       ],
+       "empreinte": "eadcf4bac9945955-1xq"
+      },
+      "fill_color": {
+       "n": 679,
+       "premieres": [
+        "#ffa500",
+        "#1e78b4",
+        "#1e78b4"
+       ],
+       "empreinte": "5da2b29e9150b14e-4pr"
+      },
+      "geometry_json": {
+       "n": 679,
+       "premieres": [
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39948,43.29572],[5.39951,43.2956],[5.39957,43.29527]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39785,43.29566],[5.39789,43.29538],[5.39789,43.29531]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39649,43.29558],[5.39785,43.29566]]]}"
+       ],
+       "empreinte": "3e7228848db0937f-21i9"
+      },
+      "gml_id": {
+       "n": 679,
+       "premieres": [
+        "troncon_de_route.6004077",
+        "troncon_de_route.6004180",
+        "troncon_de_route.6004304"
+       ],
+       "empreinte": "c571c64a96694507-dq7"
+      },
+      "id_ban_odonyme_droite": {
+       "n": 679,
+       "premieres": [
+        "28c05a85-dfee-4748-9cc1-84d1a39d2459",
+        "c3205279-089c-4c02-97a9-85b889640798",
+        "c8ab74bd-34f5-49ce-9e11-7c110f9d4ab4"
+       ],
+       "empreinte": "424fa7a60fc5b684-fx6"
+      },
+      "id_ban_odonyme_gauche": {
+       "n": 679,
+       "premieres": [
+        "28c05a85-dfee-4748-9cc1-84d1a39d2459",
+        "c3205279-089c-4c02-97a9-85b889640798",
+        "c8ab74bd-34f5-49ce-9e11-7c110f9d4ab4"
+       ],
+       "empreinte": "701d2f823f9c452a-fx6"
+      },
+      "identifiant_voie_ban_droite": {
+       "n": 679,
+       "premieres": [
+        "13205_5540",
+        "13205_2879",
+        "13205_2193"
+       ],
+       "empreinte": "9e811beb9f9bef9c-5cy"
+      },
+      "identifiant_voie_ban_gauche": {
+       "n": 679,
+       "premieres": [
+        "13205_5540",
+        "13205_2879",
+        "13205_2193"
+       ],
+       "empreinte": "bc89a39c250c6581-5d2"
+      },
+      "importance": {
+       "n": 679,
+       "premieres": [
+        "5",
+        "4",
+        "4"
+       ],
+       "empreinte": "3cc8bbcef2065f0d-1kl"
+      },
+      "insee_commune_droite": {
+       "n": 679,
+       "premieres": [
+        "13205",
+        "13205",
+        "13205"
+       ],
+       "empreinte": "390205894f5e635d-3nv"
+      },
+      "insee_commune_gauche": {
+       "n": 679,
+       "premieres": [
+        "13205",
+        "13205",
+        "13205"
+       ],
+       "empreinte": "726b3bbea9572966-3nv"
+      },
+      "itineraire_vert": {
+       "n": 679,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "1430f7b49caa0d25-iv"
+      },
+      "largeur_de_chaussee": {
+       "n": 679,
+       "premieres": [
+        4,
+        5,
+        4
+       ],
+       "empreinte": "5891e061fbaae6f1-or"
+      },
+      "liens_vers_route_nommee": {
+       "n": 679,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "2cc82c7a6f4132ff-2du"
+      },
+      "lieux_dits_ban_droite": {
+       "n": 679,
+       "premieres": [
+        "le camas",
+        "le camas/la conception",
+        "le camas/saint pierre"
+       ],
+       "empreinte": "8f88e171d06d7b8a-75w"
+      },
+      "lieux_dits_ban_gauche": {
+       "n": 679,
+       "premieres": [
+        "le camas",
+        "le camas/la conception",
+        "le camas/saint pierre"
+       ],
+       "empreinte": "bf4af664c1a348d9-745"
+      },
+      "matieres_dangereuses_interdites": {
+       "n": 679,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "e4d38a222df07d80-ky"
+      },
+      "methode_d_acquisition_altimetrique": {
+       "n": 679,
+       "premieres": [
+        "BDTopo",
+        "BDTopo",
+        "BDTopo"
+       ],
+       "empreinte": "cd3dfbefa9debae5-4wx"
+      },
+      "methode_d_acquisition_planimetrique": {
+       "n": 679,
+       "premieres": [
+        "BDTopo",
+        "BDTopo",
+        "BDTopo"
+       ],
+       "empreinte": "fc2462ecaaef8945-59a"
+      },
+      "nature": {
+       "n": 679,
+       "premieres": [
+        "Route à 1 chaussée",
+        "Route à 1 chaussée",
+        "Route à 1 chaussée"
+       ],
+       "empreinte": "a04e198e968543fa-a8b"
+      },
+      "nom_collaboratif_droite": {
+       "n": 679,
+       "premieres": [
+        "R MADON",
+        "R DU DOCTEUR SIMONE SEDAN",
+        "BD CHAVE"
+       ],
+       "empreinte": "ed9e0950d02b87e3-778"
+      },
+      "nom_collaboratif_gauche": {
+       "n": 679,
+       "premieres": [
+        "R MADON",
+        "R DU DOCTEUR SIMONE SEDAN",
+        "BD CHAVE"
+       ],
+       "empreinte": "dee4c3f30abfc303-772"
+      },
+      "nom_voie_ban_droite": {
+       "n": 679,
+       "premieres": [
+        "Rue madon",
+        "Rue du docteur simone sedan",
+        "Boulevard chave"
+       ],
+       "empreinte": "440501f613d36eb9-86q"
+      },
+      "nom_voie_ban_gauche": {
+       "n": 679,
+       "premieres": [
+        "Rue madon",
+        "Rue du docteur simone sedan",
+        "Boulevard chave"
+       ],
+       "empreinte": "808e4fa77ad5aa53-86o"
+      },
+      "nombre_de_voies": {
+       "n": 679,
+       "premieres": [
+        2,
+        2,
+        2
+       ],
+       "empreinte": "ccf62df65ff33021-oa"
+      },
+      "position_par_rapport_au_sol": {
+       "n": 679,
+       "premieres": [
+        "0",
+        "0",
+        "0"
+       ],
+       "empreinte": "df26ac3a0825226e-1kl"
+      },
+      "precision_altimetrique": {
+       "n": 679,
+       "premieres": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "empreinte": "1f95477421e1603b-1le"
+      },
+      "precision_planimetrique": {
+       "n": 679,
+       "premieres": [
+        2.5,
+        2.5,
+        2.5
+       ],
+       "empreinte": "89541c4bf3eb8e80-1hk"
+      },
+      "prive": {
+       "n": 679,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "1430f7b49caa0d25-iv"
+      },
+      "sens_amenagement_cyclable_droit": {
+       "n": 679,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "b8fa622c8ecf669e-297"
+      },
+      "sens_de_circulation": {
+       "n": 679,
+       "premieres": [
+        "Sens direct",
+        "Double sens",
+        "Double sens"
+       ],
+       "empreinte": "a3ac9cb14dd57b1c-6wv"
+      },
+      "source_voie_ban_droite": {
+       "n": 679,
+       "premieres": [
+        "commune",
+        "commune",
+        "commune"
+       ],
+       "empreinte": "8e1701e57911be09-46n"
+      },
+      "source_voie_ban_gauche": {
+       "n": 679,
+       "premieres": [
+        "commune",
+        "commune",
+        "commune"
+       ],
+       "empreinte": "bc52220dd8d92f9a-46n"
+      },
+      "urbain": {
+       "n": 679,
+       "premieres": [
+        1,
+        1,
+        1
+       ],
+       "empreinte": "b96026ca2be816ec-iv"
+      },
+      "vitesse_moyenne_vl": {
+       "n": 679,
+       "premieres": [
+        20,
+        30,
+        30
+       ],
+       "empreinte": "211d720d7b5068d4-w5"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 9,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Voirie_4eme_clippee",
+     "nbLignes": 675,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "fid",
+      "gml_id",
+      "cleabs",
+      "nature",
+      "nom_collaboratif_gauche",
+      "nom_collaboratif_droite",
+      "importance",
+      "fictif",
+      "position_par_rapport_au_sol",
+      "etat_de_l_objet",
+      "date_creation",
+      "date_modification",
+      "methode_d_acquisition_planimetrique",
+      "precision_planimetrique",
+      "methode_d_acquisition_altimetrique",
+      "precision_altimetrique",
+      "nombre_de_voies",
+      "largeur_de_chaussee",
+      "itineraire_vert",
+      "prive",
+      "sens_de_circulation",
+      "urbain",
+      "vitesse_moyenne_vl",
+      "acces_vehicule_leger",
+      "matieres_dangereuses_interdites",
+      "borne_debut_gauche",
+      "borne_debut_droite",
+      "borne_fin_gauche",
+      "borne_fin_droite",
+      "insee_commune_gauche",
+      "insee_commune_droite",
+      "source_voie_ban_gauche",
+      "source_voie_ban_droite",
+      "nom_voie_ban_gauche",
+      "nom_voie_ban_droite",
+      "lieux_dits_ban_gauche",
+      "lieux_dits_ban_droite",
+      "identifiant_voie_ban_gauche",
+      "identifiant_voie_ban_droite",
+      "id_ban_odonyme_droite",
+      "id_ban_odonyme_gauche",
+      "color",
+      "date_de_confirmation",
+      "liens_vers_route_nommee",
+      "cpx_classement_administratif",
+      "cpx_toponyme_route_nommee",
+      "acces_pieton",
+      "sens_amenagement_cyclable_droit",
+      "amenagement_cyclable_droit",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "acces_pieton": {
+       "n": 675,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "43b1de9501b1fcf8-29c"
+      },
+      "acces_vehicule_leger": {
+       "n": 675,
+       "premieres": [
+        "Libre",
+        "Libre",
+        "Libre"
+       ],
+       "empreinte": "b4b90420b6319982-5zu"
+      },
+      "amenagement_cyclable_droit": {
+       "n": 675,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "ae3ff457d2547a0b-2ac"
+      },
+      "borne_debut_droite": {
+       "n": 675,
+       "premieres": [
+        "39",
+        null,
+        "100"
+       ],
+       "empreinte": "853c97f66136a572-21n"
+      },
+      "borne_debut_gauche": {
+       "n": 675,
+       "premieres": [
+        "50",
+        null,
+        "79"
+       ],
+       "empreinte": "3ce45b220898d421-21k"
+      },
+      "borne_fin_droite": {
+       "n": 675,
+       "premieres": [
+        "37",
+        null,
+        "106"
+       ],
+       "empreinte": "d89918e5810d3902-21e"
+      },
+      "borne_fin_gauche": {
+       "n": 675,
+       "premieres": [
+        "46",
+        null,
+        "83"
+       ],
+       "empreinte": "df5a6b290f198ae2-21j"
+      },
+      "centroid_lat": {
+       "n": 675,
+       "premieres": [
+        43.305711,
+        43.305728,
+        43.306292
+       ],
+       "empreinte": "c1f27c8ccb990122-87s"
+      },
+      "centroid_lon": {
+       "n": 675,
+       "premieres": [
+        5.402646,
+        5.400928,
+        5.400852
+       ],
+       "empreinte": "259d6b2b8bb86476-7uk"
+      },
+      "cleabs": {
+       "n": 675,
+       "premieres": [
+        "TRONROUT0000000040954038",
+        "TRONROUT0000000040954139",
+        "TRONROUT0000000040954138"
+       ],
+       "empreinte": "ae5ecdb9743834fe-dji"
+      },
+      "color": {
+       "n": 675,
+       "premieres": [
+        "#ffa500",
+        "#ffa500",
+        "#1e78b4"
+       ],
+       "empreinte": "a52cf13b4570b76c-4or"
+      },
+      "cpx_classement_administratif": {
+       "n": 675,
+       "premieres": [
+        null,
+        null,
+        "Route nommée"
+       ],
+       "empreinte": "57cfc98d8e293947-2a2"
+      },
+      "cpx_toponyme_route_nommee": {
+       "n": 675,
+       "premieres": [
+        null,
+        null,
+        "Rocade du Jarret"
+       ],
+       "empreinte": "76afbc2ba5a8ba96-2by"
+      },
+      "date_creation": {
+       "n": 675,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "0d39e7d624d8d241-17ge"
+      },
+      "date_de_confirmation": {
+       "n": 675,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "f32436f55800636b-43d"
+      },
+      "date_modification": {
+       "n": 675,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2025, 12, 20, 18, 1, 54, 853, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2026, 4, 11, 19, 47, 21, 309, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2025, 12, 22, 19, 32, 13, 515, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "b76a54094daa45fa-14gl"
+      },
+      "etat_de_l_objet": {
+       "n": 675,
+       "premieres": [
+        "En service",
+        "En service",
+        "En service"
+       ],
+       "empreinte": "018f8a89673eceec-690"
+      },
+      "fictif": {
+       "n": 675,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "84fd322c480e3e67-ir"
+      },
+      "fid": {
+       "n": 675,
+       "premieres": [
+        635,
+        678,
+        735
+       ],
+       "empreinte": "9f0096ac106e5fa5-1ns"
+      },
+      "fill_color": {
+       "n": 675,
+       "premieres": [
+        "#ffa500",
+        "#ef4444",
+        "#1e78b4"
+       ],
+       "empreinte": "b14e19bb4f2984fd-4or"
+      },
+      "geometry_json": {
+       "n": 675,
+       "premieres": [
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.40259,43.30583],[5.40262,43.3058],[5.40265,43.30577],[5.40266,43.30569],[5.4027,43.30546]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.401,43.30573],[5.40086,43.30572]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.40086,43.30572],[5.40084,43.30615],[5.40083,43.30635],[5.40084,43.30645],[5.40085,43.30651],[5.40089,43.30658]]]}"
+       ],
+       "empreinte": "b78c4895caa7894a-289g"
+      },
+      "gml_id": {
+       "n": 675,
+       "premieres": [
+        "troncon_de_route.5999748",
+        "troncon_de_route.5999792",
+        "troncon_de_route.5999849"
+       ],
+       "empreinte": "4070dc4b5d07603b-doa"
+      },
+      "id_ban_odonyme_droite": {
+       "n": 675,
+       "premieres": [
+        "e6015c17-06e7-4e74-88df-e26de3d6a16d",
+        "42a2462e-ebd6-4554-8c67-9f4f8ad521b5",
+        "54e04eed-9237-4935-ade6-2d20df210cd4"
+       ],
+       "empreinte": "6206129fbc28a183-dzs"
+      },
+      "id_ban_odonyme_gauche": {
+       "n": 675,
+       "premieres": [
+        "e6015c17-06e7-4e74-88df-e26de3d6a16d",
+        "42a2462e-ebd6-4554-8c67-9f4f8ad521b5",
+        "54e04eed-9237-4935-ade6-2d20df210cd4"
+       ],
+       "empreinte": "05ee59a415a96f00-e5g"
+      },
+      "identifiant_voie_ban_droite": {
+       "n": 675,
+       "premieres": [
+        "13204_4664",
+        "13204_1486",
+        "13204_3731"
+       ],
+       "empreinte": "6df94e90e717f023-4w0"
+      },
+      "identifiant_voie_ban_gauche": {
+       "n": 675,
+       "premieres": [
+        "13204_4664",
+        "13204_1486",
+        "13204_3731"
+       ],
+       "empreinte": "fca2eda32ec4eea9-4xc"
+      },
+      "importance": {
+       "n": 675,
+       "premieres": [
+        "5",
+        "5",
+        "3"
+       ],
+       "empreinte": "321bc66b03b085b9-1k9"
+      },
+      "insee_commune_droite": {
+       "n": 675,
+       "premieres": [
+        "13204",
+        "13204",
+        "13204"
+       ],
+       "empreinte": "4fcd091f8b9cca27-3mo"
+      },
+      "insee_commune_gauche": {
+       "n": 675,
+       "premieres": [
+        "13204",
+        "13204",
+        "13204"
+       ],
+       "empreinte": "765274a8bcdb1b60-3mo"
+      },
+      "itineraire_vert": {
+       "n": 675,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "84fd322c480e3e67-ir"
+      },
+      "largeur_de_chaussee": {
+       "n": 675,
+       "premieres": [
+        4,
+        4,
+        10
+       ],
+       "empreinte": "95561c89e6b1e38c-s7"
+      },
+      "liens_vers_route_nommee": {
+       "n": 675,
+       "premieres": [
+        null,
+        null,
+        "ROUTNOMM0000000355982348"
+       ],
+       "empreinte": "1866013df1994be8-2ia"
+      },
+      "lieux_dits_ban_droite": {
+       "n": 675,
+       "premieres": [
+        "la blancarde",
+        "la blancarde",
+        "les cinq avenues/la blancarde/les chartreux"
+       ],
+       "empreinte": "23a7001219976e51-7hw"
+      },
+      "lieux_dits_ban_gauche": {
+       "n": 675,
+       "premieres": [
+        "la blancarde",
+        "la blancarde",
+        "les cinq avenues/la blancarde/les chartreux"
+       ],
+       "empreinte": "f431d8407fe68042-7g6"
+      },
+      "matieres_dangereuses_interdites": {
+       "n": 675,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "0e0c19dbdcb07805-kr"
+      },
+      "methode_d_acquisition_altimetrique": {
+       "n": 675,
+       "premieres": [
+        "BDTopo",
+        "BDTopo",
+        "Z corrigé"
+       ],
+       "empreinte": "65d16b07a4749e00-56a"
+      },
+      "methode_d_acquisition_planimetrique": {
+       "n": 675,
+       "premieres": [
+        "BDTopo",
+        "BDTopo",
+        "Levé non GPS"
+       ],
+       "empreinte": "ce03f3fdaff206f6-5fd"
+      },
+      "nature": {
+       "n": 675,
+       "premieres": [
+        "Route à 1 chaussée",
+        "Route à 1 chaussée",
+        "Route à 1 chaussée"
+       ],
+       "empreinte": "548069dae5fa40eb-9v6"
+      },
+      "nom_collaboratif_droite": {
+       "n": 675,
+       "premieres": [
+        "R JEAN",
+        "R BRUNET",
+        "BD FRANCOISE DUPARC"
+       ],
+       "empreinte": "927481a739836b3e-6sk"
+      },
+      "nom_collaboratif_gauche": {
+       "n": 675,
+       "premieres": [
+        "R JEAN",
+        "R BRUNET",
+        "BD FRANCOISE DUPARC"
+       ],
+       "empreinte": "927481a739836b3e-6sk"
+      },
+      "nom_voie_ban_droite": {
+       "n": 675,
+       "premieres": [
+        "Rue jean",
+        "Rue brunet",
+        "Boulevard francoise duparc"
+       ],
+       "empreinte": "351c4410f7cecf5b-7z4"
+      },
+      "nom_voie_ban_gauche": {
+       "n": 675,
+       "premieres": [
+        "Rue jean",
+        "Rue brunet",
+        "Boulevard francoise duparc"
+       ],
+       "empreinte": "7dcc0dd6dce672b5-81g"
+      },
+      "nombre_de_voies": {
+       "n": 675,
+       "premieres": [
+        2,
+        2,
+        5
+       ],
+       "empreinte": "7b555b01aeeeca39-rx"
+      },
+      "position_par_rapport_au_sol": {
+       "n": 675,
+       "premieres": [
+        "0",
+        "0",
+        "0"
+       ],
+       "empreinte": "3cb5ff2be738c516-1kb"
+      },
+      "precision_altimetrique": {
+       "n": 675,
+       "premieres": [
+        1.5,
+        1.5,
+        2.5
+       ],
+       "empreinte": "f50d476d4a41c10b-1l6"
+      },
+      "precision_planimetrique": {
+       "n": 675,
+       "premieres": [
+        2.5,
+        2.5,
+        5
+       ],
+       "empreinte": "927ab2f32dcfc882-1gp"
+      },
+      "prive": {
+       "n": 675,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "84fd322c480e3e67-ir"
+      },
+      "sens_amenagement_cyclable_droit": {
+       "n": 675,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "aacdf9e9301e17d7-28i"
+      },
+      "sens_de_circulation": {
+       "n": 675,
+       "premieres": [
+        "Sens direct",
+        "Sens inverse",
+        "Double sens"
+       ],
+       "empreinte": "84d17b4360ac73d5-6te"
+      },
+      "source_voie_ban_droite": {
+       "n": 675,
+       "premieres": [
+        "commune",
+        "commune",
+        "commune"
+       ],
+       "empreinte": "db07a84f6cd53e81-3va"
+      },
+      "source_voie_ban_gauche": {
+       "n": 675,
+       "premieres": [
+        "commune",
+        "commune",
+        "commune"
+       ],
+       "empreinte": "d294c3909c89f6bd-3w4"
+      },
+      "urbain": {
+       "n": 675,
+       "premieres": [
+        1,
+        1,
+        1
+       ],
+       "empreinte": "98834215bdbe9d31-ir"
+      },
+      "vitesse_moyenne_vl": {
+       "n": 675,
+       "premieres": [
+        20,
+        5,
+        30
+       ],
+       "empreinte": "7a5bb1e4e55070a8-vs"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 10,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Voirie_4eme_clippee",
+     "nbLignes": 415,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "fid",
+      "gml_id",
+      "cleabs",
+      "nature",
+      "nom_collaboratif_gauche",
+      "nom_collaboratif_droite",
+      "importance",
+      "fictif",
+      "position_par_rapport_au_sol",
+      "etat_de_l_objet",
+      "date_creation",
+      "date_modification",
+      "methode_d_acquisition_planimetrique",
+      "precision_planimetrique",
+      "methode_d_acquisition_altimetrique",
+      "precision_altimetrique",
+      "nombre_de_voies",
+      "largeur_de_chaussee",
+      "itineraire_vert",
+      "prive",
+      "sens_de_circulation",
+      "urbain",
+      "vitesse_moyenne_vl",
+      "acces_vehicule_leger",
+      "matieres_dangereuses_interdites",
+      "borne_debut_gauche",
+      "borne_debut_droite",
+      "borne_fin_gauche",
+      "borne_fin_droite",
+      "insee_commune_gauche",
+      "insee_commune_droite",
+      "source_voie_ban_gauche",
+      "source_voie_ban_droite",
+      "nom_voie_ban_gauche",
+      "nom_voie_ban_droite",
+      "lieux_dits_ban_gauche",
+      "lieux_dits_ban_droite",
+      "identifiant_voie_ban_gauche",
+      "identifiant_voie_ban_droite",
+      "id_ban_odonyme_droite",
+      "id_ban_odonyme_gauche",
+      "color",
+      "date_de_confirmation",
+      "liens_vers_route_nommee",
+      "cpx_classement_administratif",
+      "cpx_toponyme_route_nommee",
+      "acces_pieton",
+      "sens_amenagement_cyclable_droit",
+      "amenagement_cyclable_droit",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "acces_pieton": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "e37b74707b9c276f-1aj"
+      },
+      "acces_vehicule_leger": {
+       "n": 415,
+       "premieres": [
+        "Libre",
+        "Libre",
+        "Restreint aux ayants droit"
+       ],
+       "empreinte": "11cf02062767a01f-35m"
+      },
+      "amenagement_cyclable_droit": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "6feea2737bfad517-1ag"
+      },
+      "borne_debut_droite": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "a504bb53f019f933-19h"
+      },
+      "borne_debut_gauche": {
+       "n": 415,
+       "premieres": [
+        "8",
+        "58",
+        null
+       ],
+       "empreinte": "f260d9a91bfe20cb-19i"
+      },
+      "borne_fin_droite": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "4ddbdd3246f1ab23-19s"
+      },
+      "borne_fin_gauche": {
+       "n": 415,
+       "premieres": [
+        "8",
+        "56",
+        null
+       ],
+       "empreinte": "bca22274a9862e42-19l"
+      },
+      "centroid_lat": {
+       "n": 415,
+       "premieres": [
+        43.311934,
+        43.314272,
+        43.314711
+       ],
+       "empreinte": "287811d387f94ca4-51a"
+      },
+      "centroid_lon": {
+       "n": 415,
+       "premieres": [
+        5.390932,
+        5.393153,
+        5.392411
+       ],
+       "empreinte": "c9fed8821cdccc94-4ss"
+      },
+      "cleabs": {
+       "n": 415,
+       "premieres": [
+        "TRONROUT0000000040949932",
+        "TRONROUT0000000040949940",
+        "TRONROUT0000000040949959"
+       ],
+       "empreinte": "1f5e90c0c3c1f031-8bq"
+      },
+      "color": {
+       "n": 415,
+       "premieres": [
+        "#1e78b4",
+        "#1e78b4",
+        "#1e78b4"
+       ],
+       "empreinte": "95f42cfc0df309c9-2vr"
+      },
+      "cpx_classement_administratif": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "4c4379e2f098adb3-1ga"
+      },
+      "cpx_toponyme_route_nommee": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "4f888864b9a2ad80-1ba"
+      },
+      "date_creation": {
+       "n": 415,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "9d9768df85e0a2c7-qp1"
+      },
+      "date_de_confirmation": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "458502c92f22c519-22w"
+      },
+      "date_modification": {
+       "n": 415,
+       "premieres": [
+        "PyQt5.QtCore.QDateTime(2026, 1, 10, 14, 35, 1, 993, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2023, 9, 9, 9, 15, 2, 959, PyQt5.QtCore.Qt.TimeSpec(1))",
+        "PyQt5.QtCore.QDateTime(2017, 1, 20, 14, 15, 27, 894, PyQt5.QtCore.Qt.TimeSpec(1))"
+       ],
+       "empreinte": "03e80d3ae59ffe3c-pub"
+      },
+      "etat_de_l_objet": {
+       "n": 415,
+       "premieres": [
+        "En service",
+        "En service",
+        "En service"
+       ],
+       "empreinte": "e78dea1a67e6a877-3uc"
+      },
+      "fictif": {
+       "n": 415,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "d3b503aead9115f7-bj"
+      },
+      "fid": {
+       "n": 415,
+       "premieres": [
+        500,
+        505,
+        518
+       ],
+       "empreinte": "11403013979324e0-10b"
+      },
+      "fill_color": {
+       "n": 415,
+       "premieres": [
+        "#1e78b4",
+        "#1e78b4",
+        "#1e78b4"
+       ],
+       "empreinte": "7c3e97c59d7ab816-2vr"
+      },
+      "geometry_json": {
+       "n": 415,
+       "premieres": [
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39113,43.31204],[5.39107,43.31202],[5.39059,43.31174]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.3933,43.31424],[5.39324,43.31425],[5.3932,43.31425],[5.39287,43.31435]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39287,43.31435],[5.39292,43.31445],[5.39292,43.31446],[5.39291,43.31448],[5.39288,43.31449],[5.3923,43.31461],[5.39225,43.31464],[5.39221,43.31467],[5.39219,43.3147],[5.39217,43.31475],[5.39215,43.31481],[5.39215,43.31488],[5.39216,43.31495],[5.39216,43.31502],[5.39217,43.31504],[5.39218,43.31509]]]}"
+       ],
+       "empreinte": "3308014aa68eb1a9-1ehn"
+      },
+      "gml_id": {
+       "n": 415,
+       "premieres": [
+        "troncon_de_route.5996273",
+        "troncon_de_route.5996279",
+        "troncon_de_route.5996292"
+       ],
+       "empreinte": "97d31d0771c64f4b-8f7"
+      },
+      "id_ban_odonyme_droite": {
+       "n": 415,
+       "premieres": [
+        "5bde1e64-c8c4-4e1f-98b5-515443a640fb",
+        "26b47f9a-9074-4067-b897-a86d4bba84d7",
+        null
+       ],
+       "empreinte": "fd856995c433c73a-81s"
+      },
+      "id_ban_odonyme_gauche": {
+       "n": 415,
+       "premieres": [
+        "5bde1e64-c8c4-4e1f-98b5-515443a640fb",
+        "26b47f9a-9074-4067-b897-a86d4bba84d7",
+        null
+       ],
+       "empreinte": "bafb4c4aff42b25b-80u"
+      },
+      "identifiant_voie_ban_droite": {
+       "n": 415,
+       "premieres": [
+        "13203_3726",
+        "13203_4312",
+        null
+       ],
+       "empreinte": "9e31f67fecbca343-2wc"
+      },
+      "identifiant_voie_ban_gauche": {
+       "n": 415,
+       "premieres": [
+        "13203_3726",
+        "13203_4312",
+        null
+       ],
+       "empreinte": "00d32a6c0f6bcc04-2wi"
+      },
+      "importance": {
+       "n": 415,
+       "premieres": [
+        "5",
+        "5",
+        "5"
+       ],
+       "empreinte": "d6324b175a3cf23c-yl"
+      },
+      "insee_commune_droite": {
+       "n": 415,
+       "premieres": [
+        "13203",
+        "13203",
+        "13203"
+       ],
+       "empreinte": "e2b6ef393ab03c58-28g"
+      },
+      "insee_commune_gauche": {
+       "n": 415,
+       "premieres": [
+        "13203",
+        "13203",
+        "13203"
+       ],
+       "empreinte": "a10859d539f1263b-28g"
+      },
+      "itineraire_vert": {
+       "n": 415,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "d3b503aead9115f7-bj"
+      },
+      "largeur_de_chaussee": {
+       "n": 415,
+       "premieres": [
+        4,
+        4,
+        4
+       ],
+       "empreinte": "8eca14610de2629d-dg"
+      },
+      "liens_vers_route_nommee": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "224556960f59931f-1lq"
+      },
+      "lieux_dits_ban_droite": {
+       "n": 415,
+       "premieres": [
+        "belle de mai",
+        "belle de mai",
+        null
+       ],
+       "empreinte": "ca1713838c779c07-3pi"
+      },
+      "lieux_dits_ban_gauche": {
+       "n": 415,
+       "premieres": [
+        "belle de mai",
+        "belle de mai",
+        null
+       ],
+       "empreinte": "abb3e36c99dcde1d-3pn"
+      },
+      "matieres_dangereuses_interdites": {
+       "n": 415,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "6ce11302b26448f2-bs"
+      },
+      "methode_d_acquisition_altimetrique": {
+       "n": 415,
+       "premieres": [
+        "BDTopo",
+        "BDTopo",
+        "Photogrammétrie"
+       ],
+       "empreinte": "9ab141fb171b5770-32o"
+      },
+      "methode_d_acquisition_planimetrique": {
+       "n": 415,
+       "premieres": [
+        "BDTopo",
+        "BDTopo",
+        "Photogrammétrie"
+       ],
+       "empreinte": "2de0524ab27071bb-375"
+      },
+      "nature": {
+       "n": 415,
+       "premieres": [
+        "Route à 1 chaussée",
+        "Route à 1 chaussée",
+        "Route à 1 chaussée"
+       ],
+       "empreinte": "85eb5bdab445a232-64r"
+      },
+      "nom_collaboratif_droite": {
+       "n": 415,
+       "premieres": [
+        "R FRANCOIS SIMON",
+        "BD GUIGOU",
+        null
+       ],
+       "empreinte": "715cd70061c05e92-4tf"
+      },
+      "nom_collaboratif_gauche": {
+       "n": 415,
+       "premieres": [
+        "R FRANCOIS SIMON",
+        "BD GUIGOU",
+        null
+       ],
+       "empreinte": "715cd70061c05e92-4tf"
+      },
+      "nom_voie_ban_droite": {
+       "n": 415,
+       "premieres": [
+        "Rue francois simon",
+        "Boulevard guigou",
+        null
+       ],
+       "empreinte": "89f6a514f626c208-4p2"
+      },
+      "nom_voie_ban_gauche": {
+       "n": 415,
+       "premieres": [
+        "Rue francois simon",
+        "Boulevard guigou",
+        null
+       ],
+       "empreinte": "9673f6d327e6f2d9-4op"
+      },
+      "nombre_de_voies": {
+       "n": 415,
+       "premieres": [
+        2,
+        2,
+        2
+       ],
+       "empreinte": "d52f678bd103bf96-dd"
+      },
+      "position_par_rapport_au_sol": {
+       "n": 415,
+       "premieres": [
+        "0",
+        "0",
+        "0"
+       ],
+       "empreinte": "260b43adcf7c07a0-ym"
+      },
+      "precision_altimetrique": {
+       "n": 415,
+       "premieres": [
+        1.5,
+        1.5,
+        1.5
+       ],
+       "empreinte": "cb976e6d510e5366-yy"
+      },
+      "precision_planimetrique": {
+       "n": 415,
+       "premieres": [
+        2.5,
+        2.5,
+        2.5
+       ],
+       "empreinte": "bf7fdcbf9fc64859-ws"
+      },
+      "prive": {
+       "n": 415,
+       "premieres": [
+        0,
+        0,
+        0
+       ],
+       "empreinte": "d3b503aead9115f7-bj"
+      },
+      "sens_amenagement_cyclable_droit": {
+       "n": 415,
+       "premieres": [
+        null,
+        null,
+        null
+       ],
+       "empreinte": "7a5cf3689884d442-1ad"
+      },
+      "sens_de_circulation": {
+       "n": 415,
+       "premieres": [
+        "Double sens",
+        "Double sens",
+        "Double sens"
+       ],
+       "empreinte": "2d94bc92fdb5ab7d-46k"
+      },
+      "source_voie_ban_droite": {
+       "n": 415,
+       "premieres": [
+        "commune",
+        "commune",
+        null
+       ],
+       "empreinte": "2f88f9d01e6ad241-2a2"
+      },
+      "source_voie_ban_gauche": {
+       "n": 415,
+       "premieres": [
+        "commune",
+        "commune",
+        null
+       ],
+       "empreinte": "a06a89a917a97783-29x"
+      },
+      "urbain": {
+       "n": 415,
+       "premieres": [
+        1,
+        1,
+        1
+       ],
+       "empreinte": "cbb60c90a4b5a8aa-bj"
+      },
+      "vitesse_moyenne_vl": {
+       "n": 415,
+       "premieres": [
+        20,
+        25,
+        0
+       ],
+       "empreinte": "7ad7891b0e0323e1-km"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 11,
+   "actions": [
+    [
+     "AddTable",
+     "SceneManifest",
+     [
+      {
+       "id": "manifest_json",
+       "label": "Scene Manifest JSON",
+       "type": "Text"
+      },
+      {
+       "id": "scene_hash",
+       "label": "Hash SHA256",
+       "type": "Text"
+      },
+      {
+       "id": "source_file",
+       "label": "Fichier source",
+       "type": "Text"
+      },
+      {
+       "id": "created_at",
+       "label": "Créé le",
+       "type": "DateTime"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 12,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "SceneManifest",
+     "nbLignes": 1,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "manifest_json",
+      "scene_hash",
+      "source_file",
+      "created_at"
+     ],
+     "colonnes": {
+      "created_at": {
+       "n": 1,
+       "valeur": "<DATE>"
+      },
+      "manifest_json": {
+       "n": 1,
+       "json": {
+        "classification": "internal",
+        "layers": [
+         {
+          "controls": [
+           {
+            "active": false,
+            "dataMax": 25,
+            "dataMin": 0,
+            "field": "hauteur",
+            "label": "hauteur",
+            "max": 25,
+            "min": 0,
+            "type": "range"
+           }
+          ],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "polygon",
+          "id": "Batiments_4eme",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "Batiments 4eme",
+          "profile": "A",
+          "source": {
+           "table": "Batiments_4eme",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "field": "hauteur",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#fff5f0",
+              "label": "0-5 m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 5
+             },
+             {
+              "color": "#fdbb84",
+              "label": "5-10 m",
+              "lower": 5,
+              "opacity": 1,
+              "upper": 10
+             },
+             {
+              "color": "#fc8d59",
+              "label": "10-15 m",
+              "lower": 10,
+              "opacity": 1,
+              "upper": 15
+             },
+             {
+              "color": "#e34a33",
+              "label": "15-25 m",
+              "lower": 15,
+              "opacity": 1,
+              "upper": 25
+             },
+             {
+              "color": "#7f2704",
+              "label": ">25 m",
+              "lower": 25,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         },
+         {
+          "controls": [],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "polygon",
+          "id": "Limite_4eme_arr",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "Limite 4eme arr.",
+          "profile": "A",
+          "source": {
+           "table": "Limite_4eme_arr",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "color": "#000000",
+            "kind": "single",
+            "opacity": 1
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         },
+         {
+          "controls": [
+           {
+            "active": false,
+            "field": "nature",
+            "label": "nature",
+            "type": "select",
+            "values": [
+             "Antenne",
+             "Autre construction élevée",
+             "Clocher"
+            ]
+           }
+          ],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "point",
+          "id": "POI_4eme",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "POI 4eme",
+          "profile": "A",
+          "source": {
+           "table": "POI_4eme",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "field": "nature",
+            "kind": "categorized",
+            "stops": [
+             {
+              "color": "#e41a1c",
+              "label": "Antenne",
+              "opacity": 1,
+              "value": "Antenne"
+             },
+             {
+              "color": "#377eb8",
+              "label": "Autre construction élevée",
+              "opacity": 1,
+              "value": "Autre construction élevée"
+             },
+             {
+              "color": "#4daf4a",
+              "label": "Clocher",
+              "opacity": 1,
+              "value": "Clocher"
+             }
+            ]
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         },
+         {
+          "controls": [
+           {
+            "active": false,
+            "field": "sens_de_circulation",
+            "label": "sens_de_circulation",
+            "type": "select",
+            "values": [
+             "Double sens",
+             "Autre",
+             "Sens direct"
+            ]
+           }
+          ],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "line",
+          "id": "Voirie_4eme_clippee",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "Voirie 4eme (clippee)",
+          "profile": "A",
+          "source": {
+           "table": "Voirie_4eme_clippee",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "field": "sens_de_circulation",
+            "kind": "categorized",
+            "stops": [
+             {
+              "color": "#1e78b4",
+              "label": "Double sens",
+              "opacity": 1,
+              "value": "Double sens"
+             },
+             {
+              "color": "#8c8c8c",
+              "label": "Autre",
+              "opacity": 1,
+              "value": "Autre"
+             },
+             {
+              "color": "#ffa500",
+              "label": "Sens unique",
+              "opacity": 1,
+              "value": "Sens direct"
+             },
+             {
+              "color": "#ffa500",
+              "label": "Sens unique inverse",
+              "opacity": 1,
+              "value": "Sens direct"
+             }
+            ]
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         }
+        ],
+        "meta": {
+         "classification": "internal",
+         "imported_at": "<DATE>",
+         "provenance": [
+          {
+           "ingested_at": "<DATE>",
+           "platform_id": "widgets-grist-qgis2grist",
+           "via": null
+          }
+         ],
+         "source_file": "qgis2grist_marseille4e_webmap.html",
+         "source_info": {
+          "provenance": [
+           {
+            "ingested_at": "<DATE>",
+            "platform_id": "widgets-grist-qgis2grist",
+            "via": null
+           }
+          ],
+          "source": {
+           "authority": "qgis2grist_marseille4e_webmap.html",
+           "classification": "internal",
+           "license": "unknown",
+           "millesime": "2026",
+           "referential": "qgis2grist"
+          }
+         },
+         "sources": [
+          {
+           "authority": "qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": null,
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Batiments 4eme ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Batiments_4eme",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Limite 4eme arr. ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Limite_4eme_arr",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "POI 4eme ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "POI_4eme",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Voirie 4eme (clippee) ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Voirie_4eme_clippee",
+           "statut": "a_verifier"
+          }
+         ],
+         "widget": "qgis2grist-v2"
+        },
+        "subtitle": null,
+        "title": "qgis2grist_marseille4e_webmap.html",
+        "version": "0.2.1"
+       }
+      },
+      "scene_hash": {
+       "n": 1,
+       "valeur": "<HASH>"
+      },
+      "source_file": {
+       "n": 1,
+       "premieres": [
+        "qgis2grist_marseille4e_webmap.html"
+       ],
+       "empreinte": "dea30d914b47b228-10"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 13,
+   "actions": [
+    [
+     "AddTable",
+     "QgisWidgets",
+     [
+      {
+       "id": "widget_name",
+       "type": "Text"
+      },
+      {
+       "id": "source_file",
+       "type": "Text"
+      },
+      {
+       "id": "config_json",
+       "type": "Text"
+      },
+      {
+       "id": "created_at",
+       "type": "DateTime"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 14,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "QgisWidgets",
+     "nbLignes": 1,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "widget_name",
+      "source_file",
+      "config_json",
+      "created_at"
+     ],
+     "colonnes": {
+      "config_json": {
+       "n": 1,
+       "json": {
+        "layers": [
+         {
+          "color": "#3e5de7",
+          "displayName": "Batiments 4eme",
+          "featureCount": 1200,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "fid",
+            "name": "fid",
+            "rawKey": "fid",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "gml_id",
+            "name": "gml_id",
+            "rawKey": "gml_id",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "cleabs",
+            "name": "cleabs",
+            "rawKey": "cleabs",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nature",
+            "name": "nature",
+            "rawKey": "nature",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "usage_1",
+            "name": "usage_1",
+            "rawKey": "usage_1",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Bool",
+            "label": "construction_legere",
+            "name": "construction_legere",
+            "rawKey": "construction_legere",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "etat_de_l_objet",
+            "name": "etat_de_l_objet",
+            "rawKey": "etat_de_l_objet",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_creation",
+            "name": "date_creation",
+            "rawKey": "date_creation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_modification",
+            "name": "date_modification",
+            "rawKey": "date_modification",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_de_confirmation",
+            "name": "date_de_confirmation",
+            "rawKey": "date_de_confirmation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "methode_d_acquisition_planimetrique",
+            "name": "methode_d_acquisition_planimetrique",
+            "rawKey": "methode_d_acquisition_planimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "methode_d_acquisition_altimetrique",
+            "name": "methode_d_acquisition_altimetrique",
+            "rawKey": "methode_d_acquisition_altimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "precision_planimetrique",
+            "name": "precision_planimetrique",
+            "rawKey": "precision_planimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "precision_altimetrique",
+            "name": "precision_altimetrique",
+            "rawKey": "precision_altimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "hauteur",
+            "name": "hauteur",
+            "rawKey": "hauteur",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "altitude_minimale_sol",
+            "name": "altitude_minimale_sol",
+            "rawKey": "altitude_minimale_sol",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "altitude_maximale_toit",
+            "name": "altitude_maximale_toit",
+            "rawKey": "altitude_maximale_toit",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "altitude_maximale_sol",
+            "name": "altitude_maximale_sol",
+            "rawKey": "altitude_maximale_sol",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "origine_du_batiment",
+            "name": "origine_du_batiment",
+            "rawKey": "origine_du_batiment",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "identifiants_rnb",
+            "name": "identifiants_rnb",
+            "rawKey": "identifiants_rnb",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "_color",
+            "name": "color",
+            "rawKey": "_color",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_d_apparition",
+            "name": "date_d_apparition",
+            "rawKey": "date_d_apparition",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "nombre_de_logements",
+            "name": "nombre_de_logements",
+            "rawKey": "nombre_de_logements",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "nombre_d_etages",
+            "name": "nombre_d_etages",
+            "rawKey": "nombre_d_etages",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "materiaux_des_murs",
+            "name": "materiaux_des_murs",
+            "rawKey": "materiaux_des_murs",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "materiaux_de_la_toiture",
+            "name": "materiaux_de_la_toiture",
+            "rawKey": "materiaux_de_la_toiture",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "appariement_fichiers_fonciers",
+            "name": "appariement_fichiers_fonciers",
+            "rawKey": "appariement_fichiers_fonciers",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "usage_2",
+            "name": "usage_2",
+            "rawKey": "usage_2",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "altitude_minimale_toit",
+            "name": "altitude_minimale_toit",
+            "rawKey": "altitude_minimale_toit",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "GeoJSON",
+            "name": "geometry_json",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lat",
+            "name": "centroid_lat",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lon",
+            "name": "centroid_lon",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Polygon",
+          "style": {
+           "categories": [
+            {
+             "color": "#fff5f0",
+             "label": "0-5 m",
+             "lower": 0,
+             "upper": 5,
+             "value": "0-5 m"
+            },
+            {
+             "color": "#fdbb84",
+             "label": "5-10 m",
+             "lower": 5,
+             "upper": 10,
+             "value": "5-10 m"
+            },
+            {
+             "color": "#fc8d59",
+             "label": "10-15 m",
+             "lower": 10,
+             "upper": 15,
+             "value": "10-15 m"
+            },
+            {
+             "color": "#e34a33",
+             "label": "15-25 m",
+             "lower": 15,
+             "upper": 25,
+             "value": "15-25 m"
+            },
+            {
+             "color": "#7f2704",
+             "label": ">25 m",
+             "lower": 25,
+             "upper": null,
+             "value": ">25 m"
+            }
+           ],
+           "declarative": {
+            "field": "hauteur",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#fff5f0",
+              "label": "0-5 m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 5
+             },
+             {
+              "color": "#fdbb84",
+              "label": "5-10 m",
+              "lower": 5,
+              "opacity": 1,
+              "upper": 10
+             },
+             {
+              "color": "#fc8d59",
+              "label": "10-15 m",
+              "lower": 10,
+              "opacity": 1,
+              "upper": 15
+             },
+             {
+              "color": "#e34a33",
+              "label": "15-25 m",
+              "lower": 15,
+              "opacity": 1,
+              "upper": 25
+             },
+             {
+              "color": "#7f2704",
+              "label": ">25 m",
+              "lower": 25,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "field": "hauteur",
+           "qml_source": null,
+           "type": "graduatedSymbol"
+          },
+          "tableName": "Batiments_4eme",
+          "varName": null
+         },
+         {
+          "color": "#10b981",
+          "displayName": "Limite 4eme arr.",
+          "featureCount": 1,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nom",
+            "name": "nom",
+            "rawKey": "nom",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "GeoJSON",
+            "name": "geometry_json",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lat",
+            "name": "centroid_lat",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lon",
+            "name": "centroid_lon",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Polygon",
+          "style": {
+           "color": "#000000",
+           "declarative": {
+            "color": "#000000",
+            "kind": "single",
+            "opacity": 1
+           },
+           "qml_source": null,
+           "type": "singleSymbol"
+          },
+          "tableName": "Limite_4eme_arr",
+          "varName": null
+         },
+         {
+          "color": "#f59e0b",
+          "displayName": "POI 4eme",
+          "featureCount": 11,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "fid",
+            "name": "fid",
+            "rawKey": "fid",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "gml_id",
+            "name": "gml_id",
+            "rawKey": "gml_id",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "cleabs",
+            "name": "cleabs",
+            "rawKey": "cleabs",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nature",
+            "name": "nature",
+            "rawKey": "nature",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nature_detaillee",
+            "name": "nature_detaillee",
+            "rawKey": "nature_detaillee",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "importance",
+            "name": "importance",
+            "rawKey": "importance",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "etat_de_l_objet",
+            "name": "etat_de_l_objet",
+            "rawKey": "etat_de_l_objet",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_creation",
+            "name": "date_creation",
+            "rawKey": "date_creation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_modification",
+            "name": "date_modification",
+            "rawKey": "date_modification",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_de_confirmation",
+            "name": "date_de_confirmation",
+            "rawKey": "date_de_confirmation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "sources",
+            "name": "sources",
+            "rawKey": "sources",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "identifiants_sources",
+            "name": "identifiants_sources",
+            "rawKey": "identifiants_sources",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "methode_d_acquisition_planimetrique",
+            "name": "methode_d_acquisition_planimetrique",
+            "rawKey": "methode_d_acquisition_planimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "precision_planimetrique",
+            "name": "precision_planimetrique",
+            "rawKey": "precision_planimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "methode_d_acquisition_altimetrique",
+            "name": "methode_d_acquisition_altimetrique",
+            "rawKey": "methode_d_acquisition_altimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "precision_altimetrique",
+            "name": "precision_altimetrique",
+            "rawKey": "precision_altimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "hauteur",
+            "name": "hauteur",
+            "rawKey": "hauteur",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "_color",
+            "name": "color",
+            "rawKey": "_color",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Latitude",
+            "name": "latitude",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Longitude",
+            "name": "longitude",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Point",
+          "style": {
+           "categories": [
+            {
+             "color": "#e41a1c",
+             "label": "Antenne",
+             "value": "Antenne"
+            },
+            {
+             "color": "#377eb8",
+             "label": "Autre construction élevée",
+             "value": "Autre construction élevée"
+            },
+            {
+             "color": "#4daf4a",
+             "label": "Clocher",
+             "value": "Clocher"
+            }
+           ],
+           "declarative": {
+            "field": "nature",
+            "kind": "categorized",
+            "stops": [
+             {
+              "color": "#e41a1c",
+              "label": "Antenne",
+              "opacity": 1,
+              "value": "Antenne"
+             },
+             {
+              "color": "#377eb8",
+              "label": "Autre construction élevée",
+              "opacity": 1,
+              "value": "Autre construction élevée"
+             },
+             {
+              "color": "#4daf4a",
+              "label": "Clocher",
+              "opacity": 1,
+              "value": "Clocher"
+             }
+            ]
+           },
+           "field": "nature",
+           "qml_source": null,
+           "type": "categorizedSymbol"
+          },
+          "tableName": "POI_4eme",
+          "varName": null
+         },
+         {
+          "color": "#ef4444",
+          "displayName": "Voirie 4eme (clippee)",
+          "featureCount": 1769,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "fid",
+            "name": "fid",
+            "rawKey": "fid",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "gml_id",
+            "name": "gml_id",
+            "rawKey": "gml_id",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "cleabs",
+            "name": "cleabs",
+            "rawKey": "cleabs",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nature",
+            "name": "nature",
+            "rawKey": "nature",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nom_collaboratif_gauche",
+            "name": "nom_collaboratif_gauche",
+            "rawKey": "nom_collaboratif_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nom_collaboratif_droite",
+            "name": "nom_collaboratif_droite",
+            "rawKey": "nom_collaboratif_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "importance",
+            "name": "importance",
+            "rawKey": "importance",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Bool",
+            "label": "fictif",
+            "name": "fictif",
+            "rawKey": "fictif",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "position_par_rapport_au_sol",
+            "name": "position_par_rapport_au_sol",
+            "rawKey": "position_par_rapport_au_sol",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "etat_de_l_objet",
+            "name": "etat_de_l_objet",
+            "rawKey": "etat_de_l_objet",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_creation",
+            "name": "date_creation",
+            "rawKey": "date_creation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_modification",
+            "name": "date_modification",
+            "rawKey": "date_modification",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "methode_d_acquisition_planimetrique",
+            "name": "methode_d_acquisition_planimetrique",
+            "rawKey": "methode_d_acquisition_planimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "precision_planimetrique",
+            "name": "precision_planimetrique",
+            "rawKey": "precision_planimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "methode_d_acquisition_altimetrique",
+            "name": "methode_d_acquisition_altimetrique",
+            "rawKey": "methode_d_acquisition_altimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "precision_altimetrique",
+            "name": "precision_altimetrique",
+            "rawKey": "precision_altimetrique",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "nombre_de_voies",
+            "name": "nombre_de_voies",
+            "rawKey": "nombre_de_voies",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "largeur_de_chaussee",
+            "name": "largeur_de_chaussee",
+            "rawKey": "largeur_de_chaussee",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Bool",
+            "label": "itineraire_vert",
+            "name": "itineraire_vert",
+            "rawKey": "itineraire_vert",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Bool",
+            "label": "prive",
+            "name": "prive",
+            "rawKey": "prive",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "sens_de_circulation",
+            "name": "sens_de_circulation",
+            "rawKey": "sens_de_circulation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Bool",
+            "label": "urbain",
+            "name": "urbain",
+            "rawKey": "urbain",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "vitesse_moyenne_vl",
+            "name": "vitesse_moyenne_vl",
+            "rawKey": "vitesse_moyenne_vl",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "acces_vehicule_leger",
+            "name": "acces_vehicule_leger",
+            "rawKey": "acces_vehicule_leger",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Bool",
+            "label": "matieres_dangereuses_interdites",
+            "name": "matieres_dangereuses_interdites",
+            "rawKey": "matieres_dangereuses_interdites",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "borne_debut_gauche",
+            "name": "borne_debut_gauche",
+            "rawKey": "borne_debut_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "borne_debut_droite",
+            "name": "borne_debut_droite",
+            "rawKey": "borne_debut_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "borne_fin_gauche",
+            "name": "borne_fin_gauche",
+            "rawKey": "borne_fin_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "borne_fin_droite",
+            "name": "borne_fin_droite",
+            "rawKey": "borne_fin_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "insee_commune_gauche",
+            "name": "insee_commune_gauche",
+            "rawKey": "insee_commune_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "insee_commune_droite",
+            "name": "insee_commune_droite",
+            "rawKey": "insee_commune_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "source_voie_ban_gauche",
+            "name": "source_voie_ban_gauche",
+            "rawKey": "source_voie_ban_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "source_voie_ban_droite",
+            "name": "source_voie_ban_droite",
+            "rawKey": "source_voie_ban_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nom_voie_ban_gauche",
+            "name": "nom_voie_ban_gauche",
+            "rawKey": "nom_voie_ban_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nom_voie_ban_droite",
+            "name": "nom_voie_ban_droite",
+            "rawKey": "nom_voie_ban_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "lieux_dits_ban_gauche",
+            "name": "lieux_dits_ban_gauche",
+            "rawKey": "lieux_dits_ban_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "lieux_dits_ban_droite",
+            "name": "lieux_dits_ban_droite",
+            "rawKey": "lieux_dits_ban_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "identifiant_voie_ban_gauche",
+            "name": "identifiant_voie_ban_gauche",
+            "rawKey": "identifiant_voie_ban_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "identifiant_voie_ban_droite",
+            "name": "identifiant_voie_ban_droite",
+            "rawKey": "identifiant_voie_ban_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "id_ban_odonyme_droite",
+            "name": "id_ban_odonyme_droite",
+            "rawKey": "id_ban_odonyme_droite",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "id_ban_odonyme_gauche",
+            "name": "id_ban_odonyme_gauche",
+            "rawKey": "id_ban_odonyme_gauche",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "_color",
+            "name": "color",
+            "rawKey": "_color",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "date_de_confirmation",
+            "name": "date_de_confirmation",
+            "rawKey": "date_de_confirmation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "liens_vers_route_nommee",
+            "name": "liens_vers_route_nommee",
+            "rawKey": "liens_vers_route_nommee",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "cpx_classement_administratif",
+            "name": "cpx_classement_administratif",
+            "rawKey": "cpx_classement_administratif",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "cpx_toponyme_route_nommee",
+            "name": "cpx_toponyme_route_nommee",
+            "rawKey": "cpx_toponyme_route_nommee",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "acces_pieton",
+            "name": "acces_pieton",
+            "rawKey": "acces_pieton",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "sens_amenagement_cyclable_droit",
+            "name": "sens_amenagement_cyclable_droit",
+            "rawKey": "sens_amenagement_cyclable_droit",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "amenagement_cyclable_droit",
+            "name": "amenagement_cyclable_droit",
+            "rawKey": "amenagement_cyclable_droit",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "GeoJSON",
+            "name": "geometry_json",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lat",
+            "name": "centroid_lat",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lon",
+            "name": "centroid_lon",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Line",
+          "style": {
+           "categories": [
+            {
+             "color": "#1e78b4",
+             "label": "Double sens",
+             "value": "Double sens"
+            },
+            {
+             "color": "#8c8c8c",
+             "label": "Autre",
+             "value": "Autre"
+            },
+            {
+             "color": "#ffa500",
+             "label": "Sens unique",
+             "value": "Sens direct"
+            },
+            {
+             "color": "#ffa500",
+             "label": "Sens unique inverse",
+             "value": "Sens direct"
+            }
+           ],
+           "declarative": {
+            "field": "sens_de_circulation",
+            "kind": "categorized",
+            "stops": [
+             {
+              "color": "#1e78b4",
+              "label": "Double sens",
+              "opacity": 1,
+              "value": "Double sens"
+             },
+             {
+              "color": "#8c8c8c",
+              "label": "Autre",
+              "opacity": 1,
+              "value": "Autre"
+             },
+             {
+              "color": "#ffa500",
+              "label": "Sens unique",
+              "opacity": 1,
+              "value": "Sens direct"
+             },
+             {
+              "color": "#ffa500",
+              "label": "Sens unique inverse",
+              "opacity": 1,
+              "value": "Sens direct"
+             }
+            ]
+           },
+           "field": "sens_de_circulation",
+           "qml_source": null,
+           "type": "categorizedSymbol"
+          },
+          "tableName": "Voirie_4eme_clippee",
+          "varName": null
+         }
+        ],
+        "meta": {
+         "classification": "internal",
+         "imported_at": "<DATE>",
+         "provenance": [
+          {
+           "ingested_at": "<DATE>",
+           "platform_id": "widgets-grist-qgis2grist",
+           "via": null
+          }
+         ],
+         "source_file": "qgis2grist_marseille4e_webmap.html",
+         "source_info": {
+          "provenance": [
+           {
+            "ingested_at": "<DATE>",
+            "platform_id": "widgets-grist-qgis2grist",
+            "via": null
+           }
+          ],
+          "source": {
+           "authority": "qgis2grist_marseille4e_webmap.html",
+           "classification": "internal",
+           "license": "unknown",
+           "millesime": "2026",
+           "referential": "qgis2grist"
+          }
+         },
+         "sources": [
+          {
+           "authority": "qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": null,
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Batiments 4eme ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Batiments_4eme",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Limite 4eme arr. ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Limite_4eme_arr",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "POI 4eme ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "POI_4eme",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Voirie 4eme (clippee) ← qgis2grist_marseille4e_webmap.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Voirie_4eme_clippee",
+           "statut": "a_verifier"
+          }
+         ]
+        },
+        "published": {},
+        "scene_manifest": {
+         "classification": "internal",
+         "layers": [
+          {
+           "controls": [
+            {
+             "active": false,
+             "dataMax": 25,
+             "dataMin": 0,
+             "field": "hauteur",
+             "label": "hauteur",
+             "max": 25,
+             "min": 0,
+             "type": "range"
+            }
+           ],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "polygon",
+           "id": "Batiments_4eme",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "Batiments 4eme",
+           "profile": "A",
+           "source": {
+            "table": "Batiments_4eme",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "field": "hauteur",
+             "kind": "graduated",
+             "method": "equal",
+             "stops": [
+              {
+               "color": "#fff5f0",
+               "label": "0-5 m",
+               "lower": 0,
+               "opacity": 1,
+               "upper": 5
+              },
+              {
+               "color": "#fdbb84",
+               "label": "5-10 m",
+               "lower": 5,
+               "opacity": 1,
+               "upper": 10
+              },
+              {
+               "color": "#fc8d59",
+               "label": "10-15 m",
+               "lower": 10,
+               "opacity": 1,
+               "upper": 15
+              },
+              {
+               "color": "#e34a33",
+               "label": "15-25 m",
+               "lower": 15,
+               "opacity": 1,
+               "upper": 25
+              },
+              {
+               "color": "#7f2704",
+               "label": ">25 m",
+               "lower": 25,
+               "opacity": 1,
+               "upper": null
+              }
+             ]
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          },
+          {
+           "controls": [],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "polygon",
+           "id": "Limite_4eme_arr",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "Limite 4eme arr.",
+           "profile": "A",
+           "source": {
+            "table": "Limite_4eme_arr",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "color": "#000000",
+             "kind": "single",
+             "opacity": 1
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          },
+          {
+           "controls": [
+            {
+             "active": false,
+             "field": "nature",
+             "label": "nature",
+             "type": "select",
+             "values": [
+              "Antenne",
+              "Autre construction élevée",
+              "Clocher"
+             ]
+            }
+           ],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "point",
+           "id": "POI_4eme",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "POI 4eme",
+           "profile": "A",
+           "source": {
+            "table": "POI_4eme",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "field": "nature",
+             "kind": "categorized",
+             "stops": [
+              {
+               "color": "#e41a1c",
+               "label": "Antenne",
+               "opacity": 1,
+               "value": "Antenne"
+              },
+              {
+               "color": "#377eb8",
+               "label": "Autre construction élevée",
+               "opacity": 1,
+               "value": "Autre construction élevée"
+              },
+              {
+               "color": "#4daf4a",
+               "label": "Clocher",
+               "opacity": 1,
+               "value": "Clocher"
+              }
+             ]
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          },
+          {
+           "controls": [
+            {
+             "active": false,
+             "field": "sens_de_circulation",
+             "label": "sens_de_circulation",
+             "type": "select",
+             "values": [
+              "Double sens",
+              "Autre",
+              "Sens direct"
+             ]
+            }
+           ],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "line",
+           "id": "Voirie_4eme_clippee",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "Voirie 4eme (clippee)",
+           "profile": "A",
+           "source": {
+            "table": "Voirie_4eme_clippee",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "field": "sens_de_circulation",
+             "kind": "categorized",
+             "stops": [
+              {
+               "color": "#1e78b4",
+               "label": "Double sens",
+               "opacity": 1,
+               "value": "Double sens"
+              },
+              {
+               "color": "#8c8c8c",
+               "label": "Autre",
+               "opacity": 1,
+               "value": "Autre"
+              },
+              {
+               "color": "#ffa500",
+               "label": "Sens unique",
+               "opacity": 1,
+               "value": "Sens direct"
+              },
+              {
+               "color": "#ffa500",
+               "label": "Sens unique inverse",
+               "opacity": 1,
+               "value": "Sens direct"
+              }
+             ]
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          }
+         ],
+         "meta": {
+          "classification": "internal",
+          "imported_at": "<DATE>",
+          "provenance": [
+           {
+            "ingested_at": "<DATE>",
+            "platform_id": "widgets-grist-qgis2grist",
+            "via": null
+           }
+          ],
+          "source_file": "qgis2grist_marseille4e_webmap.html",
+          "source_info": {
+           "provenance": [
+            {
+             "ingested_at": "<DATE>",
+             "platform_id": "widgets-grist-qgis2grist",
+             "via": null
+            }
+           ],
+           "source": {
+            "authority": "qgis2grist_marseille4e_webmap.html",
+            "classification": "internal",
+            "license": "unknown",
+            "millesime": "2026",
+            "referential": "qgis2grist"
+           }
+          },
+          "sources": [
+           {
+            "authority": "qgis2grist_marseille4e_webmap.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": null,
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "Batiments 4eme ← qgis2grist_marseille4e_webmap.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "Batiments_4eme",
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "Limite 4eme arr. ← qgis2grist_marseille4e_webmap.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "Limite_4eme_arr",
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "POI 4eme ← qgis2grist_marseille4e_webmap.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "POI_4eme",
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "Voirie 4eme (clippee) ← qgis2grist_marseille4e_webmap.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "Voirie_4eme_clippee",
+            "statut": "a_verifier"
+           }
+          ],
+          "widget": "qgis2grist-v2"
+         },
+         "subtitle": null,
+         "title": "qgis2grist_marseille4e_webmap.html",
+         "version": "0.2.1"
+        },
+        "scene_manifest_row_id": 1,
+        "terrain": {
+         "forms": [],
+         "primaryTableId": null,
+         "version": 1
+        },
+        "version": 3
+       }
+      },
+      "created_at": {
+       "n": 1,
+       "valeur": "<DATE>"
+      },
+      "source_file": {
+       "n": 1,
+       "premieres": [
+        "qgis2grist_marseille4e_webmap.html"
+       ],
+       "empreinte": "dea30d914b47b228-10"
+      },
+      "widget_name": {
+       "n": 1,
+       "premieres": [
+        "qgis2grist_marseille4e_webmap"
+       ],
+       "empreinte": "15132187bb326cb5-v"
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "lectures": [
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "fetchTable",
+   "QgisWidgets"
+  ]
+ ],
+ "tablesFinales": {
+  "Batiments_4eme": {
+   "colonnes": [
+    "fid",
+    "gml_id",
+    "cleabs",
+    "nature",
+    "usage_1",
+    "construction_legere",
+    "etat_de_l_objet",
+    "date_creation",
+    "date_modification",
+    "date_de_confirmation",
+    "methode_d_acquisition_planimetrique",
+    "methode_d_acquisition_altimetrique",
+    "precision_planimetrique",
+    "precision_altimetrique",
+    "hauteur",
+    "altitude_minimale_sol",
+    "altitude_maximale_toit",
+    "altitude_maximale_sol",
+    "origine_du_batiment",
+    "identifiants_rnb",
+    "color",
+    "date_d_apparition",
+    "nombre_de_logements",
+    "nombre_d_etages",
+    "materiaux_des_murs",
+    "materiaux_de_la_toiture",
+    "appariement_fichiers_fonciers",
+    "usage_2",
+    "altitude_minimale_toit",
+    "geometry_json",
+    "centroid_lat",
+    "centroid_lon",
+    "fill_color"
+   ],
+   "nbLignes": 1200
+  },
+  "Limite_4eme_arr": {
+   "colonnes": [
+    "nom",
+    "geometry_json",
+    "centroid_lat",
+    "centroid_lon",
+    "fill_color"
+   ],
+   "nbLignes": 1
+  },
+  "POI_4eme": {
+   "colonnes": [
+    "fid",
+    "gml_id",
+    "cleabs",
+    "nature",
+    "nature_detaillee",
+    "importance",
+    "etat_de_l_objet",
+    "date_creation",
+    "date_modification",
+    "date_de_confirmation",
+    "sources",
+    "identifiants_sources",
+    "methode_d_acquisition_planimetrique",
+    "precision_planimetrique",
+    "methode_d_acquisition_altimetrique",
+    "precision_altimetrique",
+    "hauteur",
+    "color",
+    "latitude",
+    "longitude",
+    "fill_color"
+   ],
+   "nbLignes": 11
+  },
+  "Voirie_4eme_clippee": {
+   "colonnes": [
+    "fid",
+    "gml_id",
+    "cleabs",
+    "nature",
+    "nom_collaboratif_gauche",
+    "nom_collaboratif_droite",
+    "importance",
+    "fictif",
+    "position_par_rapport_au_sol",
+    "etat_de_l_objet",
+    "date_creation",
+    "date_modification",
+    "methode_d_acquisition_planimetrique",
+    "precision_planimetrique",
+    "methode_d_acquisition_altimetrique",
+    "precision_altimetrique",
+    "nombre_de_voies",
+    "largeur_de_chaussee",
+    "itineraire_vert",
+    "prive",
+    "sens_de_circulation",
+    "urbain",
+    "vitesse_moyenne_vl",
+    "acces_vehicule_leger",
+    "matieres_dangereuses_interdites",
+    "borne_debut_gauche",
+    "borne_debut_droite",
+    "borne_fin_gauche",
+    "borne_fin_droite",
+    "insee_commune_gauche",
+    "insee_commune_droite",
+    "source_voie_ban_gauche",
+    "source_voie_ban_droite",
+    "nom_voie_ban_gauche",
+    "nom_voie_ban_droite",
+    "lieux_dits_ban_gauche",
+    "lieux_dits_ban_droite",
+    "identifiant_voie_ban_gauche",
+    "identifiant_voie_ban_droite",
+    "id_ban_odonyme_droite",
+    "id_ban_odonyme_gauche",
+    "color",
+    "date_de_confirmation",
+    "liens_vers_route_nommee",
+    "cpx_classement_administratif",
+    "cpx_toponyme_route_nommee",
+    "acces_pieton",
+    "sens_amenagement_cyclable_droit",
+    "amenagement_cyclable_droit",
+    "geometry_json",
+    "centroid_lat",
+    "centroid_lon",
+    "fill_color"
+   ],
+   "nbLignes": 1769
+  },
+  "SceneManifest": {
+   "colonnes": [
+    "manifest_json",
+    "scene_hash",
+    "source_file",
+    "created_at"
+   ],
+   "nbLignes": 1
+  },
+  "QgisWidgets": {
+   "colonnes": [
+    "widget_name",
+    "source_file",
+    "config_json",
+    "created_at"
+   ],
+   "nbLignes": 1
+  }
+ },
+ "toasts": [
+  [
+   "✓ 4 tables importées — sauvegarde config…",
+   ""
+  ],
+  [
+   "✓ Config + SceneManifest sauvegardés",
+   "success"
+  ]
+ ],
+ "carte": {
+  "Batiments_4eme": {
+   "_color": "#3e5de7",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "geojson": "geometry_json",
+    "lat": "centroid_lat",
+    "lon": "centroid_lon"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#3e5de7",
+   "datasource": "(GeoJSON)",
+   "displayName": "Batiments 4eme",
+   "featureCount": 1200,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Int",
+     "label": "fid",
+     "name": "fid",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "usage_1",
+     "gType": "Text",
+     "label": "usage_1",
+     "name": "usage_1",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "construction_legere",
+     "gType": "Bool",
+     "label": "construction_legere",
+     "name": "construction_legere",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Numeric",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Numeric",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "hauteur",
+     "gType": "Numeric",
+     "label": "hauteur",
+     "name": "hauteur",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "altitude_minimale_sol",
+     "gType": "Numeric",
+     "label": "altitude_minimale_sol",
+     "name": "altitude_minimale_sol",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "altitude_maximale_toit",
+     "gType": "Numeric",
+     "label": "altitude_maximale_toit",
+     "name": "altitude_maximale_toit",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "altitude_maximale_sol",
+     "gType": "Int",
+     "label": "altitude_maximale_sol",
+     "name": "altitude_maximale_sol",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "origine_du_batiment",
+     "gType": "Text",
+     "label": "origine_du_batiment",
+     "name": "origine_du_batiment",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_rnb",
+     "gType": "Text",
+     "label": "identifiants_rnb",
+     "name": "identifiants_rnb",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "_color",
+     "gType": "Text",
+     "label": "_color",
+     "name": "color",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_d_apparition",
+     "gType": "Text",
+     "label": "date_d_apparition",
+     "name": "date_d_apparition",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nombre_de_logements",
+     "gType": "Int",
+     "label": "nombre_de_logements",
+     "name": "nombre_de_logements",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "nombre_d_etages",
+     "gType": "Int",
+     "label": "nombre_d_etages",
+     "name": "nombre_d_etages",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "materiaux_des_murs",
+     "gType": "Text",
+     "label": "materiaux_des_murs",
+     "name": "materiaux_des_murs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "materiaux_de_la_toiture",
+     "gType": "Text",
+     "label": "materiaux_de_la_toiture",
+     "name": "materiaux_de_la_toiture",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "appariement_fichiers_fonciers",
+     "gType": "Text",
+     "label": "appariement_fichiers_fonciers",
+     "name": "appariement_fichiers_fonciers",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "usage_2",
+     "gType": "Text",
+     "label": "usage_2",
+     "name": "usage_2",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "altitude_minimale_toit",
+     "gType": "Numeric",
+     "label": "altitude_minimale_toit",
+     "name": "altitude_minimale_toit",
+     "qType": "double"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Batiments_4eme",
+   "style": {
+    "categories": [
+     {
+      "color": "#fff5f0",
+      "label": "0-5 m",
+      "lower": 0,
+      "upper": 5,
+      "value": "0-5 m"
+     },
+     {
+      "color": "#fdbb84",
+      "label": "5-10 m",
+      "lower": 5,
+      "upper": 10,
+      "value": "5-10 m"
+     },
+     {
+      "color": "#fc8d59",
+      "label": "10-15 m",
+      "lower": 10,
+      "upper": 15,
+      "value": "10-15 m"
+     },
+     {
+      "color": "#e34a33",
+      "label": "15-25 m",
+      "lower": 15,
+      "upper": 25,
+      "value": "15-25 m"
+     },
+     {
+      "color": "#7f2704",
+      "label": ">25 m",
+      "lower": 25,
+      "upper": {
+       "__nombre": "Infinity"
+      },
+      "value": ">25 m"
+     }
+    ],
+    "field": "hauteur",
+    "type": "graduatedSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  "Limite_4eme_arr": {
+   "_color": "#10b981",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "geojson": "geometry_json",
+    "lat": "centroid_lat",
+    "lon": "centroid_lon"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#10b981",
+   "datasource": "(GeoJSON)",
+   "displayName": "Limite 4eme arr.",
+   "featureCount": 1,
+   "fields": [
+    {
+     "_rawKey": "nom",
+     "gType": "Text",
+     "label": "nom",
+     "name": "nom",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Limite_4eme_arr",
+   "style": {
+    "color": "#000000",
+    "type": "singleSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  "POI_4eme": {
+   "_color": "#f59e0b",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "lat": "latitude",
+    "lon": "longitude"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#f59e0b",
+   "datasource": "(GeoJSON)",
+   "displayName": "POI 4eme",
+   "featureCount": 11,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Int",
+     "label": "fid",
+     "name": "fid",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature_detaillee",
+     "gType": "Text",
+     "label": "nature_detaillee",
+     "name": "nature_detaillee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "importance",
+     "gType": "Text",
+     "label": "importance",
+     "name": "importance",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sources",
+     "gType": "Text",
+     "label": "sources",
+     "name": "sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_sources",
+     "gType": "Text",
+     "label": "identifiants_sources",
+     "name": "identifiants_sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Numeric",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Numeric",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "hauteur",
+     "gType": "Int",
+     "label": "hauteur",
+     "name": "hauteur",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "_color",
+     "gType": "Text",
+     "label": "_color",
+     "name": "color",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Latitude",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Longitude",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": true,
+   "name": "POI_4eme",
+   "style": {
+    "categories": [
+     {
+      "color": "#e41a1c",
+      "label": "Antenne",
+      "value": "Antenne"
+     },
+     {
+      "color": "#377eb8",
+      "label": "Autre construction élevée",
+      "value": "Autre construction élevée"
+     },
+     {
+      "color": "#4daf4a",
+      "label": "Clocher",
+      "value": "Clocher"
+     }
+    ],
+    "field": "nature",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  "Voirie_4eme_clippee": {
+   "_color": "#ef4444",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "geojson": "geometry_json",
+    "lat": "centroid_lat",
+    "lon": "centroid_lon"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#ef4444",
+   "datasource": "(GeoJSON)",
+   "displayName": "Voirie 4eme (clippee)",
+   "featureCount": 1769,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Int",
+     "label": "fid",
+     "name": "fid",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_collaboratif_gauche",
+     "gType": "Text",
+     "label": "nom_collaboratif_gauche",
+     "name": "nom_collaboratif_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_collaboratif_droite",
+     "gType": "Text",
+     "label": "nom_collaboratif_droite",
+     "name": "nom_collaboratif_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "importance",
+     "gType": "Text",
+     "label": "importance",
+     "name": "importance",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "fictif",
+     "gType": "Bool",
+     "label": "fictif",
+     "name": "fictif",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "position_par_rapport_au_sol",
+     "gType": "Text",
+     "label": "position_par_rapport_au_sol",
+     "name": "position_par_rapport_au_sol",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Numeric",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Numeric",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "nombre_de_voies",
+     "gType": "Int",
+     "label": "nombre_de_voies",
+     "name": "nombre_de_voies",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "largeur_de_chaussee",
+     "gType": "Int",
+     "label": "largeur_de_chaussee",
+     "name": "largeur_de_chaussee",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "itineraire_vert",
+     "gType": "Bool",
+     "label": "itineraire_vert",
+     "name": "itineraire_vert",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "prive",
+     "gType": "Bool",
+     "label": "prive",
+     "name": "prive",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "sens_de_circulation",
+     "gType": "Text",
+     "label": "sens_de_circulation",
+     "name": "sens_de_circulation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "urbain",
+     "gType": "Bool",
+     "label": "urbain",
+     "name": "urbain",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "vitesse_moyenne_vl",
+     "gType": "Int",
+     "label": "vitesse_moyenne_vl",
+     "name": "vitesse_moyenne_vl",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "acces_vehicule_leger",
+     "gType": "Text",
+     "label": "acces_vehicule_leger",
+     "name": "acces_vehicule_leger",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "matieres_dangereuses_interdites",
+     "gType": "Bool",
+     "label": "matieres_dangereuses_interdites",
+     "name": "matieres_dangereuses_interdites",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "borne_debut_gauche",
+     "gType": "Text",
+     "label": "borne_debut_gauche",
+     "name": "borne_debut_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_debut_droite",
+     "gType": "Text",
+     "label": "borne_debut_droite",
+     "name": "borne_debut_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_fin_gauche",
+     "gType": "Text",
+     "label": "borne_fin_gauche",
+     "name": "borne_fin_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_fin_droite",
+     "gType": "Text",
+     "label": "borne_fin_droite",
+     "name": "borne_fin_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "insee_commune_gauche",
+     "gType": "Text",
+     "label": "insee_commune_gauche",
+     "name": "insee_commune_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "insee_commune_droite",
+     "gType": "Text",
+     "label": "insee_commune_droite",
+     "name": "insee_commune_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "source_voie_ban_gauche",
+     "gType": "Text",
+     "label": "source_voie_ban_gauche",
+     "name": "source_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "source_voie_ban_droite",
+     "gType": "Text",
+     "label": "source_voie_ban_droite",
+     "name": "source_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_voie_ban_gauche",
+     "gType": "Text",
+     "label": "nom_voie_ban_gauche",
+     "name": "nom_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_voie_ban_droite",
+     "gType": "Text",
+     "label": "nom_voie_ban_droite",
+     "name": "nom_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lieux_dits_ban_gauche",
+     "gType": "Text",
+     "label": "lieux_dits_ban_gauche",
+     "name": "lieux_dits_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lieux_dits_ban_droite",
+     "gType": "Text",
+     "label": "lieux_dits_ban_droite",
+     "name": "lieux_dits_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiant_voie_ban_gauche",
+     "gType": "Text",
+     "label": "identifiant_voie_ban_gauche",
+     "name": "identifiant_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiant_voie_ban_droite",
+     "gType": "Text",
+     "label": "identifiant_voie_ban_droite",
+     "name": "identifiant_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "id_ban_odonyme_droite",
+     "gType": "Text",
+     "label": "id_ban_odonyme_droite",
+     "name": "id_ban_odonyme_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "id_ban_odonyme_gauche",
+     "gType": "Text",
+     "label": "id_ban_odonyme_gauche",
+     "name": "id_ban_odonyme_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "_color",
+     "gType": "Text",
+     "label": "_color",
+     "name": "color",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "liens_vers_route_nommee",
+     "gType": "Text",
+     "label": "liens_vers_route_nommee",
+     "name": "liens_vers_route_nommee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_classement_administratif",
+     "gType": "Text",
+     "label": "cpx_classement_administratif",
+     "name": "cpx_classement_administratif",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_toponyme_route_nommee",
+     "gType": "Text",
+     "label": "cpx_toponyme_route_nommee",
+     "name": "cpx_toponyme_route_nommee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "acces_pieton",
+     "gType": "Text",
+     "label": "acces_pieton",
+     "name": "acces_pieton",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sens_amenagement_cyclable_droit",
+     "gType": "Text",
+     "label": "sens_amenagement_cyclable_droit",
+     "name": "sens_amenagement_cyclable_droit",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "amenagement_cyclable_droit",
+     "gType": "Text",
+     "label": "amenagement_cyclable_droit",
+     "name": "amenagement_cyclable_droit",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": true,
+   "name": "Voirie_4eme_clippee",
+   "style": {
+    "categories": [
+     {
+      "color": "#1e78b4",
+      "label": "Double sens",
+      "value": "Double sens"
+     },
+     {
+      "color": "#8c8c8c",
+      "label": "Autre",
+      "value": "Autre"
+     },
+     {
+      "color": "#ffa500",
+      "label": "Sens unique",
+      "value": "Sens direct"
+     },
+     {
+      "color": "#ffa500",
+      "label": "Sens unique inverse",
+      "value": "Sens direct"
+     }
+    ],
+    "field": "sens_de_circulation",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  }
+ }
+}

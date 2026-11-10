@@ -1,0 +1,100 @@
+{
+ "fixture": "demo_points_gpkg",
+ "fichier": "demo_points.gpkg",
+ "extension": "gpkg",
+ "nbCouches": 1,
+ "couches": [
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "demo_points",
+   "featureCount": 3,
+   "fields": [
+    {
+     "_rawKey": "nom",
+     "gType": "Text",
+     "label": "Nom du point",
+     "name": "nom",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "type_bati",
+     "gType": "Text",
+     "label": "Type bati",
+     "name": "type_bati",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "score",
+     "gType": "Int",
+     "label": "Score",
+     "name": "score",
+     "qType": "integer"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Latitude",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Longitude",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": true,
+   "name": "Demo_points",
+   "style": {
+    "categories": [
+     {
+      "color": "#ff0000",
+      "label": "Type A",
+      "value": "A"
+     },
+     {
+      "color": "#0080ff",
+      "label": "Type B",
+      "value": "B"
+     }
+    ],
+    "field": "type_bati",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 3,
+    "premieres": [
+     {
+      "_localId": 1,
+      "latitude": 43.296,
+      "longitude": 5.369,
+      "nom": "Centre",
+      "score": 10,
+      "type_bati": "A"
+     },
+     {
+      "_localId": 2,
+      "latitude": 43.301,
+      "longitude": 5.381,
+      "nom": "Nord",
+      "score": 25,
+      "type_bati": "B"
+     },
+     {
+      "_localId": 3,
+      "latitude": 43.288,
+      "longitude": 5.355,
+      "nom": "Ouest",
+      "score": 40,
+      "type_bati": "A"
+     }
+    ],
+    "derniere": null,
+    "empreinte": "a788830e88e5edd8-7l"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

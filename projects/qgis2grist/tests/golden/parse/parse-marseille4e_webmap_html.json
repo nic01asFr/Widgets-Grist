@@ -1,0 +1,1373 @@
+{
+ "fixture": "marseille4e_webmap_html",
+ "fichier": "qgis2grist_marseille4e_webmap.html",
+ "extension": "html",
+ "nbCouches": 4,
+ "couches": [
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "Batiments 4eme",
+   "featureCount": 1200,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Int",
+     "label": "fid",
+     "name": "fid",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "usage_1",
+     "gType": "Text",
+     "label": "usage_1",
+     "name": "usage_1",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "construction_legere",
+     "gType": "Bool",
+     "label": "construction_legere",
+     "name": "construction_legere",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Numeric",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Numeric",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "hauteur",
+     "gType": "Numeric",
+     "label": "hauteur",
+     "name": "hauteur",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "altitude_minimale_sol",
+     "gType": "Numeric",
+     "label": "altitude_minimale_sol",
+     "name": "altitude_minimale_sol",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "altitude_maximale_toit",
+     "gType": "Numeric",
+     "label": "altitude_maximale_toit",
+     "name": "altitude_maximale_toit",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "altitude_maximale_sol",
+     "gType": "Int",
+     "label": "altitude_maximale_sol",
+     "name": "altitude_maximale_sol",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "origine_du_batiment",
+     "gType": "Text",
+     "label": "origine_du_batiment",
+     "name": "origine_du_batiment",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_rnb",
+     "gType": "Text",
+     "label": "identifiants_rnb",
+     "name": "identifiants_rnb",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "_color",
+     "gType": "Text",
+     "label": "_color",
+     "name": "color",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_d_apparition",
+     "gType": "Text",
+     "label": "date_d_apparition",
+     "name": "date_d_apparition",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nombre_de_logements",
+     "gType": "Int",
+     "label": "nombre_de_logements",
+     "name": "nombre_de_logements",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "nombre_d_etages",
+     "gType": "Int",
+     "label": "nombre_d_etages",
+     "name": "nombre_d_etages",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "materiaux_des_murs",
+     "gType": "Text",
+     "label": "materiaux_des_murs",
+     "name": "materiaux_des_murs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "materiaux_de_la_toiture",
+     "gType": "Text",
+     "label": "materiaux_de_la_toiture",
+     "name": "materiaux_de_la_toiture",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "appariement_fichiers_fonciers",
+     "gType": "Text",
+     "label": "appariement_fichiers_fonciers",
+     "name": "appariement_fichiers_fonciers",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "usage_2",
+     "gType": "Text",
+     "label": "usage_2",
+     "name": "usage_2",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "altitude_minimale_toit",
+     "gType": "Numeric",
+     "label": "altitude_minimale_toit",
+     "name": "altitude_minimale_toit",
+     "qType": "double"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Batiments_4eme",
+   "style": {
+    "categories": [
+     {
+      "color": "#fff5f0",
+      "label": "0-5 m",
+      "lower": 0,
+      "upper": 5,
+      "value": "0-5 m"
+     },
+     {
+      "color": "#fdbb84",
+      "label": "5-10 m",
+      "lower": 5,
+      "upper": 10,
+      "value": "5-10 m"
+     },
+     {
+      "color": "#fc8d59",
+      "label": "10-15 m",
+      "lower": 10,
+      "upper": 15,
+      "value": "10-15 m"
+     },
+     {
+      "color": "#e34a33",
+      "label": "15-25 m",
+      "lower": 15,
+      "upper": 25,
+      "value": "15-25 m"
+     },
+     {
+      "color": "#7f2704",
+      "label": ">25 m",
+      "lower": 25,
+      "upper": {
+       "__nombre": "Infinity"
+      },
+      "value": ">25 m"
+     }
+    ],
+    "field": "hauteur",
+    "type": "graduatedSymbol"
+   },
+   "features": {
+    "compte": 1200,
+    "premieres": [
+     {
+      "_localId": 1,
+      "altitude_maximale_sol": 64,
+      "altitude_maximale_toit": 69.5,
+      "altitude_minimale_sol": 59.7,
+      "altitude_minimale_toit": null,
+      "appariement_fichiers_fonciers": null,
+      "centroid_lat": 43.310673,
+      "centroid_lon": 5.405695,
+      "cleabs": "BATIMENT0000000219880140",
+      "color": "#fdbb84",
+      "construction_legere": false,
+      "date_creation": "PyQt5.QtCore.QDateTime(2009, 3, 23, 16, 40, 23, 273, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_d_apparition": null,
+      "date_de_confirmation": "PyQt5.QtCore.QDate(2009, 7, 1)",
+      "date_modification": "PyQt5.QtCore.QDateTime(2017, 12, 13, 13, 38, 36, 757, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fid": 1,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.40565,43.3107],[5.40564,43.31065],[5.40571,43.31064],[5.40571,43.31066],[5.40575,43.31066],[5.40576,43.31069],[5.40565,43.3107]]]]}",
+      "gml_id": "batiment.3122681",
+      "hauteur": 6.1,
+      "identifiants_rnb": "CYVPXH76JSAQ/Y5NDMZA2E9E9",
+      "materiaux_de_la_toiture": null,
+      "materiaux_des_murs": null,
+      "methode_d_acquisition_altimetrique": "Photogrammétrie",
+      "methode_d_acquisition_planimetrique": "Photogrammétrie",
+      "nature": "Indifférenciée",
+      "nombre_d_etages": null,
+      "nombre_de_logements": null,
+      "origine_du_batiment": "Imagerie aérienne",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "usage_1": "Indifférencié",
+      "usage_2": null
+     },
+     {
+      "_localId": 2,
+      "altitude_maximale_sol": 92.9,
+      "altitude_maximale_toit": 98,
+      "altitude_minimale_sol": 90.7,
+      "altitude_minimale_toit": null,
+      "appariement_fichiers_fonciers": null,
+      "centroid_lat": 43.309243,
+      "centroid_lon": 5.410796,
+      "cleabs": "BATIMENT0000000219880147",
+      "color": "#fff5f0",
+      "construction_legere": false,
+      "date_creation": "PyQt5.QtCore.QDateTime(2009, 3, 23, 16, 40, 23, 273, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_d_apparition": null,
+      "date_de_confirmation": "PyQt5.QtCore.QDate(2009, 7, 1)",
+      "date_modification": "PyQt5.QtCore.QDateTime(2023, 6, 8, 8, 31, 5, 607, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fid": 2,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.41075,43.30927],[5.41074,43.30922],[5.41086,43.3092],[5.41088,43.30925],[5.41075,43.30927]]]]}",
+      "gml_id": "batiment.3122684",
+      "hauteur": 3.2,
+      "identifiants_rnb": "YXRWQY95V2Y4",
+      "materiaux_de_la_toiture": null,
+      "materiaux_des_murs": null,
+      "methode_d_acquisition_altimetrique": "Photogrammétrie",
+      "methode_d_acquisition_planimetrique": "Photogrammétrie",
+      "nature": "Indifférenciée",
+      "nombre_d_etages": null,
+      "nombre_de_logements": null,
+      "origine_du_batiment": "Imagerie aérienne",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "usage_1": "Indifférencié",
+      "usage_2": null
+     },
+     {
+      "_localId": 3,
+      "altitude_maximale_sol": 67.1,
+      "altitude_maximale_toit": 69.7,
+      "altitude_minimale_sol": 64.6,
+      "altitude_minimale_toit": null,
+      "appariement_fichiers_fonciers": null,
+      "centroid_lat": 43.311415,
+      "centroid_lon": 5.406047,
+      "cleabs": "BATIMENT0000000219880153",
+      "color": "#fff5f0",
+      "construction_legere": false,
+      "date_creation": "PyQt5.QtCore.QDateTime(2009, 3, 23, 16, 40, 23, 273, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_d_apparition": null,
+      "date_de_confirmation": "PyQt5.QtCore.QDate(2009, 7, 1)",
+      "date_modification": "PyQt5.QtCore.QDateTime(2017, 12, 13, 13, 38, 36, 757, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fid": 3,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.40604,43.31145],[5.40601,43.31138],[5.40606,43.31137],[5.40609,43.31144],[5.40604,43.31145]]]]}",
+      "gml_id": "batiment.3122685",
+      "hauteur": 4.3,
+      "identifiants_rnb": "PAV6F21X3KWW",
+      "materiaux_de_la_toiture": null,
+      "materiaux_des_murs": null,
+      "methode_d_acquisition_altimetrique": "Photogrammétrie",
+      "methode_d_acquisition_planimetrique": "Photogrammétrie",
+      "nature": "Indifférenciée",
+      "nombre_d_etages": null,
+      "nombre_de_logements": null,
+      "origine_du_batiment": "Imagerie aérienne",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "usage_1": "Indifférencié",
+      "usage_2": null
+     }
+    ],
+    "derniere": {
+     "_localId": 1200,
+     "altitude_maximale_sol": 57,
+     "altitude_maximale_toit": 76.2,
+     "altitude_minimale_sol": 56.4,
+     "altitude_minimale_toit": 60.7,
+     "appariement_fichiers_fonciers": null,
+     "centroid_lat": 43.310265,
+     "centroid_lon": 5.393337,
+     "cleabs": "BATIMENT0000000258443756",
+     "color": "#fff5f0",
+     "construction_legere": false,
+     "date_creation": "PyQt5.QtCore.QDateTime(2011, 5, 20, 6, 53, 58, 585, PyQt5.QtCore.Qt.TimeSpec(1))",
+     "date_d_apparition": null,
+     "date_de_confirmation": null,
+     "date_modification": "PyQt5.QtCore.QDateTime(2017, 10, 25, 11, 52, 14, 143, PyQt5.QtCore.Qt.TimeSpec(1))",
+     "etat_de_l_objet": "En service",
+     "fid": 1200,
+     "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.39338,43.31028],[5.39337,43.31025],[5.39333,43.31025],[5.39329,43.31026],[5.39329,43.31028],[5.39338,43.31028]]]]}",
+     "gml_id": "batiment.9687562",
+     "hauteur": 4.3,
+     "identifiants_rnb": "G2P435DQ8Q74",
+     "materiaux_de_la_toiture": null,
+     "materiaux_des_murs": null,
+     "methode_d_acquisition_altimetrique": "Corrélation",
+     "methode_d_acquisition_planimetrique": "BDParcellaire recalée",
+     "nature": "Indifférenciée",
+     "nombre_d_etages": null,
+     "nombre_de_logements": null,
+     "origine_du_batiment": "Cadastre",
+     "precision_altimetrique": 1,
+     "precision_planimetrique": 3,
+     "usage_1": "Indifférencié",
+     "usage_2": null
+    },
+    "empreinte": "3ef458a937332bfb-wmnw"
+   }
+  },
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "Limite 4eme arr.",
+   "featureCount": 1,
+   "fields": [
+    {
+     "_rawKey": "nom",
+     "gType": "Text",
+     "label": "nom",
+     "name": "nom",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Limite_4eme_arr",
+   "style": {
+    "color": "#000000",
+    "type": "singleSymbol"
+   },
+   "features": {
+    "compte": 1,
+    "premieres": [
+     {
+      "_localId": 1,
+      "centroid_lat": 43.304107,
+      "centroid_lon": 5.397773,
+      "geometry_json": "{\"type\":\"Polygon\",\"coordinates\":[[[5.38816,43.29553],[5.41127,43.29501],[5.41219,43.31698],[5.38907,43.31749],[5.38816,43.29553]]]}",
+      "nom": "Limite 4eme arrondissement"
+     }
+    ],
+    "derniere": null,
+    "empreinte": "8504a05c3314cfb3-72"
+   }
+  },
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "POI 4eme",
+   "featureCount": 11,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Int",
+     "label": "fid",
+     "name": "fid",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature_detaillee",
+     "gType": "Text",
+     "label": "nature_detaillee",
+     "name": "nature_detaillee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "importance",
+     "gType": "Text",
+     "label": "importance",
+     "name": "importance",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sources",
+     "gType": "Text",
+     "label": "sources",
+     "name": "sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_sources",
+     "gType": "Text",
+     "label": "identifiants_sources",
+     "name": "identifiants_sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Numeric",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Numeric",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "hauteur",
+     "gType": "Int",
+     "label": "hauteur",
+     "name": "hauteur",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "_color",
+     "gType": "Text",
+     "label": "_color",
+     "name": "color",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Latitude",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Longitude",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": true,
+   "name": "POI_4eme",
+   "style": {
+    "categories": [
+     {
+      "color": "#e41a1c",
+      "label": "Antenne",
+      "value": "Antenne"
+     },
+     {
+      "color": "#377eb8",
+      "label": "Autre construction élevée",
+      "value": "Autre construction élevée"
+     },
+     {
+      "color": "#4daf4a",
+      "label": "Clocher",
+      "value": "Clocher"
+     }
+    ],
+    "field": "nature",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 11,
+    "premieres": [
+     {
+      "_localId": 1,
+      "cleabs": "CONSPONC0000002012602299",
+      "color": "#377eb8",
+      "date_creation": "PyQt5.QtCore.QDateTime(2018, 8, 29, 11, 46, 57, 306, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_de_confirmation": "PyQt5.QtCore.QDate(2026, 1, 7)",
+      "date_modification": "PyQt5.QtCore.QDateTime(2026, 3, 5, 14, 40, 47, 578, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fid": 1,
+      "gml_id": "construction_ponctuelle.23448",
+      "hauteur": 20,
+      "identifiants_sources": "ANFR:1460802",
+      "importance": "5",
+      "latitude": 43.307133,
+      "longitude": 5.389385,
+      "methode_d_acquisition_altimetrique": "Photogrammétrie",
+      "methode_d_acquisition_planimetrique": "Photogrammétrie",
+      "nature": "Autre construction élevée",
+      "nature_detaillee": "Mât d'éclairage",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "sources": "ANFR 2026"
+     },
+     {
+      "_localId": 2,
+      "cleabs": "CONSPONC0000002012602303",
+      "color": "#e41a1c",
+      "date_creation": "PyQt5.QtCore.QDateTime(2018, 8, 29, 11, 47, 19, 338, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_de_confirmation": "PyQt5.QtCore.QDate(2026, 1, 7)",
+      "date_modification": "PyQt5.QtCore.QDateTime(2026, 3, 5, 14, 40, 47, 578, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fid": 2,
+      "gml_id": "construction_ponctuelle.35195",
+      "hauteur": 15,
+      "identifiants_sources": "ANFR:1388191",
+      "importance": "5",
+      "latitude": 43.297313,
+      "longitude": 5.405752,
+      "methode_d_acquisition_altimetrique": "Photogrammétrie",
+      "methode_d_acquisition_planimetrique": "Photogrammétrie",
+      "nature": "Antenne",
+      "nature_detaillee": "Antenne-relais",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "sources": "ANFR 2026"
+     },
+     {
+      "_localId": 3,
+      "cleabs": "CONSPONC0000000040301288",
+      "color": "#4daf4a",
+      "date_creation": "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_de_confirmation": null,
+      "date_modification": "PyQt5.QtCore.QDateTime(2021, 3, 22, 21, 24, 38, 787, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fid": 3,
+      "gml_id": "construction_ponctuelle.81713",
+      "hauteur": null,
+      "identifiants_sources": null,
+      "importance": "5",
+      "latitude": 43.311049,
+      "longitude": 5.409368,
+      "methode_d_acquisition_altimetrique": "BDTopo",
+      "methode_d_acquisition_planimetrique": "BDTopo",
+      "nature": "Clocher",
+      "nature_detaillee": null,
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "sources": null
+     }
+    ],
+    "derniere": {
+     "_localId": 11,
+     "cleabs": "CONSPONC0000000040301331",
+     "color": "#4daf4a",
+     "date_creation": "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+     "date_de_confirmation": null,
+     "date_modification": "PyQt5.QtCore.QDateTime(2021, 3, 22, 21, 24, 38, 787, PyQt5.QtCore.Qt.TimeSpec(1))",
+     "etat_de_l_objet": "En service",
+     "fid": 11,
+     "gml_id": "construction_ponctuelle.82053",
+     "hauteur": null,
+     "identifiants_sources": null,
+     "importance": "5",
+     "latitude": 43.299628,
+     "longitude": 5.403287,
+     "methode_d_acquisition_altimetrique": "BDTopo",
+     "methode_d_acquisition_planimetrique": "BDTopo",
+     "nature": "Clocher",
+     "nature_detaillee": null,
+     "precision_altimetrique": 1.5,
+     "precision_planimetrique": 2.5,
+     "sources": null
+    },
+    "empreinte": "9b3b3ccf193bdc39-60t"
+   }
+  },
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "Voirie 4eme (clippee)",
+   "featureCount": 1769,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Int",
+     "label": "fid",
+     "name": "fid",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_collaboratif_gauche",
+     "gType": "Text",
+     "label": "nom_collaboratif_gauche",
+     "name": "nom_collaboratif_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_collaboratif_droite",
+     "gType": "Text",
+     "label": "nom_collaboratif_droite",
+     "name": "nom_collaboratif_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "importance",
+     "gType": "Text",
+     "label": "importance",
+     "name": "importance",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "fictif",
+     "gType": "Bool",
+     "label": "fictif",
+     "name": "fictif",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "position_par_rapport_au_sol",
+     "gType": "Text",
+     "label": "position_par_rapport_au_sol",
+     "name": "position_par_rapport_au_sol",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Numeric",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Numeric",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "nombre_de_voies",
+     "gType": "Int",
+     "label": "nombre_de_voies",
+     "name": "nombre_de_voies",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "largeur_de_chaussee",
+     "gType": "Int",
+     "label": "largeur_de_chaussee",
+     "name": "largeur_de_chaussee",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "itineraire_vert",
+     "gType": "Bool",
+     "label": "itineraire_vert",
+     "name": "itineraire_vert",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "prive",
+     "gType": "Bool",
+     "label": "prive",
+     "name": "prive",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "sens_de_circulation",
+     "gType": "Text",
+     "label": "sens_de_circulation",
+     "name": "sens_de_circulation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "urbain",
+     "gType": "Bool",
+     "label": "urbain",
+     "name": "urbain",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "vitesse_moyenne_vl",
+     "gType": "Int",
+     "label": "vitesse_moyenne_vl",
+     "name": "vitesse_moyenne_vl",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "acces_vehicule_leger",
+     "gType": "Text",
+     "label": "acces_vehicule_leger",
+     "name": "acces_vehicule_leger",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "matieres_dangereuses_interdites",
+     "gType": "Bool",
+     "label": "matieres_dangereuses_interdites",
+     "name": "matieres_dangereuses_interdites",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "borne_debut_gauche",
+     "gType": "Text",
+     "label": "borne_debut_gauche",
+     "name": "borne_debut_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_debut_droite",
+     "gType": "Text",
+     "label": "borne_debut_droite",
+     "name": "borne_debut_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_fin_gauche",
+     "gType": "Text",
+     "label": "borne_fin_gauche",
+     "name": "borne_fin_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_fin_droite",
+     "gType": "Text",
+     "label": "borne_fin_droite",
+     "name": "borne_fin_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "insee_commune_gauche",
+     "gType": "Text",
+     "label": "insee_commune_gauche",
+     "name": "insee_commune_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "insee_commune_droite",
+     "gType": "Text",
+     "label": "insee_commune_droite",
+     "name": "insee_commune_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "source_voie_ban_gauche",
+     "gType": "Text",
+     "label": "source_voie_ban_gauche",
+     "name": "source_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "source_voie_ban_droite",
+     "gType": "Text",
+     "label": "source_voie_ban_droite",
+     "name": "source_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_voie_ban_gauche",
+     "gType": "Text",
+     "label": "nom_voie_ban_gauche",
+     "name": "nom_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_voie_ban_droite",
+     "gType": "Text",
+     "label": "nom_voie_ban_droite",
+     "name": "nom_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lieux_dits_ban_gauche",
+     "gType": "Text",
+     "label": "lieux_dits_ban_gauche",
+     "name": "lieux_dits_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lieux_dits_ban_droite",
+     "gType": "Text",
+     "label": "lieux_dits_ban_droite",
+     "name": "lieux_dits_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiant_voie_ban_gauche",
+     "gType": "Text",
+     "label": "identifiant_voie_ban_gauche",
+     "name": "identifiant_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiant_voie_ban_droite",
+     "gType": "Text",
+     "label": "identifiant_voie_ban_droite",
+     "name": "identifiant_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "id_ban_odonyme_droite",
+     "gType": "Text",
+     "label": "id_ban_odonyme_droite",
+     "name": "id_ban_odonyme_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "id_ban_odonyme_gauche",
+     "gType": "Text",
+     "label": "id_ban_odonyme_gauche",
+     "name": "id_ban_odonyme_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "_color",
+     "gType": "Text",
+     "label": "_color",
+     "name": "color",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "liens_vers_route_nommee",
+     "gType": "Text",
+     "label": "liens_vers_route_nommee",
+     "name": "liens_vers_route_nommee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_classement_administratif",
+     "gType": "Text",
+     "label": "cpx_classement_administratif",
+     "name": "cpx_classement_administratif",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_toponyme_route_nommee",
+     "gType": "Text",
+     "label": "cpx_toponyme_route_nommee",
+     "name": "cpx_toponyme_route_nommee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "acces_pieton",
+     "gType": "Text",
+     "label": "acces_pieton",
+     "name": "acces_pieton",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sens_amenagement_cyclable_droit",
+     "gType": "Text",
+     "label": "sens_amenagement_cyclable_droit",
+     "name": "sens_amenagement_cyclable_droit",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "amenagement_cyclable_droit",
+     "gType": "Text",
+     "label": "amenagement_cyclable_droit",
+     "name": "amenagement_cyclable_droit",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": true,
+   "name": "Voirie_4eme_clippee",
+   "style": {
+    "categories": [
+     {
+      "color": "#1e78b4",
+      "label": "Double sens",
+      "value": "Double sens"
+     },
+     {
+      "color": "#8c8c8c",
+      "label": "Autre",
+      "value": "Autre"
+     },
+     {
+      "color": "#ffa500",
+      "label": "Sens unique",
+      "value": "Sens direct"
+     },
+     {
+      "color": "#ffa500",
+      "label": "Sens unique inverse",
+      "value": "Sens direct"
+     }
+    ],
+    "field": "sens_de_circulation",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 1769,
+    "premieres": [
+     {
+      "_localId": 1,
+      "acces_pieton": null,
+      "acces_vehicule_leger": "Libre",
+      "amenagement_cyclable_droit": null,
+      "borne_debut_droite": "2",
+      "borne_debut_gauche": "1",
+      "borne_fin_droite": "20",
+      "borne_fin_gauche": "11",
+      "centroid_lat": 43.29553,
+      "centroid_lon": 5.399521,
+      "cleabs": "TRONROUT0000000040959451",
+      "color": "#ffa500",
+      "cpx_classement_administratif": null,
+      "cpx_toponyme_route_nommee": null,
+      "date_creation": "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_de_confirmation": null,
+      "date_modification": "PyQt5.QtCore.QDateTime(2023, 9, 9, 9, 15, 2, 959, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fictif": false,
+      "fid": 1066,
+      "geometry_json": "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39948,43.29572],[5.39951,43.2956],[5.39957,43.29527]]]}",
+      "gml_id": "troncon_de_route.6004077",
+      "id_ban_odonyme_droite": "28c05a85-dfee-4748-9cc1-84d1a39d2459",
+      "id_ban_odonyme_gauche": "28c05a85-dfee-4748-9cc1-84d1a39d2459",
+      "identifiant_voie_ban_droite": "13205_5540",
+      "identifiant_voie_ban_gauche": "13205_5540",
+      "importance": "5",
+      "insee_commune_droite": "13205",
+      "insee_commune_gauche": "13205",
+      "itineraire_vert": false,
+      "largeur_de_chaussee": 4,
+      "liens_vers_route_nommee": null,
+      "lieux_dits_ban_droite": "le camas",
+      "lieux_dits_ban_gauche": "le camas",
+      "matieres_dangereuses_interdites": false,
+      "methode_d_acquisition_altimetrique": "BDTopo",
+      "methode_d_acquisition_planimetrique": "BDTopo",
+      "nature": "Route à 1 chaussée",
+      "nom_collaboratif_droite": "R MADON",
+      "nom_collaboratif_gauche": "R MADON",
+      "nom_voie_ban_droite": "Rue madon",
+      "nom_voie_ban_gauche": "Rue madon",
+      "nombre_de_voies": 2,
+      "position_par_rapport_au_sol": "0",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "prive": false,
+      "sens_amenagement_cyclable_droit": null,
+      "sens_de_circulation": "Sens direct",
+      "source_voie_ban_droite": "commune",
+      "source_voie_ban_gauche": "commune",
+      "urbain": true,
+      "vitesse_moyenne_vl": 20
+     },
+     {
+      "_localId": 2,
+      "acces_pieton": null,
+      "acces_vehicule_leger": "Libre",
+      "amenagement_cyclable_droit": null,
+      "borne_debut_droite": "2",
+      "borne_debut_gauche": "1",
+      "borne_fin_droite": "18",
+      "borne_fin_gauche": "3",
+      "centroid_lat": 43.29545,
+      "centroid_lon": 5.397876,
+      "cleabs": "TRONROUT0000000040959594",
+      "color": "#1e78b4",
+      "cpx_classement_administratif": null,
+      "cpx_toponyme_route_nommee": null,
+      "date_creation": "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_de_confirmation": null,
+      "date_modification": "PyQt5.QtCore.QDateTime(2026, 1, 31, 16, 15, 37, 292, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fictif": false,
+      "fid": 1155,
+      "geometry_json": "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39785,43.29566],[5.39789,43.29538],[5.39789,43.29531]]]}",
+      "gml_id": "troncon_de_route.6004180",
+      "id_ban_odonyme_droite": "c3205279-089c-4c02-97a9-85b889640798",
+      "id_ban_odonyme_gauche": "c3205279-089c-4c02-97a9-85b889640798",
+      "identifiant_voie_ban_droite": "13205_2879",
+      "identifiant_voie_ban_gauche": "13205_2879",
+      "importance": "4",
+      "insee_commune_droite": "13205",
+      "insee_commune_gauche": "13205",
+      "itineraire_vert": false,
+      "largeur_de_chaussee": 5,
+      "liens_vers_route_nommee": null,
+      "lieux_dits_ban_droite": "le camas/la conception",
+      "lieux_dits_ban_gauche": "le camas/la conception",
+      "matieres_dangereuses_interdites": false,
+      "methode_d_acquisition_altimetrique": "BDTopo",
+      "methode_d_acquisition_planimetrique": "BDTopo",
+      "nature": "Route à 1 chaussée",
+      "nom_collaboratif_droite": "R DU DOCTEUR SIMONE SEDAN",
+      "nom_collaboratif_gauche": "R DU DOCTEUR SIMONE SEDAN",
+      "nom_voie_ban_droite": "Rue du docteur simone sedan",
+      "nom_voie_ban_gauche": "Rue du docteur simone sedan",
+      "nombre_de_voies": 2,
+      "position_par_rapport_au_sol": "0",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "prive": false,
+      "sens_amenagement_cyclable_droit": null,
+      "sens_de_circulation": "Double sens",
+      "source_voie_ban_droite": "commune",
+      "source_voie_ban_gauche": "commune",
+      "urbain": true,
+      "vitesse_moyenne_vl": 30
+     },
+     {
+      "_localId": 3,
+      "acces_pieton": null,
+      "acces_vehicule_leger": "Libre",
+      "amenagement_cyclable_droit": null,
+      "borne_debut_droite": "182",
+      "borne_debut_gauche": "169",
+      "borne_fin_droite": "202",
+      "borne_fin_gauche": "189",
+      "centroid_lat": 43.295618,
+      "centroid_lon": 5.39717,
+      "cleabs": "TRONROUT0000000040959734",
+      "color": "#1e78b4",
+      "cpx_classement_administratif": null,
+      "cpx_toponyme_route_nommee": null,
+      "date_creation": "PyQt5.QtCore.QDateTime(2006, 11, 22, 11, 22, 15, 462, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "date_de_confirmation": null,
+      "date_modification": "PyQt5.QtCore.QDateTime(2023, 9, 9, 9, 15, 2, 959, PyQt5.QtCore.Qt.TimeSpec(1))",
+      "etat_de_l_objet": "En service",
+      "fictif": false,
+      "fid": 1252,
+      "geometry_json": "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.39649,43.29558],[5.39785,43.29566]]]}",
+      "gml_id": "troncon_de_route.6004304",
+      "id_ban_odonyme_droite": "c8ab74bd-34f5-49ce-9e11-7c110f9d4ab4",
+      "id_ban_odonyme_gauche": "c8ab74bd-34f5-49ce-9e11-7c110f9d4ab4",
+      "identifiant_voie_ban_droite": "13205_2193",
+      "identifiant_voie_ban_gauche": "13205_2193",
+      "importance": "4",
+      "insee_commune_droite": "13205",
+      "insee_commune_gauche": "13205",
+      "itineraire_vert": false,
+      "largeur_de_chaussee": 4,
+      "liens_vers_route_nommee": null,
+      "lieux_dits_ban_droite": "le camas/saint pierre",
+      "lieux_dits_ban_gauche": "le camas/saint pierre",
+      "matieres_dangereuses_interdites": false,
+      "methode_d_acquisition_altimetrique": "BDTopo",
+      "methode_d_acquisition_planimetrique": "BDTopo",
+      "nature": "Route à 1 chaussée",
+      "nom_collaboratif_droite": "BD CHAVE",
+      "nom_collaboratif_gauche": "BD CHAVE",
+      "nom_voie_ban_droite": "Boulevard chave",
+      "nom_voie_ban_gauche": "Boulevard chave",
+      "nombre_de_voies": 2,
+      "position_par_rapport_au_sol": "0",
+      "precision_altimetrique": 1.5,
+      "precision_planimetrique": 2.5,
+      "prive": false,
+      "sens_amenagement_cyclable_droit": null,
+      "sens_de_circulation": "Double sens",
+      "source_voie_ban_droite": "commune",
+      "source_voie_ban_gauche": "commune",
+      "urbain": true,
+      "vitesse_moyenne_vl": 30
+     }
+    ],
+    "derniere": {
+     "_localId": 1769,
+     "acces_pieton": null,
+     "acces_vehicule_leger": "Restreint aux ayants droit",
+     "amenagement_cyclable_droit": null,
+     "borne_debut_droite": null,
+     "borne_debut_gauche": null,
+     "borne_fin_droite": null,
+     "borne_fin_gauche": null,
+     "centroid_lat": 43.316848,
+     "centroid_lon": 5.406943,
+     "cleabs": "TRONROUT0000002206132070",
+     "color": "#1e78b4",
+     "cpx_classement_administratif": null,
+     "cpx_toponyme_route_nommee": null,
+     "date_creation": "PyQt5.QtCore.QDateTime(2020, 1, 6, 13, 0, 8, 610, PyQt5.QtCore.Qt.TimeSpec(1))",
+     "date_de_confirmation": null,
+     "date_modification": null,
+     "etat_de_l_objet": "En service",
+     "fictif": false,
+     "fid": 1638,
+     "geometry_json": "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.40695,43.31675],[5.40693,43.31695]]]}",
+     "gml_id": "troncon_de_route.17705445",
+     "id_ban_odonyme_droite": null,
+     "id_ban_odonyme_gauche": null,
+     "identifiant_voie_ban_droite": null,
+     "identifiant_voie_ban_gauche": null,
+     "importance": "5",
+     "insee_commune_droite": "13213",
+     "insee_commune_gauche": "13213",
+     "itineraire_vert": false,
+     "largeur_de_chaussee": 4,
+     "liens_vers_route_nommee": null,
+     "lieux_dits_ban_droite": null,
+     "lieux_dits_ban_gauche": null,
+     "matieres_dangereuses_interdites": false,
+     "methode_d_acquisition_altimetrique": "Photogrammétrie",
+     "methode_d_acquisition_planimetrique": "Photogrammétrie",
+     "nature": "Route à 1 chaussée",
+     "nom_collaboratif_droite": null,
+     "nom_collaboratif_gauche": null,
+     "nom_voie_ban_droite": null,
+     "nom_voie_ban_gauche": null,
+     "nombre_de_voies": 2,
+     "position_par_rapport_au_sol": "0",
+     "precision_altimetrique": 1.5,
+     "precision_planimetrique": 2.5,
+     "prive": false,
+     "sens_amenagement_cyclable_droit": null,
+     "sens_de_circulation": "Double sens",
+     "source_voie_ban_droite": null,
+     "source_voie_ban_gauche": null,
+     "urbain": true,
+     "vitesse_moyenne_vl": 0
+    },
+    "empreinte": "02f6c13f3dd1d421-20of5"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

@@ -24,7 +24,7 @@
   'use strict';
 
   const MANIFEST_VERSION = lod.MANIFEST_LOD_VERSION || '0.2.1';
-  const DEFAULT_CLASSIFICATION = 'cerema_internal';
+  const DEFAULT_CLASSIFICATION = 'internal';
 
   /**
    * geometry_type Scene Manifest depuis geomType qgis2grist.
@@ -49,7 +49,7 @@
    * suffixe ('latitude' → 'latitude2'). Omis si tout est conventionnel, pour
    * ne pas alourdir le manifest du cas nominal.
    *
-   * Extension additive à V0.2.1 (à valider cerema-offre-de-service) : un
+   * Extension additive à V0.2.1 (à valider avec l'offre de service) : un
    * lecteur qui l'ignore retombe sur la convention, comme aujourd'hui.
    */
   function geometryFieldsFor(layer) {
