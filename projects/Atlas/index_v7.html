@@ -13,6 +13,7 @@
     <title>Atlas</title>
 
     <script>try { var mq = new URLSearchParams(location.search).get('marque'); document.documentElement.setAttribute('data-marque', mq === 'atlas' || mq === 'aucune' || mq === 'icone' ? mq : 'aucune'); } catch (e) { document.documentElement.setAttribute('data-marque', 'aucune'); /* adresse illisible : sans marque */ }</script>
+    <script>try { if (new URLSearchParams(location.search).get('theme') === 'atlas') document.documentElement.setAttribute('data-origine', 'atlas'); } catch (e) { /* adresse illisible : l'origine Grist */ }</script>
     <script>
         /* Mémoire de démarrage (lib/demarrage-cache.js) : embarqué (widget Grist), Atlas relit AVANT le premier affichage le dernier thème appliqué et la dernière vue pour cette instance,
            pour que la première image soit déjà la bonne ; les textes provisoires (nom du projet, légende vide) restent cachés jusqu'à ce que les données soient là (classe `atlas-demarrage`,
@@ -151,19 +152,20 @@
 
     <style>
         /* ============================================
-           ATLAS — TOKENS (papier, serif, terre cuite)
+           ATLAS — TOKENS D'ORIGINE : ceux de l'instance Grist DINUM (lib/charte/origine-grist.js, test d'égalité : tests/origine-grist.test.js).
+           L'ancienne palette (papier, serif, terre cuite) reste disponible par `?theme=atlas` (bloc html[data-origine="atlas"] plus bas).
         ============================================ */
         :root {
-            --bg: #F4EFE3;
-            --surface: #FFFFFF;
-            --surface-muted: #FAF6EB;
-            --ink: #1F1B14;
-            --text: #2D2820;
-            --muted: #7A6F5E;
-            --muted-light: #A89E8B;
-            --hairline: #E2DBC8;
-            --hairline-strong: #C9C0A8;
-            --accent: #C44536;
+            --bg: #f6f8f9;
+            --surface: #fbfcfd;
+            --surface-muted: #eef0f1;
+            --ink: #222631;
+            --text: #3b3f49;
+            --muted: #6c7077;
+            --muted-light: #a1a4a9;
+            --hairline: #d8dbdd;
+            --hairline-strong: #bbbdc1;
+            --accent: #3e5de7;
             /*
              * Atlas est une interface claire, et ne le disait a personne. Sans
              * ce jeton, le navigateur peint TOUS les controles natifs — cases,
@@ -184,13 +186,13 @@
              * annoncer clair est la seule chose vraie.
              */
             color-scheme: light !important;
-            --accent-soft: #F5E9DC;
+            --accent-soft: #dce2f6;
             --accent2: #2E4E54;
             --sun: #E8A234;
             --green: #5B7A4F;
 
-            --serif: 'Newsreader', Georgia, serif;
-            --sans: 'Hanken Grotesk', system-ui, sans-serif;
+            --serif: Marianne, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --sans: Marianne, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             --mono: 'JetBrains Mono', monospace;
 
             --header-h: 52px;
@@ -198,6 +200,12 @@
             --module-w: 260px;
             --inspector-w: 360px;
             --t-fast: 140ms ease;
+        }
+        /* `?theme=atlas` : la palette historique d'Atlas (papier crème, terre cuite, Newsreader et Hanken Grotesk), posée par le script de tête. */
+        html[data-origine="atlas"] {
+            --bg: #F4EFE3; --surface: #FFFFFF; --surface-muted: #FAF6EB; --ink: #1F1B14; --text: #2D2820; --muted: #7A6F5E; --muted-light: #A89E8B;
+            --hairline: #E2DBC8; --hairline-strong: #C9C0A8; --accent: #C44536; --accent-soft: #F5E9DC;
+            --serif: 'Newsreader', Georgia, serif; --sans: 'Hanken Grotesk', system-ui, sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }

@@ -5,6 +5,7 @@
 // ============================================================
 
 import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=20260827a';
+import { origineGrist } from './lib/charte/origine-grist.js?v=20261110a';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
@@ -3776,7 +3777,13 @@ function applyLabelsVisibility() {
  * Le fond « Thème » : le fond de carte repeint avec la charte courante (document, sinon instance Grist, sinon celle d'Atlas qui existe toujours). Le plan est calculé une fois
  * (`rafraichirFondTheme`) puis posé à chaque style prêt ; `appliquerFondTheme` est synchrone et ne fait rien tant que le plan n'est pas là ou que ce n'est pas le fond choisi.
  */
-let _planTheme = null, _charteDuFond = null, _fondThemeModule = null, _variablesAppliquees = {}, _modeAppliqueSombre = false;
+/**
+ * La charte d'ORIGINE d'Atlas, celle de l'instance Grist DINUM (lib/charte/origine-grist.js) : le fond de carte et les palettes de données la suivent tant qu'aucun thème de l'hôte, du document
+ * ou de l'instance ne la remplace. `?theme=atlas` rend la palette historique (null : le plan et les palettes d'Atlas, comme avant).
+ */
+function charteOrigineInitiale() { try { return themeAtlasDemande() ? null : origineGrist().charte; } catch (_) { return null; } }
+function themeAtlasDemande() { try { return new URLSearchParams(location.search).get('theme') === 'atlas'; } catch (_) { return false; } }
+let _planTheme = null, _charteDuFond = charteOrigineInitiale(), _fondThemeModule = null, _variablesAppliquees = {}, _modeAppliqueSombre = false;
 /** Le thème appliqué et le plan du fond, mémorisés pour l'instance : la prochaine ouverture les pose avant le premier affichage (lib/demarrage-cache.js). */
 function memoriserDemarrage() {
     try { if (window.__atlasCleDemarrage) ecrireCache(localStorage, window.__atlasCleDemarrage, { theme: { variables: _variablesAppliquees, mode: _modeAppliqueSombre ? 'sombre' : 'clair', plan: _planTheme || {} } }); } catch (_) { /* stockage refusé */ }
@@ -12926,7 +12933,7 @@ async function chargerThemeDocument() {
         if (!CONFIG.grist.ready) return;
         suivrePreferenceContraste();
         // « Sans thème » (`?theme=aucun`, à mettre dans l'adresse du widget) : les valeurs d'origine d'Atlas, ni le document ni l'instance Grist ; un choix explicite passe avant les deux.
-        if (themeAucunDemande()) { _themeDocumentActif = false; const AP = await import('./lib/charte/application.js?v=20261025a'); poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return; }   // et on efface ce que la mémoire de démarrage avait déjà posé
+        if (themeAucunDemande()) { _themeDocumentActif = false; const AP = await import('./lib/charte/application.js?v=20261025a'); poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = charteOrigineInitiale(); void rafraichirFondTheme(); return; }   // et on efface ce que la mémoire de démarrage avait déjà posé
         const tables = await grist.docApi.listTables();
         if (tables.includes('Theme_document')) {
             const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=20261025b'), import('./lib/charte/application.js?v=20261025a')]);
@@ -13003,7 +13010,7 @@ async function appliquerThemeInstance() {
         const r = t.themedef ? TD.charteDepuisThemeDef(t.themedef, { mode: t.sombre ? 'sombre' : 'clair' }) : { charte: null };
         if (!r.charte) {
             console.info("[Atlas] thème de l'instance non appliqué (" + (theme.appearance || 'apparence inconnue') + ') :', (t.refus || (r.refus && r.refus.code) || (t.themedef ? 'refusé par la charte' : 'aucune couleur reprenable')), (t.ecartes || []).map((e) => e.cle + ':' + e.code).join(', '));
-            poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = null; void rafraichirFondTheme(); return;
+            poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = charteOrigineInitiale(); void rafraichirFondTheme(); return;
         }
         const { variables, notes } = TDoc.habillageApplication({ charte: r.charte });
         // la police de l'instance : sa pile exacte (celle de Grist, ou Marianne puis les polices système chez DINUM), pas seulement la police système de ThemeDef

@@ -38,6 +38,11 @@ const CSS = `
 .hote-marque { display: flex; align-items: center; gap: .55rem;
   font-family: var(--serif, Georgia, serif); font-size: 1.35rem;
   color: var(--ink, #1F1B14); margin-bottom: .3rem; }
+/* La marque suit le réglage de la page (?marque=, défaut « aucune ») et les couleurs de la charte, comme l'en-tête de l'application. */
+.hote-logo-corps { fill: var(--accent, #3e5de7); }
+.hote-logo-trait { stroke: var(--surface, #fbfcfd); }
+html[data-marque="aucune"] .hote-marque { display: none; }
+html[data-marque="icone"] .hote-marque span { display: none; }
 .hote h2 { font-family: var(--serif, Georgia, serif); font-weight: 500;
   font-size: 1.5rem; line-height: 1.2; margin: 0; color: var(--ink, #1F1B14); }
 .hote p { margin: 0; font-size: .95rem; line-height: 1.55; color: var(--muted, #7A6F5E); }
@@ -202,7 +207,7 @@ const IC = {
 
 const MARQUE = `<div class="hote-marque">
   <svg width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-    <path d="M4 24 16 6l12 18-12 4z" fill="#C44536"/><path d="M16 6v22" stroke="#F4EFE3" stroke-width="1.2"/>
+    <path class="hote-logo-corps" d="M4 24 16 6l12 18-12 4z"/><path class="hote-logo-trait" d="M16 6v22" stroke-width="1.2"/>
   </svg><span>Atlas</span></div>`;
 
 /**
