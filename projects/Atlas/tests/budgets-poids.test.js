@@ -48,6 +48,7 @@ const total = (fichiers) => {
   return { brut, gz: comp, n: fichiers.length };
 };
 
+// 1.45.0 : plafond brut d'app.js relevé de 5 Ko (1 040 000 -> 1 045 000) pour la charte d'origine (origineGrist, charteOrigineInitiale, retours « sans thème ») et la lecture du thème avant les données (initGrist) : +100 octets au-dessus de l'ancien plafond, le gzip reste sous le sien.
 // 1.44.0 : plafonds relevés pour le contrat 0.8 (+ environ 20 Ko bruts, 6 Ko gzip dans la fermeture du composant) : elevation-grille.js (grille d'altitudes), capture-image.js (figure papier),
 // textes de describe.js, quatre commandes dans bi-runtime.js, pont.js et client.js (client 6 : 17,3 Ko, 6,2 Ko gzip). Les deux nouveaux modules sont importés à la demande mais comptent dans la fermeture (noyau : 52 fichiers).
 // 1.43.0 : plafonds de lib/bi, de la fermeture d'entree.js et de montage.js relevés (+4 Ko gzip environ) pour ui/feuille.js (feuilles de style construites, sans style en ligne),
@@ -55,7 +56,7 @@ const total = (fichiers) => {
 // montage 192,6 Ko (50), lib/bi 452,5 Ko bruts / 165,0 Ko gzip, lib/bi/ui 7,9 Ko gzip. Les polices (.pbf) ne sont pas du JS : elles sont hors de ces budgets.
 // [description, fichiers, plafond brut (octets), plafond gzip (octets)] ; mesures du 15/10/2026 entre parenthèses
 const BUDGETS = [
-  ['application complète (app.js)', ['app.js'], 1_040_000, 305_000],                                  // 992 153 / 284 850 ; 1.41.0 : 294,1 Ko gzip (relief de l'export 3D : lecteur de tuiles, pose sur le terrain, format du fond ; la grille et les altitudes sont dans lib/export-*.js, chargés à la demande)
+  ['application complète (app.js)', ['app.js'], 1_045_000, 305_000],                                  // 992 153 / 284 850 ; 1.41.0 : 294,1 Ko gzip (relief de l'export 3D : lecteur de tuiles, pose sur le terrain, format du fond ; la grille et les altitudes sont dans lib/export-*.js, chargés à la demande)
   ['page (index.html)', ['index.html'], 176_000, 38_000],                                                // 156 478 / 33 196 // 1.38.0 : 35,4 Ko gzip (script de tête de la mémoire de démarrage, règles du thème sombre et du glyphe) ; plafonds 170 -> 176 Ko bruts, 36 -> 38 Ko gzip
   ['client hôte en un fichier', ['lib/bi/client-hote.js'], 18_000, 6_600],   // 1.35.0 : 15 586 octets (contrat 0.4 : règle de version, 4 commandes) ; plafond relevé avec la raison dans le commit                              // 14 770 / 5 463 (octets exacts, empreinte épinglée par les hôtes)
   ['page maigre du composant (bi.html)', ['bi.html'], 8_000, 3_200],                                    // 5 759 octets : la page de l'application en fait 157 909 // 1.30.0 : 490 Ko bruts (environnement.js, soleil.js, terrain-base.js : chargés À LA DEMANDE, la fermeture les compte, la page seule non) ; plafonds 475 -> 505 Ko bruts, 172 -> 185 Ko gzip

@@ -18,9 +18,9 @@
 <meta name="twitter:description" content="Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Atlas","description":"Atlas affiche vos tableaux sur une carte : dans Grist, sur un téléphone ou dans votre propre site, à vos couleurs. La carte reste à jour sans rien exporter, et vos données restent chez vous.","url":"https://nic01asfr.github.io/Widgets-Grist/w/atlas/","applicationCategory":"BusinessApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"codeRepository":"https://github.com/nic01asFr/Widgets-Grist/tree/main/projects/Atlas","dateModified":"2026-11-04"}</script>
 <style>
-:root { --papier: #FAF7F0; --surface: #FFFFFF; --encre: #1A1814; --plume: #6B6355; --filet: #E6DFD1; --accent: #C44536; }
+:root { --papier: #F6F8F9; --surface: #FFFFFF; --encre: #222631; --plume: #6C7077; --filet: #D8DBDD; --accent: #3E5DE7; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --papier: #14120F; --surface: #1D1A16; --encre: #F2EDE3; --plume: #9A9184; --filet: #2E2A23; }
+  :root:not([data-theme="light"]) { --papier: #0F1626; --surface: #18223A; --encre: #DDE3EF; --plume: #8A97AB; --filet: #283145; --accent: #7B8CFF; }
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--papier); color: var(--encre);
@@ -28,7 +28,7 @@ body { margin: 0; background: var(--papier); color: var(--encre);
   -webkit-font-smoothing: antialiased; }
 a { color: inherit; }
 main { max-width: 60rem; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
-h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 500;
+h1, h2, h3 { font-family: Marianne, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-weight: 500;
   line-height: 1.15; text-wrap: balance; margin: 0; }
 h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: -.01em; }
 h2 { font-size: 1.5rem; margin-bottom: 1rem; }
@@ -264,7 +264,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   <div class="faits">
     <span><b>1</b> widget</span>
     <span>Accès <b>lecture et écriture</b></span>
-    <span><span class="vif"></span>Mis à jour il y a 3 j</span>
+    <span><span class="vif"></span>Mis à jour il y a 5 j</span>
   </div>
   <div class="boutons">
     <a class="bouton" href="#cas">Voir un cas de bout en bout</a>
@@ -544,13 +544,14 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   <section class="partie" id="nouveautes" aria-labelledby="t-nouveautes">
     <header class="entete"><h2 id="t-nouveautes">Nouveautés</h2></header>
     <div class="journal">
+      <div><b>v1.45.0</b><p>Atlas démarre sans clignotement et aux couleurs de l’instance Grist DINUM. Plus de logo qui apparaît puis disparaît : sans réglage, ni logo ni nom, le nom du projet seul. Dans un document Grist, le thème du document ou de l’instance est lu avant la scène et les couches, au lieu d’arriver après et de tout recolorer. L’apparence d’origine, sans thème d’hôte, est celle de l’instance (bleu, polices de l’instance) au lieu de la palette crème et terre cuite, qui reste disponible avec ?theme=atlas. Le texte secondaire et les liens de l’écran d’accueil sont plus lisibles. Le composant carte BI et le contrat 0.8 ne changent pas.</p></div>
       <div><b>v1.44.0</b><p>Pour les applications qui intègrent la carte d’Atlas : elles peuvent maintenant lire une grille d’altitudes du relief affiché, lire les étapes du récit et en jouer une (et savoir quand la personne change d’étape), et obtenir une image de la carte avec les mentions de ses sources, pour une figure papier. Le composant dit aussi plus vite et plus clairement pourquoi la carte ne démarre pas, et attend plus longtemps sur une connexion lente. Rien ne change pour les applications existantes. L’application Android reste une version de test, non signée.</p></div>
       <div><b>v1.43.0</b><p>Pour les applications qui intègrent la carte d’Atlas : un paquet « carte seule », léger et fonctionnant sous une politique de sécurité de contenu stricte, avec un outil qui vérifie la copie. Les étiquettes de la carte ne dépendent plus d’un serveur extérieur (les polices sont embarquées), et si un texte demande des caractères qu’elles n’ont pas, la carte l’affiche sans étiquettes et le dit, au lieu de faire disparaître les points.</p></div>
       <div><b>v1.42.2</b><p>Dans l’application Android, les recherches d’adresse et l’import depuis OpenStreetMap étaient refusés (erreur 406) : Atlas se présente mieux au service, et si celui-ci le refuse encore, la requête repart par le moteur web de la page. Une requête refusée parce que le service est surchargé est reprise d’elle-même, avec un message clair.</p></div>
       <div><b>v1.42.1</b><p>Les flèches précédent et suivant, la croix de fermeture et les boutons de lecture de la barre de sélection et du récit sont de vraies icônes, plus des caractères qui s’affichaient en emoji sur certains appareils.</p></div>
-      <div><b>v1.42.0</b><p>Atlas suit mieux le thème de l’instance Grist qui l’héberge : il reprend son fond, son texte et sa couleur d’action, en clair comme en sombre, et suit le passage de l’un à l’autre sans recharger. Les couleurs forcées et le contraste élevé de la personne passent avant tout thème, et ce qui est posé reste lisible. Pour les applications qui intègrent la carte, le soleil de la scène est réglable (date, heure, ombres portées) et lisible, et l’export 3D en tient compte.</p></div>
     </div>
-    <details class="detail"><summary>Toutes les versions (72)</summary><div class="journal">
+    <details class="detail"><summary>Toutes les versions (73)</summary><div class="journal">
+      <div><b>v1.42.0</b><p>Atlas suit mieux le thème de l’instance Grist qui l’héberge : il reprend son fond, son texte et sa couleur d’action, en clair comme en sombre, et suit le passage de l’un à l’autre sans recharger. Les couleurs forcées et le contraste élevé de la personne passent avant tout thème, et ce qui est posé reste lisible. Pour les applications qui intègrent la carte, le soleil de la scène est réglable (date, heure, ombres portées) et lisible, et l’export 3D en tient compte.</p></div>
       <div><b>v1.41.0</b><p>La scène 3D exportée peut maintenant avoir du relief : un terrain en grille aux altitudes réelles, la carte drapée dessus, une tranche de maquette, les objets et le bâti posés sur la pente. Le bâti qui débordait est coupé à l’emprise, le fond de carte détaillé s’écrit plus léger (JPEG) et son attribution porte sa licence.</p></div>
       <div><b>v1.40.0</b><p>La scène 3D exportée peut maintenant avoir un sol : un aplat aux couleurs du thème, une dalle de maquette, ou le fond de carte rendu à plat, pour que le bâti ne flotte plus sur une table. Les luminaires du catalogue sont exportés avec leurs licences.</p></div>
       <div><b>v1.39.1</b><p>Correctif : l’export de la scène 3D en GLB échouait sur le site publié (un fichier de l’exporteur manquait). Il fonctionne, et un contrôle empêche que cela se reproduise.</p></div>

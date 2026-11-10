@@ -8,10 +8,10 @@
  * setTheme, getTheme, setVisual, updateFeature, setEdition, setFond, getLegend, getRows, resize ;
  * couches administratives (admin-runtime.js) : addAdminLayer, removeLayer, setChoropleth, setStatistique, drillDown, drillUp, setDrillAuto, setUnitFilter.
  */
-import { attributionSure, attributionTexte } from '../attribution.js?v=1.44.0';
-import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.44.0';
+import { attributionSure, attributionTexte } from '../attribution.js?v=1.45.0';
+import { expressionFiltreControles, buildControlPredicate } from '../controls.js?v=1.45.0';
 import { diagnostiquerCouche } from './diagnostic-donnees.js';
-import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.44.0';
+import { expressionCouleurDeclarative } from '../declarative-style.js?v=1.45.0';
 import { agreger } from './agregats.js';
 import { rampe, seuilsQuantiles, classeDe, estPale } from './echelles.js';
 import { modeleLegende, lignesLegende, legendeEtats } from './legende.js';
@@ -514,7 +514,7 @@ export function attacher(map, opts = {}) {
       // l'environnement déclaré (relief, bâti en volume, ciel, soleil) : brique chargée à la demande, jamais pour une scène qui n'en déclare pas et n'a rien à défaire
       if (manifest.environnement !== undefined || (!fusion && etatEnvironnement)) {
         try {
-          const env = await import('./environnement.js?v=1.44.0');
+          const env = await import('./environnement.js?v=1.45.0');
           if (etatEnvironnement && (!fusion || manifest.environnement !== undefined)) { env.reinitialiserEnvironnement(map, etatEnvironnement); etatEnvironnement = null; }
           const r = env.appliquerEnvironnement(map, env.environnementDeclare(manifest.environnement), { theme });
           etatEnvironnement = Object.values(r.etat).some(Boolean) ? r.etat : null;
@@ -638,7 +638,7 @@ export function attacher(map, opts = {}) {
      */
     async getBuildings(o) {
       // brique chargée À LA DEMANDE : la page maigre n'embarque pas un module que la plupart des hôtes n'appellent jamais
-      const B = await import('./batiments.js?v=1.44.0');
+      const B = await import('./batiments.js?v=1.45.0');
       const { normaliserOptionsBatiments, batimentsDeEntites, creerLimiteur, ZOOM_MINIMAL: ZOOM_MINIMAL_BATIMENTS, APPELS_PAR_SECONDE, ATTRIBUTION: ATTRIBUTION_BATIMENTS } = B, intersectionBatiments = B.intersection;
       const opt = normaliserOptionsBatiments(o);
       if (!limiteurBatiments) limiteurBatiments = creerLimiteur(maintenant);
@@ -658,7 +658,7 @@ export function attacher(map, opts = {}) {
      * (visuel, style, légende). Voir lib/bi/features.js pour les plafonds. Une couche de table (sans géométrie) ou une couche administrative est refusée.
      */
     async getFeatures(layer, o) {
-      const F = await import('./features.js?v=1.44.0');
+      const F = await import('./features.js?v=1.45.0');
       const opt = F.normaliserOptionsFeatures(o);
       if (!limiteurFeatures) limiteurFeatures = F.creerLimiteur(maintenant);
       if (!limiteurFeatures()) throw new Error('getFeatures : trop_frequent (' + F.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
@@ -676,7 +676,7 @@ export function attacher(map, opts = {}) {
      * Sans relief dans la scène : refus `relief_absent`, jamais une grille de zéros. Voir lib/bi/elevation-grille.js pour la forme et les plafonds.
      */
     async getElevationGrid(o) {
-      const G = await import('./elevation-grille.js?v=1.44.0');
+      const G = await import('./elevation-grille.js?v=1.45.0');
       if (!limiteurElevation) limiteurElevation = G.creerLimiteur(maintenant);
       if (!limiteurElevation()) throw new Error('getElevationGrid : trop_frequent (' + G.APPELS_PAR_SECONDE + ' appels par seconde au plus)');
       const b = typeof map.getBounds === 'function' ? map.getBounds() : null;
@@ -696,7 +696,7 @@ export function attacher(map, opts = {}) {
      * les mentions de source (aussi dessinées en pied d'image) et l'état de la caméra, de quoi retrouver la même vue. Voir lib/bi/capture-image.js pour ce qu'elle contient, ses plafonds et la limite d'origine.
      */
     async captureImage(o) {
-      const C = await import('./capture-image.js?v=1.44.0');
+      const C = await import('./capture-image.js?v=1.45.0');
       const opt = C.normaliserOptionsCapture(o);
       if (!limiteurCapture) limiteurCapture = C.creerLimiteur(maintenant);
       if (!limiteurCapture()) throw new Error('captureImage : trop_frequent (' + C.APPELS_PAR_SECONDE + ' appel par seconde au plus)');
