@@ -7,6 +7,7 @@
  * - package.json : deux entrées grist
  *
  * Usage: node scripts/promote-qgis2grist.js
+ *        node scripts/promote-qgis2grist.js --out <dossier>   (promotion d'essai : published/ n'est pas touche)
  */
 const fs = require('fs');
 const path = require('path');
@@ -14,10 +15,12 @@ const path = require('path');
 const root = path.join(__dirname, '..');
 const src = path.join(root, 'projects', 'qgis2grist');
 const forms = path.join(root, 'projects', 'grist_forms');
-const pub = path.join(root, 'published', 'qgis2grist');
+const outIdx = process.argv.indexOf('--out');
+if (outIdx > -1 && !process.argv[outIdx + 1]) throw new Error('--out demande un dossier');
+const pub = outIdx > -1 ? path.resolve(process.argv[outIdx + 1]) : path.join(root, 'published', 'qgis2grist');
 const v2 = path.join(pub, 'v2');
 const vendor = path.join(v2, 'vendor', 'grist_forms');
-const VER = '2.0.1';
+const VER = '2.1.0';
 
 function mkdirp(d) {
   fs.mkdirSync(d, { recursive: true });
@@ -72,6 +75,11 @@ const vendorFiles = [
   ['shared/session-context.js', 'session-context.js'],
   ['shared/dsfr-like.css', 'dsfr-like.css'],
   ['runtime/engine.js', 'engine.js'],
+  // Theme charge par index_v2.html : sans ces fichiers, 404 une fois publie et theme non applique.
+  ['shared/theme.js', 'theme.js'],
+  ['shared/theme-instance.js', 'theme-instance.js'],
+  ['shared/derivation-valeurs.js', 'derivation-valeurs.js'],
+  ['shared/themedef.js', 'themedef.js'],
 ];
 for (const [rel, name] of vendorFiles) {
   const from = path.join(forms, rel);
@@ -85,7 +93,10 @@ for (const [rel, name] of vendorFiles) {
 rewrite(path.join(v2, 'index.html'), [
   [/<title>[^<]*<\/title>/, '<title>QGIS → Grist Importer v2</title>'],
   [/lib\/([\w.-]+\.js)\?v=[^"']+/g, `lib/$1?v=${VER}`],
+  // Scripts sans version : on les versionne aussi, sinon un navigateur garde l'ancien module en cache.
+  [/src="lib\/([\w.-]+\.js)"/g, `src="lib/$1?v=${VER}"`],
   [/\.\.\/grist_forms\/shared\/publish\.js/g, 'vendor/grist_forms/publish.js'],
+  [/\.\.\/grist_forms\/shared\/(theme|theme-instance|derivation-valeurs|themedef)\.js/g, 'vendor/grist_forms/$1.js'],
 ]);
 
 rewrite(path.join(v2, 'terrain.html'), [
@@ -97,6 +108,22 @@ rewrite(path.join(v2, 'terrain.html'), [
   [/\.\.\/grist_forms\/runtime\/engine\.js/g, 'vendor/grist_forms/engine.js'],
   [/\.\.\/grist_forms\/shared\/dsfr-like\.css/g, 'vendor/grist_forms/dsfr-like.css'],
 ]);
+
+// --- Garde : le nom de l'employeur ne doit jamais figurer dans le paquet publie (decision de Nicolas) ---
+function listFiles(dir) {
+  const out = [];
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) out.push(...listFiles(p));
+    else out.push(p);
+  }
+  return out;
+}
+const INTERDIT = new RegExp(['cer', 'ema'].join(''), 'i');
+const fautifs = listFiles(pub).filter((f) => /.(js|html|css|json|md)$/i.test(f) && INTERDIT.test(fs.readFileSync(f, 'utf8')));
+if (fautifs.length) {
+  throw new Error('Nom interdit present dans le paquet : ' + fautifs.map((f) => path.relative(pub, f)).join(', '));
+}
 
 // package.json dual widget
 const pkg = {

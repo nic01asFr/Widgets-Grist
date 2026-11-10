@@ -1,0 +1,44 @@
+{
+ "fixture": "marseille4e_voirie_gpkg",
+ "fichier": "qgis2grist_marseille4e_voirie.gpkg",
+ "extension": "gpkg",
+ "nbCouches": 1,
+ "couches": [
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "qgis2grist_marseille4e_voirie",
+   "featureCount": 0,
+   "fields": [
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": false,
+   "name": "Qgis2grist_marseille4e_voirie",
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

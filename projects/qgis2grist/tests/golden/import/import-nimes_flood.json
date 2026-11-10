@@ -1,0 +1,4088 @@
+{
+ "versionFormat": 1,
+ "scenario": "nimes_flood",
+ "fixture": "nimes_flood_html",
+ "erreur": null,
+ "etatFinal": "importing",
+ "nbAppelsApplyUserActions": 16,
+ "appels": [
+  {
+   "appel": 0,
+   "actions": [
+    [
+     "AddTable",
+     "Flooddata",
+     [
+      {
+       "id": "scenario",
+       "type": "Text"
+      },
+      {
+       "id": "ht_min",
+       "type": "Numeric"
+      },
+      {
+       "id": "ht_max",
+       "type": "Int"
+      },
+      {
+       "id": "cours_deau",
+       "type": "Text"
+      },
+      {
+       "id": "area_ha",
+       "type": "Numeric"
+      },
+      {
+       "id": "geometry_json",
+       "label": "GeoJSON",
+       "type": "Text"
+      },
+      {
+       "id": "centroid_lat",
+       "label": "Centroid Lat",
+       "type": "Numeric"
+      },
+      {
+       "id": "centroid_lon",
+       "label": "Centroid Lon",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 1,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Flooddata",
+     "nbLignes": 1,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "scenario",
+      "ht_min",
+      "ht_max",
+      "cours_deau",
+      "area_ha",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "area_ha": {
+       "n": 1,
+       "premieres": [
+        87.32
+       ],
+       "empreinte": "4bebd98951e5335d-5"
+      },
+      "centroid_lat": {
+       "n": 1,
+       "premieres": [
+        43.208526
+       ],
+       "empreinte": "c915c7c195d81e74-h"
+      },
+      "centroid_lon": {
+       "n": 1,
+       "premieres": [
+        6.476188
+       ],
+       "empreinte": "476c4364338a4175-h"
+      },
+      "cours_deau": {
+       "n": 1,
+       "premieres": [
+        "bourrian_giscle_mole"
+       ],
+       "empreinte": "90f90d70062fe9c8-m"
+      },
+      "fill_color": {
+       "n": 1,
+       "premieres": [
+        "#3c78d2"
+       ],
+       "empreinte": "95fba72c7dd05037-9"
+      },
+      "geometry_json": {
+       "n": 1,
+       "premieres": [
+        {
+         "__chaine": true,
+         "longueur": 3349,
+         "debut": "{\"type\":\"Polygon\",\"coordinates\":[[[6.46618,43.20989],[6.46598,43.20972],[6.46474,43.20914],[6.46423,43.20878],[6.46386,4",
+         "empreinte": "9138af3f3c405b7c-2l1"
+        }
+       ],
+       "empreinte": "8a3fc9c12818d95f-2l9"
+      },
+      "ht_max": {
+       "n": 1,
+       "premieres": [
+        1
+       ],
+       "empreinte": "83cb7856a7712926-1"
+      },
+      "ht_min": {
+       "n": 1,
+       "premieres": [
+        0.5
+       ],
+       "empreinte": "2d03dc212f2ddfc3-3"
+      },
+      "scenario": {
+       "n": 1,
+       "premieres": [
+        "02Moy"
+       ],
+       "empreinte": "4e054f82f4ec72cb-7"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 2,
+   "actions": [
+    [
+     "AddTable",
+     "Buildingsdata",
+     [
+      {
+       "id": "nature",
+       "type": "Text"
+      },
+      {
+       "id": "usage_1",
+       "type": "Text"
+      },
+      {
+       "id": "hauteur",
+       "type": "Numeric"
+      },
+      {
+       "id": "nombre_de_logements",
+       "type": "Int"
+      },
+      {
+       "id": "nombre_d_etages",
+       "type": "Int"
+      },
+      {
+       "id": "geometry_json",
+       "label": "GeoJSON",
+       "type": "Text"
+      },
+      {
+       "id": "centroid_lat",
+       "label": "Centroid Lat",
+       "type": "Numeric"
+      },
+      {
+       "id": "centroid_lon",
+       "label": "Centroid Lon",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 3,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Buildingsdata",
+     "nbLignes": 1798,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "nature",
+      "usage_1",
+      "hauteur",
+      "nombre_de_logements",
+      "nombre_d_etages",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 1798,
+       "premieres": [
+        43.13934,
+        43.139641,
+        43.140637
+       ],
+       "empreinte": "e5f6f84d417bf984-mbf"
+      },
+      "centroid_lon": {
+       "n": 1798,
+       "premieres": [
+        6.362162,
+        6.361614,
+        6.360419
+       ],
+       "empreinte": "89415a334dc92f9b-lrv"
+      },
+      "fill_color": {
+       "n": 1798,
+       "premieres": [
+        "#10b981",
+        "#10b981",
+        "#10b981"
+       ],
+       "empreinte": "485fcabecf3561eb-chi"
+      },
+      "geometry_json": {
+       "n": 1798,
+       "premieres": [
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36212,43.13936],[6.36223,43.13935],[6.36223,43.13932],[6.36212,43.13932],[6.36212,43.13936]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36157,43.13964],[6.36164,43.13968],[6.36168,43.13964],[6.36161,43.1396],[6.36157,43.13964]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36036,43.14069],[6.36055,43.14063],[6.36051,43.14055],[6.36031,43.14061],[6.36036,43.14069]]]]}"
+       ],
+       "empreinte": "c660a40cbe10c2a0-8d13"
+      },
+      "hauteur": {
+       "n": 1798,
+       "premieres": [
+        2.2,
+        1.5,
+        8.5
+       ],
+       "empreinte": "0ced38cc8251dce7-3y0"
+      },
+      "nature": {
+       "n": 1798,
+       "premieres": [
+        "Indifférenciée",
+        "Indifférenciée",
+        "Indifférenciée"
+       ],
+       "empreinte": "c01e247518a246d8-mde"
+      },
+      "nombre_d_etages": {
+       "n": 1798,
+       "premieres": [
+        null,
+        null,
+        2
+       ],
+       "empreinte": "f8750ce95b2638e0-3is"
+      },
+      "nombre_de_logements": {
+       "n": 1798,
+       "premieres": [
+        null,
+        null,
+        10
+       ],
+       "empreinte": "0e8c9a33878665aa-3jl"
+      },
+      "usage_1": {
+       "n": 1798,
+       "premieres": [
+        "Indifférencié",
+        "Indifférencié",
+        "Résidentiel"
+       ],
+       "empreinte": "b86d06c51fc3ab67-jg9"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 4,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Buildingsdata",
+     "nbLignes": 1771,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "nature",
+      "usage_1",
+      "hauteur",
+      "nombre_de_logements",
+      "nombre_d_etages",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 1771,
+       "premieres": [
+        43.156677,
+        43.156476,
+        43.156488
+       ],
+       "empreinte": "1c060a4124918b21-lup"
+      },
+      "centroid_lon": {
+       "n": 1771,
+       "premieres": [
+        6.423286,
+        6.423253,
+        6.423177
+       ],
+       "empreinte": "1f15160e8e2295dd-lbd"
+      },
+      "fill_color": {
+       "n": 1771,
+       "premieres": [
+        "#10b981",
+        "#10b981",
+        "#10b981"
+       ],
+       "empreinte": "b685d9b3c41a424d-car"
+      },
+      "geometry_json": {
+       "n": 1771,
+       "premieres": [
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.42327,43.15664],[6.42328,43.15665],[6.42333,43.15663],[6.42337,43.15667],[6.42331,43.15669],[6.42332,43.1567],[6.42328,43.15672],[6.42327,43.15671],[6.42324,43.15672],[6.4232,43.15667],[6.42327,43.15664]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.42317,43.1565],[6.42319,43.15649],[6.42318,43.15648],[6.42316,43.15642],[6.42324,43.1564],[6.42325,43.15644],[6.42329,43.15643],[6.42331,43.15647],[6.42336,43.15645],[6.42339,43.15647],[6.42334,43.1565],[6.42333,43.1565],[6.42332,43.15651],[6.42318,43.15654],[6.42317,43.15651],[6.42317,43.1565]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.42318,43.15648],[6.42319,43.15649],[6.42317,43.1565],[6.42316,43.15649],[6.42318,43.15648]]]]}"
+       ],
+       "empreinte": "67213762db0e2037-8fvd"
+      },
+      "hauteur": {
+       "n": 1771,
+       "premieres": [
+        7.1,
+        5.1,
+        5.5
+       ],
+       "empreinte": "a532f42816a22130-3wk"
+      },
+      "nature": {
+       "n": 1771,
+       "premieres": [
+        "Indifférenciée",
+        "Indifférenciée",
+        "Indifférenciée"
+       ],
+       "empreinte": "fccbbb8f894ae383-m5m"
+      },
+      "nombre_d_etages": {
+       "n": 1771,
+       "premieres": [
+        2,
+        2,
+        null
+       ],
+       "empreinte": "b68077a07173481a-3ly"
+      },
+      "nombre_de_logements": {
+       "n": 1771,
+       "premieres": [
+        1,
+        1,
+        null
+       ],
+       "empreinte": "06eb751a30347135-3ms"
+      },
+      "usage_1": {
+       "n": 1771,
+       "premieres": [
+        "Résidentiel",
+        "Résidentiel",
+        "Indifférencié"
+       ],
+       "empreinte": "383b9fc404346653-izx"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 5,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Buildingsdata",
+     "nbLignes": 1851,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "nature",
+      "usage_1",
+      "hauteur",
+      "nombre_de_logements",
+      "nombre_d_etages",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 1851,
+       "premieres": [
+        43.157724,
+        43.158178,
+        43.158598
+       ],
+       "empreinte": "b03d830eaf4b8729-mro"
+      },
+      "centroid_lon": {
+       "n": 1851,
+       "premieres": [
+        6.424565,
+        6.420854,
+        6.420831
+       ],
+       "empreinte": "66b862963a0f1825-m1a"
+      },
+      "fill_color": {
+       "n": 1851,
+       "premieres": [
+        "#10b981",
+        "#10b981",
+        "#10b981"
+       ],
+       "empreinte": "b61cbd6fa8f67e16-cur"
+      },
+      "geometry_json": {
+       "n": 1851,
+       "premieres": [
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.42468,43.15775],[6.42462,43.1578],[6.4245,43.15773],[6.42451,43.15772],[6.4245,43.15771],[6.42452,43.15769],[6.42453,43.1577],[6.42456,43.15767],[6.42468,43.15775]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.42072,43.15822],[6.42073,43.15811],[6.42079,43.15811],[6.42079,43.1581],[6.42092,43.15811],[6.42092,43.15811],[6.42097,43.15812],[6.42096,43.15821],[6.42097,43.15821],[6.42097,43.15824],[6.4209,43.15823],[6.4209,43.15822],[6.42078,43.15822],[6.42078,43.15823],[6.42072,43.15822]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.42077,43.15869],[6.42077,43.15865],[6.42074,43.15865],[6.42075,43.15855],[6.42078,43.15855],[6.42079,43.15851],[6.42089,43.15852],[6.42089,43.15852],[6.42092,43.15852],[6.42091,43.15857],[6.42087,43.15857],[6.42086,43.15865],[6.42089,43.15865],[6.42088,43.1587],[6.42077,43.15869]]]]}"
+       ],
+       "empreinte": "6b38645e3a0b5eaf-89k3"
+      },
+      "hauteur": {
+       "n": 1851,
+       "premieres": [
+        4.4,
+        5.5,
+        5.7
+       ],
+       "empreinte": "8507fc2901afb039-427"
+      },
+      "nature": {
+       "n": 1851,
+       "premieres": [
+        "Indifférenciée",
+        "Indifférenciée",
+        "Indifférenciée"
+       ],
+       "empreinte": "fed03b1e36a65ae5-neb"
+      },
+      "nombre_d_etages": {
+       "n": 1851,
+       "premieres": [
+        null,
+        2,
+        2
+       ],
+       "empreinte": "4e9edd7698bdac92-40o"
+      },
+      "nombre_de_logements": {
+       "n": 1851,
+       "premieres": [
+        null,
+        8,
+        8
+       ],
+       "empreinte": "7b084f2d19e474d5-429"
+      },
+      "usage_1": {
+       "n": 1851,
+       "premieres": [
+        "Indifférencié",
+        "Résidentiel",
+        "Résidentiel"
+       ],
+       "empreinte": "98cd7d2fb16d2ea9-k8o"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 6,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Buildingsdata",
+     "nbLignes": 1705,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "nature",
+      "usage_1",
+      "hauteur",
+      "nombre_de_logements",
+      "nombre_d_etages",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 1705,
+       "premieres": [
+        43.138513,
+        43.137809,
+        43.13839
+       ],
+       "empreinte": "20146498ee989ae3-l8t"
+      },
+      "centroid_lon": {
+       "n": 1705,
+       "premieres": [
+        6.368533,
+        6.368433,
+        6.368511
+       ],
+       "empreinte": "25fafd741db28014-kho"
+      },
+      "fill_color": {
+       "n": 1705,
+       "premieres": [
+        "#10b981",
+        "#10b981",
+        "#10b981"
+       ],
+       "empreinte": "83b306cf6bcc078d-bu9"
+      },
+      "geometry_json": {
+       "n": 1705,
+       "premieres": [
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36857,43.13851],[6.36854,43.13854],[6.36848,43.13851],[6.36851,43.13848],[6.36857,43.13851]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36846,43.13783],[6.36848,43.1378],[6.3684,43.13777],[6.36839,43.1378],[6.36842,43.13782],[6.36846,43.13783]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36848,43.13832],[6.36844,43.13837],[6.36845,43.13837],[6.36839,43.13844],[6.36849,43.13848],[6.36854,43.13842],[6.36856,43.13842],[6.3686,43.13838],[6.3686,43.13838],[6.3686,43.13838],[6.36848,43.13832]]]]}"
+       ],
+       "empreinte": "9f1d6de0385ebb06-8k4i"
+      },
+      "hauteur": {
+       "n": 1705,
+       "premieres": [
+        9.2,
+        4.8,
+        11.9
+       ],
+       "empreinte": "912963f41391e151-3vc"
+      },
+      "nature": {
+       "n": 1705,
+       "premieres": [
+        "Indifférenciée",
+        "Indifférenciée",
+        "Indifférenciée"
+       ],
+       "empreinte": "66d6545c27514ad9-ls8"
+      },
+      "nombre_d_etages": {
+       "n": 1705,
+       "premieres": [
+        null,
+        null,
+        4
+       ],
+       "empreinte": "0414cdf6f8a719f6-3fj"
+      },
+      "nombre_de_logements": {
+       "n": 1705,
+       "premieres": [
+        null,
+        null,
+        4
+       ],
+       "empreinte": "2e348b5413dcc4e1-3hh"
+      },
+      "usage_1": {
+       "n": 1705,
+       "premieres": [
+        "Indifférencié",
+        "Indifférencié",
+        "Résidentiel"
+       ],
+       "empreinte": "d5739c72c8bf1abc-iy4"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 7,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Buildingsdata",
+     "nbLignes": 920,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "nature",
+      "usage_1",
+      "hauteur",
+      "nombre_de_logements",
+      "nombre_d_etages",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 920,
+       "premieres": [
+        43.139215,
+        43.139198,
+        43.138185
+       ],
+       "empreinte": "324b409db0ba2c94-bc7"
+      },
+      "centroid_lon": {
+       "n": 920,
+       "premieres": [
+        6.369329,
+        6.369026,
+        6.370569
+       ],
+       "empreinte": "a79dfa741be8c903-ayt"
+      },
+      "fill_color": {
+       "n": 920,
+       "premieres": [
+        "#10b981",
+        "#10b981",
+        "#10b981"
+       ],
+       "empreinte": "a41611fbf9d9440b-6e0"
+      },
+      "geometry_json": {
+       "n": 920,
+       "premieres": [
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36936,43.13919],[6.36936,43.13925],[6.36936,43.13926],[6.36929,43.13926],[6.36929,43.13922],[6.3693,43.13922],[6.3693,43.13918],[6.36933,43.13918],[6.36933,43.13919],[6.36936,43.13919]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.36907,43.13921],[6.36907,43.1392],[6.36899,43.13918],[6.36898,43.13918],[6.36898,43.1392],[6.36907,43.13921]]]]}",
+        "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[6.37061,43.13821],[6.3706,43.13814],[6.37051,43.13815],[6.37052,43.13822],[6.37061,43.13821]]]]}"
+       ],
+       "empreinte": "6ea933308e7bf726-42na"
+      },
+      "hauteur": {
+       "n": 920,
+       "premieres": [
+        1.5,
+        7.5,
+        2.9
+       ],
+       "empreinte": "2010ccb53cc43ff4-20i"
+      },
+      "nature": {
+       "n": 920,
+       "premieres": [
+        "Indifférenciée",
+        "Indifférenciée",
+        "Indifférenciée"
+       ],
+       "empreinte": "5b878969a17ed56b-c3c"
+      },
+      "nombre_d_etages": {
+       "n": 920,
+       "premieres": [
+        1,
+        null,
+        null
+       ],
+       "empreinte": "ddf48a6c56eab249-1pc"
+      },
+      "nombre_de_logements": {
+       "n": 920,
+       "premieres": [
+        1,
+        null,
+        null
+       ],
+       "empreinte": "5486bd07de65e2c1-1py"
+      },
+      "usage_1": {
+       "n": 920,
+       "premieres": [
+        "Résidentiel",
+        "Indifférencié",
+        "Indifférencié"
+       ],
+       "empreinte": "50dae5a6e48c11eb-a1g"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 8,
+   "actions": [
+    [
+     "AddTable",
+     "Routesdata",
+     [
+      {
+       "id": "nature",
+       "type": "Text"
+      },
+      {
+       "id": "importance",
+       "type": "Text"
+      },
+      {
+       "id": "sens_de_circulation",
+       "type": "Text"
+      },
+      {
+       "id": "ht_num_t100",
+       "type": "Int"
+      },
+      {
+       "id": "ht_num_t1000",
+       "type": "Int"
+      },
+      {
+       "id": "ht_num_t10",
+       "type": "Int"
+      },
+      {
+       "id": "ht_num",
+       "type": "Int"
+      },
+      {
+       "id": "geometry_json",
+       "label": "GeoJSON",
+       "type": "Text"
+      },
+      {
+       "id": "centroid_lat",
+       "label": "Centroid Lat",
+       "type": "Numeric"
+      },
+      {
+       "id": "centroid_lon",
+       "label": "Centroid Lon",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 9,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Routesdata",
+     "nbLignes": 938,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "nature",
+      "importance",
+      "sens_de_circulation",
+      "ht_num_t100",
+      "ht_num_t1000",
+      "ht_num_t10",
+      "ht_num",
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 938,
+       "premieres": [
+        43.274465,
+        43.273782,
+        43.273272
+       ],
+       "empreinte": "4f86ec52032a30b7-bxu"
+      },
+      "centroid_lon": {
+       "n": 938,
+       "premieres": [
+        6.57478,
+        6.574665,
+        6.573925
+       ],
+       "empreinte": "5ccad55f031e1cbe-bo6"
+      },
+      "fill_color": {
+       "n": 938,
+       "premieres": [
+        "#f59e0b",
+        "#f59e0b",
+        "#f59e0b"
+       ],
+       "empreinte": "4ad621cdc91eb15e-6ii"
+      },
+      "geometry_json": {
+       "n": 938,
+       "premieres": [
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[6.5749,43.27433],[6.57483,43.27438],[6.57476,43.27445],[6.57471,43.27455],[6.5747,43.27461]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[6.57474,43.27378],[6.57473,43.27378],[6.57465,43.27378],[6.57455,43.27379]]]}",
+        "{\"type\":\"MultiLineString\",\"coordinates\":[[[6.57374,43.2734],[6.57383,43.27337],[6.57391,43.27333],[6.57396,43.27329],[6.57399,43.27325],[6.57402,43.2732],[6.57404,43.27306]]]}"
+       ],
+       "empreinte": "8b60ed92a46a8728-3ewk"
+      },
+      "ht_num": {
+       "n": 938,
+       "premieres": [
+        -1,
+        -1,
+        -1
+       ],
+       "empreinte": "0c925d355bf01e51-1ej"
+      },
+      "ht_num_t10": {
+       "n": 938,
+       "premieres": [
+        -1,
+        -1,
+        -1
+       ],
+       "empreinte": "c72662fa914b82b8-1g4"
+      },
+      "ht_num_t100": {
+       "n": 938,
+       "premieres": [
+        -1,
+        -1,
+        -1
+       ],
+       "empreinte": "0c925d355bf01e51-1ej"
+      },
+      "ht_num_t1000": {
+       "n": 938,
+       "premieres": [
+        -1,
+        -1,
+        -1
+       ],
+       "empreinte": "c72662fa914b82b8-1g4"
+      },
+      "importance": {
+       "n": 938,
+       "premieres": [
+        "3",
+        "3",
+        "3"
+       ],
+       "empreinte": "c73a54335ed78209-266"
+      },
+      "nature": {
+       "n": 938,
+       "premieres": [
+        "Bretelle",
+        "Route à 1 chaussée",
+        "Bretelle"
+       ],
+       "empreinte": "88eac374d9bf2d0c-blz"
+      },
+      "sens_de_circulation": {
+       "n": 938,
+       "premieres": [
+        "Sens direct",
+        "Double sens",
+        "Sens direct"
+       ],
+       "empreinte": "1ac4a1c907969d77-9do"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 10,
+   "actions": [
+    [
+     "AddTable",
+     "Couche_4",
+     [
+      {
+       "id": "geometry_json",
+       "label": "GeoJSON",
+       "type": "Text"
+      },
+      {
+       "id": "centroid_lat",
+       "label": "Centroid Lat",
+       "type": "Numeric"
+      },
+      {
+       "id": "centroid_lon",
+       "label": "Centroid Lon",
+       "type": "Numeric"
+      },
+      {
+       "id": "fill_color",
+       "label": "Couleur (auto)",
+       "type": "Text"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 11,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "Couche_4",
+     "nbLignes": 1,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "geometry_json",
+      "centroid_lat",
+      "centroid_lon",
+      "fill_color"
+     ],
+     "colonnes": {
+      "centroid_lat": {
+       "n": 1,
+       "premieres": [
+        43.25003
+       ],
+       "empreinte": "e2a439133fcf7d30-i"
+      },
+      "centroid_lon": {
+       "n": 1,
+       "premieres": [
+        6.528551
+       ],
+       "empreinte": "8bf0b1c3a0c4c703-h"
+      },
+      "fill_color": {
+       "n": 1,
+       "premieres": [
+        "#ef4444"
+       ],
+       "empreinte": "9d8d4c104d56f06b-9"
+      },
+      "geometry_json": {
+       "n": 1,
+       "premieres": [
+        {
+         "__chaine": true,
+         "longueur": 9392,
+         "debut": "{\"type\":\"Polygon\",\"coordinates\":[[[6.56445,43.25877],[6.56275,43.25838],[6.55915,43.25679],[6.55855,43.25619],[6.55735,4",
+         "empreinte": "d8a8bc1bfe7fb53d-78w"
+        }
+       ],
+       "empreinte": "f9d6982b891a8aa4-794"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 12,
+   "actions": [
+    [
+     "AddTable",
+     "SceneManifest",
+     [
+      {
+       "id": "manifest_json",
+       "label": "Scene Manifest JSON",
+       "type": "Text"
+      },
+      {
+       "id": "scene_hash",
+       "label": "Hash SHA256",
+       "type": "Text"
+      },
+      {
+       "id": "source_file",
+       "label": "Fichier source",
+       "type": "Text"
+      },
+      {
+       "id": "created_at",
+       "label": "Créé le",
+       "type": "DateTime"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 13,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "SceneManifest",
+     "nbLignes": 1,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "manifest_json",
+      "scene_hash",
+      "source_file",
+      "created_at"
+     ],
+     "colonnes": {
+      "created_at": {
+       "n": 1,
+       "valeur": "<DATE>"
+      },
+      "manifest_json": {
+       "n": 1,
+       "json": {
+        "classification": "internal",
+        "layers": [
+         {
+          "controls": [
+           {
+            "active": false,
+            "dataMax": 2,
+            "dataMin": 0,
+            "field": "ht_max",
+            "label": "ht_max",
+            "max": 2,
+            "min": 0,
+            "type": "range"
+           },
+           {
+            "active": false,
+            "dataMax": 5,
+            "dataMin": 0,
+            "field": "ht_min",
+            "label": "Niveau simulé",
+            "max": 5,
+            "min": 0,
+            "mode": "simulation",
+            "type": "range"
+           }
+          ],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "polygon",
+          "id": "Flooddata",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "Flooddata",
+          "profile": "A",
+          "source": {
+           "table": "Flooddata",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "field": "ht_max",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#64aaf0",
+              "label": "Inondation < 0.5m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#3c78d2",
+              "label": "Inondation 0.5–1m",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#1e46b4",
+              "label": "Inondation 1–2m",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#0a1e78",
+              "label": "Inondation > 2m",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         },
+         {
+          "controls": [
+           {
+            "active": false,
+            "dataMax": 2,
+            "dataMin": 0,
+            "field": "max_water_height",
+            "label": "max_water_height",
+            "max": 2,
+            "min": 0,
+            "type": "range"
+           },
+           {
+            "active": false,
+            "dataMax": 5,
+            "dataMin": 0,
+            "field": "ht_min",
+            "label": "Niveau simulé",
+            "max": 5,
+            "min": 0,
+            "mode": "simulation",
+            "type": "range"
+           }
+          ],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "polygon",
+          "id": "Buildingsdata",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "Buildingsdata",
+          "profile": "A",
+          "source": {
+           "table": "Buildingsdata",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "field": "max_water_height",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#fff564",
+              "label": "Exposé < 0.5m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#ffa520",
+              "label": "Exposé 0.5–1m",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#ff5a00",
+              "label": "Exposé 1–2m",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#bd0026",
+              "label": "Exposé > 2m",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         },
+         {
+          "controls": [
+           {
+            "active": false,
+            "dataMax": 5,
+            "dataMin": 0,
+            "field": "ht_min",
+            "label": "Niveau simulé",
+            "max": 5,
+            "min": 0,
+            "mode": "simulation",
+            "type": "range"
+           }
+          ],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "line",
+          "id": "Routesdata",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "Routesdata",
+          "profile": "A",
+          "source": {
+           "table": "Routesdata",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "field": null,
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#888888",
+              "label": "0–0",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0
+             },
+             {
+              "color": "#1ed241",
+              "label": "0–0.5",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#f0c800",
+              "label": "0.5–1",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#ff5a00",
+              "label": "1–2",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#d21414",
+              "label": ">2",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         },
+         {
+          "controls": [
+           {
+            "active": false,
+            "dataMax": 2,
+            "dataMin": 0,
+            "field": "ht_max",
+            "label": "ht_max",
+            "max": 2,
+            "min": 0,
+            "type": "range"
+           },
+           {
+            "active": false,
+            "dataMax": 5,
+            "dataMin": 0,
+            "field": "ht_min",
+            "label": "Niveau simulé",
+            "max": 5,
+            "min": 0,
+            "mode": "simulation",
+            "type": "range"
+           }
+          ],
+          "fetch": {
+           "mode": "full"
+          },
+          "geometry_type": "polygon",
+          "id": "Couche_4",
+          "limits": {
+           "maxFeaturesInView": 10000
+          },
+          "name": "Couche 4",
+          "profile": "A",
+          "source": {
+           "table": "Couche_4",
+           "type": "grist"
+          },
+          "style": {
+           "declarative": {
+            "field": "ht_max",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#64aaf0",
+              "label": "Inondation < 0.5m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#3c78d2",
+              "label": "Inondation 0.5–1m",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#1e46b4",
+              "label": "Inondation 1–2m",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#0a1e78",
+              "label": "Inondation > 2m",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "qml_source": null
+          },
+          "visibility": {
+           "maxZoom": null,
+           "minZoom": null
+          }
+         }
+        ],
+        "meta": {
+         "classification": "internal",
+         "colorFnFields": {
+          "buildingColor": "getBuildingHtMax",
+          "floodColor": "ht_max"
+         },
+         "colorScaleFns": {
+          "buildingColor": {
+           "_paramName": "depth",
+           "categories": [
+            {
+             "color": "#cccccc",
+             "label": "0–0",
+             "lower": 0,
+             "upper": 0,
+             "value": "0–0"
+            },
+            {
+             "color": "#fff564",
+             "label": "0–0.5",
+             "lower": 0,
+             "upper": 0.5,
+             "value": "0–0.5"
+            },
+            {
+             "color": "#ffa520",
+             "label": "0.5–1",
+             "lower": 0.5,
+             "upper": 1,
+             "value": "0.5–1"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "1–2",
+             "lower": 1,
+             "upper": 2,
+             "value": "1–2"
+            },
+            {
+             "color": "#bd0026",
+             "label": ">2",
+             "lower": 2,
+             "upper": null,
+             "value": ">2"
+            }
+           ],
+           "field": null,
+           "type": "graduatedSymbol"
+          },
+          "floodColor": {
+           "_paramName": "htMax",
+           "categories": [
+            {
+             "color": "#64aaf0",
+             "label": "> 0",
+             "lower": 0,
+             "upper": 0.5,
+             "value": "0–0.5"
+            },
+            {
+             "color": "#3c78d2",
+             "label": "> 0.5",
+             "lower": 0.5,
+             "upper": 1,
+             "value": "0.5–1"
+            },
+            {
+             "color": "#1e46b4",
+             "label": "> 1",
+             "lower": 1,
+             "upper": 2,
+             "value": "1–2"
+            },
+            {
+             "color": "#0a1e78",
+             "label": "> 2",
+             "lower": 2,
+             "upper": null,
+             "value": "2–Infinity"
+            }
+           ],
+           "field": null,
+           "type": "graduatedSymbol"
+          },
+          "routeColor": {
+           "_paramName": "htNum",
+           "categories": [
+            {
+             "color": "#888888",
+             "label": "0–0",
+             "lower": 0,
+             "upper": 0,
+             "value": "0–0"
+            },
+            {
+             "color": "#1ed241",
+             "label": "0–0.5",
+             "lower": 0,
+             "upper": 0.5,
+             "value": "0–0.5"
+            },
+            {
+             "color": "#f0c800",
+             "label": "0.5–1",
+             "lower": 0.5,
+             "upper": 1,
+             "value": "0.5–1"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "1–2",
+             "lower": 1,
+             "upper": 2,
+             "value": "1–2"
+            },
+            {
+             "color": "#d21414",
+             "label": ">2",
+             "lower": 2,
+             "upper": null,
+             "value": ">2"
+            }
+           ],
+           "field": null,
+           "type": "graduatedSymbol"
+          }
+         },
+         "imported_at": "<DATE>",
+         "inferredStyles": {
+          "buildingStyle": {
+           "categories": [
+            {
+             "color": "#fff564",
+             "label": "Exposé < 0.5m",
+             "lower": 0,
+             "rawColor": "#fff564",
+             "upper": 0.5,
+             "value": "Exposé < 0.5m"
+            },
+            {
+             "color": "#ffa520",
+             "label": "Exposé 0.5–1m",
+             "lower": 0.5,
+             "rawColor": "#ffa520",
+             "upper": 1,
+             "value": "Exposé 0.5–1m"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "Exposé 1–2m",
+             "lower": 1,
+             "rawColor": "#ff5a00",
+             "upper": 2,
+             "value": "Exposé 1–2m"
+            },
+            {
+             "color": "#bd0026",
+             "label": "Exposé > 2m",
+             "lower": 2,
+             "rawColor": "#bd0026",
+             "upper": null,
+             "value": "Exposé > 2m"
+            }
+           ],
+           "field": "max_water_height",
+           "type": "graduatedSymbol"
+          },
+          "floodStyle": {
+           "categories": [
+            {
+             "color": "#64aaf0",
+             "label": "Inondation < 0.5m",
+             "lower": 0,
+             "rawColor": "rgba(100,170,240,0.5)",
+             "upper": 0.5,
+             "value": "Inondation < 0.5m"
+            },
+            {
+             "color": "#3c78d2",
+             "label": "Inondation 0.5–1m",
+             "lower": 0.5,
+             "rawColor": "rgba(60,120,210,0.6)",
+             "upper": 1,
+             "value": "Inondation 0.5–1m"
+            },
+            {
+             "color": "#1e46b4",
+             "label": "Inondation 1–2m",
+             "lower": 1,
+             "rawColor": "rgba(30,70,180,0.7)",
+             "upper": 2,
+             "value": "Inondation 1–2m"
+            },
+            {
+             "color": "#0a1e78",
+             "label": "Inondation > 2m",
+             "lower": 2,
+             "rawColor": "rgba(10,30,120,0.8)",
+             "upper": null,
+             "value": "Inondation > 2m"
+            }
+           ],
+           "field": "ht_max",
+           "type": "graduatedSymbol"
+          }
+         },
+         "interactiveMap": "flood",
+         "legendItems": [
+          {
+           "circle": false,
+           "color": "#64aaf0",
+           "label": "Inondation < 0.5m",
+           "rawColor": "rgba(100,170,240,0.5)"
+          },
+          {
+           "circle": false,
+           "color": "#3c78d2",
+           "label": "Inondation 0.5–1m",
+           "rawColor": "rgba(60,120,210,0.6)"
+          },
+          {
+           "circle": false,
+           "color": "#1e46b4",
+           "label": "Inondation 1–2m",
+           "rawColor": "rgba(30,70,180,0.7)"
+          },
+          {
+           "circle": false,
+           "color": "#0a1e78",
+           "label": "Inondation > 2m",
+           "rawColor": "rgba(10,30,120,0.8)"
+          },
+          {
+           "circle": false,
+           "color": "#cccccc",
+           "label": "Hors zone",
+           "rawColor": "#cccccc"
+          },
+          {
+           "circle": false,
+           "color": "#fff564",
+           "label": "Exposé < 0.5m",
+           "rawColor": "#fff564"
+          },
+          {
+           "circle": false,
+           "color": "#ffa520",
+           "label": "Exposé 0.5–1m",
+           "rawColor": "#ffa520"
+          },
+          {
+           "circle": false,
+           "color": "#ff5a00",
+           "label": "Exposé 1–2m",
+           "rawColor": "#ff5a00"
+          },
+          {
+           "circle": false,
+           "color": "#bd0026",
+           "label": "Exposé > 2m",
+           "rawColor": "#bd0026"
+          },
+          {
+           "circle": true,
+           "color": "#ff8c00",
+           "label": "Ét. sensible (école, hôpital)",
+           "rawColor": "#ff8c00"
+          }
+         ],
+         "provenance": [
+          {
+           "ingested_at": "<DATE>",
+           "platform_id": "widgets-grist-qgis2grist",
+           "via": null
+          }
+         ],
+         "sliderMax": 5,
+         "sliderMin": 0,
+         "sliderTitle": null,
+         "sliderUnit": "m",
+         "source": "Georisques — Directive Inondation TRI",
+         "source_file": "qgis2grist_nimes_flood.html",
+         "source_info": {
+          "provenance": [
+           {
+            "ingested_at": "<DATE>",
+            "platform_id": "widgets-grist-qgis2grist",
+            "via": null
+           }
+          ],
+          "source": {
+           "authority": "qgis2grist_nimes_flood.html",
+           "classification": "internal",
+           "license": "unknown",
+           "millesime": "2026",
+           "referential": "qgis2grist"
+          }
+         },
+         "sources": [
+          {
+           "authority": "qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": null,
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Flooddata ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Flooddata",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Buildingsdata ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Buildingsdata",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Routesdata ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Routesdata",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Couche 4 ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Couche_4",
+           "statut": "a_verifier"
+          }
+         ],
+         "statsTitle": "Statistiques",
+         "subtitle": null,
+         "title": null,
+         "widget": "qgis2grist-v2"
+        },
+        "subtitle": null,
+        "title": "qgis2grist_nimes_flood.html",
+        "version": "0.2.1"
+       }
+      },
+      "scene_hash": {
+       "n": 1,
+       "valeur": "<HASH>"
+      },
+      "source_file": {
+       "n": 1,
+       "premieres": [
+        "qgis2grist_nimes_flood.html"
+       ],
+       "empreinte": "8785ded5b8966f59-t"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "appel": 14,
+   "actions": [
+    [
+     "AddTable",
+     "QgisWidgets",
+     [
+      {
+       "id": "widget_name",
+       "type": "Text"
+      },
+      {
+       "id": "source_file",
+       "type": "Text"
+      },
+      {
+       "id": "config_json",
+       "type": "Text"
+      },
+      {
+       "id": "created_at",
+       "type": "DateTime"
+      }
+     ]
+    ]
+   ]
+  },
+  {
+   "appel": 15,
+   "actions": [
+    {
+     "op": "BulkAddRecord",
+     "table": "QgisWidgets",
+     "nbLignes": 1,
+     "idsNuls": true,
+     "ordreColonnes": [
+      "widget_name",
+      "source_file",
+      "config_json",
+      "created_at"
+     ],
+     "colonnes": {
+      "config_json": {
+       "n": 1,
+       "json": {
+        "layers": [
+         {
+          "color": "#3e5de7",
+          "displayName": "Flooddata",
+          "featureCount": 1,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "scenario",
+            "name": "scenario",
+            "rawKey": "scenario",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "ht_min",
+            "name": "ht_min",
+            "rawKey": "ht_min",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "ht_max",
+            "name": "ht_max",
+            "rawKey": "ht_max",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "cours_deau",
+            "name": "cours_deau",
+            "rawKey": "cours_deau",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "area_ha",
+            "name": "area_ha",
+            "rawKey": "area_ha",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "GeoJSON",
+            "name": "geometry_json",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lat",
+            "name": "centroid_lat",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lon",
+            "name": "centroid_lon",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Polygon",
+          "style": {
+           "categories": [
+            {
+             "color": "#64aaf0",
+             "label": "Inondation < 0.5m",
+             "lower": 0,
+             "rawColor": "rgba(100,170,240,0.5)",
+             "upper": 0.5,
+             "value": "Inondation < 0.5m"
+            },
+            {
+             "color": "#3c78d2",
+             "label": "Inondation 0.5–1m",
+             "lower": 0.5,
+             "rawColor": "rgba(60,120,210,0.6)",
+             "upper": 1,
+             "value": "Inondation 0.5–1m"
+            },
+            {
+             "color": "#1e46b4",
+             "label": "Inondation 1–2m",
+             "lower": 1,
+             "rawColor": "rgba(30,70,180,0.7)",
+             "upper": 2,
+             "value": "Inondation 1–2m"
+            },
+            {
+             "color": "#0a1e78",
+             "label": "Inondation > 2m",
+             "lower": 2,
+             "rawColor": "rgba(10,30,120,0.8)",
+             "upper": null,
+             "value": "Inondation > 2m"
+            }
+           ],
+           "declarative": {
+            "field": "ht_max",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#64aaf0",
+              "label": "Inondation < 0.5m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#3c78d2",
+              "label": "Inondation 0.5–1m",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#1e46b4",
+              "label": "Inondation 1–2m",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#0a1e78",
+              "label": "Inondation > 2m",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "field": "ht_max",
+           "qml_source": null,
+           "type": "graduatedSymbol"
+          },
+          "tableName": "Flooddata",
+          "varName": "floodData"
+         },
+         {
+          "color": "#10b981",
+          "displayName": "Buildingsdata",
+          "featureCount": 8045,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nature",
+            "name": "nature",
+            "rawKey": "nature",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "usage_1",
+            "name": "usage_1",
+            "rawKey": "usage_1",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "hauteur",
+            "name": "hauteur",
+            "rawKey": "hauteur",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "nombre_de_logements",
+            "name": "nombre_de_logements",
+            "rawKey": "nombre_de_logements",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "nombre_d_etages",
+            "name": "nombre_d_etages",
+            "rawKey": "nombre_d_etages",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "GeoJSON",
+            "name": "geometry_json",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lat",
+            "name": "centroid_lat",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lon",
+            "name": "centroid_lon",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Polygon",
+          "style": {
+           "categories": [
+            {
+             "color": "#fff564",
+             "label": "Exposé < 0.5m",
+             "lower": 0,
+             "rawColor": "#fff564",
+             "upper": 0.5,
+             "value": "Exposé < 0.5m"
+            },
+            {
+             "color": "#ffa520",
+             "label": "Exposé 0.5–1m",
+             "lower": 0.5,
+             "rawColor": "#ffa520",
+             "upper": 1,
+             "value": "Exposé 0.5–1m"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "Exposé 1–2m",
+             "lower": 1,
+             "rawColor": "#ff5a00",
+             "upper": 2,
+             "value": "Exposé 1–2m"
+            },
+            {
+             "color": "#bd0026",
+             "label": "Exposé > 2m",
+             "lower": 2,
+             "rawColor": "#bd0026",
+             "upper": null,
+             "value": "Exposé > 2m"
+            }
+           ],
+           "declarative": {
+            "field": "max_water_height",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#fff564",
+              "label": "Exposé < 0.5m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#ffa520",
+              "label": "Exposé 0.5–1m",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#ff5a00",
+              "label": "Exposé 1–2m",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#bd0026",
+              "label": "Exposé > 2m",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "field": "max_water_height",
+           "qml_source": null,
+           "type": "graduatedSymbol"
+          },
+          "tableName": "Buildingsdata",
+          "varName": "buildingsData"
+         },
+         {
+          "color": "#f59e0b",
+          "displayName": "Routesdata",
+          "featureCount": 938,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "nature",
+            "name": "nature",
+            "rawKey": "nature",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "importance",
+            "name": "importance",
+            "rawKey": "importance",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "sens_de_circulation",
+            "name": "sens_de_circulation",
+            "rawKey": "sens_de_circulation",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "ht_num_t100",
+            "name": "ht_num_t100",
+            "rawKey": "ht_num_t100",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "ht_num_t1000",
+            "name": "ht_num_t1000",
+            "rawKey": "ht_num_t1000",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "ht_num_t10",
+            "name": "ht_num_t10",
+            "rawKey": "ht_num_t10",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Int",
+            "label": "ht_num",
+            "name": "ht_num",
+            "rawKey": "ht_num",
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "GeoJSON",
+            "name": "geometry_json",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lat",
+            "name": "centroid_lat",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lon",
+            "name": "centroid_lon",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Line",
+          "style": {
+           "_paramName": "htNum",
+           "categories": [
+            {
+             "color": "#888888",
+             "label": "0–0",
+             "lower": 0,
+             "upper": 0,
+             "value": "0–0"
+            },
+            {
+             "color": "#1ed241",
+             "label": "0–0.5",
+             "lower": 0,
+             "upper": 0.5,
+             "value": "0–0.5"
+            },
+            {
+             "color": "#f0c800",
+             "label": "0.5–1",
+             "lower": 0.5,
+             "upper": 1,
+             "value": "0.5–1"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "1–2",
+             "lower": 1,
+             "upper": 2,
+             "value": "1–2"
+            },
+            {
+             "color": "#d21414",
+             "label": ">2",
+             "lower": 2,
+             "upper": null,
+             "value": ">2"
+            }
+           ],
+           "declarative": {
+            "field": null,
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#888888",
+              "label": "0–0",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0
+             },
+             {
+              "color": "#1ed241",
+              "label": "0–0.5",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#f0c800",
+              "label": "0.5–1",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#ff5a00",
+              "label": "1–2",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#d21414",
+              "label": ">2",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "field": null,
+           "qml_source": null,
+           "type": "graduatedSymbol"
+          },
+          "tableName": "Routesdata",
+          "varName": "routesData"
+         },
+         {
+          "color": "#ef4444",
+          "displayName": "Couche 4",
+          "featureCount": 1,
+          "fields": [
+           {
+            "description": null,
+            "gType": "Text",
+            "label": "GeoJSON",
+            "name": "geometry_json",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lat",
+            "name": "centroid_lat",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           },
+           {
+            "description": null,
+            "gType": "Numeric",
+            "label": "Centroid Lon",
+            "name": "centroid_lon",
+            "rawKey": null,
+            "refTargetField": null,
+            "refTargetTable": null,
+            "widgetOptions": null
+           }
+          ],
+          "geomType": "Polygon",
+          "style": {
+           "categories": [
+            {
+             "color": "#64aaf0",
+             "label": "Inondation < 0.5m",
+             "lower": 0,
+             "rawColor": "rgba(100,170,240,0.5)",
+             "upper": 0.5,
+             "value": "Inondation < 0.5m"
+            },
+            {
+             "color": "#3c78d2",
+             "label": "Inondation 0.5–1m",
+             "lower": 0.5,
+             "rawColor": "rgba(60,120,210,0.6)",
+             "upper": 1,
+             "value": "Inondation 0.5–1m"
+            },
+            {
+             "color": "#1e46b4",
+             "label": "Inondation 1–2m",
+             "lower": 1,
+             "rawColor": "rgba(30,70,180,0.7)",
+             "upper": 2,
+             "value": "Inondation 1–2m"
+            },
+            {
+             "color": "#0a1e78",
+             "label": "Inondation > 2m",
+             "lower": 2,
+             "rawColor": "rgba(10,30,120,0.8)",
+             "upper": null,
+             "value": "Inondation > 2m"
+            }
+           ],
+           "declarative": {
+            "field": "ht_max",
+            "kind": "graduated",
+            "method": "equal",
+            "stops": [
+             {
+              "color": "#64aaf0",
+              "label": "Inondation < 0.5m",
+              "lower": 0,
+              "opacity": 1,
+              "upper": 0.5
+             },
+             {
+              "color": "#3c78d2",
+              "label": "Inondation 0.5–1m",
+              "lower": 0.5,
+              "opacity": 1,
+              "upper": 1
+             },
+             {
+              "color": "#1e46b4",
+              "label": "Inondation 1–2m",
+              "lower": 1,
+              "opacity": 1,
+              "upper": 2
+             },
+             {
+              "color": "#0a1e78",
+              "label": "Inondation > 2m",
+              "lower": 2,
+              "opacity": 1,
+              "upper": null
+             }
+            ]
+           },
+           "field": "ht_max",
+           "qml_source": null,
+           "type": "graduatedSymbol"
+          },
+          "tableName": "Couche_4",
+          "varName": null
+         }
+        ],
+        "meta": {
+         "classification": "internal",
+         "colorFnFields": {
+          "buildingColor": "getBuildingHtMax",
+          "floodColor": "ht_max"
+         },
+         "colorScaleFns": {
+          "buildingColor": {
+           "_paramName": "depth",
+           "categories": [
+            {
+             "color": "#cccccc",
+             "label": "0–0",
+             "lower": 0,
+             "upper": 0,
+             "value": "0–0"
+            },
+            {
+             "color": "#fff564",
+             "label": "0–0.5",
+             "lower": 0,
+             "upper": 0.5,
+             "value": "0–0.5"
+            },
+            {
+             "color": "#ffa520",
+             "label": "0.5–1",
+             "lower": 0.5,
+             "upper": 1,
+             "value": "0.5–1"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "1–2",
+             "lower": 1,
+             "upper": 2,
+             "value": "1–2"
+            },
+            {
+             "color": "#bd0026",
+             "label": ">2",
+             "lower": 2,
+             "upper": null,
+             "value": ">2"
+            }
+           ],
+           "field": null,
+           "type": "graduatedSymbol"
+          },
+          "floodColor": {
+           "_paramName": "htMax",
+           "categories": [
+            {
+             "color": "#64aaf0",
+             "label": "> 0",
+             "lower": 0,
+             "upper": 0.5,
+             "value": "0–0.5"
+            },
+            {
+             "color": "#3c78d2",
+             "label": "> 0.5",
+             "lower": 0.5,
+             "upper": 1,
+             "value": "0.5–1"
+            },
+            {
+             "color": "#1e46b4",
+             "label": "> 1",
+             "lower": 1,
+             "upper": 2,
+             "value": "1–2"
+            },
+            {
+             "color": "#0a1e78",
+             "label": "> 2",
+             "lower": 2,
+             "upper": null,
+             "value": "2–Infinity"
+            }
+           ],
+           "field": null,
+           "type": "graduatedSymbol"
+          },
+          "routeColor": {
+           "_paramName": "htNum",
+           "categories": [
+            {
+             "color": "#888888",
+             "label": "0–0",
+             "lower": 0,
+             "upper": 0,
+             "value": "0–0"
+            },
+            {
+             "color": "#1ed241",
+             "label": "0–0.5",
+             "lower": 0,
+             "upper": 0.5,
+             "value": "0–0.5"
+            },
+            {
+             "color": "#f0c800",
+             "label": "0.5–1",
+             "lower": 0.5,
+             "upper": 1,
+             "value": "0.5–1"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "1–2",
+             "lower": 1,
+             "upper": 2,
+             "value": "1–2"
+            },
+            {
+             "color": "#d21414",
+             "label": ">2",
+             "lower": 2,
+             "upper": null,
+             "value": ">2"
+            }
+           ],
+           "field": null,
+           "type": "graduatedSymbol"
+          }
+         },
+         "imported_at": "<DATE>",
+         "inferredStyles": {
+          "buildingStyle": {
+           "categories": [
+            {
+             "color": "#fff564",
+             "label": "Exposé < 0.5m",
+             "lower": 0,
+             "rawColor": "#fff564",
+             "upper": 0.5,
+             "value": "Exposé < 0.5m"
+            },
+            {
+             "color": "#ffa520",
+             "label": "Exposé 0.5–1m",
+             "lower": 0.5,
+             "rawColor": "#ffa520",
+             "upper": 1,
+             "value": "Exposé 0.5–1m"
+            },
+            {
+             "color": "#ff5a00",
+             "label": "Exposé 1–2m",
+             "lower": 1,
+             "rawColor": "#ff5a00",
+             "upper": 2,
+             "value": "Exposé 1–2m"
+            },
+            {
+             "color": "#bd0026",
+             "label": "Exposé > 2m",
+             "lower": 2,
+             "rawColor": "#bd0026",
+             "upper": null,
+             "value": "Exposé > 2m"
+            }
+           ],
+           "field": "max_water_height",
+           "type": "graduatedSymbol"
+          },
+          "floodStyle": {
+           "categories": [
+            {
+             "color": "#64aaf0",
+             "label": "Inondation < 0.5m",
+             "lower": 0,
+             "rawColor": "rgba(100,170,240,0.5)",
+             "upper": 0.5,
+             "value": "Inondation < 0.5m"
+            },
+            {
+             "color": "#3c78d2",
+             "label": "Inondation 0.5–1m",
+             "lower": 0.5,
+             "rawColor": "rgba(60,120,210,0.6)",
+             "upper": 1,
+             "value": "Inondation 0.5–1m"
+            },
+            {
+             "color": "#1e46b4",
+             "label": "Inondation 1–2m",
+             "lower": 1,
+             "rawColor": "rgba(30,70,180,0.7)",
+             "upper": 2,
+             "value": "Inondation 1–2m"
+            },
+            {
+             "color": "#0a1e78",
+             "label": "Inondation > 2m",
+             "lower": 2,
+             "rawColor": "rgba(10,30,120,0.8)",
+             "upper": null,
+             "value": "Inondation > 2m"
+            }
+           ],
+           "field": "ht_max",
+           "type": "graduatedSymbol"
+          }
+         },
+         "interactiveMap": "flood",
+         "legendItems": [
+          {
+           "circle": false,
+           "color": "#64aaf0",
+           "label": "Inondation < 0.5m",
+           "rawColor": "rgba(100,170,240,0.5)"
+          },
+          {
+           "circle": false,
+           "color": "#3c78d2",
+           "label": "Inondation 0.5–1m",
+           "rawColor": "rgba(60,120,210,0.6)"
+          },
+          {
+           "circle": false,
+           "color": "#1e46b4",
+           "label": "Inondation 1–2m",
+           "rawColor": "rgba(30,70,180,0.7)"
+          },
+          {
+           "circle": false,
+           "color": "#0a1e78",
+           "label": "Inondation > 2m",
+           "rawColor": "rgba(10,30,120,0.8)"
+          },
+          {
+           "circle": false,
+           "color": "#cccccc",
+           "label": "Hors zone",
+           "rawColor": "#cccccc"
+          },
+          {
+           "circle": false,
+           "color": "#fff564",
+           "label": "Exposé < 0.5m",
+           "rawColor": "#fff564"
+          },
+          {
+           "circle": false,
+           "color": "#ffa520",
+           "label": "Exposé 0.5–1m",
+           "rawColor": "#ffa520"
+          },
+          {
+           "circle": false,
+           "color": "#ff5a00",
+           "label": "Exposé 1–2m",
+           "rawColor": "#ff5a00"
+          },
+          {
+           "circle": false,
+           "color": "#bd0026",
+           "label": "Exposé > 2m",
+           "rawColor": "#bd0026"
+          },
+          {
+           "circle": true,
+           "color": "#ff8c00",
+           "label": "Ét. sensible (école, hôpital)",
+           "rawColor": "#ff8c00"
+          }
+         ],
+         "provenance": [
+          {
+           "ingested_at": "<DATE>",
+           "platform_id": "widgets-grist-qgis2grist",
+           "via": null
+          }
+         ],
+         "sliderMax": 5,
+         "sliderMin": 0,
+         "sliderTitle": null,
+         "sliderUnit": "m",
+         "source": "Georisques — Directive Inondation TRI",
+         "source_file": "qgis2grist_nimes_flood.html",
+         "source_info": {
+          "provenance": [
+           {
+            "ingested_at": "<DATE>",
+            "platform_id": "widgets-grist-qgis2grist",
+            "via": null
+           }
+          ],
+          "source": {
+           "authority": "qgis2grist_nimes_flood.html",
+           "classification": "internal",
+           "license": "unknown",
+           "millesime": "2026",
+           "referential": "qgis2grist"
+          }
+         },
+         "sources": [
+          {
+           "authority": "qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": null,
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Flooddata ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Flooddata",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Buildingsdata ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Buildingsdata",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Routesdata ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Routesdata",
+           "statut": "a_verifier"
+          },
+          {
+           "authority": "Couche 4 ← qgis2grist_nimes_flood.html",
+           "corpus": "qgis-import",
+           "licence": "unknown",
+           "millesime": "2026",
+           "ref_id": "Couche_4",
+           "statut": "a_verifier"
+          }
+         ],
+         "statsTitle": "Statistiques",
+         "subtitle": null,
+         "title": null
+        },
+        "published": {},
+        "scene_manifest": {
+         "classification": "internal",
+         "layers": [
+          {
+           "controls": [
+            {
+             "active": false,
+             "dataMax": 2,
+             "dataMin": 0,
+             "field": "ht_max",
+             "label": "ht_max",
+             "max": 2,
+             "min": 0,
+             "type": "range"
+            },
+            {
+             "active": false,
+             "dataMax": 5,
+             "dataMin": 0,
+             "field": "ht_min",
+             "label": "Niveau simulé",
+             "max": 5,
+             "min": 0,
+             "mode": "simulation",
+             "type": "range"
+            }
+           ],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "polygon",
+           "id": "Flooddata",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "Flooddata",
+           "profile": "A",
+           "source": {
+            "table": "Flooddata",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "field": "ht_max",
+             "kind": "graduated",
+             "method": "equal",
+             "stops": [
+              {
+               "color": "#64aaf0",
+               "label": "Inondation < 0.5m",
+               "lower": 0,
+               "opacity": 1,
+               "upper": 0.5
+              },
+              {
+               "color": "#3c78d2",
+               "label": "Inondation 0.5–1m",
+               "lower": 0.5,
+               "opacity": 1,
+               "upper": 1
+              },
+              {
+               "color": "#1e46b4",
+               "label": "Inondation 1–2m",
+               "lower": 1,
+               "opacity": 1,
+               "upper": 2
+              },
+              {
+               "color": "#0a1e78",
+               "label": "Inondation > 2m",
+               "lower": 2,
+               "opacity": 1,
+               "upper": null
+              }
+             ]
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          },
+          {
+           "controls": [
+            {
+             "active": false,
+             "dataMax": 2,
+             "dataMin": 0,
+             "field": "max_water_height",
+             "label": "max_water_height",
+             "max": 2,
+             "min": 0,
+             "type": "range"
+            },
+            {
+             "active": false,
+             "dataMax": 5,
+             "dataMin": 0,
+             "field": "ht_min",
+             "label": "Niveau simulé",
+             "max": 5,
+             "min": 0,
+             "mode": "simulation",
+             "type": "range"
+            }
+           ],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "polygon",
+           "id": "Buildingsdata",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "Buildingsdata",
+           "profile": "A",
+           "source": {
+            "table": "Buildingsdata",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "field": "max_water_height",
+             "kind": "graduated",
+             "method": "equal",
+             "stops": [
+              {
+               "color": "#fff564",
+               "label": "Exposé < 0.5m",
+               "lower": 0,
+               "opacity": 1,
+               "upper": 0.5
+              },
+              {
+               "color": "#ffa520",
+               "label": "Exposé 0.5–1m",
+               "lower": 0.5,
+               "opacity": 1,
+               "upper": 1
+              },
+              {
+               "color": "#ff5a00",
+               "label": "Exposé 1–2m",
+               "lower": 1,
+               "opacity": 1,
+               "upper": 2
+              },
+              {
+               "color": "#bd0026",
+               "label": "Exposé > 2m",
+               "lower": 2,
+               "opacity": 1,
+               "upper": null
+              }
+             ]
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          },
+          {
+           "controls": [
+            {
+             "active": false,
+             "dataMax": 5,
+             "dataMin": 0,
+             "field": "ht_min",
+             "label": "Niveau simulé",
+             "max": 5,
+             "min": 0,
+             "mode": "simulation",
+             "type": "range"
+            }
+           ],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "line",
+           "id": "Routesdata",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "Routesdata",
+           "profile": "A",
+           "source": {
+            "table": "Routesdata",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "field": null,
+             "kind": "graduated",
+             "method": "equal",
+             "stops": [
+              {
+               "color": "#888888",
+               "label": "0–0",
+               "lower": 0,
+               "opacity": 1,
+               "upper": 0
+              },
+              {
+               "color": "#1ed241",
+               "label": "0–0.5",
+               "lower": 0,
+               "opacity": 1,
+               "upper": 0.5
+              },
+              {
+               "color": "#f0c800",
+               "label": "0.5–1",
+               "lower": 0.5,
+               "opacity": 1,
+               "upper": 1
+              },
+              {
+               "color": "#ff5a00",
+               "label": "1–2",
+               "lower": 1,
+               "opacity": 1,
+               "upper": 2
+              },
+              {
+               "color": "#d21414",
+               "label": ">2",
+               "lower": 2,
+               "opacity": 1,
+               "upper": null
+              }
+             ]
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          },
+          {
+           "controls": [
+            {
+             "active": false,
+             "dataMax": 2,
+             "dataMin": 0,
+             "field": "ht_max",
+             "label": "ht_max",
+             "max": 2,
+             "min": 0,
+             "type": "range"
+            },
+            {
+             "active": false,
+             "dataMax": 5,
+             "dataMin": 0,
+             "field": "ht_min",
+             "label": "Niveau simulé",
+             "max": 5,
+             "min": 0,
+             "mode": "simulation",
+             "type": "range"
+            }
+           ],
+           "fetch": {
+            "mode": "full"
+           },
+           "geometry_type": "polygon",
+           "id": "Couche_4",
+           "limits": {
+            "maxFeaturesInView": 10000
+           },
+           "name": "Couche 4",
+           "profile": "A",
+           "source": {
+            "table": "Couche_4",
+            "type": "grist"
+           },
+           "style": {
+            "declarative": {
+             "field": "ht_max",
+             "kind": "graduated",
+             "method": "equal",
+             "stops": [
+              {
+               "color": "#64aaf0",
+               "label": "Inondation < 0.5m",
+               "lower": 0,
+               "opacity": 1,
+               "upper": 0.5
+              },
+              {
+               "color": "#3c78d2",
+               "label": "Inondation 0.5–1m",
+               "lower": 0.5,
+               "opacity": 1,
+               "upper": 1
+              },
+              {
+               "color": "#1e46b4",
+               "label": "Inondation 1–2m",
+               "lower": 1,
+               "opacity": 1,
+               "upper": 2
+              },
+              {
+               "color": "#0a1e78",
+               "label": "Inondation > 2m",
+               "lower": 2,
+               "opacity": 1,
+               "upper": null
+              }
+             ]
+            },
+            "qml_source": null
+           },
+           "visibility": {
+            "maxZoom": null,
+            "minZoom": null
+           }
+          }
+         ],
+         "meta": {
+          "classification": "internal",
+          "colorFnFields": {
+           "buildingColor": "getBuildingHtMax",
+           "floodColor": "ht_max"
+          },
+          "colorScaleFns": {
+           "buildingColor": {
+            "_paramName": "depth",
+            "categories": [
+             {
+              "color": "#cccccc",
+              "label": "0–0",
+              "lower": 0,
+              "upper": 0,
+              "value": "0–0"
+             },
+             {
+              "color": "#fff564",
+              "label": "0–0.5",
+              "lower": 0,
+              "upper": 0.5,
+              "value": "0–0.5"
+             },
+             {
+              "color": "#ffa520",
+              "label": "0.5–1",
+              "lower": 0.5,
+              "upper": 1,
+              "value": "0.5–1"
+             },
+             {
+              "color": "#ff5a00",
+              "label": "1–2",
+              "lower": 1,
+              "upper": 2,
+              "value": "1–2"
+             },
+             {
+              "color": "#bd0026",
+              "label": ">2",
+              "lower": 2,
+              "upper": null,
+              "value": ">2"
+             }
+            ],
+            "field": null,
+            "type": "graduatedSymbol"
+           },
+           "floodColor": {
+            "_paramName": "htMax",
+            "categories": [
+             {
+              "color": "#64aaf0",
+              "label": "> 0",
+              "lower": 0,
+              "upper": 0.5,
+              "value": "0–0.5"
+             },
+             {
+              "color": "#3c78d2",
+              "label": "> 0.5",
+              "lower": 0.5,
+              "upper": 1,
+              "value": "0.5–1"
+             },
+             {
+              "color": "#1e46b4",
+              "label": "> 1",
+              "lower": 1,
+              "upper": 2,
+              "value": "1–2"
+             },
+             {
+              "color": "#0a1e78",
+              "label": "> 2",
+              "lower": 2,
+              "upper": null,
+              "value": "2–Infinity"
+             }
+            ],
+            "field": null,
+            "type": "graduatedSymbol"
+           },
+           "routeColor": {
+            "_paramName": "htNum",
+            "categories": [
+             {
+              "color": "#888888",
+              "label": "0–0",
+              "lower": 0,
+              "upper": 0,
+              "value": "0–0"
+             },
+             {
+              "color": "#1ed241",
+              "label": "0–0.5",
+              "lower": 0,
+              "upper": 0.5,
+              "value": "0–0.5"
+             },
+             {
+              "color": "#f0c800",
+              "label": "0.5–1",
+              "lower": 0.5,
+              "upper": 1,
+              "value": "0.5–1"
+             },
+             {
+              "color": "#ff5a00",
+              "label": "1–2",
+              "lower": 1,
+              "upper": 2,
+              "value": "1–2"
+             },
+             {
+              "color": "#d21414",
+              "label": ">2",
+              "lower": 2,
+              "upper": null,
+              "value": ">2"
+             }
+            ],
+            "field": null,
+            "type": "graduatedSymbol"
+           }
+          },
+          "imported_at": "<DATE>",
+          "inferredStyles": {
+           "buildingStyle": {
+            "categories": [
+             {
+              "color": "#fff564",
+              "label": "Exposé < 0.5m",
+              "lower": 0,
+              "rawColor": "#fff564",
+              "upper": 0.5,
+              "value": "Exposé < 0.5m"
+             },
+             {
+              "color": "#ffa520",
+              "label": "Exposé 0.5–1m",
+              "lower": 0.5,
+              "rawColor": "#ffa520",
+              "upper": 1,
+              "value": "Exposé 0.5–1m"
+             },
+             {
+              "color": "#ff5a00",
+              "label": "Exposé 1–2m",
+              "lower": 1,
+              "rawColor": "#ff5a00",
+              "upper": 2,
+              "value": "Exposé 1–2m"
+             },
+             {
+              "color": "#bd0026",
+              "label": "Exposé > 2m",
+              "lower": 2,
+              "rawColor": "#bd0026",
+              "upper": null,
+              "value": "Exposé > 2m"
+             }
+            ],
+            "field": "max_water_height",
+            "type": "graduatedSymbol"
+           },
+           "floodStyle": {
+            "categories": [
+             {
+              "color": "#64aaf0",
+              "label": "Inondation < 0.5m",
+              "lower": 0,
+              "rawColor": "rgba(100,170,240,0.5)",
+              "upper": 0.5,
+              "value": "Inondation < 0.5m"
+             },
+             {
+              "color": "#3c78d2",
+              "label": "Inondation 0.5–1m",
+              "lower": 0.5,
+              "rawColor": "rgba(60,120,210,0.6)",
+              "upper": 1,
+              "value": "Inondation 0.5–1m"
+             },
+             {
+              "color": "#1e46b4",
+              "label": "Inondation 1–2m",
+              "lower": 1,
+              "rawColor": "rgba(30,70,180,0.7)",
+              "upper": 2,
+              "value": "Inondation 1–2m"
+             },
+             {
+              "color": "#0a1e78",
+              "label": "Inondation > 2m",
+              "lower": 2,
+              "rawColor": "rgba(10,30,120,0.8)",
+              "upper": null,
+              "value": "Inondation > 2m"
+             }
+            ],
+            "field": "ht_max",
+            "type": "graduatedSymbol"
+           }
+          },
+          "interactiveMap": "flood",
+          "legendItems": [
+           {
+            "circle": false,
+            "color": "#64aaf0",
+            "label": "Inondation < 0.5m",
+            "rawColor": "rgba(100,170,240,0.5)"
+           },
+           {
+            "circle": false,
+            "color": "#3c78d2",
+            "label": "Inondation 0.5–1m",
+            "rawColor": "rgba(60,120,210,0.6)"
+           },
+           {
+            "circle": false,
+            "color": "#1e46b4",
+            "label": "Inondation 1–2m",
+            "rawColor": "rgba(30,70,180,0.7)"
+           },
+           {
+            "circle": false,
+            "color": "#0a1e78",
+            "label": "Inondation > 2m",
+            "rawColor": "rgba(10,30,120,0.8)"
+           },
+           {
+            "circle": false,
+            "color": "#cccccc",
+            "label": "Hors zone",
+            "rawColor": "#cccccc"
+           },
+           {
+            "circle": false,
+            "color": "#fff564",
+            "label": "Exposé < 0.5m",
+            "rawColor": "#fff564"
+           },
+           {
+            "circle": false,
+            "color": "#ffa520",
+            "label": "Exposé 0.5–1m",
+            "rawColor": "#ffa520"
+           },
+           {
+            "circle": false,
+            "color": "#ff5a00",
+            "label": "Exposé 1–2m",
+            "rawColor": "#ff5a00"
+           },
+           {
+            "circle": false,
+            "color": "#bd0026",
+            "label": "Exposé > 2m",
+            "rawColor": "#bd0026"
+           },
+           {
+            "circle": true,
+            "color": "#ff8c00",
+            "label": "Ét. sensible (école, hôpital)",
+            "rawColor": "#ff8c00"
+           }
+          ],
+          "provenance": [
+           {
+            "ingested_at": "<DATE>",
+            "platform_id": "widgets-grist-qgis2grist",
+            "via": null
+           }
+          ],
+          "sliderMax": 5,
+          "sliderMin": 0,
+          "sliderTitle": null,
+          "sliderUnit": "m",
+          "source": "Georisques — Directive Inondation TRI",
+          "source_file": "qgis2grist_nimes_flood.html",
+          "source_info": {
+           "provenance": [
+            {
+             "ingested_at": "<DATE>",
+             "platform_id": "widgets-grist-qgis2grist",
+             "via": null
+            }
+           ],
+           "source": {
+            "authority": "qgis2grist_nimes_flood.html",
+            "classification": "internal",
+            "license": "unknown",
+            "millesime": "2026",
+            "referential": "qgis2grist"
+           }
+          },
+          "sources": [
+           {
+            "authority": "qgis2grist_nimes_flood.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": null,
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "Flooddata ← qgis2grist_nimes_flood.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "Flooddata",
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "Buildingsdata ← qgis2grist_nimes_flood.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "Buildingsdata",
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "Routesdata ← qgis2grist_nimes_flood.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "Routesdata",
+            "statut": "a_verifier"
+           },
+           {
+            "authority": "Couche 4 ← qgis2grist_nimes_flood.html",
+            "corpus": "qgis-import",
+            "licence": "unknown",
+            "millesime": "2026",
+            "ref_id": "Couche_4",
+            "statut": "a_verifier"
+           }
+          ],
+          "statsTitle": "Statistiques",
+          "subtitle": null,
+          "title": null,
+          "widget": "qgis2grist-v2"
+         },
+         "subtitle": null,
+         "title": "qgis2grist_nimes_flood.html",
+         "version": "0.2.1"
+        },
+        "scene_manifest_row_id": 1,
+        "terrain": {
+         "forms": [],
+         "primaryTableId": null,
+         "version": 1
+        },
+        "version": 3
+       }
+      },
+      "created_at": {
+       "n": 1,
+       "valeur": "<DATE>"
+      },
+      "source_file": {
+       "n": 1,
+       "premieres": [
+        "qgis2grist_nimes_flood.html"
+       ],
+       "empreinte": "8785ded5b8966f59-t"
+      },
+      "widget_name": {
+       "n": 1,
+       "premieres": [
+        "qgis2grist_nimes_flood"
+       ],
+       "empreinte": "c0725f006c9b248a-o"
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "lectures": [
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "listTables"
+  ],
+  [
+   "fetchTable",
+   "QgisWidgets"
+  ]
+ ],
+ "tablesFinales": {
+  "Flooddata": {
+   "colonnes": [
+    "scenario",
+    "ht_min",
+    "ht_max",
+    "cours_deau",
+    "area_ha",
+    "geometry_json",
+    "centroid_lat",
+    "centroid_lon",
+    "fill_color"
+   ],
+   "nbLignes": 1
+  },
+  "Buildingsdata": {
+   "colonnes": [
+    "nature",
+    "usage_1",
+    "hauteur",
+    "nombre_de_logements",
+    "nombre_d_etages",
+    "geometry_json",
+    "centroid_lat",
+    "centroid_lon",
+    "fill_color"
+   ],
+   "nbLignes": 8045
+  },
+  "Routesdata": {
+   "colonnes": [
+    "nature",
+    "importance",
+    "sens_de_circulation",
+    "ht_num_t100",
+    "ht_num_t1000",
+    "ht_num_t10",
+    "ht_num",
+    "geometry_json",
+    "centroid_lat",
+    "centroid_lon",
+    "fill_color"
+   ],
+   "nbLignes": 938
+  },
+  "Couche_4": {
+   "colonnes": [
+    "geometry_json",
+    "centroid_lat",
+    "centroid_lon",
+    "fill_color"
+   ],
+   "nbLignes": 1
+  },
+  "SceneManifest": {
+   "colonnes": [
+    "manifest_json",
+    "scene_hash",
+    "source_file",
+    "created_at"
+   ],
+   "nbLignes": 1
+  },
+  "QgisWidgets": {
+   "colonnes": [
+    "widget_name",
+    "source_file",
+    "config_json",
+    "created_at"
+   ],
+   "nbLignes": 1
+  }
+ },
+ "toasts": [
+  [
+   "✓ 4 tables importées — sauvegarde config…",
+   ""
+  ],
+  [
+   "✓ Config + SceneManifest sauvegardés",
+   "success"
+  ]
+ ],
+ "carte": {
+  "Flooddata": {
+   "_color": "#3e5de7",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "geojson": "geometry_json",
+    "lat": "centroid_lat",
+    "lon": "centroid_lon"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#3e5de7",
+   "datasource": "(GeoJSON)",
+   "displayName": "Flooddata",
+   "featureCount": 1,
+   "fields": [
+    {
+     "_rawKey": "scenario",
+     "gType": "Text",
+     "label": "scenario",
+     "name": "scenario",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ht_min",
+     "gType": "Numeric",
+     "label": "ht_min",
+     "name": "ht_min",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "ht_max",
+     "gType": "Int",
+     "label": "ht_max",
+     "name": "ht_max",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "cours_deau",
+     "gType": "Text",
+     "label": "cours_deau",
+     "name": "cours_deau",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "area_ha",
+     "gType": "Numeric",
+     "label": "area_ha",
+     "name": "area_ha",
+     "qType": "double"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Flooddata",
+   "style": {
+    "categories": [
+     {
+      "color": "#64aaf0",
+      "label": "Inondation < 0.5m",
+      "lower": 0,
+      "rawColor": "rgba(100,170,240,0.5)",
+      "upper": 0.5,
+      "value": "Inondation < 0.5m"
+     },
+     {
+      "color": "#3c78d2",
+      "label": "Inondation 0.5–1m",
+      "lower": 0.5,
+      "rawColor": "rgba(60,120,210,0.6)",
+      "upper": 1,
+      "value": "Inondation 0.5–1m"
+     },
+     {
+      "color": "#1e46b4",
+      "label": "Inondation 1–2m",
+      "lower": 1,
+      "rawColor": "rgba(30,70,180,0.7)",
+      "upper": 2,
+      "value": "Inondation 1–2m"
+     },
+     {
+      "color": "#0a1e78",
+      "label": "Inondation > 2m",
+      "lower": 2,
+      "rawColor": "rgba(10,30,120,0.8)",
+      "upper": {
+       "__nombre": "Infinity"
+      },
+      "value": "Inondation > 2m"
+     }
+    ],
+    "field": "ht_max",
+    "type": "graduatedSymbol"
+   },
+   "varName": "floodData",
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  "Buildingsdata": {
+   "_color": "#10b981",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "geojson": "geometry_json",
+    "lat": "centroid_lat",
+    "lon": "centroid_lon"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#10b981",
+   "datasource": "(GeoJSON)",
+   "displayName": "Buildingsdata",
+   "featureCount": 8045,
+   "fields": [
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "usage_1",
+     "gType": "Text",
+     "label": "usage_1",
+     "name": "usage_1",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "hauteur",
+     "gType": "Numeric",
+     "label": "hauteur",
+     "name": "hauteur",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "nombre_de_logements",
+     "gType": "Int",
+     "label": "nombre_de_logements",
+     "name": "nombre_de_logements",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "nombre_d_etages",
+     "gType": "Int",
+     "label": "nombre_d_etages",
+     "name": "nombre_d_etages",
+     "qType": "integer"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Buildingsdata",
+   "style": {
+    "categories": [
+     {
+      "color": "#fff564",
+      "label": "Exposé < 0.5m",
+      "lower": 0,
+      "rawColor": "#fff564",
+      "upper": 0.5,
+      "value": "Exposé < 0.5m"
+     },
+     {
+      "color": "#ffa520",
+      "label": "Exposé 0.5–1m",
+      "lower": 0.5,
+      "rawColor": "#ffa520",
+      "upper": 1,
+      "value": "Exposé 0.5–1m"
+     },
+     {
+      "color": "#ff5a00",
+      "label": "Exposé 1–2m",
+      "lower": 1,
+      "rawColor": "#ff5a00",
+      "upper": 2,
+      "value": "Exposé 1–2m"
+     },
+     {
+      "color": "#bd0026",
+      "label": "Exposé > 2m",
+      "lower": 2,
+      "rawColor": "#bd0026",
+      "upper": {
+       "__nombre": "Infinity"
+      },
+      "value": "Exposé > 2m"
+     }
+    ],
+    "field": "max_water_height",
+    "type": "graduatedSymbol"
+   },
+   "varName": "buildingsData",
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  "Routesdata": {
+   "_color": "#f59e0b",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "geojson": "geometry_json",
+    "lat": "centroid_lat",
+    "lon": "centroid_lon"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#f59e0b",
+   "datasource": "(GeoJSON)",
+   "displayName": "Routesdata",
+   "featureCount": 938,
+   "fields": [
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "importance",
+     "gType": "Text",
+     "label": "importance",
+     "name": "importance",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sens_de_circulation",
+     "gType": "Text",
+     "label": "sens_de_circulation",
+     "name": "sens_de_circulation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ht_num_t100",
+     "gType": "Int",
+     "label": "ht_num_t100",
+     "name": "ht_num_t100",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "ht_num_t1000",
+     "gType": "Int",
+     "label": "ht_num_t1000",
+     "name": "ht_num_t1000",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "ht_num_t10",
+     "gType": "Int",
+     "label": "ht_num_t10",
+     "name": "ht_num_t10",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "ht_num",
+     "gType": "Int",
+     "label": "ht_num",
+     "name": "ht_num",
+     "qType": "integer"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": true,
+   "name": "Routesdata",
+   "style": {
+    "_paramName": "htNum",
+    "categories": [
+     {
+      "color": "#888888",
+      "label": "0–0",
+      "lower": 0,
+      "upper": 0,
+      "value": "0–0"
+     },
+     {
+      "color": "#1ed241",
+      "label": "0–0.5",
+      "lower": 0,
+      "upper": 0.5,
+      "value": "0–0.5"
+     },
+     {
+      "color": "#f0c800",
+      "label": "0.5–1",
+      "lower": 0.5,
+      "upper": 1,
+      "value": "0.5–1"
+     },
+     {
+      "color": "#ff5a00",
+      "label": "1–2",
+      "lower": 1,
+      "upper": 2,
+      "value": "1–2"
+     },
+     {
+      "color": "#d21414",
+      "label": ">2",
+      "lower": 2,
+      "upper": {
+       "__nombre": "Infinity"
+      },
+      "value": ">2"
+     }
+    ],
+    "field": null,
+    "type": "graduatedSymbol"
+   },
+   "varName": "routesData",
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  "Couche_4": {
+   "_color": "#ef4444",
+   "_fillColorCol": "fill_color",
+   "_geometryCols": {
+    "geojson": "geometry_json",
+    "lat": "centroid_lat",
+    "lon": "centroid_lon"
+   },
+   "_lod": {
+    "fetch": {
+     "mode": "full"
+    },
+    "limits": {
+     "maxFeaturesInView": 10000
+    },
+    "profile": "A",
+    "visibility": {
+     "maxZoom": null,
+     "minZoom": null
+    }
+   },
+   "color": "#ef4444",
+   "datasource": "(GeoJSON)",
+   "displayName": "Couche 4",
+   "featureCount": 1,
+   "fields": [
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Couche_4",
+   "style": {
+    "categories": [
+     {
+      "color": "#64aaf0",
+      "label": "Inondation < 0.5m",
+      "lower": 0,
+      "rawColor": "rgba(100,170,240,0.5)",
+      "upper": 0.5,
+      "value": "Inondation < 0.5m"
+     },
+     {
+      "color": "#3c78d2",
+      "label": "Inondation 0.5–1m",
+      "lower": 0.5,
+      "rawColor": "rgba(60,120,210,0.6)",
+      "upper": 1,
+      "value": "Inondation 0.5–1m"
+     },
+     {
+      "color": "#1e46b4",
+      "label": "Inondation 1–2m",
+      "lower": 1,
+      "rawColor": "rgba(30,70,180,0.7)",
+      "upper": 2,
+      "value": "Inondation 1–2m"
+     },
+     {
+      "color": "#0a1e78",
+      "label": "Inondation > 2m",
+      "lower": 2,
+      "rawColor": "rgba(10,30,120,0.8)",
+      "upper": {
+       "__nombre": "Infinity"
+      },
+      "value": "Inondation > 2m"
+     }
+    ],
+    "field": "ht_max",
+    "type": "graduatedSymbol"
+   },
+   "varName": null,
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  }
+ }
+}

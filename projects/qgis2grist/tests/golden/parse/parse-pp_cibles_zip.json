@@ -1,0 +1,178 @@
+{
+ "fixture": "pp_cibles_zip",
+ "fichier": "pp_cibles.zip",
+ "extension": "zip",
+ "nbCouches": 1,
+ "couches": [
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "pp cibles",
+   "featureCount": 2970,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Int",
+     "label": "fid",
+     "name": "fid",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "OBJECTID",
+     "gType": "Int",
+     "label": "OBJECTID",
+     "name": "OBJECTID",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "insee_com",
+     "gType": "Text",
+     "label": "insee_com",
+     "name": "insee_com",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_com",
+     "gType": "Text",
+     "label": "nom_com",
+     "name": "nom_com",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "adresse",
+     "gType": "Text",
+     "label": "adresse",
+     "name": "adresse",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lon",
+     "gType": "Numeric",
+     "label": "lon",
+     "name": "lon",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "lat",
+     "gType": "Numeric",
+     "label": "lat",
+     "name": "lat",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "ID_PP",
+     "gType": "Int",
+     "label": "ID_PP",
+     "name": "ID_PP",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "Shape_Length",
+     "gType": "Numeric",
+     "label": "Shape_Length",
+     "name": "Shape_Length",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "Shape_Area",
+     "gType": "Numeric",
+     "label": "Shape_Area",
+     "name": "Shape_Area",
+     "qType": "double"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Pp_cibles",
+   "features": {
+    "compte": 2970,
+    "premieres": [
+     {
+      "ID_PP": 6,
+      "OBJECTID": 6,
+      "Shape_Area": 77.766776,
+      "Shape_Length": 45.834942,
+      "_localId": 1,
+      "adresse": "Route du Col de Porte 38700 Sarcenas",
+      "centroid_lat": 6469448.56178,
+      "centroid_lon": 916869.0659,
+      "fid": 6,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[916876.5376,6469446.7391],[916857.7666,6469447.1549],[916857.8584,6469451.2958],[916876.6293,6469450.88],[916876.5376,6469446.7391]]]]}",
+      "insee_com": "38472",
+      "lat": 45.2902,
+      "lon": 5.76704,
+      "nom_com": "Sarcenas"
+     },
+     {
+      "ID_PP": 10,
+      "OBJECTID": 10,
+      "Shape_Area": 55.356403,
+      "Shape_Length": 37.408707,
+      "_localId": 2,
+      "adresse": "218 Rue de la Chimie 38610 Gières",
+      "centroid_lat": 6458800.8965,
+      "centroid_lon": 917501.75318,
+      "fid": 10,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[917507.902,6458800.2221],[917493.013,6458798.254],[917492.53,6458801.9081],[917507.4189,6458803.8762],[917507.902,6458800.2221]]]]}",
+      "insee_com": "38179",
+      "lat": 45.194182,
+      "lon": 5.770345,
+      "nom_com": "Gières"
+     },
+     {
+      "ID_PP": 11,
+      "OBJECTID": 11,
+      "Shape_Area": 55.960611,
+      "Shape_Length": 35.088922,
+      "_localId": 3,
+      "adresse": "220 Rue de la Chimie 38610 Gières",
+      "centroid_lat": 6458807.61652,
+      "centroid_lon": 917506.45336,
+      "fid": 11,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[917505.5264,6458802.0954],[917503.6929,6458815.3228],[917507.8438,6458815.8982],[917509.6773,6458802.6708],[917505.5264,6458802.0954]]]]}",
+      "insee_com": "38179",
+      "lat": 45.194251,
+      "lon": 5.770431,
+      "nom_com": "Gières"
+     }
+    ],
+    "derniere": {
+     "ID_PP": 9254,
+     "OBJECTID": 9227,
+     "Shape_Area": 32.595247,
+     "Shape_Length": 28.266861,
+     "_localId": 2970,
+     "adresse": "26 Rue George Sand 38400 Saint-Martin-d'Hères",
+     "centroid_lat": 6455693.91208,
+     "centroid_lon": 916206.22004,
+     "fid": 9227,
+     "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[916201.6714,6455691.8323],[916210.0131,6455698.528],[916213.23,6455696.8822],[916204.5143,6455690.4856],[916201.6714,6455691.8323]]]]}",
+     "insee_com": "38421",
+     "lat": 45.166634,
+     "lon": 5.752514,
+     "nom_com": "Saint-Martin-d'Hères"
+    },
+    "empreinte": "07ac8e9a2cedb7dd-uib5"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

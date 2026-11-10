@@ -1,0 +1,374 @@
+{
+ "fixture": "gam_communes_zip",
+ "fichier": "gam_communes.zip",
+ "extension": "zip",
+ "nbCouches": 1,
+ "couches": [
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "gam communes",
+   "featureCount": 49,
+   "fields": [
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_insee",
+     "gType": "Text",
+     "label": "code_insee",
+     "name": "code_insee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_insee_du_canton",
+     "gType": "Text",
+     "label": "code_insee_du_canton",
+     "name": "code_insee_du_canton",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_insee_de_l_arrondissement",
+     "gType": "Text",
+     "label": "code_insee_de_l_arrondissement",
+     "name": "code_insee_de_l_arrondissement",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_insee_de_la_collectivite_terr",
+     "gType": "Text",
+     "label": "code_insee_de_la_collectivite_terr",
+     "name": "code_insee_de_la_collectivite_terr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_insee_du_departement",
+     "gType": "Text",
+     "label": "code_insee_du_departement",
+     "name": "code_insee_du_departement",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_insee_de_la_region",
+     "gType": "Text",
+     "label": "code_insee_de_la_region",
+     "name": "code_insee_de_la_region",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "population",
+     "gType": "Int",
+     "label": "population",
+     "name": "population",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "superficie_cadastrale",
+     "gType": "Int",
+     "label": "superficie_cadastrale",
+     "name": "superficie_cadastrale",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_d_apparition",
+     "gType": "Text",
+     "label": "date_d_apparition",
+     "name": "date_d_apparition",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_postal",
+     "gType": "Text",
+     "label": "code_postal",
+     "name": "code_postal",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_officiel",
+     "gType": "Text",
+     "label": "nom_officiel",
+     "name": "nom_officiel",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "chef_lieu_d_arrondissement",
+     "gType": "Bool",
+     "label": "chef_lieu_d_arrondissement",
+     "name": "chef_lieu_d_arrondissement",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "chef_lieu_de_collectivite_terr",
+     "gType": "Bool",
+     "label": "chef_lieu_de_collectivite_terr",
+     "name": "chef_lieu_de_collectivite_terr",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "chef_lieu_de_departement",
+     "gType": "Bool",
+     "label": "chef_lieu_de_departement",
+     "name": "chef_lieu_de_departement",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "chef_lieu_de_region",
+     "gType": "Bool",
+     "label": "chef_lieu_de_region",
+     "name": "chef_lieu_de_region",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "capitale_d_etat",
+     "gType": "Bool",
+     "label": "capitale_d_etat",
+     "name": "capitale_d_etat",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "date_du_recensement",
+     "gType": "Text",
+     "label": "date_du_recensement",
+     "name": "date_du_recensement",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "organisme_recenseur",
+     "gType": "Text",
+     "label": "organisme_recenseur",
+     "name": "organisme_recenseur",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code_siren",
+     "gType": "Text",
+     "label": "code_siren",
+     "name": "code_siren",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "codes_siren_des_epci",
+     "gType": "Text",
+     "label": "codes_siren_des_epci",
+     "name": "codes_siren_des_epci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lien_vers_chef_lieu",
+     "gType": "Text",
+     "label": "lien_vers_chef_lieu",
+     "name": "lien_vers_chef_lieu",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "liens_vers_autorite_administrative",
+     "gType": "Text",
+     "label": "liens_vers_autorite_administrative",
+     "name": "liens_vers_autorite_administrative",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Gam_communes",
+   "features": {
+    "compte": 49,
+    "premieres": [
+     {
+      "_localId": 1,
+      "capitale_d_etat": false,
+      "centroid_lat": 6468850.601569,
+      "centroid_lon": 910803.417254,
+      "chef_lieu_d_arrondissement": false,
+      "chef_lieu_de_collectivite_terr": false,
+      "chef_lieu_de_departement": false,
+      "chef_lieu_de_region": false,
+      "cleabs": "COMMUNE_0000000009753735",
+      "code_insee": "38258",
+      "code_insee_de_l_arrondissement": "381",
+      "code_insee_de_la_collectivite_terr": "38D",
+      "code_insee_de_la_region": "84",
+      "code_insee_du_canton": "3810",
+      "code_insee_du_departement": "38",
+      "code_postal": "38120",
+      "code_siren": "213802580",
+      "codes_siren_des_epci": "200040715",
+      "date_creation": "2006-08-02T06:36:54.900Z",
+      "date_d_apparition": null,
+      "date_de_confirmation": null,
+      "date_du_recensement": "2022-01-01Z",
+      "date_modification": "2025-06-20T16:27:56.721Z",
+      "geometry_json": {
+       "__chaine": true,
+       "longueur": 15529,
+       "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[911477.39984,6470294.90475],[911477.09984,6470290.50475],[911478.39984,6470281.",
+       "empreinte": "0abe8d869ae1e29e-bzd"
+      },
+      "lien_vers_chef_lieu": "PAIHABIT0000000007543928",
+      "liens_vers_autorite_administrative": "SURFACTI0000000007463610",
+      "nom_officiel": "Mont-Saint-Martin",
+      "organisme_recenseur": "INSEE",
+      "population": 93,
+      "superficie_cadastrale": 530
+     },
+     {
+      "_localId": 2,
+      "capitale_d_etat": false,
+      "centroid_lat": 6457520.3325,
+      "centroid_lon": 913946.195367,
+      "chef_lieu_d_arrondissement": true,
+      "chef_lieu_de_collectivite_terr": true,
+      "chef_lieu_de_departement": true,
+      "chef_lieu_de_region": false,
+      "cleabs": "COMMUNE_0000000009754185",
+      "code_insee": "38185",
+      "code_insee_de_l_arrondissement": "381",
+      "code_insee_de_la_collectivite_terr": "38D",
+      "code_insee_de_la_region": "84",
+      "code_insee_du_canton": "3898",
+      "code_insee_du_departement": "38",
+      "code_postal": "38000",
+      "code_siren": "213801855",
+      "codes_siren_des_epci": "200040715",
+      "date_creation": "2006-08-02T06:36:54.900Z",
+      "date_d_apparition": null,
+      "date_de_confirmation": null,
+      "date_du_recensement": "2023-01-01Z",
+      "date_modification": "2026-01-05T10:00:18.226Z",
+      "geometry_json": {
+       "__chaine": true,
+       "longueur": 15616,
+       "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[910233.09984,6460717.60475],[910233.79984,6460718.30475],[910241.29984,6460727.",
+       "empreinte": "d9969be081c9770d-c1s"
+      },
+      "lien_vers_chef_lieu": "PAIHABIT0000000007545011",
+      "liens_vers_autorite_administrative": "SURFACTI0000000007463707",
+      "nom_officiel": "Grenoble",
+      "organisme_recenseur": "INSEE",
+      "population": 156140,
+      "superficie_cadastrale": 1810
+     },
+     {
+      "_localId": 3,
+      "capitale_d_etat": false,
+      "centroid_lat": 6450251.719573,
+      "centroid_lon": 923186.740548,
+      "chef_lieu_d_arrondissement": false,
+      "chef_lieu_de_collectivite_terr": false,
+      "chef_lieu_de_departement": false,
+      "chef_lieu_de_region": false,
+      "cleabs": "COMMUNE_0000000009754390",
+      "code_insee": "38529",
+      "code_insee_de_l_arrondissement": "381",
+      "code_insee_de_la_collectivite_terr": "38D",
+      "code_insee_de_la_region": "84",
+      "code_insee_du_canton": "3819",
+      "code_insee_du_departement": "38",
+      "code_postal": "38410",
+      "code_siren": "213805294",
+      "codes_siren_des_epci": "200040715",
+      "date_creation": "2006-08-02T06:36:54.900Z",
+      "date_d_apparition": null,
+      "date_de_confirmation": null,
+      "date_du_recensement": "2023-01-01Z",
+      "date_modification": "2026-01-05T10:00:18.226Z",
+      "geometry_json": {
+       "__chaine": true,
+       "longueur": 19415,
+       "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[920327.79983,6451273.10475],[920335.19983,6451281.40475],[920342.99983,6451291.",
+       "empreinte": "b3e59073bc65bc84-ezb"
+      },
+      "lien_vers_chef_lieu": "PAIHABIT0000000007546086",
+      "liens_vers_autorite_administrative": "SURFACTI0000000007463837",
+      "nom_officiel": "Vaulnaveys-le-Haut",
+      "organisme_recenseur": "INSEE",
+      "population": 4006,
+      "superficie_cadastrale": 1990
+     }
+    ],
+    "derniere": {
+     "_localId": 49,
+     "capitale_d_etat": false,
+     "centroid_lat": 6438313.282823,
+     "centroid_lon": 913131.833609,
+     "chef_lieu_d_arrondissement": false,
+     "chef_lieu_de_collectivite_terr": false,
+     "chef_lieu_de_departement": false,
+     "chef_lieu_de_region": false,
+     "cleabs": "COMMUNE_0000000009754814",
+     "code_insee": "38277",
+     "code_insee_de_l_arrondissement": "381",
+     "code_insee_de_la_collectivite_terr": "38D",
+     "code_insee_de_la_region": "84",
+     "code_insee_du_canton": "3820",
+     "code_insee_du_departement": "38",
+     "code_postal": "38450",
+     "code_siren": "213802770",
+     "codes_siren_des_epci": "200040715",
+     "date_creation": "2006-08-02T06:36:54.900Z",
+     "date_d_apparition": null,
+     "date_de_confirmation": null,
+     "date_du_recensement": "2023-01-01Z",
+     "date_modification": "2026-01-05T10:00:18.226Z",
+     "geometry_json": {
+      "__chaine": true,
+      "longueur": 6655,
+      "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[912143.99984,6436984.70475],[912161.29984,6437035.70475],[912196.59984,6437139.",
+      "empreinte": "43eeae48866ad7b2-54v"
+     },
+     "lien_vers_chef_lieu": "PAIHABIT0000000007547472",
+     "liens_vers_autorite_administrative": "SURFACTI0000000007463918",
+     "nom_officiel": "Notre-Dame-de-Commiers",
+     "organisme_recenseur": "INSEE",
+     "population": 519,
+     "superficie_cadastrale": 480
+    },
+    "empreinte": "93ee2f5fc2f12860-187r"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

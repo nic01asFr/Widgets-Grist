@@ -1,0 +1,6450 @@
+{
+ "fixture": "qfield_wastewater_zip",
+ "fichier": "web/qfield_wastewater.zip",
+ "extension": "zip",
+ "nbCouches": 26,
+ "couches": [
+  {
+   "_formFieldOrder": [],
+   "_layerId": "special_structure_emergency_spillway20180530222948807",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_special_structure_emergency_spillway",
+   "displayName": "vl_special_structure_emergency_spillway",
+   "featureCount": 6,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_special_structure_emergency_spillway",
+   "style": null,
+   "features": {
+    "compte": 6,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5866,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autres",
+      "value_it": "altri",
+      "value_ro": "altele",
+      "vsacode": 5866
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5864,
+      "fid": null,
+      "value_de": "inMischabwasserkanalisation",
+      "value_en": "in_combined_waste_water_drain",
+      "value_fr": "dans_canalisation_eaux_mixtes",
+      "value_it": "in_canalizzazione_acque_miste",
+      "value_ro": "in_canalizare_apa_mixta",
+      "vsacode": 5864
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5865,
+      "fid": null,
+      "value_de": "inRegenabwasserkanalisation",
+      "value_en": "in_rain_waste_water_drain",
+      "value_fr": "dans_canalisation_eaux_pluviales",
+      "value_it": "in_canalizzazione_acque_meteoriche",
+      "value_ro": "in_canalizare_apa_meteorica",
+      "vsacode": 5865
+     }
+    ],
+    "derniere": {
+     "_localId": 6,
+     "abbr_de": "",
+     "abbr_en": "",
+     "abbr_fr": "",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 5867,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnu",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscut",
+     "vsacode": 5867
+    },
+    "empreinte": "2b69de6b2e494486-1ba"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_channel_connection_type",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_channel_connection_type",
+   "displayName": "vl_channel_connection_type",
+   "featureCount": 13,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_channel_connection_type",
+   "style": null,
+   "features": {
+    "compte": 13,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "A",
+      "abbr_en": "O",
+      "abbr_fr": "AU",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5341,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "altul",
+      "vsacode": 5341
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "EL",
+      "abbr_en": "EWS",
+      "abbr_fr": "MSA",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 190,
+      "fid": null,
+      "value_de": "Elektroschweissmuffen",
+      "value_en": "electric_welded_sleeves",
+      "value_fr": "manchon_electrosoudable",
+      "value_it": "zzz_Elektroschweissmuffen",
+      "value_ro": "manson_electrosudabil",
+      "vsacode": 190
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "FM",
+      "abbr_en": "",
+      "abbr_fr": "MP",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 187,
+      "fid": null,
+      "value_de": "Flachmuffen",
+      "value_en": "flat_sleeves",
+      "value_fr": "manchon_plat",
+      "value_it": "zzz_Flachmuffen",
+      "value_ro": "mason_plat",
+      "vsacode": 187
+     }
+    ],
+    "derniere": {
+     "_localId": 13,
+     "abbr_de": "VK",
+     "abbr_en": "",
+     "abbr_fr": "RTD",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 3666,
+     "fid": null,
+     "value_de": "Vortriebsrohrkupplung",
+     "value_en": "jacking_pipe_coupling",
+     "value_fr": "raccord_pour_tube_de_pousse_tube",
+     "value_it": "zzz_Vortriebsrohrkupplung",
+     "value_ro": "racord_prin_presstube",
+     "vsacode": 3666
+    },
+    "empreinte": "2bd16b809795437b-2qi"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_channel_function_hierarchic",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_channel_function_hierarchic",
+   "displayName": "vl_channel_function_hierarchic",
+   "featureCount": 14,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "order_fct_hierarchic",
+     "gType": "Text",
+     "label": "order_fct_hierarchic",
+     "name": "order_fct_hierarchic",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_channel_function_hierarchic",
+   "style": null,
+   "features": {
+    "compte": 14,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5062,
+      "fid": null,
+      "order_fct_hierarchic": 5,
+      "value_de": "PAA.Sanierungsleitung",
+      "value_en": "pwwf.renovation_conduction",
+      "value_fr": "OAP.conduite_d_assainissement",
+      "value_it": "IPS.condotta_risanamento",
+      "value_ro": "pwwf.conducta",
+      "vsacode": 5062
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5063,
+      "fid": null,
+      "order_fct_hierarchic": 7,
+      "value_de": "SAA.Sanierungsleitung",
+      "value_en": "swwf.renovation_conduction",
+      "value_fr": "OAS.conduite_d_assainissement",
+      "value_it": "ISS.condotta_risanamento",
+      "value_ro": "swwf.racord",
+      "vsacode": 5063
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5064,
+      "fid": null,
+      "order_fct_hierarchic": 6,
+      "value_de": "PAA.Liegenschaftsentwaesserung",
+      "value_en": "pwwf.residential_drainage",
+      "value_fr": "OAP.evacuation_bien_fonds",
+      "value_it": "IPS.samltimento_acque_fondi",
+      "value_ro": "pwwf.evacuare_rezidentiala",
+      "vsacode": 5064
+     }
+    ],
+    "derniere": {
+     "_localId": 14,
+     "abbr_de": "",
+     "abbr_en": "",
+     "abbr_fr": "",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 5075,
+     "fid": null,
+     "order_fct_hierarchic": 14,
+     "value_de": "SAA.unbekannt",
+     "value_en": "swwf.unknown",
+     "value_fr": "OAS.inconnue",
+     "value_it": "ISS.sconosciuto",
+     "value_ro": "swwf.necunoscuta",
+     "vsacode": 5075
+    },
+    "empreinte": "142e456f14d7206f-3he"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_channel_function_hydraulic",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_channel_function_hydraulic",
+   "displayName": "vl_channel_function_hydraulic",
+   "featureCount": 11,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_channel_function_hydraulic",
+   "style": null,
+   "features": {
+    "compte": 11,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5320,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "alta",
+      "vsacode": 5320
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "DT",
+      "abbr_en": "DTP",
+      "abbr_fr": "CTD",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 2546,
+      "fid": null,
+      "value_de": "Drainagetransportleitung",
+      "value_en": "drainage_transportation_pipe",
+      "value_fr": "conduite_de_transport_pour_le_drainage",
+      "value_it": "condotta_trasporto_drenaggi",
+      "value_ro": "conducta_transport_dren",
+      "vsacode": 2546
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "DR",
+      "abbr_en": "RP",
+      "abbr_fr": "CE",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 22,
+      "fid": null,
+      "value_de": "Drosselleitung",
+      "value_en": "restriction_pipe",
+      "value_fr": "conduite_d_etranglement",
+      "value_it": "condotta_strozzamento",
+      "value_ro": "conducta_redusa",
+      "vsacode": 22
+     }
+    ],
+    "derniere": {
+     "_localId": 11,
+     "abbr_de": "VL",
+     "abbr_en": "",
+     "abbr_fr": "CV",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 3655,
+     "fid": null,
+     "value_de": "Vakuumleitung",
+     "value_en": "vacuum_pipe",
+     "value_fr": "conduite_sous_vide",
+     "value_it": "canalizzazione_sotto_vuoto",
+     "value_ro": "conducta_vidata",
+     "vsacode": 3655
+    },
+    "empreinte": "cffd06b2b79533e7-2fh"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_channel_usage_current",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_channel_usage_current",
+   "displayName": "vl_channel_usage_current",
+   "featureCount": 9,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "order_usage_current",
+     "gType": "Text",
+     "label": "order_usage_current",
+     "name": "order_usage_current",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_channel_usage_current",
+   "style": null,
+   "features": {
+    "compte": 9,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "KW",
+      "abbr_en": "",
+      "abbr_fr": "EUR",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4514,
+      "fid": null,
+      "order_usage_current": 5,
+      "value_de": "Reinabwasser",
+      "value_en": "clean_wastewater",
+      "value_fr": "eaux_claires",
+      "value_it": "acque_chiare",
+      "value_ro": "ape_conventional_curate",
+      "vsacode": 4514
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "EW",
+      "abbr_en": "DCW",
+      "abbr_fr": "EUD",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4516,
+      "fid": null,
+      "order_usage_current": 3,
+      "value_de": "entlastetes_Mischabwasser",
+      "value_en": "discharged_combined_wastewater",
+      "value_fr": "eaux_mixtes_deversees",
+      "value_it": "acque_miste_scaricate",
+      "value_ro": "ape_mixte_deversate",
+      "vsacode": 4516
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4518,
+      "fid": null,
+      "order_usage_current": 7,
+      "value_de": "Bachwasser",
+      "value_en": "creek_water",
+      "value_fr": "eaux_cours_d_eau",
+      "value_it": "acqua_corso_acqua",
+      "value_ro": "ape_curs_de_apa",
+      "vsacode": 4518
+     }
+    ],
+    "derniere": {
+     "_localId": 9,
+     "abbr_de": "",
+     "abbr_en": "",
+     "abbr_fr": "",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 5322,
+     "fid": null,
+     "order_usage_current": 9,
+     "value_de": "andere",
+     "value_en": "other",
+     "value_fr": "autre",
+     "value_it": "altro",
+     "value_ro": "alta",
+     "vsacode": 5322
+    },
+    "empreinte": "2fce278bf2ce1d6d-21c"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_channel_usage_planned",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_channel_usage_planned",
+   "displayName": "vl_channel_usage_planned",
+   "featureCount": 9,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_channel_usage_planned",
+   "style": null,
+   "features": {
+    "compte": 9,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5323,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "alta",
+      "vsacode": 5323
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4519,
+      "fid": null,
+      "value_de": "Bachwasser",
+      "value_en": "creek_water",
+      "value_fr": "eaux_cours_d_eau",
+      "value_it": "acqua_corso_acqua",
+      "value_ro": "ape_curs_de_apa",
+      "vsacode": 4519
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "EW",
+      "abbr_en": "DCW",
+      "abbr_fr": "EUD",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4517,
+      "fid": null,
+      "value_de": "entlastetes_Mischabwasser",
+      "value_en": "discharged_combined_wastewater",
+      "value_fr": "eaux_mixtes_deversees",
+      "value_it": "acque_miste_scaricate",
+      "value_ro": "ape_mixte_deversate",
+      "vsacode": 4517
+     }
+    ],
+    "derniere": {
+     "_localId": 9,
+     "abbr_de": "U",
+     "abbr_en": "",
+     "abbr_fr": "I",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 4569,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnu",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscuta",
+     "vsacode": 4569
+    },
+    "empreinte": "ad2be22672ddb01b-1vc"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_cover_cover_shape",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_cover_cover_shape",
+   "displayName": "vl_cover_cover_shape",
+   "featureCount": 4,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_cover_cover_shape",
+   "style": null,
+   "features": {
+    "compte": 4,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "A",
+      "abbr_en": "O",
+      "abbr_fr": "AU",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5353,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "altul",
+      "vsacode": 5353
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "E",
+      "abbr_en": "R",
+      "abbr_fr": "AX",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3499,
+      "fid": null,
+      "value_de": "eckig",
+      "value_en": "rectangular",
+      "value_fr": "anguleux",
+      "value_it": "zzz_eckig",
+      "value_ro": "dreptunghic",
+      "vsacode": 3499
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "R",
+      "abbr_en": "",
+      "abbr_fr": "R",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3498,
+      "fid": null,
+      "value_de": "rund",
+      "value_en": "round",
+      "value_fr": "rond",
+      "value_it": "zzz_rund",
+      "value_ro": "rotund",
+      "vsacode": 3498
+     }
+    ],
+    "derniere": {
+     "_localId": 4,
+     "abbr_de": "U",
+     "abbr_en": "",
+     "abbr_fr": "I",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 5354,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnue",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscut",
+     "vsacode": 5354
+    },
+    "empreinte": "13c5f1a925acf963-qa"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_cover_fastening",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_cover_fastening",
+   "displayName": "vl_cover_fastening",
+   "featureCount": 3,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_cover_fastening",
+   "style": null,
+   "features": {
+    "compte": 3,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "NVS",
+      "abbr_en": "",
+      "abbr_fr": "NVS",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5350,
+      "fid": null,
+      "value_de": "nicht_verschraubt",
+      "value_en": "not_bolted",
+      "value_fr": "non_vissee",
+      "value_it": "zzz_nicht_verschraubt",
+      "value_ro": "neinsurubata",
+      "vsacode": 5350
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "U",
+      "abbr_en": "",
+      "abbr_fr": "I",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5351,
+      "fid": null,
+      "value_de": "unbekannt",
+      "value_en": "unknown",
+      "value_fr": "inconnue",
+      "value_it": "sconosciuto",
+      "value_ro": "necunoscuta",
+      "vsacode": 5351
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "VS",
+      "abbr_en": "",
+      "abbr_fr": "VS",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5352,
+      "fid": null,
+      "value_de": "verschraubt",
+      "value_en": "bolted",
+      "value_fr": "vissee",
+      "value_it": "zzz_verschraubt",
+      "value_ro": "insurubata",
+      "vsacode": 5352
+     }
+    ],
+    "derniere": null,
+    "empreinte": "d472cea0e1250766-le"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_cover_material",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_cover_material",
+   "displayName": "vl_cover_material",
+   "featureCount": 4,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_cover_material",
+   "style": null,
+   "features": {
+    "compte": 4,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4540,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "altul",
+      "vsacode": 4540
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4541,
+      "fid": null,
+      "value_de": "Beton",
+      "value_en": "concrete",
+      "value_fr": "beton",
+      "value_it": "zzz_Beton",
+      "value_ro": "beton",
+      "vsacode": 4541
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4542,
+      "fid": null,
+      "value_de": "Kunststoff",
+      "value_en": "plastic",
+      "value_fr": "matiere_plastique",
+      "value_it": "zzz_Kunststoff",
+      "value_ro": "materie_plastica",
+      "vsacode": 4542
+     }
+    ],
+    "derniere": {
+     "_localId": 4,
+     "abbr_de": "",
+     "abbr_en": "",
+     "abbr_fr": "",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 4543,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnu",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscut",
+     "vsacode": 4543
+    },
+    "empreinte": "ed3ed2ebd1bb4226-qm"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_cover_venting",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_cover_venting",
+   "displayName": "vl_cover_venting",
+   "featureCount": 3,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_cover_venting",
+   "style": null,
+   "features": {
+    "compte": 3,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "EL",
+      "abbr_en": "",
+      "abbr_fr": "AE",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 229,
+      "fid": null,
+      "value_de": "entlueftet",
+      "value_en": "vented",
+      "value_fr": "aere",
+      "value_it": "zzz_entlueftet",
+      "value_ro": "cu_aerisire",
+      "vsacode": 229
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "NEL",
+      "abbr_en": "",
+      "abbr_fr": "NAE",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 230,
+      "fid": null,
+      "value_de": "nicht_entlueftet",
+      "value_en": "not_vented",
+      "value_fr": "non_aere",
+      "value_it": "zzz_nicht_entlueftet",
+      "value_ro": "fara_aerisire",
+      "vsacode": 230
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "U",
+      "abbr_en": "",
+      "abbr_fr": "I",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5348,
+      "fid": null,
+      "value_de": "unbekannt",
+      "value_en": "unknown",
+      "value_fr": "inconnue",
+      "value_it": "sconosciuto",
+      "value_ro": "necunoscut",
+      "vsacode": 5348
+     }
+    ],
+    "derniere": null,
+    "empreinte": "3b1332c0741c36e8-l3"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_manhole_function",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_manhole_function",
+   "displayName": "vl_manhole_function",
+   "featureCount": 16,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_manhole_function",
+   "style": null,
+   "features": {
+    "compte": 16,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "AK",
+      "abbr_en": "DS",
+      "abbr_fr": "OC",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4532,
+      "fid": null,
+      "value_de": "Absturzbauwerk",
+      "value_en": "drop_structure",
+      "value_fr": "ouvrage_de_chute",
+      "value_it": "manufatto_caduta",
+      "value_ro": "instalatie_picurare",
+      "vsacode": 4532
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "A",
+      "abbr_en": "O",
+      "abbr_fr": "AU",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5344,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "alta",
+      "vsacode": 5344
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "BE",
+      "abbr_en": "VE",
+      "abbr_fr": "AE",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4533,
+      "fid": null,
+      "value_de": "Be_Entlueftung",
+      "value_en": "venting",
+      "value_fr": "aeration",
+      "value_it": "zzz_Be_Entlueftung",
+      "value_ro": "aerisire",
+      "vsacode": 4533
+     }
+    ],
+    "derniere": {
+     "_localId": 16,
+     "abbr_de": "U",
+     "abbr_en": "",
+     "abbr_fr": "I",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 5345,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnue",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscuta",
+     "vsacode": 5345
+    },
+    "empreinte": "a8b79174aefa5f1b-3h5"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_manhole_material20151117174216343",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_manhole_material",
+   "displayName": "vl_manhole_material",
+   "featureCount": 4,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_manhole_material",
+   "style": null,
+   "features": {
+    "compte": 4,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4540,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "altul",
+      "vsacode": 4540
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4541,
+      "fid": null,
+      "value_de": "Beton",
+      "value_en": "concrete",
+      "value_fr": "beton",
+      "value_it": "zzz_Beton",
+      "value_ro": "beton",
+      "vsacode": 4541
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 4542,
+      "fid": null,
+      "value_de": "Kunststoff",
+      "value_en": "plastic",
+      "value_fr": "matiere_plastique",
+      "value_it": "zzz_Kunststoff",
+      "value_ro": "materie_plastica",
+      "vsacode": 4542
+     }
+    ],
+    "derniere": {
+     "_localId": 4,
+     "abbr_de": "",
+     "abbr_en": "",
+     "abbr_fr": "",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 4543,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnu",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscut",
+     "vsacode": 4543
+    },
+    "empreinte": "ed3ed2ebd1bb4226-qm"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_manhole_surface_inflow20151117174216393",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_manhole_surface_inflow",
+   "displayName": "vl_manhole_surface_inflow",
+   "featureCount": 5,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_manhole_surface_inflow",
+   "style": null,
+   "features": {
+    "compte": 5,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "A",
+      "abbr_en": "O",
+      "abbr_fr": "AU",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5342,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "altul",
+      "vsacode": 5342
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "K",
+      "abbr_en": "",
+      "abbr_fr": "AN",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 2741,
+      "fid": null,
+      "value_de": "keiner",
+      "value_en": "none",
+      "value_fr": "aucune",
+      "value_it": "nessuno",
+      "value_ro": "niciunul",
+      "vsacode": 2741
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "R",
+      "abbr_en": "",
+      "abbr_fr": "G",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 2739,
+      "fid": null,
+      "value_de": "Rost",
+      "value_en": "grid",
+      "value_fr": "grille_d_ecoulement",
+      "value_it": "zzz_Rost",
+      "value_ro": "grilaj",
+      "vsacode": 2739
+     }
+    ],
+    "derniere": {
+     "_localId": 5,
+     "abbr_de": "ZS",
+     "abbr_en": "",
+     "abbr_fr": "AL",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 2740,
+     "fid": null,
+     "value_de": "Zulauf_seitlich",
+     "value_en": "intake_from_side",
+     "value_fr": "arrivee_laterale",
+     "value_it": "zzz_Zulauf_seitlich",
+     "value_ro": "admisie_laterala",
+     "vsacode": 2740
+    },
+    "empreinte": "d491ccf07789f805-y6"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_pipe_profile_profile_type",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_pipe_profile_profile_type",
+   "displayName": "vl_pipe_profile_profile_type",
+   "featureCount": 7,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_pipe_profile_profile_type",
+   "style": null,
+   "features": {
+    "compte": 7,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "E",
+      "abbr_en": "E",
+      "abbr_fr": "OV",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3351,
+      "fid": null,
+      "value_de": "Eiprofil",
+      "value_en": "egg",
+      "value_fr": "ovoide",
+      "value_it": "ovoidale",
+      "value_ro": "ovoid",
+      "vsacode": 3351
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "K",
+      "abbr_en": "CI",
+      "abbr_fr": "CI",
+      "abbr_it": "CI",
+      "abbr_ro": "R",
+      "active": 1,
+      "code": 3350,
+      "fid": null,
+      "value_de": "Kreisprofil",
+      "value_en": "circle",
+      "value_fr": "circulaire",
+      "value_it": "cicolare",
+      "value_ro": "rotund",
+      "vsacode": 3350
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "M",
+      "abbr_en": "M",
+      "abbr_fr": "V",
+      "abbr_it": "C",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3352,
+      "fid": null,
+      "value_de": "Maulprofil",
+      "value_en": "mouth",
+      "value_fr": "profil_en_voute",
+      "value_it": "composto",
+      "value_ro": "sectiune_cu_bolta",
+      "vsacode": 3352
+     }
+    ],
+    "derniere": {
+     "_localId": 7,
+     "abbr_de": "U",
+     "abbr_en": "U",
+     "abbr_fr": "I",
+     "abbr_it": "S",
+     "abbr_ro": "N",
+     "active": 1,
+     "code": 3357,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnu",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscut",
+     "vsacode": 3357
+    },
+    "empreinte": "278f83b862acb463-1dm"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_reach_horizontal_positioning",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_reach_horizontal_positioning",
+   "displayName": "vl_reach_horizontal_positioning",
+   "featureCount": 0,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": false,
+   "name": "Vl_reach_horizontal_positioning",
+   "style": null,
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_reach_inside_coating",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_reach_inside_coating",
+   "displayName": "vl_reach_inside_coating",
+   "featureCount": 6,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_reach_inside_coating",
+   "style": null,
+   "features": {
+    "compte": 6,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "A",
+      "abbr_en": "O",
+      "abbr_fr": "AU",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5383,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "alta",
+      "vsacode": 5383
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "B",
+      "abbr_en": "C",
+      "abbr_fr": "PR",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 248,
+      "fid": null,
+      "value_de": "Anstrich_Beschichtung",
+      "value_en": "coating",
+      "value_fr": "peinture_revetement",
+      "value_it": "zzz_Anstrich_Beschichtung",
+      "value_ro": "strat_vopsea",
+      "vsacode": 248
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "KL",
+      "abbr_en": "",
+      "abbr_fr": "RB",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 250,
+      "fid": null,
+      "value_de": "Kanalklinkerauskleidung",
+      "value_en": "brick_lining",
+      "value_fr": "revetement_en_brique",
+      "value_it": "zzz_Kanalklinkerauskleidung",
+      "value_ro": "strat_caramida",
+      "vsacode": 250
+     }
+    ],
+    "derniere": {
+     "_localId": 6,
+     "abbr_de": "ZM",
+     "abbr_en": "",
+     "abbr_fr": "RM",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 249,
+     "fid": null,
+     "value_de": "Zementmoertelauskleidung",
+     "value_en": "cement_mortar_lining",
+     "value_fr": "revetement_en_mortier_de_ciment",
+     "value_it": "zzz_Zementmoertelauskleidung",
+     "value_ro": "strat_mortar_ciment",
+     "vsacode": 249
+    },
+    "empreinte": "3c829d8c0bd87a74-1a9"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_reach_material",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_reach_material",
+   "displayName": "vl_reach_material",
+   "featureCount": 24,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_reach_material",
+   "style": null,
+   "features": {
+    "compte": 24,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "A",
+      "abbr_en": "O",
+      "abbr_fr": "AU",
+      "abbr_it": "A",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5381,
+      "fid": null,
+      "value_de": "andere",
+      "value_en": "other",
+      "value_fr": "autre",
+      "value_it": "altro",
+      "value_ro": "alta",
+      "vsacode": 5381
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "AZ",
+      "abbr_en": "AC",
+      "abbr_fr": "AC",
+      "abbr_it": "CA",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 2754,
+      "fid": null,
+      "value_de": "Asbestzement",
+      "value_en": "asbestos_cement",
+      "value_fr": "amiante_ciment",
+      "value_it": "cemento_amianto",
+      "value_ro": "azbociment",
+      "vsacode": 2754
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "NB",
+      "abbr_en": "CN",
+      "abbr_fr": "BN",
+      "abbr_it": "CN",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3638,
+      "fid": null,
+      "value_de": "Beton_Normalbeton",
+      "value_en": "concrete_normal",
+      "value_fr": "beton_normal",
+      "value_it": "calcestruzzo_normale",
+      "value_ro": "beton_normal",
+      "vsacode": 3638
+     }
+    ],
+    "derniere": {
+     "_localId": 24,
+     "abbr_de": "Z",
+     "abbr_en": "C",
+     "abbr_fr": "C",
+     "abbr_it": "C",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 2762,
+     "fid": null,
+     "value_de": "Zement",
+     "value_en": "cement",
+     "value_fr": "ciment",
+     "value_it": "cemento",
+     "value_ro": "ciment",
+     "vsacode": 2762
+    },
+    "empreinte": "23f83079257fc58c-598"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_reach_point_elevation_accuracy",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_reach_point_elevation_accuracy",
+   "displayName": "vl_reach_point_elevation_accuracy",
+   "featureCount": 5,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_reach_point_elevation_accuracy",
+   "style": null,
+   "features": {
+    "compte": 5,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "G06",
+      "abbr_en": "",
+      "abbr_fr": "S06",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3248,
+      "fid": null,
+      "value_de": "groesser_6cm",
+      "value_en": "more_than_6cm",
+      "value_fr": "plusque_6cm",
+      "value_it": "piu_6cm",
+      "value_ro": "mai_mare_6cm",
+      "vsacode": 3248
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "P01",
+      "abbr_en": "",
+      "abbr_fr": "P01",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3245,
+      "fid": null,
+      "value_de": "plusminus_1cm",
+      "value_en": "plusminus_1cm",
+      "value_fr": "plus_moins_1cm",
+      "value_it": "piu_meno_1cm",
+      "value_ro": "plus_minus_1cm",
+      "vsacode": 3245
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "P03",
+      "abbr_en": "",
+      "abbr_fr": "P03",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3246,
+      "fid": null,
+      "value_de": "plusminus_3cm",
+      "value_en": "plusminus_3cm",
+      "value_fr": "plus_moins_3cm",
+      "value_it": "piu_meno_3cm",
+      "value_ro": "plus_minus_3cm",
+      "vsacode": 3246
+     }
+    ],
+    "derniere": {
+     "_localId": 5,
+     "abbr_de": "U",
+     "abbr_en": "",
+     "abbr_fr": "I",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 5376,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnue",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscut",
+     "vsacode": 5376
+    },
+    "empreinte": "fb04e222e4fdc3a6-10i"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_special_structure_bypass",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_special_structure_bypass",
+   "displayName": "vl_special_structure_bypass",
+   "featureCount": 3,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_special_structure_bypass",
+   "style": null,
+   "features": {
+    "compte": 3,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "NV",
+      "abbr_en": "",
+      "abbr_fr": "IE",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 2682,
+      "fid": null,
+      "value_de": "nicht_vorhanden",
+      "value_en": "inexistent",
+      "value_fr": "inexistant",
+      "value_it": "zzz_nicht_vorhanden",
+      "value_ro": "inexistent",
+      "vsacode": 2682
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "U",
+      "abbr_en": "",
+      "abbr_fr": "I",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3055,
+      "fid": null,
+      "value_de": "unbekannt",
+      "value_en": "unknown",
+      "value_fr": "inconnu",
+      "value_it": "sconosciuto",
+      "value_ro": "necunoscut",
+      "vsacode": 3055
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "V",
+      "abbr_en": "",
+      "abbr_fr": "E",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 2681,
+      "fid": null,
+      "value_de": "vorhanden",
+      "value_en": "existent",
+      "value_fr": "existant",
+      "value_it": "zzz_vorhanden",
+      "value_ro": "existent",
+      "vsacode": 2681
+     }
+    ],
+    "derniere": null,
+    "empreinte": "f08db5e5ddf473f3-l0"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_special_structure_function",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_special_structure_function",
+   "displayName": "vl_special_structure_function",
+   "featureCount": 30,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_special_structure_function",
+   "style": null,
+   "features": {
+    "compte": 30,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 6397,
+      "fid": null,
+      "value_de": "abflussloseGrube",
+      "value_en": "pit_without_drain",
+      "value_fr": "fosse_etanche",
+      "value_it": "zzz_abflussloseGrube",
+      "value_ro": "bazin_vidanjabil",
+      "vsacode": 6397
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "AK",
+      "abbr_en": "DS",
+      "abbr_fr": "OC",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 245,
+      "fid": null,
+      "value_de": "Absturzbauwerk",
+      "value_en": "drop_structure",
+      "value_fr": "ouvrage_de_chute",
+      "value_it": "manufatto_caduta",
+      "value_ro": "instalatie_picurare",
+      "vsacode": 245
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 6398,
+      "fid": null,
+      "value_de": "Abwasserfaulraum",
+      "value_en": "hydrolizing_tank",
+      "value_fr": "fosse_digestive",
+      "value_it": "zzz_Abwasserfaulraum",
+      "value_ro": "fosa_hidroliza",
+      "vsacode": 6398
+     }
+    ],
+    "derniere": {
+     "_localId": 30,
+     "abbr_de": "WF",
+     "abbr_en": "",
+     "abbr_fr": "CT",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 2745,
+     "fid": null,
+     "value_de": "Wirbelfallschacht",
+     "value_en": "vortex_manhole",
+     "value_fr": "chambre_de_chute_a_vortex",
+     "value_it": "zzz_Wirbelfallschacht",
+     "value_ro": "instalatie_picurare_cu_vortex",
+     "vsacode": 2745
+    },
+    "empreinte": "c370adee5e2b2421-6pw"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_wastewater_structure_accessibility_13d77bb7_b9a4_447e_a98b_aaa6ac34bb1d",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_wastewater_structure_accessibility",
+   "displayName": "vl_wastewater_structure_accessibility",
+   "featureCount": 4,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_wastewater_structure_accessibility",
+   "style": null,
+   "features": {
+    "compte": 4,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "UED",
+      "abbr_en": "",
+      "abbr_fr": "CO",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3444,
+      "fid": null,
+      "value_de": "ueberdeckt",
+      "value_en": "covered",
+      "value_fr": "couvert",
+      "value_it": "coperto",
+      "value_ro": "capac",
+      "vsacode": 3444
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "U",
+      "abbr_en": "",
+      "abbr_fr": "I",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3447,
+      "fid": null,
+      "value_de": "unbekannt",
+      "value_en": "unknown",
+      "value_fr": "inconnu",
+      "value_it": "sconosciuto",
+      "value_ro": "necunoscut",
+      "vsacode": 3447
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "UZG",
+      "abbr_en": "",
+      "abbr_fr": "NA",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3446,
+      "fid": null,
+      "value_de": "unzugaenglich",
+      "value_en": "inaccessible",
+      "value_fr": "inaccessible",
+      "value_it": "non_accessibile",
+      "value_ro": "inaccesibil",
+      "vsacode": 3446
+     }
+    ],
+    "derniere": {
+     "_localId": 4,
+     "abbr_de": "ZG",
+     "abbr_en": "",
+     "abbr_fr": "A",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 3445,
+     "fid": null,
+     "value_de": "zugaenglich",
+     "value_en": "accessible",
+     "value_fr": "accessible",
+     "value_it": "accessibile",
+     "value_ro": "accessibil",
+     "vsacode": 3445
+    },
+    "empreinte": "78c794a701165d29-ru"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_wastewater_structure_renovation_necessity",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_wastewater_structure_renovation_necessity",
+   "displayName": "vl_wastewater_structure_renovation_necessity",
+   "featureCount": 6,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_wastewater_structure_renovation_necessity",
+   "style": null,
+   "features": {
+    "compte": 6,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "DR",
+      "abbr_en": "UR",
+      "abbr_fr": "UR",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5370,
+      "fid": null,
+      "value_de": "dringend",
+      "value_en": "urgent",
+      "value_fr": "urgente",
+      "value_it": "urgente",
+      "value_ro": "urgent",
+      "vsacode": 5370
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "K",
+      "abbr_en": "N",
+      "abbr_fr": "AN",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 5368,
+      "fid": null,
+      "value_de": "keiner",
+      "value_en": "none",
+      "value_fr": "aucune",
+      "value_it": "nessuno",
+      "value_ro": "niciuna",
+      "vsacode": 5368
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "KF",
+      "abbr_en": "ST",
+      "abbr_fr": "CT",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 2,
+      "fid": null,
+      "value_de": "kurzfristig",
+      "value_en": "short_term",
+      "value_fr": "a_court_terme",
+      "value_it": "breve_termine",
+      "value_ro": "termen_scurt",
+      "vsacode": 2
+     }
+    ],
+    "derniere": {
+     "_localId": 6,
+     "abbr_de": "U",
+     "abbr_en": "",
+     "abbr_fr": "I",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 5369,
+     "fid": null,
+     "value_de": "unbekannt",
+     "value_en": "unknown",
+     "value_fr": "inconnue",
+     "value_it": "sconosciuto",
+     "value_ro": "necunoscuta",
+     "vsacode": 5369
+    },
+    "empreinte": "2f29f8c1f8eb1064-159"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_wastewater_structure_status",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_wastewater_structure_status",
+   "displayName": "vl_wastewater_structure_status",
+   "featureCount": 11,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_wastewater_structure_status",
+   "style": null,
+   "features": {
+    "compte": 11,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "AB",
+      "abbr_en": "NO",
+      "abbr_fr": "H",
+      "abbr_it": "FS",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3633,
+      "fid": null,
+      "value_de": "ausser_Betrieb",
+      "value_en": "inoperative",
+      "value_fr": "hors_service",
+      "value_it": "fuori_servizio",
+      "value_ro": "rrr_ausser_Betrieb",
+      "vsacode": 3633
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "",
+      "abbr_en": "",
+      "abbr_fr": "",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 8493,
+      "fid": null,
+      "value_de": "in_Betrieb",
+      "value_en": "operational",
+      "value_fr": "en_service",
+      "value_it": "in_funzione",
+      "value_ro": "functionala",
+      "vsacode": 8493
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "T",
+      "abbr_en": "T",
+      "abbr_fr": "P",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 6530,
+      "fid": null,
+      "value_de": "in_Betrieb.provisorisch",
+      "value_en": "operational.tentative",
+      "value_fr": "en_service.provisoire",
+      "value_it": "in_funzione.provvisorio",
+      "value_ro": "functionala.provizoriu",
+      "vsacode": 6530
+     }
+    ],
+    "derniere": {
+     "_localId": 11,
+     "abbr_de": "N",
+     "abbr_en": "",
+     "abbr_fr": "PR",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 6529,
+     "fid": null,
+     "value_de": "weitere.Projekt",
+     "value_en": "other.project",
+     "value_fr": "autre.projet",
+     "value_it": "altri.progetto",
+     "value_ro": "alta.proiect",
+     "vsacode": 6529
+    },
+    "empreinte": "a240ff7a207bcf5b-2j0"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "vl_wastewater_structure_structure_condition",
+   "datasource": "./datasets/qgep_lists.gpkg|layername=vl_wastewater_structure_structure_condition",
+   "displayName": "vl_wastewater_structure_structure_condition",
+   "featureCount": 6,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "code",
+     "gType": "Text",
+     "label": "code",
+     "name": "code",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vsacode",
+     "gType": "Text",
+     "label": "vsacode",
+     "name": "vsacode",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_en",
+     "gType": "Text",
+     "label": "value_en",
+     "name": "value_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_de",
+     "gType": "Text",
+     "label": "value_de",
+     "name": "value_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_fr",
+     "gType": "Text",
+     "label": "value_fr",
+     "name": "value_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_it",
+     "gType": "Text",
+     "label": "value_it",
+     "name": "value_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "value_ro",
+     "gType": "Text",
+     "label": "value_ro",
+     "name": "value_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_en",
+     "gType": "Text",
+     "label": "abbr_en",
+     "name": "abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_de",
+     "gType": "Text",
+     "label": "abbr_de",
+     "name": "abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_fr",
+     "gType": "Text",
+     "label": "abbr_fr",
+     "name": "abbr_fr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_it",
+     "gType": "Text",
+     "label": "abbr_it",
+     "name": "abbr_it",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "abbr_ro",
+     "gType": "Text",
+     "label": "abbr_ro",
+     "name": "abbr_ro",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "active",
+     "gType": "Text",
+     "label": "active",
+     "name": "active",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Vl_wastewater_structure_structure_condition",
+   "style": null,
+   "features": {
+    "compte": 6,
+    "premieres": [
+     {
+      "_localId": 1,
+      "abbr_de": "U",
+      "abbr_en": "",
+      "abbr_fr": "I",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3037,
+      "fid": null,
+      "value_de": "unbekannt",
+      "value_en": "unknown",
+      "value_fr": "inconnu",
+      "value_it": "sconosciuto",
+      "value_ro": "necunoscuta",
+      "vsacode": 3037
+     },
+     {
+      "_localId": 2,
+      "abbr_de": "Z0",
+      "abbr_en": "",
+      "abbr_fr": "Z0",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3363,
+      "fid": null,
+      "value_de": "Z0",
+      "value_en": "Z0",
+      "value_fr": "Z0",
+      "value_it": "Z0",
+      "value_ro": "Z0",
+      "vsacode": 3363
+     },
+     {
+      "_localId": 3,
+      "abbr_de": "Z1",
+      "abbr_en": "",
+      "abbr_fr": "Z1",
+      "abbr_it": "",
+      "abbr_ro": "",
+      "active": 1,
+      "code": 3359,
+      "fid": null,
+      "value_de": "Z1",
+      "value_en": "Z1",
+      "value_fr": "Z1",
+      "value_it": "Z1",
+      "value_ro": "Z1",
+      "vsacode": 3359
+     }
+    ],
+    "derniere": {
+     "_localId": 6,
+     "abbr_de": "Z4",
+     "abbr_en": "",
+     "abbr_fr": "Z4",
+     "abbr_it": "",
+     "abbr_ro": "",
+     "active": 1,
+     "code": 3362,
+     "fid": null,
+     "value_de": "Z4",
+     "value_en": "Z4",
+     "value_fr": "Z4",
+     "value_it": "Z4",
+     "value_ro": "",
+     "vsacode": 3362
+    },
+    "empreinte": "64207eb27b666967-107"
+   }
+  },
+  {
+   "_formFieldOrder": [
+    "identifier",
+    "clear_height",
+    "material",
+    "ch_usage_current",
+    "ch_function_hierarchic",
+    "ch_function_hydraulic",
+    "horizontal_positioning",
+    "ws_status",
+    "ws_year_of_construction",
+    "rp_from_level",
+    "rp_from_fk_wastewater_networkelement",
+    "rp_to_level",
+    "rp_to_fk_wastewater_networkelement",
+    "inside_coating",
+    "remark",
+    "length_effective",
+    "identifier",
+    "obj_id",
+    "clear_height",
+    "material",
+    "width",
+    "horizontal_positioning",
+    "inside_coating",
+    "remark",
+    "length_effective",
+    "_slope_per_mill",
+    "last_modification",
+    "ws_identifier",
+    "ws_obj_id",
+    "ws_location_name",
+    "ws_status",
+    "ws_year_of_construction",
+    "ws_year_of_replacement",
+    "ws_renovation_necessity",
+    "ws_structure_condition",
+    "ws_remark",
+    "ws_identifier",
+    "ch_usage_current",
+    "ch_usage_planned",
+    "ch_function_hierarchic",
+    "ch_function_hydraulic",
+    "ch_connection_type",
+    "rp_from_identifier",
+    "rp_from_level",
+    "rp_from_elevation_accuracy",
+    "rp_from_fk_wastewater_networkelement",
+    "rp_to_identifier",
+    "rp_to_level",
+    "rp_to_elevation_accuracy",
+    "rp_to_fk_wastewater_networkelement"
+   ],
+   "_layerId": "vw_qgep_reach",
+   "datasource": "./datasets/qgep_reach.gpkg|layername=qgep_reach",
+   "displayName": "Reaches",
+   "featureCount": 4076,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "obj_id",
+     "gType": "Text",
+     "label": "Object id",
+     "name": "obj_id",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 99999,
+     "_rangeMin": 0,
+     "_rawKey": "clear_height",
+     "gType": "Int",
+     "label": "Clear height",
+     "name": "clear_height",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "material",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_reach_material",
+      "LayerName": "vl_reach_material",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_reach_material\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_reach_material",
+     "gType": "Ref:Vl_reach_material",
+     "label": "Material",
+     "name": "material",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ch_usage_current",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_channel_usage_current",
+      "LayerName": "vl_channel_usage_current",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_channel_usage_current\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_channel_usage_current",
+     "gType": "Ref:Vl_channel_usage_current",
+     "label": "Current usage",
+     "name": "ch_usage_current",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ch_function_hierarchic",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_channel_function_hierarchic",
+      "LayerName": "vl_channel_function_hierarchic",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_channel_function_hierarchic\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_channel_function_hierarchic",
+     "gType": "Ref:Vl_channel_function_hierarchic",
+     "label": "Hierarchic function",
+     "name": "ch_function_hierarchic",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_status",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_wastewater_structure_status",
+      "LayerName": "vl_wastewater_structure_status",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_wastewater_structure_status\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_wastewater_structure_status",
+     "gType": "Ref:Vl_wastewater_structure_status",
+     "label": "Status",
+     "name": "ws_status",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ch_function_hydraulic",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_channel_function_hydraulic",
+      "LayerName": "vl_channel_function_hydraulic",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_channel_function_hydraulic\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_channel_function_hydraulic",
+     "gType": "Ref:Vl_channel_function_hydraulic",
+     "label": "Hydraulic function",
+     "name": "ch_function_hydraulic",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 99999,
+     "_rangeMin": 0,
+     "_rawKey": "width",
+     "gType": "Int",
+     "label": "Width",
+     "name": "width",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "horizontal_positioning",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_reach_horizontal_positioning",
+      "LayerName": "vl_reach_horizontal_positioning",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_reach_horizontal_positioning\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_reach_horizontal_positioning",
+     "gType": "Ref:Vl_reach_horizontal_positioning",
+     "label": "Horizontal positioning",
+     "name": "horizontal_positioning",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "inside_coating",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_reach_inside_coating",
+      "LayerName": "vl_reach_inside_coating",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_reach_inside_coating\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_reach_inside_coating",
+     "gType": "Ref:Vl_reach_inside_coating",
+     "label": "Inside coating",
+     "name": "inside_coating",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 30000,
+     "_rangeMin": 0,
+     "_rawKey": "length_effective",
+     "gType": "Numeric",
+     "label": "Effective length",
+     "name": "length_effective",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifier",
+     "gType": "Text",
+     "label": "Identifier",
+     "name": "identifier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "last_modification",
+     "gType": "DateTime",
+     "label": "Last modification",
+     "name": "last_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "remark",
+     "gType": "Text",
+     "label": "Remarks",
+     "name": "remark",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ch_bedding_encasement",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_channel_bedding_encasement",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "gType": "Text",
+     "label": "ch_bedding_encasement",
+     "name": "ch_bedding_encasement",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ch_connection_type",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_channel_connection_type",
+      "LayerName": "vl_channel_connection_type",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_channel_connection_type\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_channel_connection_type",
+     "gType": "Ref:Vl_channel_connection_type",
+     "label": "Connection type",
+     "name": "ch_connection_type",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ch_usage_planned",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_channel_usage_planned",
+      "LayerName": "vl_channel_usage_planned",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_channel_usage_planned\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_channel_usage_planned",
+     "gType": "Ref:Vl_channel_usage_planned",
+     "label": "Planned usage",
+     "name": "ch_usage_planned",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_obj_id",
+     "gType": "Text",
+     "label": "Object id",
+     "name": "ws_obj_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws__input_label",
+     "gType": "Text",
+     "label": "ws__input_label",
+     "name": "ws_input_label",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws__output_label",
+     "gType": "Text",
+     "label": "ws__output_label",
+     "name": "ws_output_label",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_fk_main_wastewater_node",
+     "gType": "Text",
+     "label": "ws_fk_main_wastewater_node",
+     "name": "ws_fk_main_wastewater_node",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_identifier",
+     "gType": "Text",
+     "label": "Identifier",
+     "name": "ws_identifier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_last_modification",
+     "gType": "DateTime",
+     "label": "ws_last_modification",
+     "name": "ws_last_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_location_name",
+     "gType": "Text",
+     "label": "Location name",
+     "name": "ws_location_name",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_remark",
+     "gType": "Text",
+     "label": "Remarks",
+     "name": "ws_remark",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_renovation_necessity",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_wastewater_structure_renovation_necessity",
+      "LayerName": "vl_wastewater_structure_renovation_necessity",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_wastewater_structure_renovation_necessity\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_wastewater_structure_renovation_necessity",
+     "gType": "Ref:Vl_wastewater_structure_renovation_necessity",
+     "label": "Renovation necessity",
+     "name": "ws_renovation_necessity",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_structure_condition",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_wastewater_structure_structure_condition",
+      "LayerName": "vl_wastewater_structure_structure_condition",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_wastewater_structure_structure_condition\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_wastewater_structure_structure_condition",
+     "gType": "Ref:Vl_wastewater_structure_structure_condition",
+     "label": "Structure condition",
+     "name": "ws_structure_condition",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 2100,
+     "_rangeMin": 1800,
+     "_rawKey": "ws_year_of_construction",
+     "gType": "Int",
+     "label": "Year of construction",
+     "name": "ws_year_of_construction",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 2100,
+     "_rangeMin": 1800,
+     "_rawKey": "ws_year_of_replacement",
+     "gType": "Int",
+     "label": "Year of replacement",
+     "name": "ws_year_of_replacement",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_from_obj_id",
+     "gType": "Text",
+     "label": "rp_from_obj_id",
+     "name": "rp_from_obj_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_from_elevation_accuracy",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_reach_point_elevation_accuracy",
+      "LayerName": "vl_reach_point_elevation_accuracy",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_reach_point_elevation_accuracy\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_reach_point_elevation_accuracy",
+     "gType": "Ref:Vl_reach_point_elevation_accuracy",
+     "label": "Elevation accuracy",
+     "name": "rp_from_elevation_accuracy",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_from_fk_wastewater_networkelement",
+     "gType": "Text",
+     "label": "Network element",
+     "name": "rp_from_fk_wastewater_networkelement",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_from_identifier",
+     "gType": "Text",
+     "label": "Identifier",
+     "name": "rp_from_identifier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_from_last_modification",
+     "gType": "DateTime",
+     "label": "rp_from_last_modification",
+     "name": "rp_from_last_modification",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "rp_from_level",
+     "gType": "Numeric",
+     "label": "Level",
+     "name": "rp_from_level",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_to_obj_id",
+     "gType": "Text",
+     "label": "rp_to_obj_id",
+     "name": "rp_to_obj_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_to_elevation_accuracy",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_reach_point_elevation_accuracy",
+      "LayerName": "vl_reach_point_elevation_accuracy",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_reach_point_elevation_accuracy\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_reach_point_elevation_accuracy",
+     "gType": "Ref:Vl_reach_point_elevation_accuracy",
+     "label": "Elevation accuracy",
+     "name": "rp_to_elevation_accuracy",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_to_fk_wastewater_networkelement",
+     "gType": "Text",
+     "label": "Network element",
+     "name": "rp_to_fk_wastewater_networkelement",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_to_identifier",
+     "gType": "Text",
+     "label": "Identifier",
+     "name": "rp_to_identifier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "rp_to_last_modification",
+     "gType": "DateTime",
+     "label": "rp_to_last_modification",
+     "name": "rp_to_last_modification",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "rp_to_level",
+     "gType": "Numeric",
+     "label": "Level",
+     "name": "rp_to_level",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "material_abbr_en",
+     "gType": "Text",
+     "label": "material_abbr_en",
+     "name": "material_abbr_en",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "material_abbr_de",
+     "gType": "Text",
+     "label": "material_abbr_de",
+     "name": "material_abbr_de",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "material_abbr_fr",
+     "gType": "Text",
+     "label": "material_abbr_fr",
+     "name": "material_abbr_fr",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": true,
+   "name": "Reaches",
+   "style": {
+    "categories": [
+     {
+      "color": null,
+      "label": "Wide reaches, accurate positioning, scale <=2000",
+      "value": "Wide reaches, accurate positioning, scale <=2000"
+     },
+     {
+      "color": null,
+      "label": "Wide reaches, inaccurate positioning, scale <=2000",
+      "value": "Wide reaches, inaccurate positioning, scale <=2000"
+     },
+     {
+      "color": null,
+      "label": "Narrow main reaches, accurate positioning, scale <=2000",
+      "value": "Narrow main reaches, accurate positioning, scale <=2000"
+     },
+     {
+      "color": null,
+      "label": "Narrow main reaches, inaccurate positioning, scale <=2000",
+      "value": "Narrow main reaches, inaccurate positioning, scale <=2000"
+     },
+     {
+      "color": null,
+      "label": "Narrow minor reaches, accurate positioning, scale <=2000",
+      "value": "Narrow minor reaches, accurate positioning, scale <=2000"
+     },
+     {
+      "color": null,
+      "label": "Narrow minor reaches, inaccurate positioning, scale <=2000",
+      "value": "Narrow minor reaches, inaccurate positioning, scale <=2000"
+     },
+     {
+      "color": null,
+      "label": "Wide reaches, accurate positioning, scale 2000-5000",
+      "value": "Wide reaches, accurate positioning, scale 2000-5000"
+     },
+     {
+      "color": null,
+      "label": "Wide reaches, inaccurate positioning, scale 2000-5000",
+      "value": "Wide reaches, inaccurate positioning, scale 2000-5000"
+     },
+     {
+      "color": null,
+      "label": "Narrow main reaches, accurate positioning, scale 1000-3000",
+      "value": "Narrow main reaches, accurate positioning, scale 1000-3000"
+     },
+     {
+      "color": null,
+      "label": "Narrow main reaches, inaccurate positioning, scale 1000-3000",
+      "value": "Narrow main reaches, inaccurate positioning, scale 1000-3000"
+     },
+     {
+      "color": null,
+      "label": "Main reaches, accurate positioning, scale >5000",
+      "value": "Main reaches, accurate positioning, scale >5000"
+     },
+     {
+      "color": null,
+      "label": "Main reaches, accurate positioning, scale >5000",
+      "value": "Main reaches, accurate positioning, scale >5000"
+     },
+     {
+      "color": null,
+      "label": "Missing attributes",
+      "value": "Missing attributes"
+     },
+     {
+      "color": null,
+      "label": "Main reaches, missing attributes",
+      "value": "Main reaches, missing attributes"
+     }
+    ],
+    "field": "",
+    "rules": [
+     {
+      "color": null,
+      "filter": "width >= 300 and horizontal_positioning = 5378",
+      "kind": "expr",
+      "label": "Wide reaches, accurate positioning, scale <=2000",
+      "symbol": "0"
+     },
+     {
+      "color": null,
+      "filter": "width >= 300 and horizontal_positioning <> 5378",
+      "kind": "expr",
+      "label": "Wide reaches, inaccurate positioning, scale <=2000",
+      "symbol": "1"
+     },
+     {
+      "color": null,
+      "filter": "(width < 300 OR width IS NULL) AND ch_function_hierarchic IN (5068,5069,5070,5071) AND horizontal_positioning = 5378",
+      "kind": "expr",
+      "label": "Narrow main reaches, accurate positioning, scale <=2000",
+      "symbol": "2"
+     },
+     {
+      "color": null,
+      "filter": "(width < 300 OR width IS NULL) AND ch_function_hierarchic IN (5068,5069,5070,5071) AND horizontal_positioning <> 5378",
+      "kind": "expr",
+      "label": "Narrow main reaches, inaccurate positioning, scale <=2000",
+      "symbol": "3"
+     },
+     {
+      "color": null,
+      "filter": "(width < 300 OR width IS NULL) AND ch_function_hierarchic NOT IN (5068,5069,5070,5071) AND horizontal_positioning = 5378",
+      "kind": "expr",
+      "label": "Narrow minor reaches, accurate positioning, scale <=2000",
+      "symbol": "4"
+     },
+     {
+      "color": null,
+      "filter": "(width < 300 OR width IS NULL) AND ch_function_hierarchic NOT IN (5068,5069,5070,5071) AND horizontal_positioning <> 5378",
+      "kind": "expr",
+      "label": "Narrow minor reaches, inaccurate positioning, scale <=2000",
+      "symbol": "5"
+     },
+     {
+      "color": null,
+      "filter": "width >= 600 and horizontal_positioning = 5378",
+      "kind": "expr",
+      "label": "Wide reaches, accurate positioning, scale 2000-5000",
+      "symbol": "6"
+     },
+     {
+      "color": null,
+      "filter": "width >= 600 and horizontal_positioning <> 5378",
+      "kind": "expr",
+      "label": "Wide reaches, inaccurate positioning, scale 2000-5000",
+      "symbol": "7"
+     },
+     {
+      "color": null,
+      "filter": "(width < 600 OR width IS NULL) AND ch_function_hierarchic IN (5068,5069,5070,5071) AND horizontal_positioning = 5378",
+      "kind": "expr",
+      "label": "Narrow main reaches, accurate positioning, scale 1000-3000",
+      "symbol": "8"
+     },
+     {
+      "color": null,
+      "filter": "(width < 600 OR width IS NULL) AND ch_function_hierarchic IN (5068,5069,5070,5071) AND horizontal_positioning <> 5378",
+      "kind": "expr",
+      "label": "Narrow main reaches, inaccurate positioning, scale 1000-3000",
+      "symbol": "9"
+     },
+     {
+      "color": null,
+      "filter": "ch_function_hierarchic IN (5068,5069,5070,5071) AND horizontal_positioning = 5378",
+      "kind": "expr",
+      "label": "Main reaches, accurate positioning, scale >5000",
+      "symbol": "10"
+     },
+     {
+      "color": null,
+      "filter": "ch_function_hierarchic IN (5068,5069,5070,5071) AND horizontal_positioning <> 5378",
+      "kind": "expr",
+      "label": "Main reaches, accurate positioning, scale >5000",
+      "symbol": "11"
+     },
+     {
+      "color": null,
+      "filter": "ch_function_hierarchic IS NULL or horizontal_positioning IS NULL",
+      "kind": "expr",
+      "label": "Missing attributes",
+      "symbol": "12"
+     },
+     {
+      "color": null,
+      "filter": "ch_function_hierarchic IN (5068,5069,5070,5071) AND horizontal_positioning is NULL",
+      "kind": "expr",
+      "label": "Main reaches, missing attributes",
+      "symbol": "13"
+     }
+    ],
+    "type": "ruleRenderer"
+   },
+   "features": {
+    "compte": 4076,
+    "premieres": [
+     {
+      "_localId": 1,
+      "centroid_lat": 47.515528,
+      "centroid_lon": 9.433785,
+      "ch_bedding_encasement": 5329,
+      "ch_connection_type": 3036,
+      "ch_function_hierarchic": 5066,
+      "ch_function_hydraulic": 367,
+      "ch_usage_current": 4522,
+      "ch_usage_planned": 4569,
+      "clear_height": 200,
+      "fid": null,
+      "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.43376,47.51568],[9.43379,47.51545],[9.4338,47.51545]]}",
+      "horizontal_positioning": 5378,
+      "identifier": "AAA HA25906",
+      "inside_coating": 5383,
+      "last_modification": "2018-04-04T17:24:50.000",
+      "length_effective": 26.12,
+      "material": 3016,
+      "material_abbr_de": "U",
+      "material_abbr_en": "U",
+      "material_abbr_fr": "I",
+      "obj_id": "ch13p7mzRE000002",
+      "remark": null,
+      "rp_from_elevation_accuracy": 5376,
+      "rp_from_fk_wastewater_networkelement": "ch13p7mzWN006356",
+      "rp_from_identifier": "AAA HA25906A",
+      "rp_from_last_modification": "2018-04-04T17:25:04.000",
+      "rp_from_level": null,
+      "rp_from_obj_id": "ch13p7mzRP008696",
+      "rp_to_elevation_accuracy": 5376,
+      "rp_to_fk_wastewater_networkelement": "ch13p7mzRE001161",
+      "rp_to_identifier": "AAA HA25906E",
+      "rp_to_last_modification": "2018-04-04T17:25:04.000",
+      "rp_to_level": null,
+      "rp_to_obj_id": "ch13p7mzRP008697",
+      "width": 200,
+      "ws_fk_main_wastewater_node": null,
+      "ws_identifier": "AAA KA25906",
+      "ws_input_label": "",
+      "ws_last_modification": "2021-08-10T08:14:12.000",
+      "ws_location_name": null,
+      "ws_obj_id": "ch13p7mzCL015009",
+      "ws_output_label": "",
+      "ws_remark": null,
+      "ws_renovation_necessity": 5369,
+      "ws_status": 3027,
+      "ws_structure_condition": 3037,
+      "ws_year_of_construction": 1800,
+      "ws_year_of_replacement": null
+     },
+     {
+      "_localId": 2,
+      "centroid_lat": 47.517886,
+      "centroid_lon": 9.43599,
+      "ch_bedding_encasement": 5329,
+      "ch_connection_type": 3036,
+      "ch_function_hierarchic": 5064,
+      "ch_function_hydraulic": 367,
+      "ch_usage_current": 4522,
+      "ch_usage_planned": 4569,
+      "clear_height": 120,
+      "fid": null,
+      "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.43587,47.51793],[9.43611,47.51784]]}",
+      "horizontal_positioning": 5378,
+      "identifier": "AAA HA38860",
+      "inside_coating": 5383,
+      "last_modification": "2018-04-04T17:24:50.000",
+      "length_effective": 20.41,
+      "material": 153,
+      "material_abbr_de": "ST",
+      "material_abbr_en": "ST",
+      "material_abbr_fr": "AC",
+      "obj_id": "ch13p7mzRE000006",
+      "remark": "E09",
+      "rp_from_elevation_accuracy": 5376,
+      "rp_from_fk_wastewater_networkelement": "ch13p7mzWN001247",
+      "rp_from_identifier": "AAA HA38860A",
+      "rp_from_last_modification": "2018-04-04T17:25:04.000",
+      "rp_from_level": null,
+      "rp_from_obj_id": "ch13p7mzRP003179",
+      "rp_to_elevation_accuracy": 5376,
+      "rp_to_fk_wastewater_networkelement": "ch13p7mzRE005623",
+      "rp_to_identifier": "AAA HA38860E",
+      "rp_to_last_modification": "2018-04-04T17:25:04.000",
+      "rp_to_level": null,
+      "rp_to_obj_id": "ch13p7mzRP003186",
+      "width": 120,
+      "ws_fk_main_wastewater_node": null,
+      "ws_identifier": "AAA KA38860",
+      "ws_input_label": "\nI1=?",
+      "ws_last_modification": "2021-08-10T08:14:12.000",
+      "ws_location_name": null,
+      "ws_obj_id": "ch13p7mzCL017163",
+      "ws_output_label": "",
+      "ws_remark": "E09",
+      "ws_renovation_necessity": 5369,
+      "ws_status": 3027,
+      "ws_structure_condition": 3037,
+      "ws_year_of_construction": 1800,
+      "ws_year_of_replacement": null
+     },
+     {
+      "_localId": 3,
+      "centroid_lat": 47.514231,
+      "centroid_lon": 9.438499,
+      "ch_bedding_encasement": 5329,
+      "ch_connection_type": 3036,
+      "ch_function_hierarchic": 5071,
+      "ch_function_hydraulic": 144,
+      "ch_usage_current": 4520,
+      "ch_usage_planned": 4569,
+      "clear_height": 700,
+      "fid": null,
+      "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.43813,47.5142],[9.43886,47.51427]]}",
+      "horizontal_positioning": 5378,
+      "identifier": "AAA HA24689",
+      "inside_coating": 5383,
+      "last_modification": "2018-04-04T17:24:50.000",
+      "length_effective": 55.41,
+      "material": 3016,
+      "material_abbr_de": "U",
+      "material_abbr_en": "U",
+      "material_abbr_fr": "I",
+      "obj_id": "ch13p7mzRE000015",
+      "remark": null,
+      "rp_from_elevation_accuracy": 5376,
+      "rp_from_fk_wastewater_networkelement": "ch13p7mzWN002401",
+      "rp_from_identifier": "AAA HA24689A",
+      "rp_from_last_modification": "2018-04-04T17:25:04.000",
+      "rp_from_level": null,
+      "rp_from_obj_id": "ch13p7mzRP008138",
+      "rp_to_elevation_accuracy": 5376,
+      "rp_to_fk_wastewater_networkelement": "ch13p7mzWN005575",
+      "rp_to_identifier": "AAA HA24689E",
+      "rp_to_last_modification": "2018-04-04T17:25:04.000",
+      "rp_to_level": null,
+      "rp_to_obj_id": "ch13p7mzRP008139",
+      "width": 700,
+      "ws_fk_main_wastewater_node": null,
+      "ws_identifier": "AAA KA24689",
+      "ws_input_label": "",
+      "ws_last_modification": "2021-08-10T08:14:12.000",
+      "ws_location_name": null,
+      "ws_obj_id": "ch13p7mzCL013962",
+      "ws_output_label": "",
+      "ws_remark": null,
+      "ws_renovation_necessity": 5369,
+      "ws_status": 8493,
+      "ws_structure_condition": 3037,
+      "ws_year_of_construction": 1800,
+      "ws_year_of_replacement": null
+     }
+    ],
+    "derniere": {
+     "_localId": 4076,
+     "centroid_lat": 47.511918,
+     "centroid_lon": 9.433615,
+     "ch_bedding_encasement": 5329,
+     "ch_connection_type": 3036,
+     "ch_function_hierarchic": 5071,
+     "ch_function_hydraulic": 367,
+     "ch_usage_current": 4520,
+     "ch_usage_planned": 4569,
+     "clear_height": 600,
+     "fid": null,
+     "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.43359,47.51169],[9.43359,47.5117],[9.43364,47.51214],[9.43364,47.51214]]}",
+     "horizontal_positioning": 5378,
+     "identifier": "AAA HA5942",
+     "inside_coating": 5383,
+     "last_modification": "2018-04-04T17:24:54.000",
+     "length_effective": 48.81,
+     "material": 3641,
+     "material_abbr_de": "SB",
+     "material_abbr_en": "CS",
+     "material_abbr_fr": "BS",
+     "obj_id": "ch13p7mzRE017200",
+     "remark": null,
+     "rp_from_elevation_accuracy": 5376,
+     "rp_from_fk_wastewater_networkelement": "ch13p7mzWN000468",
+     "rp_from_identifier": "AAA HA5942A",
+     "rp_from_last_modification": "2018-04-04T17:25:04.000",
+     "rp_from_level": 395.88,
+     "rp_from_obj_id": "ch13p7mzRP013178",
+     "rp_to_elevation_accuracy": 5376,
+     "rp_to_fk_wastewater_networkelement": "ch13p7mzWN002537",
+     "rp_to_identifier": "AAA HA5942E",
+     "rp_to_last_modification": "2018-04-04T17:25:04.000",
+     "rp_to_level": 395.56,
+     "rp_to_obj_id": "ch13p7mzRP013179",
+     "width": 600,
+     "ws_fk_main_wastewater_node": null,
+     "ws_identifier": "AAA HA5942",
+     "ws_input_label": "\nI1=?\nI2=?\nI3=?",
+     "ws_last_modification": "2021-08-10T08:14:12.000",
+     "ws_location_name": null,
+     "ws_obj_id": "ch13p7mzCL010691",
+     "ws_output_label": "",
+     "ws_remark": null,
+     "ws_renovation_necessity": 5368,
+     "ws_status": 8493,
+     "ws_structure_condition": 3362,
+     "ws_year_of_construction": 1800,
+     "ws_year_of_replacement": null
+    },
+    "empreinte": "04c430f81eec3915-3l3xp"
+   }
+  },
+  {
+   "_formFieldOrder": [
+    "identifier",
+    "ws_type",
+    "ma_function",
+    "ma_material",
+    "ma_dimension1",
+    "ma_dimension2",
+    "ss_function",
+    "co_level",
+    "status",
+    "fk_owner",
+    "fk_operator",
+    "location_name",
+    "year_of_construction",
+    "renovation_necessity",
+    "co_venting",
+    "co_fastening",
+    "co_identifier",
+    "co_obj_id",
+    "co_level",
+    "co_material",
+    "co_diameter",
+    "co_venting",
+    "co_fastening",
+    "co_remark",
+    "wn_identifier",
+    "wn_obj_id",
+    "wn_bottom_level",
+    "wn_backflow_level",
+    "wn_remark",
+    "identifier",
+    "obj_id",
+    "accessibility",
+    "location_name",
+    "status",
+    "year_of_construction",
+    "inspection_interval",
+    "renovation_necessity",
+    "structure_condition",
+    "replacement_value",
+    "gross_costs",
+    "remark",
+    "_depth",
+    "last_modification",
+    "ma_function",
+    "ma_dimension1",
+    "ma_dimension2",
+    "ma_material",
+    "ma_surface_inflow",
+    "remark",
+    "ss_function",
+    "ss_bypass",
+    "ss_emergency_spillway",
+    "remark"
+   ],
+   "_layerId": "vw_qgep_wastewater_structure",
+   "datasource": "./datasets/qgep_wastewater_structure.gpkg|layername=qgep_wastewater_structure",
+   "displayName": "Wastewater structures",
+   "featureCount": 2489,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "obj_id",
+     "gType": "Text",
+     "label": "Object id",
+     "name": "obj_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifier",
+     "gType": "Text",
+     "label": "Identifier",
+     "name": "identifier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ws_type",
+     "_valueMap": {
+      "discharge_point": "Discharge Point",
+      "infiltration_installation": "Infiltration Installation",
+      "manhole": "Manhole",
+      "special_structure": "Special Structure"
+     },
+     "gType": "Choice",
+     "label": "Water structure type",
+     "name": "ws_type",
+     "qType": "string",
+     "widgetOptions": "{\"choices\":[\"Discharge Point\",\"Infiltration Installation\",\"Manhole\",\"Special Structure\"]}"
+    },
+    {
+     "_rawKey": "ma_function",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_manhole_function",
+      "LayerName": "vl_manhole_function",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_manhole_function\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_manhole_function",
+     "gType": "Ref:Vl_manhole_function",
+     "label": "Manhole function",
+     "name": "ma_function",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ss_function",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": false,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_special_structure_function",
+      "LayerName": "vl_special_structure_function",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_special_structure_function\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_special_structure_function",
+     "gType": "Ref:Vl_special_structure_function",
+     "label": "Function",
+     "name": "ss_function",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "status",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_wastewater_structure_status",
+      "LayerName": "vl_wastewater_structure_status",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_wastewater_structure_status\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_wastewater_structure_status",
+     "gType": "Ref:Vl_wastewater_structure_status",
+     "label": "Status",
+     "name": "status",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "accessibility",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_wastewater_structure_accessibility_13d77bb7_b9a4_447e_a98b_aaa6ac34bb1d",
+      "LayerName": "vl_wastewater_structure_accessibility",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_wastewater_structure_accessibility\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_wastewater_structure_accessibility",
+     "gType": "Ref:Vl_wastewater_structure_accessibility",
+     "label": "Accessibility",
+     "name": "accessibility",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 99999999.99,
+     "_rangeMin": 0,
+     "_rawKey": "gross_costs",
+     "gType": "Numeric",
+     "label": "Gross costs",
+     "name": "gross_costs",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 20,
+     "_rangeMin": 0,
+     "_rawKey": "inspection_interval",
+     "gType": "Numeric",
+     "label": "Inspection interval",
+     "name": "inspection_interval",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "last_modification",
+     "gType": "DateTime",
+     "label": "Last modification",
+     "name": "last_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "location_name",
+     "gType": "Text",
+     "label": "Location name",
+     "name": "location_name",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "remark",
+     "gType": "Text",
+     "label": "Remarks",
+     "name": "remark",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "renovation_necessity",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_wastewater_structure_renovation_necessity",
+      "LayerName": "vl_wastewater_structure_renovation_necessity",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_wastewater_structure_renovation_necessity\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_wastewater_structure_renovation_necessity",
+     "gType": "Ref:Vl_wastewater_structure_renovation_necessity",
+     "label": "Renovation necessity",
+     "name": "renovation_necessity",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 99999999.99,
+     "_rangeMin": 0,
+     "_rawKey": "replacement_value",
+     "gType": "Numeric",
+     "label": "Replacement value",
+     "name": "replacement_value",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "structure_condition",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_wastewater_structure_structure_condition",
+      "LayerName": "vl_wastewater_structure_structure_condition",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_wastewater_structure_structure_condition\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_wastewater_structure_structure_condition",
+     "gType": "Ref:Vl_wastewater_structure_structure_condition",
+     "label": "Structure condition",
+     "name": "structure_condition",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 2100,
+     "_rangeMin": 1800,
+     "_rawKey": "year_of_construction",
+     "gType": "Int",
+     "label": "Year of construction",
+     "name": "year_of_construction",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "co_identifier",
+     "gType": "Text",
+     "label": "Identifier",
+     "name": "co_identifier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "co_remark",
+     "gType": "Text",
+     "label": "Remark",
+     "name": "co_remark",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "co_obj_id",
+     "gType": "Text",
+     "label": "Object id",
+     "name": "co_obj_id",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "co_diameter",
+     "gType": "Int",
+     "label": "Diameter",
+     "name": "co_diameter",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "co_fastening",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_cover_fastening",
+      "LayerName": "vl_cover_fastening",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_cover_fastening\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_cover_fastening",
+     "gType": "Ref:Vl_cover_fastening",
+     "label": "Fastening",
+     "name": "co_fastening",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "co_level",
+     "gType": "Numeric",
+     "label": "Level",
+     "name": "co_level",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "co_material",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_cover_material",
+      "LayerName": "vl_cover_material",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_manhole_material\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_cover_material",
+     "gType": "Ref:Vl_cover_material",
+     "label": "Material",
+     "name": "co_material",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "co_venting",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_cover_venting",
+      "LayerName": "vl_cover_venting",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_cover_venting\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_cover_venting",
+     "gType": "Ref:Vl_cover_venting",
+     "label": "Venting",
+     "name": "co_venting",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ma_orientation",
+     "gType": "Text",
+     "label": "Orientation",
+     "name": "ma_orientation",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "ma_dimension1",
+     "gType": "Int",
+     "label": "Dimension 1",
+     "name": "ma_dimension1",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "ma_dimension2",
+     "gType": "Int",
+     "label": "Dimension 2",
+     "name": "ma_dimension2",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ma_material",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_manhole_material20151117174216343",
+      "LayerName": "vl_manhole_material",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_manhole_material\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_manhole_material",
+     "gType": "Ref:Vl_manhole_material",
+     "label": "Material",
+     "name": "ma_material",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ma_surface_inflow",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_manhole_surface_inflow20151117174216393",
+      "LayerName": "vl_manhole_surface_inflow",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_manhole_surface_inflow\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_manhole_surface_inflow",
+     "gType": "Ref:Vl_manhole_surface_inflow",
+     "label": "Surface inflow",
+     "name": "ma_surface_inflow",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ss_bypass",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "vl_special_structure_bypass",
+      "LayerName": "vl_special_structure_bypass",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_special_structure_bypass\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_special_structure_bypass",
+     "gType": "Ref:Vl_special_structure_bypass",
+     "label": "Bypass",
+     "name": "ss_bypass",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ss_emergency_spillway",
+     "_refTarget": {
+      "AllowMulti": false,
+      "AllowNull": true,
+      "Description": {},
+      "FilterExpression": {},
+      "Key": "code",
+      "Layer": "special_structure_emergency_spillway20180530222948807",
+      "LayerName": "vl_special_structure_emergency_spillway",
+      "LayerProviderName": "postgres",
+      "LayerSource": "dbname='qgepdemodata' service='pg_qgep' sslmode=require key='code' checkPrimaryKeyUnicity='1' table=\"public\".\"vl_special_structure_emergency_spillway\"",
+      "NofColumns": 1,
+      "OrderByValue": true,
+      "UseCompleter": false,
+      "Value": "value_en"
+     },
+     "_refTargetField": "code",
+     "_refTargetTable": "Vl_special_structure_emergency_spillway",
+     "gType": "Ref:Vl_special_structure_emergency_spillway",
+     "label": "Emergency spillway",
+     "name": "ss_emergency_spillway",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "wn_obj_id",
+     "gType": "Text",
+     "label": "Object id",
+     "name": "wn_obj_id",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "wn_backflow_level",
+     "gType": "Numeric",
+     "label": "Backflow level",
+     "name": "wn_backflow_level",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 4000,
+     "_rangeMin": 0,
+     "_rawKey": "wn_bottom_level",
+     "gType": "Numeric",
+     "label": "Bottom level",
+     "name": "wn_bottom_level",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "wn_fk_hydr_geometry",
+     "gType": "Text",
+     "label": "wn_fk_hydr_geometry",
+     "name": "wn_fk_hydr_geometry",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "wn_fk_wastewater_structure",
+     "gType": "Text",
+     "label": "wn_fk_wastewater_structure",
+     "name": "wn_fk_wastewater_structure",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "wn_identifier",
+     "gType": "Text",
+     "label": "Identifier",
+     "name": "wn_identifier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "wn_last_modification",
+     "gType": "DateTime",
+     "label": "wn_last_modification",
+     "name": "wn_last_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "wn_remark",
+     "gType": "Text",
+     "label": "Remark",
+     "name": "wn_remark",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": true,
+   "name": "Wastewater_structures",
+   "style": {
+    "categories": [
+     {
+      "color": "#ffffff",
+      "label": "manhole, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow  - main drainage system",
+      "value": "manhole, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow  - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "manhole, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow - minor drainage system",
+      "value": "manhole, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow - minor drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "special structure, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow  - main drainage system",
+      "value": "special structure, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow  - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "special structure, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow - minor drainage system",
+      "value": "special structure, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow - minor drainage system"
+     },
+     {
+      "color": "#ff0000",
+      "label": "rail_track_gully - main drainage system",
+      "value": "rail_track_gully - main drainage system"
+     },
+     {
+      "color": "#ff0000",
+      "label": "rail_track_gully - minor drainage system",
+      "value": "rail_track_gully - minor drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "pump_station - main drainage system",
+      "value": "pump_station - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "pump_station - minor drainage system",
+      "value": "pump_station - minor drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "oil_separator - main drainage system",
+      "value": "oil_separator - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "oil_separator - minor drainage system",
+      "value": "oil_separator - minor drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "floating_material_separator - main drainage system",
+      "value": "floating_material_separator - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "floating_material_separator - minor drainage system",
+      "value": "floating_material_separator - minor drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "rain_water_manhole - main drainage system",
+      "value": "rain_water_manhole - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "rain_water_manhole - minor drainage system",
+      "value": "rain_water_manhole - minor drainage system"
+     },
+     {
+      "color": "#d7d7d7",
+      "label": "slurry_collector - main drainage system",
+      "value": "slurry_collector - main drainage system"
+     },
+     {
+      "color": "#d7d7d7",
+      "label": "slurry_collector - minor drainage system",
+      "value": "slurry_collector - minor drainage system"
+     },
+     {
+      "color": "#d7d7d7",
+      "label": "gully - main drainage system",
+      "value": "gully - main drainage system"
+     },
+     {
+      "color": "#d7d7d7",
+      "label": "gully - minor drainage system",
+      "value": "gully - minor drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "drainage_channel - main drainage system",
+      "value": "drainage_channel - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "drainage_channel - minor drainage system",
+      "value": "drainage_channel - minor drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "other - main drainage system",
+      "value": "other - main drainage system"
+     },
+     {
+      "color": "#ffffff",
+      "label": "other - minor drainage system",
+      "value": "other - minor drainage system"
+     }
+    ],
+    "field": "",
+    "rules": [
+     {
+      "color": "#ffffff",
+      "filter": "ma_function IN (204,5345,4532,4533,4537,4798,5346) AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "manhole, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow  - main drainage system",
+      "symbol": "0"
+     },
+     {
+      "color": "#ffffff",
+      "filter": "ma_function IN (204,5345,4532,4533,4537,4798,5346) AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "manhole, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow - minor drainage system",
+      "symbol": "1"
+     },
+     {
+      "color": "#ffffff",
+      "filter": "ws_type = 'special_structure' AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "special structure, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow  - main drainage system",
+      "symbol": "2"
+     },
+     {
+      "color": "#ffffff",
+      "filter": "ws_type = 'special_structure' AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "special structure, unknown, drop_structure, co_venting, jetting_manhole, separating_structure, stormwater_overflow - minor drainage system",
+      "symbol": "3"
+     },
+     {
+      "color": "#ff0000",
+      "filter": " ma_function = 228 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "rail_track_gully - main drainage system",
+      "symbol": "4"
+     },
+     {
+      "color": "#ff0000",
+      "filter": " ma_function = 228 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "rail_track_gully - minor drainage system",
+      "symbol": "5"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 4536 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "pump_station - main drainage system",
+      "symbol": "6"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 4536 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "pump_station - minor drainage system",
+      "symbol": "7"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 1008 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "oil_separator - main drainage system",
+      "symbol": "8"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 1008 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "oil_separator - minor drainage system",
+      "symbol": "9"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 1008 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "floating_material_separator - main drainage system",
+      "symbol": "10"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 1008 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "floating_material_separator - minor drainage system",
+      "symbol": "11"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 3267 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "rain_water_manhole - main drainage system",
+      "symbol": "12"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 3267 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "rain_water_manhole - minor drainage system",
+      "symbol": "13"
+     },
+     {
+      "color": "#d7d7d7",
+      "filter": " ma_function = 2742 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "slurry_collector - main drainage system",
+      "symbol": "14"
+     },
+     {
+      "color": "#d7d7d7",
+      "filter": " ma_function = 2742 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "slurry_collector - minor drainage system",
+      "symbol": "15"
+     },
+     {
+      "color": "#d7d7d7",
+      "filter": " ma_function = 3266 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "gully - main drainage system",
+      "symbol": "16"
+     },
+     {
+      "color": "#d7d7d7",
+      "filter": " ma_function = 3266 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "gully - minor drainage system",
+      "symbol": "17"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 3472 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "drainage_channel - main drainage system",
+      "symbol": "18"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 3472 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "drainage_channel - minor drainage system",
+      "symbol": "19"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 5344 AND _channel_function_hierarchic IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "other - main drainage system",
+      "symbol": "20"
+     },
+     {
+      "color": "#ffffff",
+      "filter": " ma_function = 5344 AND _channel_function_hierarchic NOT IN (5068,5069,5070,5071)",
+      "kind": "expr",
+      "label": "other - minor drainage system",
+      "symbol": "21"
+     },
+     {
+      "color": "#ff21fc",
+      "filter": "ELSE",
+      "kind": "expr",
+      "label": "",
+      "symbol": "22"
+     }
+    ],
+    "type": "ruleRenderer"
+   },
+   "features": {
+    "compte": 2489,
+    "premieres": [
+     {
+      "_localId": 1,
+      "accessibility": null,
+      "co_diameter": null,
+      "co_fastening": null,
+      "co_identifier": "LIE232",
+      "co_level": null,
+      "co_material": null,
+      "co_obj_id": "ch13p7mzCO001846",
+      "co_remark": "Privat",
+      "co_venting": null,
+      "fid": null,
+      "gross_costs": null,
+      "identifier": "LIE232",
+      "inspection_interval": null,
+      "last_modification": "2021-08-10T08:14:12.000",
+      "latitude": 47.512984,
+      "location_name": null,
+      "longitude": 9.434478,
+      "ma_dimension1": null,
+      "ma_dimension2": null,
+      "ma_function": 3266,
+      "ma_material": null,
+      "ma_orientation": null,
+      "ma_surface_inflow": null,
+      "obj_id": "ch13p7mzMA006237",
+      "remark": null,
+      "renovation_necessity": 5369,
+      "replacement_value": null,
+      "ss_bypass": null,
+      "ss_emergency_spillway": null,
+      "ss_function": null,
+      "status": 3027,
+      "structure_condition": 3037,
+      "wn_backflow_level": null,
+      "wn_bottom_level": null,
+      "wn_fk_hydr_geometry": null,
+      "wn_fk_wastewater_structure": "ch13p7mzMA006237",
+      "wn_identifier": "LIE232",
+      "wn_last_modification": "2018-04-04T17:23:52.000",
+      "wn_obj_id": "ch13p7mzWN004139",
+      "wn_remark": null,
+      "ws_type": "manhole",
+      "year_of_construction": 1800
+     },
+     {
+      "_localId": 2,
+      "accessibility": null,
+      "co_diameter": null,
+      "co_fastening": null,
+      "co_identifier": "8320.0057",
+      "co_level": null,
+      "co_material": null,
+      "co_obj_id": "ch13p7mzCO001295",
+      "co_remark": null,
+      "co_venting": null,
+      "fid": null,
+      "gross_costs": null,
+      "identifier": "8320.0057",
+      "inspection_interval": null,
+      "last_modification": "2021-08-10T08:14:13.000",
+      "latitude": 47.512143,
+      "location_name": "TRY1",
+      "longitude": 9.433229,
+      "ma_dimension1": null,
+      "ma_dimension2": null,
+      "ma_function": null,
+      "ma_material": null,
+      "ma_orientation": null,
+      "ma_surface_inflow": null,
+      "obj_id": "ch13p7mzSS000131",
+      "remark": "PW Rosasco",
+      "renovation_necessity": 5369,
+      "replacement_value": null,
+      "ss_bypass": null,
+      "ss_emergency_spillway": null,
+      "ss_function": 246,
+      "status": 8493,
+      "structure_condition": null,
+      "wn_backflow_level": null,
+      "wn_bottom_level": 394,
+      "wn_fk_hydr_geometry": null,
+      "wn_fk_wastewater_structure": "ch13p7mzSS000131",
+      "wn_identifier": "8320.0057",
+      "wn_last_modification": "2018-04-04T17:23:52.000",
+      "wn_obj_id": "ch13p7mzWN003672",
+      "wn_remark": "PW Rosasco",
+      "ws_type": "special_structure",
+      "year_of_construction": 1800
+     },
+     {
+      "_localId": 3,
+      "accessibility": null,
+      "co_diameter": null,
+      "co_fastening": null,
+      "co_identifier": "AAA DE52102",
+      "co_level": null,
+      "co_material": null,
+      "co_obj_id": "ch13p7mzCO010033",
+      "co_remark": "E09",
+      "co_venting": null,
+      "fid": null,
+      "gross_costs": null,
+      "identifier": "AAA DE52102",
+      "inspection_interval": null,
+      "last_modification": "2021-08-10T08:14:12.000",
+      "latitude": 47.513157,
+      "location_name": null,
+      "longitude": 9.434084,
+      "ma_dimension1": null,
+      "ma_dimension2": null,
+      "ma_function": 204,
+      "ma_material": null,
+      "ma_orientation": null,
+      "ma_surface_inflow": null,
+      "obj_id": "ch13p7mzMA003470",
+      "remark": "E09",
+      "renovation_necessity": 5369,
+      "replacement_value": null,
+      "ss_bypass": null,
+      "ss_emergency_spillway": null,
+      "ss_function": null,
+      "status": 3027,
+      "structure_condition": 3037,
+      "wn_backflow_level": null,
+      "wn_bottom_level": null,
+      "wn_fk_hydr_geometry": null,
+      "wn_fk_wastewater_structure": null,
+      "wn_identifier": null,
+      "wn_last_modification": null,
+      "wn_obj_id": null,
+      "wn_remark": null,
+      "ws_type": "manhole",
+      "year_of_construction": 1800
+     }
+    ],
+    "derniere": {
+     "_localId": 2489,
+     "accessibility": null,
+     "co_diameter": null,
+     "co_fastening": null,
+     "co_identifier": null,
+     "co_level": null,
+     "co_material": null,
+     "co_obj_id": null,
+     "co_remark": null,
+     "co_venting": null,
+     "fid": null,
+     "gross_costs": null,
+     "identifier": "8385.0031",
+     "inspection_interval": null,
+     "last_modification": "2021-08-10T08:14:13.000",
+     "latitude": 47.5145,
+     "location_name": null,
+     "longitude": 9.43711,
+     "ma_dimension1": null,
+     "ma_dimension2": null,
+     "ma_function": null,
+     "ma_material": null,
+     "ma_orientation": null,
+     "ma_surface_inflow": null,
+     "obj_id": "ch13p7mzSS000443",
+     "remark": null,
+     "renovation_necessity": 5369,
+     "replacement_value": null,
+     "ss_bypass": null,
+     "ss_emergency_spillway": null,
+     "ss_function": 3674,
+     "status": 3633,
+     "structure_condition": 3037,
+     "wn_backflow_level": null,
+     "wn_bottom_level": 395.87,
+     "wn_fk_hydr_geometry": null,
+     "wn_fk_wastewater_structure": "ch13p7mzSS000443",
+     "wn_identifier": "0505.0070",
+     "wn_last_modification": "2018-04-04T17:23:52.000",
+     "wn_obj_id": "ch13p7mzWN001961",
+     "wn_remark": null,
+     "ws_type": "special_structure",
+     "year_of_construction": 1800
+    },
+    "empreinte": "61131da4a231e70a-1ipmo"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

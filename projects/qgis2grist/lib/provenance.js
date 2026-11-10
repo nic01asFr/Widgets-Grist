@@ -12,7 +12,7 @@
   'use strict';
 
   const PLATFORM_ID = 'widgets-grist-qgis2grist';
-  const DEFAULT_CLASSIFICATION = 'cerema_internal';
+  const DEFAULT_CLASSIFICATION = 'internal';
   const DEFAULT_CORPUS = 'qgis-import';
 
   function currentMillesime(date) {

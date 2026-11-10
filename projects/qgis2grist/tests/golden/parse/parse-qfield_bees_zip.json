@@ -1,0 +1,1972 @@
+{
+ "fixture": "qfield_bees_zip",
+ "fichier": "web/qfield_bees.zip",
+ "extension": "zip",
+ "nbCouches": 8,
+ "couches": [
+  {
+   "_formFieldOrder": [
+    "percentage",
+    "apiary_uuid",
+    "apiary_id",
+    "field_uuid",
+    "field_id",
+    "description"
+   ],
+   "_layerId": "Pollen_Consumption_9dac944e_6937_4617_928b_0daaf97303e9",
+   "datasource": "./datasets/bees.gpkg|layername=Pollen_Consumption",
+   "displayName": "Pollen_Consumption",
+   "featureCount": 12,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 100,
+     "_rangeMin": 0,
+     "_rawKey": "percentage",
+     "gType": "Int",
+     "label": "Percentage",
+     "name": "percentage",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "uuid",
+     "gType": "Text",
+     "label": "uuid",
+     "name": "uuid",
+     "qType": "string"
+    },
+    {
+     "_isQgsRelation": true,
+     "_rawKey": "apiary_uuid",
+     "_refTarget": {
+      "AllowAddFeatures": false,
+      "AllowNULL": false,
+      "MapIdentification": false,
+      "OrderByValue": false,
+      "ReadOnly": false,
+      "ReferencedLayerDataSource": "C:/Users/Linda/Documents/projekte/demo_pro/bees.gpkg|layername=apiary",
+      "ReferencedLayerId": "apiary_27954fba_aad8_4336_8b19_23afed462c51",
+      "ReferencedLayerName": "Apiary",
+      "ReferencedLayerProviderKey": "ogr",
+      "Relation": "Pollen_Con_apiary_uuid_apiary_279_uuid",
+      "ShowForm": false,
+      "ShowOpenFormButton": true
+     },
+     "_refTargetField": "uuid",
+     "_refTargetTable": "Apiary",
+     "gType": "Ref:Apiary",
+     "label": "Apiary UUID",
+     "name": "apiary_uuid",
+     "qType": "string"
+    },
+    {
+     "_isQgsRelation": true,
+     "_rawKey": "field_uuid",
+     "_refTarget": {
+      "AllowAddFeatures": false,
+      "AllowNULL": false,
+      "MapIdentification": false,
+      "OrderByValue": false,
+      "ReadOnly": false,
+      "ReferencedLayerDataSource": "C:/Users/Linda/Documents/projekte/demo_pro/bees.gpkg|layername=area",
+      "ReferencedLayerId": "ogr_dbname___home_marco_dev_QField_demo_projects_citybees_new_gpkg__table__area___geom__sql__ba518f87_384f_494b_acd8_66843717f48b",
+      "ReferencedLayerName": "Fields",
+      "ReferencedLayerProviderKey": "ogr",
+      "Relation": "Pollen_Con_field_uuid_ogr_dbname_uuid",
+      "ShowForm": false,
+      "ShowOpenFormButton": true
+     },
+     "_refTargetField": "uuid",
+     "_refTargetTable": "Fields",
+     "gType": "Ref:Fields",
+     "label": "Field UUID",
+     "name": "field_uuid",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Pollen_Consumption",
+   "style": null,
+   "features": {
+    "compte": 12,
+    "premieres": [
+     {
+      "_localId": 1,
+      "apiary_uuid": "{82417071-c18a-4d6a-b2cd-44e46e3e65b6}",
+      "fid": null,
+      "field_uuid": "{5e5c21c9-68ca-4560-8498-484084c266da}",
+      "percentage": 9,
+      "uuid": "{658cf61b-4e5b-4622-9af8-1ee0ce9c7c1e}"
+     },
+     {
+      "_localId": 2,
+      "apiary_uuid": "{1e90e07e-422f-476a-a6fd-cc20b74a807f}",
+      "fid": null,
+      "field_uuid": "{1ea9bdf9-8646-4d7d-adc8-5cde5d28478e}",
+      "percentage": 9,
+      "uuid": "{71564a5d-0ab1-40ee-887c-0924bd61b26b}"
+     },
+     {
+      "_localId": 3,
+      "apiary_uuid": "{1e90e07e-422f-476a-a6fd-cc20b74a807f}",
+      "fid": null,
+      "field_uuid": "{c7407437-2fec-4871-a45f-a940c7de458e}",
+      "percentage": 8,
+      "uuid": "{748453eb-78a9-4e74-b88b-d4c106ace8c3}"
+     }
+    ],
+    "derniere": {
+     "_localId": 12,
+     "apiary_uuid": "{0235be9c-2026-42ac-a99c-f9e8183fc602}",
+     "fid": null,
+     "field_uuid": "{064a2978-83fe-4e93-ab3c-1ed5b2a76258}",
+     "percentage": 10,
+     "uuid": "{5cbeaae0-9123-4161-bd5e-2d8031014daa}"
+    },
+    "empreinte": "b9384e3f2695be56-1t0"
+   }
+  },
+  {
+   "_formFieldOrder": [
+    "reviewer",
+    "review_date",
+    "apiary_uuid",
+    "apiary_id"
+   ],
+   "_layerId": "Reviews_c8ab909e_4686_45c7_affe_08141059dfd0",
+   "datasource": "./datasets/bees.gpkg|layername=Reviews",
+   "displayName": "Apiary_Reviews",
+   "featureCount": 16,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "reviewer",
+     "gType": "Text",
+     "label": "Reviewer",
+     "name": "reviewer",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "review_date",
+     "gType": "DateTime",
+     "label": "Date of Review",
+     "name": "review_date",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 2147483647,
+     "_rangeMin": -2147483648,
+     "_rawKey": "apiary_id",
+     "gType": "Int",
+     "label": "apiary_id",
+     "name": "apiary_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "uuid",
+     "gType": "Text",
+     "label": "uuid",
+     "name": "uuid",
+     "qType": "string"
+    },
+    {
+     "_isQgsRelation": true,
+     "_rawKey": "apiary_uuid",
+     "_refTarget": {
+      "AllowAddFeatures": false,
+      "AllowNULL": false,
+      "MapIdentification": true,
+      "OrderByValue": false,
+      "ReadOnly": false,
+      "ReferencedLayerDataSource": "C:/Users/Linda/Documents/projekte/demo_pro/bees.gpkg|layername=apiary",
+      "ReferencedLayerId": "apiary_27954fba_aad8_4336_8b19_23afed462c51",
+      "ReferencedLayerName": "Apiary",
+      "ReferencedLayerProviderKey": "ogr",
+      "Relation": "Reviews_c8_apiary_uuid_apiary_279_uuid",
+      "ShowForm": false,
+      "ShowOpenFormButton": true
+     },
+     "_refTargetField": "uuid",
+     "_refTargetTable": "Apiary",
+     "gType": "Ref:Apiary",
+     "label": "apiary_uuid",
+     "name": "apiary_uuid",
+     "qType": "string"
+    }
+   ],
+   "geomType": "No geometry",
+   "hasData": true,
+   "name": "Apiary_Reviews",
+   "style": null,
+   "features": {
+    "compte": 16,
+    "premieres": [
+     {
+      "_localId": 1,
+      "apiary_id": 26,
+      "apiary_uuid": "{014be504-b170-44ef-96d6-333e874bd30e}",
+      "fid": null,
+      "review_date": "2022-10-04",
+      "reviewer": "David Signer",
+      "uuid": "{b0076270-ad05-4c55-a509-0b010156b3ed}"
+     },
+     {
+      "_localId": 2,
+      "apiary_id": 9,
+      "apiary_uuid": "{07453566-026b-4516-a449-a864fe768f8b}",
+      "fid": null,
+      "review_date": "2022-09-24",
+      "reviewer": "Matteo Molino",
+      "uuid": "{3a47f436-c6f6-4986-8fa5-084cc91d395b}"
+     },
+     {
+      "_localId": 3,
+      "apiary_id": 47,
+      "apiary_uuid": "{1511c328-29db-43d0-be29-e49be6ddb1dd}",
+      "fid": null,
+      "review_date": "2022-05-25",
+      "reviewer": "Maya Mielina",
+      "uuid": "{2cb8dba5-4976-4c51-a23a-9b3ca24371a3}"
+     }
+    ],
+    "derniere": {
+     "_localId": 16,
+     "apiary_id": 27,
+     "apiary_uuid": "{92ea9423-a042-4e19-8a55-8c9650438de1}",
+     "fid": null,
+     "review_date": "2022-10-03",
+     "reviewer": "Maya Mielina",
+     "uuid": "{9805e723-f7a1-4ed6-b026-4169f76fbf1c}"
+    },
+    "empreinte": "07c11106abd5df8e-2fr"
+   }
+  },
+  {
+   "_formFieldOrder": [
+    "nbr_of_boxes",
+    "bee_species",
+    "bee_amount",
+    "beekeeper",
+    "average_harvest",
+    "picture",
+    "disease",
+    "kind_of_disease",
+    "source",
+    "quality",
+    "horizontal_accuracy",
+    "nr_used_satellites",
+    "fix_status_descr",
+    "x",
+    "y",
+    "z",
+    "position_locked"
+   ],
+   "_layerId": "apiary_27954fba_aad8_4336_8b19_23afed462c51",
+   "datasource": "./datasets/bees.gpkg|layername=apiary",
+   "displayName": "Apiary",
+   "featureCount": 35,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 10,
+     "_rangeMin": 1,
+     "_rawKey": "nbr_of_boxes",
+     "gType": "Int",
+     "label": "Number of Boxes",
+     "name": "nbr_of_boxes",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "bee_species",
+     "_valueMap": {
+      "Apis Mellifera": "Buckfast bee",
+      "Apis Mellifera Carnica": "Carniolan honey bee",
+      "Apis Mellifera Mellifera": "European honey bee"
+     },
+     "gType": "Choice",
+     "label": "Species of Bees",
+     "name": "bee_species",
+     "qType": "string",
+     "widgetOptions": "{\"choices\":[\"Buckfast bee\",\"Carniolan honey bee\",\"European honey bee\"]}"
+    },
+    {
+     "_rawKey": "bee_amount",
+     "_valueMap": {
+      "1000": "< 1000",
+      "10000": "1000 - 10000",
+      "100000": "> 10000"
+     },
+     "gType": "Choice",
+     "label": "Amount of Bees",
+     "name": "bee_amount",
+     "qType": "string",
+     "widgetOptions": "{\"choices\":[\"1000 - 10000\",\"< 1000\",\"> 10000\"]}"
+    },
+    {
+     "_rawKey": "beekeeper",
+     "gType": "Text",
+     "label": "Beekeeper",
+     "name": "beekeeper",
+     "qType": "string"
+    },
+    {
+     "_externalResource": {
+      "DocumentViewer": 1,
+      "DocumentViewerHeight": 0,
+      "DocumentViewerWidth": 0,
+      "FileWidget": true,
+      "FileWidgetButton": true,
+      "FileWidgetFilter": {},
+      "PropertyCollection": {
+       "name": {},
+       "properties": {},
+       "type": "collection"
+      },
+      "RelativeStorage": 1,
+      "StorageAuthConfigId": {},
+      "StorageMode": 0,
+      "StorageType": {}
+     },
+     "_rawKey": "picture",
+     "gType": "Text",
+     "label": "Photo",
+     "name": "picture",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "disease",
+     "gType": "Bool",
+     "label": "Infected",
+     "name": "disease",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "kind_of_disease",
+     "_valueMap": {
+      "AFB": "American Foulbreed",
+      "EFB": "European Foulbreed"
+     },
+     "gType": "Choice",
+     "label": "Kind of Disease",
+     "name": "kind_of_disease",
+     "qType": "string",
+     "widgetOptions": "{\"choices\":[\"American Foulbreed\",\"European Foulbreed\"]}"
+    },
+    {
+     "_rangeMax": 100,
+     "_rangeMin": 0,
+     "_rawKey": "average_harvest",
+     "gType": "Int",
+     "label": "Yearly Harvest (kg)",
+     "name": "average_harvest",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "area_id",
+     "gType": "Text",
+     "label": "Area mostly used",
+     "name": "area_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "uuid",
+     "gType": "Text",
+     "label": "ID",
+     "name": "uuid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "source",
+     "gType": "Text",
+     "label": "Source",
+     "name": "source",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "quality",
+     "gType": "Text",
+     "label": "Quality",
+     "name": "quality",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "x",
+     "gType": "Text",
+     "label": "X",
+     "name": "x",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "y",
+     "gType": "Text",
+     "label": "Y",
+     "name": "y",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "z",
+     "gType": "Text",
+     "label": "Z",
+     "name": "z",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "horizontal_accuracy",
+     "gType": "Text",
+     "label": "Horizontal accuracy",
+     "name": "horizontal_accuracy",
+     "qType": "string"
+    },
+    {
+     "_rangeMax": 2147483647,
+     "_rangeMin": -2147483648,
+     "_rawKey": "nr_used_satellites",
+     "gType": "Int",
+     "label": "Nb. of satellites",
+     "name": "nr_used_satellites",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "fix_status_descr",
+     "gType": "Text",
+     "label": "Fix status",
+     "name": "fix_status_descr",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "position_locked",
+     "gType": "Bool",
+     "label": "Position locked?",
+     "name": "position_locked",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": true,
+   "name": "Apiary",
+   "style": {
+    "categories": [
+     {
+      "color": "#de7300",
+      "label": "European honey bee",
+      "value": "Apis Mellifera Mellifera"
+     },
+     {
+      "color": "#2da4ff",
+      "label": "Buckfast bee",
+      "value": "Apis Mellifera"
+     },
+     {
+      "color": "#9d3796",
+      "label": "Carniolan honey bee",
+      "value": "Apis Mellifera Carnica"
+     }
+    ],
+    "field": "bee_species",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 35,
+    "premieres": [
+     {
+      "_localId": 1,
+      "area_id": null,
+      "average_harvest": 20,
+      "bee_amount": "100000",
+      "bee_species": "Apis Mellifera",
+      "beekeeper": "Rita Levi Montalcini",
+      "disease": 1,
+      "fid": null,
+      "fix_status_descr": null,
+      "horizontal_accuracy": null,
+      "kind_of_disease": "EFB",
+      "latitude": 46.811121,
+      "longitude": 9.259313,
+      "nbr_of_boxes": 10,
+      "nr_used_satellites": null,
+      "picture": "DCIM/4.jpg",
+      "position_locked": null,
+      "quality": null,
+      "source": null,
+      "uuid": "{d89d4955-0d11-43b9-a6e5-32add1729628}",
+      "x": null,
+      "y": null,
+      "z": null
+     },
+     {
+      "_localId": 2,
+      "area_id": null,
+      "average_harvest": 10,
+      "bee_amount": "10000",
+      "bee_species": "Apis Mellifera",
+      "beekeeper": "Stephen Hawking",
+      "disease": 0,
+      "fid": null,
+      "fix_status_descr": null,
+      "horizontal_accuracy": null,
+      "kind_of_disease": null,
+      "latitude": 46.809588,
+      "longitude": 9.258077,
+      "nbr_of_boxes": 4,
+      "nr_used_satellites": null,
+      "picture": "DCIM/4.jpg",
+      "position_locked": null,
+      "quality": null,
+      "source": null,
+      "uuid": "{d6a44bf1-9a33-4b4a-9b2d-9f88928aaf24}",
+      "x": null,
+      "y": null,
+      "z": null
+     },
+     {
+      "_localId": 3,
+      "area_id": null,
+      "average_harvest": null,
+      "bee_amount": "1000",
+      "bee_species": "Apis Mellifera Mellifera",
+      "beekeeper": "Sheldon Cooper",
+      "disease": 0,
+      "fid": null,
+      "fix_status_descr": null,
+      "horizontal_accuracy": null,
+      "kind_of_disease": null,
+      "latitude": 46.807408,
+      "longitude": 9.257755,
+      "nbr_of_boxes": 3,
+      "nr_used_satellites": null,
+      "picture": "DCIM/2.jpg",
+      "position_locked": null,
+      "quality": null,
+      "source": null,
+      "uuid": "{82417071-c18a-4d6a-b2cd-44e46e3e65b6}",
+      "x": null,
+      "y": null,
+      "z": null
+     }
+    ],
+    "derniere": {
+     "_localId": 35,
+     "area_id": null,
+     "average_harvest": 20,
+     "bee_amount": "1000",
+     "bee_species": "Apis Mellifera Carnica",
+     "beekeeper": "Mac Moneysack",
+     "disease": 1,
+     "fid": null,
+     "fix_status_descr": null,
+     "horizontal_accuracy": null,
+     "kind_of_disease": "EFB",
+     "latitude": 46.809676,
+     "longitude": 9.258081,
+     "nbr_of_boxes": 5,
+     "nr_used_satellites": null,
+     "picture": "DCIM/3.jpg",
+     "position_locked": null,
+     "quality": null,
+     "source": null,
+     "uuid": "{555a66d9-4a35-4bbd-bf70-e790b35a2a57}",
+     "x": null,
+     "y": null,
+     "z": null
+    },
+    "empreinte": "4446936a8bb8c9f1-cpn"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "buildings_3bd3a9b3_9f70_44bd_9390_807f598c2835",
+   "datasource": "./basemaps/laax.gpkg|layername=buildings",
+   "displayName": "buildings",
+   "featureCount": 3790,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "osm_id",
+     "gType": "Text",
+     "label": "osm_id",
+     "name": "osm_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "osm_way_id",
+     "gType": "Text",
+     "label": "osm_way_id",
+     "name": "osm_way_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "name",
+     "gType": "Text",
+     "label": "name",
+     "name": "name",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "type",
+     "gType": "Text",
+     "label": "type",
+     "name": "type",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "aeroway",
+     "gType": "Text",
+     "label": "aeroway",
+     "name": "aeroway",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "amenity",
+     "gType": "Text",
+     "label": "amenity",
+     "name": "amenity",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "admin_level",
+     "gType": "Text",
+     "label": "admin_level",
+     "name": "admin_level",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "barrier",
+     "gType": "Text",
+     "label": "barrier",
+     "name": "barrier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "boundary",
+     "gType": "Text",
+     "label": "boundary",
+     "name": "boundary",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "building",
+     "gType": "Text",
+     "label": "building",
+     "name": "building",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "craft",
+     "gType": "Text",
+     "label": "craft",
+     "name": "craft",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "geological",
+     "gType": "Text",
+     "label": "geological",
+     "name": "geological",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "historic",
+     "gType": "Text",
+     "label": "historic",
+     "name": "historic",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "land_area",
+     "gType": "Text",
+     "label": "land_area",
+     "name": "land_area",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "landuse",
+     "gType": "Text",
+     "label": "landuse",
+     "name": "landuse",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "leisure",
+     "gType": "Text",
+     "label": "leisure",
+     "name": "leisure",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "man_made",
+     "gType": "Text",
+     "label": "man_made",
+     "name": "man_made",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "military",
+     "gType": "Text",
+     "label": "military",
+     "name": "military",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "natural",
+     "gType": "Text",
+     "label": "natural",
+     "name": "natural",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "office",
+     "gType": "Text",
+     "label": "office",
+     "name": "office",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "place",
+     "gType": "Text",
+     "label": "place",
+     "name": "place",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "shop",
+     "gType": "Text",
+     "label": "shop",
+     "name": "shop",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sport",
+     "gType": "Text",
+     "label": "sport",
+     "name": "sport",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "tourism",
+     "gType": "Text",
+     "label": "tourism",
+     "name": "tourism",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "other_tags",
+     "gType": "Text",
+     "label": "other_tags",
+     "name": "other_tags",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "orig_ogc_fid",
+     "gType": "Text",
+     "label": "orig_ogc_fid",
+     "name": "orig_ogc_fid",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Buildings",
+   "style": {
+    "categories": [
+     {
+      "color": "#e6ded3",
+      "label": "Building",
+      "value": "Building"
+     },
+     {
+      "color": "#c2bdb5",
+      "label": "Shadow 1",
+      "value": "Shadow 1"
+     },
+     {
+      "color": "#c2bdb5",
+      "label": "Shadow 2",
+      "value": "Shadow 2"
+     },
+     {
+      "color": "#c2bdb5",
+      "label": "Shadow 3",
+      "value": "Shadow 3"
+     }
+    ],
+    "field": "",
+    "rules": [
+     {
+      "color": "#e6ded3",
+      "filter": "",
+      "kind": "else",
+      "label": "Building",
+      "symbol": "0"
+     },
+     {
+      "color": "#c2bdb5",
+      "filter": "",
+      "kind": "else",
+      "label": "Shadow 1",
+      "symbol": "1"
+     },
+     {
+      "color": "#c2bdb5",
+      "filter": "",
+      "kind": "else",
+      "label": "Shadow 2",
+      "symbol": "2"
+     },
+     {
+      "color": "#c2bdb5",
+      "filter": "",
+      "kind": "else",
+      "label": "Shadow 3",
+      "symbol": "3"
+     }
+    ],
+    "type": "ruleRenderer"
+   },
+   "features": {
+    "compte": 3790,
+    "premieres": [
+     {
+      "_localId": 1,
+      "admin_level": null,
+      "aeroway": null,
+      "amenity": "school",
+      "barrier": null,
+      "boundary": null,
+      "building": "yes",
+      "centroid_lat": 46.831829,
+      "centroid_lon": 9.286988,
+      "craft": null,
+      "fid": null,
+      "geological": null,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.28704,46.832],[9.28728,46.83173],[9.28691,46.83158],[9.28667,46.83185],[9.28704,46.832]]]]}",
+      "historic": null,
+      "land_area": null,
+      "landuse": null,
+      "leisure": null,
+      "man_made": null,
+      "military": null,
+      "name": null,
+      "natural": null,
+      "office": null,
+      "orig_ogc_fid": 60785,
+      "osm_id": null,
+      "osm_way_id": "30084786",
+      "other_tags": "\"addr:housenumber\"=>\"2\",\"addr:street\"=>\"Via Punt Crap\"",
+      "place": null,
+      "shop": null,
+      "sport": null,
+      "tourism": null,
+      "type": null
+     },
+     {
+      "_localId": 2,
+      "admin_level": null,
+      "aeroway": null,
+      "amenity": null,
+      "barrier": null,
+      "boundary": null,
+      "building": "train_station",
+      "centroid_lat": 46.807329,
+      "centroid_lon": 9.310441,
+      "craft": null,
+      "fid": null,
+      "geological": null,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.31036,46.80736],[9.31037,46.80727],[9.31056,46.80728],[9.31055,46.80737],[9.31036,46.80736]]]]}",
+      "historic": null,
+      "land_area": null,
+      "landuse": null,
+      "leisure": null,
+      "man_made": null,
+      "military": null,
+      "name": null,
+      "natural": null,
+      "office": null,
+      "orig_ogc_fid": 80832,
+      "osm_id": null,
+      "osm_way_id": "35220906",
+      "other_tags": null,
+      "place": null,
+      "shop": null,
+      "sport": null,
+      "tourism": null,
+      "type": null
+     },
+     {
+      "_localId": 3,
+      "admin_level": null,
+      "aeroway": null,
+      "amenity": null,
+      "barrier": null,
+      "boundary": null,
+      "building": "yes",
+      "centroid_lat": 46.819921,
+      "centroid_lon": 9.264137,
+      "craft": null,
+      "fid": null,
+      "geological": null,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.26455,46.81992],[9.2643,46.81988],[9.26425,46.82005],[9.26403,46.82001],[9.26414,46.81966],[9.26376,46.81961],[9.26368,46.8199],[9.26363,46.82007],[9.26447,46.82019],[9.26455,46.81992]]]]}",
+      "historic": null,
+      "land_area": null,
+      "landuse": null,
+      "leisure": null,
+      "man_made": null,
+      "military": null,
+      "name": null,
+      "natural": null,
+      "office": null,
+      "orig_ogc_fid": 155408,
+      "osm_id": null,
+      "osm_way_id": "48638431",
+      "other_tags": null,
+      "place": null,
+      "shop": null,
+      "sport": null,
+      "tourism": null,
+      "type": null
+     }
+    ],
+    "derniere": {
+     "_localId": 3790,
+     "admin_level": null,
+     "aeroway": null,
+     "amenity": null,
+     "barrier": null,
+     "boundary": null,
+     "building": "cabin",
+     "centroid_lat": 46.829337,
+     "centroid_lon": 9.260834,
+     "craft": null,
+     "fid": null,
+     "geological": null,
+     "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.26081,46.82935],[9.26086,46.82935],[9.26087,46.82932],[9.26082,46.82932],[9.26081,46.82935]]]]}",
+     "historic": null,
+     "land_area": null,
+     "landuse": null,
+     "leisure": null,
+     "man_made": null,
+     "military": null,
+     "name": null,
+     "natural": null,
+     "office": null,
+     "orig_ogc_fid": 3408111,
+     "osm_id": null,
+     "osm_way_id": "561736116",
+     "other_tags": null,
+     "place": null,
+     "shop": null,
+     "sport": null,
+     "tourism": null,
+     "type": null
+    },
+    "empreinte": "73e12d9dbc3c819c-1mc20"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "landscape_b275e43a_b9f2_4087_b31a_c5793005d343",
+   "datasource": "./basemaps/laax.gpkg|layername=landscape",
+   "displayName": "landscape",
+   "featureCount": 31,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "osm_id",
+     "gType": "Text",
+     "label": "osm_id",
+     "name": "osm_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "osm_way_id",
+     "gType": "Text",
+     "label": "osm_way_id",
+     "name": "osm_way_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "name",
+     "gType": "Text",
+     "label": "name",
+     "name": "name",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "type",
+     "gType": "Text",
+     "label": "type",
+     "name": "type",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "aeroway",
+     "gType": "Text",
+     "label": "aeroway",
+     "name": "aeroway",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "amenity",
+     "gType": "Text",
+     "label": "amenity",
+     "name": "amenity",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "admin_level",
+     "gType": "Text",
+     "label": "admin_level",
+     "name": "admin_level",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "barrier",
+     "gType": "Text",
+     "label": "barrier",
+     "name": "barrier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "boundary",
+     "gType": "Text",
+     "label": "boundary",
+     "name": "boundary",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "building",
+     "gType": "Text",
+     "label": "building",
+     "name": "building",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "craft",
+     "gType": "Text",
+     "label": "craft",
+     "name": "craft",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "geological",
+     "gType": "Text",
+     "label": "geological",
+     "name": "geological",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "historic",
+     "gType": "Text",
+     "label": "historic",
+     "name": "historic",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "land_area",
+     "gType": "Text",
+     "label": "land_area",
+     "name": "land_area",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "landuse",
+     "gType": "Text",
+     "label": "landuse",
+     "name": "landuse",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "leisure",
+     "gType": "Text",
+     "label": "leisure",
+     "name": "leisure",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "man_made",
+     "gType": "Text",
+     "label": "man_made",
+     "name": "man_made",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "military",
+     "gType": "Text",
+     "label": "military",
+     "name": "military",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "natural",
+     "gType": "Text",
+     "label": "natural",
+     "name": "natural",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "office",
+     "gType": "Text",
+     "label": "office",
+     "name": "office",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "place",
+     "gType": "Text",
+     "label": "place",
+     "name": "place",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "shop",
+     "gType": "Text",
+     "label": "shop",
+     "name": "shop",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sport",
+     "gType": "Text",
+     "label": "sport",
+     "name": "sport",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "tourism",
+     "gType": "Text",
+     "label": "tourism",
+     "name": "tourism",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "other_tags",
+     "gType": "Text",
+     "label": "other_tags",
+     "name": "other_tags",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "orig_ogc_fid",
+     "gType": "Text",
+     "label": "orig_ogc_fid",
+     "name": "orig_ogc_fid",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Landscape",
+   "style": {
+    "categories": [
+     {
+      "color": "#bfdfa0",
+      "label": "nature",
+      "value": "nature"
+     },
+     {
+      "color": "#fde1bf",
+      "label": "residential",
+      "value": "residential"
+     },
+     {
+      "color": "#7abdea",
+      "label": "water",
+      "value": "water"
+     },
+     {
+      "color": "#afafaf",
+      "label": "industrial",
+      "value": "industrial"
+     }
+    ],
+    "field": "landuse",
+    "rules": [
+     {
+      "color": "#bfdfa0",
+      "filter": "\"natural\" is not null OR \"landuse\" is not null OR \"leisure\" is not null",
+      "kind": "expr",
+      "label": "nature",
+      "symbol": "0"
+     },
+     {
+      "color": "#fde1bf",
+      "field": "landuse",
+      "filter": " \"landuse\" = 'residential' ",
+      "kind": "eq",
+      "label": "residential",
+      "symbol": "1",
+      "value": "residential"
+     },
+     {
+      "color": "#7abdea",
+      "field": "natural",
+      "filter": "\"natural\" = 'water' or \"other_tags\" LIKE '%water%'",
+      "kind": "eq",
+      "label": "water",
+      "symbol": "2",
+      "value": "water"
+     },
+     {
+      "color": "#afafaf",
+      "field": "landuse",
+      "filter": " \"aeroway\" is not null or \"landuse\" = 'industrial'",
+      "kind": "eq",
+      "label": "industrial",
+      "symbol": "3",
+      "value": "industrial"
+     }
+    ],
+    "type": "ruleRenderer"
+   },
+   "features": {
+    "compte": 31,
+    "premieres": [
+     {
+      "_localId": 1,
+      "admin_level": null,
+      "aeroway": null,
+      "amenity": null,
+      "barrier": null,
+      "boundary": null,
+      "building": null,
+      "centroid_lat": 46.837828,
+      "centroid_lon": 9.257783,
+      "craft": null,
+      "fid": null,
+      "geological": null,
+      "geometry_json": {
+       "__chaine": true,
+       "longueur": 14909,
+       "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.27585,46.83708],[9.2762,46.83734],[9.2767,46.8367],[9.2775,46.83631],[9.27946",
+       "empreinte": "7320fa19142402ab-bi5"
+      },
+      "historic": null,
+      "land_area": null,
+      "landuse": "forest",
+      "leisure": null,
+      "man_made": null,
+      "military": null,
+      "name": null,
+      "natural": null,
+      "office": null,
+      "orig_ogc_fid": 62,
+      "osm_id": "8950",
+      "osm_way_id": null,
+      "other_tags": null,
+      "place": null,
+      "shop": null,
+      "sport": null,
+      "tourism": null,
+      "type": "multipolygon"
+     },
+     {
+      "_localId": 2,
+      "admin_level": null,
+      "aeroway": null,
+      "amenity": null,
+      "barrier": null,
+      "boundary": null,
+      "building": null,
+      "centroid_lat": 46.818106,
+      "centroid_lon": 9.246834,
+      "craft": null,
+      "fid": null,
+      "geological": null,
+      "geometry_json": {
+       "__chaine": true,
+       "longueur": 7482,
+       "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.24849,46.81995],[9.24827,46.81979],[9.2485,46.81962],[9.24832,46.81924],[9.24",
+       "empreinte": "9d2cf7f73585095d-5ru"
+      },
+      "historic": null,
+      "land_area": null,
+      "landuse": "forest",
+      "leisure": null,
+      "man_made": null,
+      "military": null,
+      "name": null,
+      "natural": null,
+      "office": null,
+      "orig_ogc_fid": 63,
+      "osm_id": "8951",
+      "osm_way_id": null,
+      "other_tags": null,
+      "place": null,
+      "shop": null,
+      "sport": null,
+      "tourism": null,
+      "type": "multipolygon"
+     },
+     {
+      "_localId": 3,
+      "admin_level": null,
+      "aeroway": null,
+      "amenity": null,
+      "barrier": null,
+      "boundary": null,
+      "building": null,
+      "centroid_lat": 46.78442,
+      "centroid_lon": 9.305778,
+      "craft": null,
+      "fid": null,
+      "geological": null,
+      "geometry_json": {
+       "__chaine": true,
+       "longueur": 3745,
+       "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.32369,46.79368],[9.32212,46.79166],[9.32172,46.79125],[9.32143,46.79149],[9.3",
+       "empreinte": "f9f761a47332d8a8-2w1"
+      },
+      "historic": null,
+      "land_area": null,
+      "landuse": "forest",
+      "leisure": null,
+      "man_made": null,
+      "military": null,
+      "name": null,
+      "natural": null,
+      "office": null,
+      "orig_ogc_fid": 542,
+      "osm_id": "114913",
+      "osm_way_id": null,
+      "other_tags": null,
+      "place": null,
+      "shop": null,
+      "sport": null,
+      "tourism": null,
+      "type": "multipolygon"
+     }
+    ],
+    "derniere": {
+     "_localId": 31,
+     "admin_level": null,
+     "aeroway": null,
+     "amenity": null,
+     "barrier": null,
+     "boundary": null,
+     "building": null,
+     "centroid_lat": 46.814911,
+     "centroid_lon": 9.217862,
+     "craft": null,
+     "fid": null,
+     "geological": null,
+     "geometry_json": {
+      "__chaine": true,
+      "longueur": 3295,
+      "debut": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[9.21855,46.80469],[9.2176,46.80546],[9.21555,46.81031],[9.21589,46.81067],[9.21",
+      "empreinte": "d464b9e3bc61fe70-2jj"
+     },
+     "historic": null,
+     "land_area": null,
+     "landuse": "forest",
+     "leisure": null,
+     "man_made": null,
+     "military": null,
+     "name": null,
+     "natural": null,
+     "office": null,
+     "orig_ogc_fid": 21928,
+     "osm_id": "3485158",
+     "osm_way_id": null,
+     "other_tags": null,
+     "place": null,
+     "shop": null,
+     "sport": null,
+     "tourism": null,
+     "type": "multipolygon"
+    },
+    "empreinte": "e57a907b5eb0f085-huk"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "lines_3691e21a_d6eb_4d63_a8f5_d5ada1aca9b8",
+   "datasource": "./basemaps/laax.gpkg|layername=lines",
+   "displayName": "lines",
+   "featureCount": 1264,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "osm_id",
+     "gType": "Text",
+     "label": "osm_id",
+     "name": "osm_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "name",
+     "gType": "Text",
+     "label": "name",
+     "name": "name",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "highway",
+     "gType": "Text",
+     "label": "highway",
+     "name": "highway",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "waterway",
+     "gType": "Text",
+     "label": "waterway",
+     "name": "waterway",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "aerialway",
+     "gType": "Text",
+     "label": "aerialway",
+     "name": "aerialway",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "barrier",
+     "gType": "Text",
+     "label": "barrier",
+     "name": "barrier",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "man_made",
+     "gType": "Text",
+     "label": "man_made",
+     "name": "man_made",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "z_order",
+     "gType": "Text",
+     "label": "z_order",
+     "name": "z_order",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "other_tags",
+     "gType": "Text",
+     "label": "other_tags",
+     "name": "other_tags",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "orig_ogc_fid",
+     "gType": "Text",
+     "label": "orig_ogc_fid",
+     "name": "orig_ogc_fid",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": true,
+   "name": "Lines",
+   "style": {
+    "categories": [
+     {
+      "color": null,
+      "label": "roads",
+      "value": "roads"
+     },
+     {
+      "color": "#ff0000",
+      "label": "rails",
+      "value": "rails"
+     },
+     {
+      "color": null,
+      "label": "river",
+      "value": "river"
+     }
+    ],
+    "field": "waterway",
+    "rules": [
+     {
+      "color": null,
+      "filter": "\"highway\" is not null",
+      "kind": "expr",
+      "label": "roads",
+      "symbol": null
+     },
+     {
+      "color": "#ff0000",
+      "filter": "\"other_tags\" LIKE '%\"rail\"%' or \"other_tags\" LIKE '%\"railway\"%'",
+      "kind": "expr",
+      "label": "rails",
+      "symbol": "7"
+     },
+     {
+      "color": null,
+      "field": "waterway",
+      "filter": "\"waterway\" = 'river'",
+      "kind": "eq",
+      "label": "river",
+      "symbol": null,
+      "value": "river"
+     }
+    ],
+    "type": "ruleRenderer"
+   },
+   "features": {
+    "compte": 1264,
+    "premieres": [
+     {
+      "_localId": 1,
+      "aerialway": null,
+      "barrier": null,
+      "centroid_lat": 46.825081,
+      "centroid_lon": 9.27542,
+      "fid": null,
+      "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.27396,46.82486],[9.27422,46.82486],[9.27441,46.8249],[9.27468,46.82494],[9.27497,46.82499],[9.27525,46.82505],[9.27559,46.82514],[9.27588,46.82521],[9.27613,46.82525],[9.27633,46.82527],[9.27658,46.82526],[9.27703,46.82524]]}",
+      "highway": "tertiary",
+      "man_made": null,
+      "name": null,
+      "orig_ogc_fid": 6492,
+      "osm_id": "5029894",
+      "other_tags": "\"lanes\"=>\"1\",\"oneway\"=>\"yes\",\"sidewalk\"=>\"right\"",
+      "waterway": null,
+      "z_order": 4
+     },
+     {
+      "_localId": 2,
+      "aerialway": null,
+      "barrier": null,
+      "centroid_lat": 46.835443,
+      "centroid_lon": 9.310082,
+      "fid": null,
+      "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.30801,46.835],[9.30823,46.83506],[9.30945,46.83527],[9.31066,46.83554],[9.31098,46.83561],[9.31148,46.83576],[9.31177,46.83586]]}",
+      "highway": "tertiary_link",
+      "man_made": null,
+      "name": null,
+      "orig_ogc_fid": 6493,
+      "osm_id": "5029895",
+      "other_tags": "\"lanes\"=>\"1\",\"oneway\"=>\"yes\",\"ref\"=>\"19\",\"sidewalk\"=>\"none\"",
+      "waterway": null,
+      "z_order": 4
+     },
+     {
+      "_localId": 3,
+      "aerialway": null,
+      "barrier": null,
+      "centroid_lat": 46.83587,
+      "centroid_lon": 9.311166,
+      "fid": null,
+      "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.31177,46.83586],[9.31141,46.83587],[9.31107,46.83588],[9.31087,46.83588],[9.31072,46.83586]]}",
+      "highway": "tertiary_link",
+      "man_made": null,
+      "name": null,
+      "orig_ogc_fid": 6495,
+      "osm_id": "5029897",
+      "other_tags": "\"lanes\"=>\"1\",\"oneway\"=>\"yes\",\"ref\"=>\"19\"",
+      "waterway": null,
+      "z_order": 4
+     }
+    ],
+    "derniere": {
+     "_localId": 1264,
+     "aerialway": null,
+     "barrier": null,
+     "centroid_lat": 46.821947,
+     "centroid_lon": 9.295245,
+     "fid": null,
+     "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[9.29524,46.82196],[9.29525,46.82193]]}",
+     "highway": "footway",
+     "man_made": null,
+     "name": null,
+     "orig_ogc_fid": 1584080,
+     "osm_id": "588489601",
+     "other_tags": null,
+     "waterway": null,
+     "z_order": 0
+    },
+    "empreinte": "c2f83a81b808bd8f-cqhp"
+   }
+  },
+  {
+   "_formFieldOrder": [
+    "proprietor",
+    "plant_species",
+    "picture",
+    "review_date",
+    "reviewer"
+   ],
+   "_layerId": "ogr_dbname___home_marco_dev_QField_demo_projects_citybees_new_gpkg__table__area___geom__sql__ba518f87_384f_494b_acd8_66843717f48b",
+   "datasource": "./datasets/bees.gpkg|layername=area",
+   "displayName": "Fields",
+   "featureCount": 18,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "proprietor",
+     "_valueMap": {
+      "cantonal": "Regional",
+      "national": "National",
+      "private": "Private"
+     },
+     "gType": "Choice",
+     "label": "Proprietor",
+     "name": "proprietor",
+     "qType": "string",
+     "widgetOptions": "{\"choices\":[\"Regional\",\"National\",\"Private\"]}"
+    },
+    {
+     "_rawKey": "plant_species",
+     "_valueMap": {
+      "colza": "Colza",
+      "grass": "Grass",
+      "lavender": "Lavender",
+      "taraxacum": "Dandelions",
+      "weed": "Weed"
+     },
+     "gType": "Choice",
+     "label": "Plants",
+     "name": "plant_species",
+     "qType": "string",
+     "widgetOptions": "{\"choices\":[\"Dandelions\",\"Grass\",\"Lavender\",\"Colza\",\"Weed\"]}"
+    },
+    {
+     "_externalResource": {
+      "DocumentViewer": 0,
+      "DocumentViewerHeight": 0,
+      "DocumentViewerWidth": 0,
+      "FileWidget": true,
+      "FileWidgetButton": true,
+      "FileWidgetFilter": {},
+      "PropertyCollection": {
+       "name": {},
+       "properties": {},
+       "type": "collection"
+      },
+      "RelativeStorage": 1,
+      "StorageMode": 0
+     },
+     "_rawKey": "picture",
+     "gType": "Text",
+     "label": "Photo",
+     "name": "picture",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "review_date",
+     "gType": "DateTime",
+     "label": "Date of Review",
+     "name": "review_date",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "reviewer",
+     "gType": "Text",
+     "label": "Reviewer",
+     "name": "reviewer",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "uuid",
+     "gType": "Text",
+     "label": "ID",
+     "name": "uuid",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Fields",
+   "style": {
+    "categories": [
+     {
+      "color": "#d7191c",
+      "label": "Colza",
+      "value": "colza"
+     },
+     {
+      "color": "#f69053",
+      "label": "Grass",
+      "value": "grass"
+     },
+     {
+      "color": "#daafc1",
+      "label": "Lavender",
+      "value": "lavender"
+     },
+     {
+      "color": "#90c6a9",
+      "label": "Dandelions",
+      "value": "taraxacum"
+     },
+     {
+      "color": "#90c6a9",
+      "label": "Weed",
+      "value": "weed"
+     }
+    ],
+    "field": "plant_species",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 18,
+    "premieres": [
+     {
+      "_localId": 1,
+      "centroid_lat": 46.806745,
+      "centroid_lon": 9.25659,
+      "fid": null,
+      "geometry_json": "{\"type\":\"Polygon\",\"coordinates\":[[[9.2563,46.80696],[9.2562,46.80697],[9.25631,46.80663],[9.2564,46.80641],[9.25727,46.80657],[9.2572,46.80664],[9.25704,46.80666],[9.25677,46.80668],[9.25657,46.80676],[9.25641,46.8068],[9.25632,46.8069],[9.2563,46.80696]]]}",
+      "picture": "DCIM/lavender.jpg",
+      "plant_species": "lavender",
+      "proprietor": "national",
+      "review_date": "2019-05-23",
+      "reviewer": "Marco Bernasocchi",
+      "uuid": "{524bd130-62e6-4644-bf6c-a63d52d6e1dc}"
+     },
+     {
+      "_localId": 2,
+      "centroid_lat": 46.807074,
+      "centroid_lon": 9.257734,
+      "fid": null,
+      "geometry_json": "{\"type\":\"Polygon\",\"coordinates\":[[[9.25778,46.80734],[9.25785,46.80728],[9.25798,46.80719],[9.25807,46.80722],[9.25804,46.80691],[9.25791,46.80696],[9.25762,46.80665],[9.25745,46.80668],[9.25735,46.80678],[9.25746,46.80725],[9.25751,46.8073],[9.25778,46.80734]]]}",
+      "picture": "DCIM/taraxacum.jpg",
+      "plant_species": "taraxacum",
+      "proprietor": "private",
+      "review_date": "2019-05-23",
+      "reviewer": "Marco Bernasocchi",
+      "uuid": "{bf29c1ea-9d21-4b03-af69-a32ad6dd316f}"
+     },
+     {
+      "_localId": 3,
+      "centroid_lat": 46.806391,
+      "centroid_lon": 9.25711,
+      "fid": null,
+      "geometry_json": "{\"type\":\"Polygon\",\"coordinates\":[[[9.2564,46.80641],[9.25727,46.80657],[9.25739,46.80649],[9.25745,46.80645],[9.25766,46.80637],[9.25767,46.80635],[9.25758,46.80628],[9.25742,46.80637],[9.25654,46.80623],[9.25643,46.80635],[9.2564,46.80641]]]}",
+      "picture": "DCIM/grass.jpg",
+      "plant_species": "grass",
+      "proprietor": "cantonal",
+      "review_date": "2019-05-23",
+      "reviewer": "Denis Rouzard",
+      "uuid": "{1ea9bdf9-8646-4d7d-adc8-5cde5d28478e}"
+     }
+    ],
+    "derniere": {
+     "_localId": 18,
+     "centroid_lat": 46.809003,
+     "centroid_lon": 9.257508,
+     "fid": null,
+     "geometry_json": "{\"type\":\"Polygon\",\"coordinates\":[[[9.25768,46.80913],[9.25767,46.80909],[9.25757,46.80909],[9.25745,46.80896],[9.25751,46.80887],[9.25725,46.80879],[9.25716,46.80881],[9.2576,46.80915],[9.25768,46.80913]]]}",
+     "picture": "DCIM/lavender.jpg",
+     "plant_species": "lavender",
+     "proprietor": "national",
+     "review_date": "2020-05-25",
+     "reviewer": "Maya Mielina",
+     "uuid": "{cb5e0f73-eff6-46e7-953a-f72d468e766c}"
+    },
+    "empreinte": "b77849ef5237c736-74x"
+   }
+  },
+  {
+   "_formFieldOrder": [
+    "name",
+    "region",
+    "editor"
+   ],
+   "_layerId": "tracks_52090350_5d83_46a5_8c69_9938cdd76f27",
+   "datasource": "./datasets/bees.gpkg|layername=tracks",
+   "displayName": "Tracks",
+   "featureCount": 1,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "name",
+     "gType": "Text",
+     "label": "Track Name",
+     "name": "name",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "region",
+     "gType": "Text",
+     "label": "Region",
+     "name": "region",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "editor",
+     "gType": "Text",
+     "label": "Editor Name",
+     "name": "editor",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "uuid",
+     "gType": "Text",
+     "label": "uuid",
+     "name": "uuid",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": true,
+   "name": "Tracks",
+   "style": {
+    "categories": [],
+    "color": "#f17c22",
+    "field": null,
+    "type": "singleSymbol"
+   },
+   "features": {
+    "compte": 1,
+    "premieres": [
+     {
+      "_localId": 1,
+      "centroid_lat": 46.812005,
+      "centroid_lon": 9.254082,
+      "editor": "Linda Camathiias",
+      "fid": null,
+      "geometry_json": {
+       "__chaine": true,
+       "longueur": 1500,
+       "debut": "{\"type\":\"LineString\",\"coordinates\":[[9.24976,46.81427],[9.24976,46.81413],[9.24929,46.81376],[9.24876,46.81331],[9.24841",
+       "empreinte": "e2f34291273db989-15o"
+      },
+      "name": "Munt Sura",
+      "region": "",
+      "uuid": "{ffe7d709-9850-4f2b-b68c-2486ed4704fe}"
+     }
+    ],
+    "derniere": null,
+    "empreinte": "dcc214ede693575a-b7"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

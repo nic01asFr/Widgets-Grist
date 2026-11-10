@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>qgis2grist — validation binding (navigateur)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 20px; max-width: 720px; }
+    .ok { color: #15803d; } .fail { color: #b91c1c; }
+    pre { background: #f1f5f9; padding: 12px; overflow: auto; font-size: 12px; }
+  </style>
+  <script src="../lib/qml-to-declarative.js?v=20260729c"></script>
+  <script src="../lib/qml-style-parser.js?v=20260729c"></script>
+  <script src="../lib/scene-lod.js?v=20260729c"></script>
+  <script src="../lib/controls-from-layer.js?v=20260729c"></script>
+  <script src="../lib/scene-manifest.js?v=20260729c"></script>
+</head>
+<body>
+  <h1>Validation binding qgis2grist</h1>
+  <div id="out">Exécution…</div>
+  <pre id="log"></pre>
+  <script>
+    (function () {
+      const out = document.getElementById('out');
+      const log = document.getElementById('log');
+      const errors = [];
+      function ok(cond, msg) { if (!cond) errors.push(msg); return cond; }
+
+      if (typeof Q2G === 'undefined' || typeof Q2G.qmlStyleToDeclarative !== 'function') {
+        out.innerHTML = '<p class="fail"><strong>ÉCHEC</strong> — librairies Q2G non chargées (cache navigateur ?)</p>';
+        return;
+      }
+
+      const apiaryStyle = {
+        type: 'categorizedSymbol',
+        field: 'bee_species',
+        categories: [
+          { value: 'Apis Mellifera Mellifera', label: 'European honey bee', color: '#e15759' },
+          { value: 'Apis Mellifera', label: 'Buckfast bee', color: '#4e79a7' },
+          { value: 'Apis Mellifera Carnica', label: 'Carniolan honey bee', color: '#59a14f' },
+        ],
+      };
+      const decl = Q2G.qmlStyleToDeclarative(apiaryStyle);
+      ok(decl.stops[0].value === 'Apis Mellifera Mellifera', 'stop.value = brute QGIS');
+      ok(decl.stops[0].label === 'European honey bee', 'stop.label conservé');
+
+      const imported = {
+        Apiary: {
+          displayName: 'Apiary', geomType: 'Point', hasData: true,
+          fields: [{ name: 'bee_species', gType: 'Text' }],
+          style: apiaryStyle,
+        },
+        Pollen_Consumption: {
+          displayName: 'Pollen', geomType: 'Polygon', hasData: true,
+          fields: [{ name: 'percentage', gType: 'Int', _rangeMin: 0, _rangeMax: 100 }],
+          style: { type: 'singleSymbol', color: '#aaa' },
+        },
+        Fields: {
+          displayName: 'Fields', geomType: 'Polygon', hasData: true,
+          fields: [{ name: 'plant_species', gType: 'Text' }],
+          style: {
+            type: 'categorizedSymbol', field: 'plant_species',
+            categories: [
+              { value: 'colza', label: 'Colza', color: '#f00' },
+              { value: 'grass', label: 'Grass', color: '#0f0' },
+            ],
+          },
+        },
+      };
+
+      const manifest = Q2G.buildSceneManifest(imported, null, 'qfield_bees.zip');
+      const apiary = manifest.layers.find(l => l.id === 'Apiary');
+      const pollen = manifest.layers.find(l => l.id === 'Pollen_Consumption');
+      ok(apiary?.controls?.[0]?.type === 'select', 'Apiary control select');
+      ok(pollen?.controls?.[0]?.type === 'range', 'Pollen control range');
+      ok(pollen?.controls?.[0]?.max === 100, 'Pollen max 100');
+
+      log.textContent = JSON.stringify({
+        apiary: { declarative: apiary?.style?.declarative?.kind, controls: apiary?.controls },
+        pollen: { controls: pollen?.controls },
+      }, null, 2);
+
+      window.__Q2G_BINDING_TEST__ = { ok: !errors.length, errors };
+      if (errors.length) {
+        out.innerHTML = '<p class="fail"><strong>ÉCHEC</strong></p><ul>' + errors.map(e => '<li>' + e + '</li>').join('') + '</ul>';
+      } else {
+        out.innerHTML = '<p class="ok"><strong>OK</strong> — manifest + controls + stops value/label</p>';
+      }
+    })();
+  </script>
+</body>
+</html>

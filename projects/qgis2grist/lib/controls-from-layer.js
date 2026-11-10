@@ -64,6 +64,8 @@
 
   /** Catégorisé → control select. */
   function selectFromCategorized(declarative, layer) {
+    // Un style gradue donne deja une plage sur ce champ : pas de liste de selection en doublon.
+    if (declarative && declarative.kind === 'graduated') return null;
     let styleField = declarative?.field || null;
     let valueSources = declarative?.stops || [];
 
@@ -218,8 +220,29 @@
     return out;
   }
 
+  /**
+   * Restauration : la config sauvegardee (QgisWidgets) ne garde pas les bornes `_rangeMin`/`_rangeMax`
+   * des champs a widget Range QGIS ; les controles de plage du manifeste sauvegarde les portent encore.
+   * Les remet sur les champs (sans ecraser une borne deja connue) pour que les controles deduits a la
+   * restauration soient les memes qu'a l'import. Modifie `fields` en place et le rend.
+   * @param {object[]} fields
+   * @param {object[]} controls  controles du manifeste sauvegarde pour la couche
+   */
+  function hydrateRangeBounds(fields, controls) {
+    const list = fields || [];
+    for (const c of (controls || [])) {
+      if (!c || c.type !== 'range' || c.mode || c.min == null || c.max == null) continue;
+      const f = list.find((x) => x.name === c.field);
+      if (!f || f._rangeMin != null || f._rangeMax != null) continue;
+      f._rangeMin = +c.min;
+      f._rangeMax = +c.max;
+    }
+    return list;
+  }
+
   return {
     resolveFieldName,
+    hydrateRangeBounds,
     inferLayerControls,
     rangeFromGraduated,
     selectFromCategorized,

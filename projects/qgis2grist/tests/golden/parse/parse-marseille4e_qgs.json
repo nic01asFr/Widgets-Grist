@@ -1,0 +1,1204 @@
+{
+ "fixture": "marseille4e_qgs",
+ "fichier": "qgis2grist_marseille4e.qgs",
+ "extension": "qgs",
+ "nbCouches": 4,
+ "couches": [
+  {
+   "_formFieldOrder": [],
+   "_layerId": "Batiments_4eme_1623d963_0b0c_444f_b391_2e591045f7f1",
+   "datasource": "./data/batiments_4eme.gpkg",
+   "displayName": "Batiments 4eme",
+   "featureCount": 0,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "usage_1",
+     "gType": "Text",
+     "label": "usage_1",
+     "name": "usage_1",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "usage_2",
+     "gType": "Text",
+     "label": "usage_2",
+     "name": "usage_2",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "construction_legere",
+     "gType": "Text",
+     "label": "construction_legere",
+     "name": "construction_legere",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_d_apparition",
+     "gType": "Text",
+     "label": "date_d_apparition",
+     "name": "date_d_apparition",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sources",
+     "gType": "Text",
+     "label": "sources",
+     "name": "sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_sources",
+     "gType": "Text",
+     "label": "identifiants_sources",
+     "name": "identifiants_sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Text",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Text",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nombre_de_logements",
+     "gType": "Text",
+     "label": "nombre_de_logements",
+     "name": "nombre_de_logements",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nombre_d_etages",
+     "gType": "Text",
+     "label": "nombre_d_etages",
+     "name": "nombre_d_etages",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "materiaux_des_murs",
+     "gType": "Text",
+     "label": "materiaux_des_murs",
+     "name": "materiaux_des_murs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "materiaux_de_la_toiture",
+     "gType": "Text",
+     "label": "materiaux_de_la_toiture",
+     "name": "materiaux_de_la_toiture",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "hauteur",
+     "gType": "Text",
+     "label": "hauteur",
+     "name": "hauteur",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "altitude_minimale_sol",
+     "gType": "Text",
+     "label": "altitude_minimale_sol",
+     "name": "altitude_minimale_sol",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "altitude_minimale_toit",
+     "gType": "Text",
+     "label": "altitude_minimale_toit",
+     "name": "altitude_minimale_toit",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "altitude_maximale_toit",
+     "gType": "Text",
+     "label": "altitude_maximale_toit",
+     "name": "altitude_maximale_toit",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "altitude_maximale_sol",
+     "gType": "Text",
+     "label": "altitude_maximale_sol",
+     "name": "altitude_maximale_sol",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "origine_du_batiment",
+     "gType": "Text",
+     "label": "origine_du_batiment",
+     "name": "origine_du_batiment",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "appariement_fichiers_fonciers",
+     "gType": "Text",
+     "label": "appariement_fichiers_fonciers",
+     "name": "appariement_fichiers_fonciers",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_rnb",
+     "gType": "Text",
+     "label": "identifiants_rnb",
+     "name": "identifiants_rnb",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": false,
+   "name": "Batiments_4eme",
+   "style": {
+    "categories": [
+     {
+      "color": "#fff5f0",
+      "label": "0-5 m",
+      "lower": 0,
+      "upper": 5,
+      "value": "0-5 m"
+     },
+     {
+      "color": "#fdbb84",
+      "label": "5-10 m",
+      "lower": 5,
+      "upper": 10,
+      "value": "5-10 m"
+     },
+     {
+      "color": "#fc8d59",
+      "label": "10-15 m",
+      "lower": 10,
+      "upper": 15,
+      "value": "10-15 m"
+     },
+     {
+      "color": "#e34a33",
+      "label": "15-25 m",
+      "lower": 15,
+      "upper": 25,
+      "value": "15-25 m"
+     },
+     {
+      "color": "#7f2704",
+      "label": ">25 m",
+      "lower": 25,
+      "upper": 999,
+      "value": ">25 m"
+     }
+    ],
+    "field": "hauteur",
+    "type": "graduatedSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "Limite_4eme_arr__a30f8fba_9744_473f_9c7d_7c371ea629c2",
+   "datasource": "./data/limite_4eme_arr.gpkg",
+   "displayName": "Limite 4eme arr.",
+   "featureCount": 0,
+   "fields": [
+    {
+     "_rawKey": "nom",
+     "gType": "Text",
+     "label": "nom",
+     "name": "nom",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": false,
+   "name": "Limite_4eme_arr",
+   "style": {
+    "categories": [],
+    "color": "#000000",
+    "field": null,
+    "type": "singleSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "POI_4eme_76af036d_266c_4d28_9adb_a76b175a001a",
+   "datasource": "./data/poi_4eme.gpkg",
+   "displayName": "POI 4eme",
+   "featureCount": 0,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature_detaillee",
+     "gType": "Text",
+     "label": "nature_detaillee",
+     "name": "nature_detaillee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "toponyme",
+     "gType": "Text",
+     "label": "toponyme",
+     "name": "toponyme",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "statut_du_toponyme",
+     "gType": "Text",
+     "label": "statut_du_toponyme",
+     "name": "statut_du_toponyme",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "importance",
+     "gType": "Text",
+     "label": "importance",
+     "name": "importance",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_d_apparition",
+     "gType": "Text",
+     "label": "date_d_apparition",
+     "name": "date_d_apparition",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sources",
+     "gType": "Text",
+     "label": "sources",
+     "name": "sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_sources",
+     "gType": "Text",
+     "label": "identifiants_sources",
+     "name": "identifiants_sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Text",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Text",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "hauteur",
+     "gType": "Text",
+     "label": "hauteur",
+     "name": "hauteur",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": false,
+   "name": "POI_4eme",
+   "style": {
+    "categories": [
+     {
+      "color": "#e41a1c",
+      "label": "Antenne",
+      "value": "Antenne"
+     },
+     {
+      "color": "#377eb8",
+      "label": "Autre construction élevée",
+      "value": "Autre construction élevée"
+     },
+     {
+      "color": "#4daf4a",
+      "label": "Clocher",
+      "value": "Clocher"
+     }
+    ],
+    "field": "nature",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  },
+  {
+   "_formFieldOrder": [],
+   "_layerId": "Voirie_clippee_bc2b0c7e_4946_4fb8_b668_73e3f4e6a739",
+   "datasource": "./data/voirie_4eme__clippee.gpkg",
+   "displayName": "Voirie 4eme (clippee)",
+   "featureCount": 0,
+   "fields": [
+    {
+     "_rawKey": "fid",
+     "gType": "Text",
+     "label": "fid",
+     "name": "fid",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "gml_id",
+     "gType": "Text",
+     "label": "gml_id",
+     "name": "gml_id",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cleabs",
+     "gType": "Text",
+     "label": "cleabs",
+     "name": "cleabs",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature",
+     "gType": "Text",
+     "label": "nature",
+     "name": "nature",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_collaboratif_gauche",
+     "gType": "Text",
+     "label": "nom_collaboratif_gauche",
+     "name": "nom_collaboratif_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_collaboratif_droite",
+     "gType": "Text",
+     "label": "nom_collaboratif_droite",
+     "name": "nom_collaboratif_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "importance",
+     "gType": "Text",
+     "label": "importance",
+     "name": "importance",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "fictif",
+     "gType": "Text",
+     "label": "fictif",
+     "name": "fictif",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "position_par_rapport_au_sol",
+     "gType": "Text",
+     "label": "position_par_rapport_au_sol",
+     "name": "position_par_rapport_au_sol",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "etat_de_l_objet",
+     "gType": "Text",
+     "label": "etat_de_l_objet",
+     "name": "etat_de_l_objet",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_creation",
+     "gType": "Text",
+     "label": "date_creation",
+     "name": "date_creation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_modification",
+     "gType": "Text",
+     "label": "date_modification",
+     "name": "date_modification",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_d_apparition",
+     "gType": "Text",
+     "label": "date_d_apparition",
+     "name": "date_d_apparition",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_confirmation",
+     "gType": "Text",
+     "label": "date_de_confirmation",
+     "name": "date_de_confirmation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sources",
+     "gType": "Text",
+     "label": "sources",
+     "name": "sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiants_sources",
+     "gType": "Text",
+     "label": "identifiants_sources",
+     "name": "identifiants_sources",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_planimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_planimetrique",
+     "name": "methode_d_acquisition_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_planimetrique",
+     "gType": "Text",
+     "label": "precision_planimetrique",
+     "name": "precision_planimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "methode_d_acquisition_altimetrique",
+     "gType": "Text",
+     "label": "methode_d_acquisition_altimetrique",
+     "name": "methode_d_acquisition_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "precision_altimetrique",
+     "gType": "Text",
+     "label": "precision_altimetrique",
+     "name": "precision_altimetrique",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nombre_de_voies",
+     "gType": "Text",
+     "label": "nombre_de_voies",
+     "name": "nombre_de_voies",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "largeur_de_chaussee",
+     "gType": "Text",
+     "label": "largeur_de_chaussee",
+     "name": "largeur_de_chaussee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "itineraire_vert",
+     "gType": "Text",
+     "label": "itineraire_vert",
+     "name": "itineraire_vert",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "prive",
+     "gType": "Text",
+     "label": "prive",
+     "name": "prive",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sens_de_circulation",
+     "gType": "Text",
+     "label": "sens_de_circulation",
+     "name": "sens_de_circulation",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "reserve_aux_bus",
+     "gType": "Text",
+     "label": "reserve_aux_bus",
+     "name": "reserve_aux_bus",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "urbain",
+     "gType": "Text",
+     "label": "urbain",
+     "name": "urbain",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vitesse_moyenne_vl",
+     "gType": "Text",
+     "label": "vitesse_moyenne_vl",
+     "name": "vitesse_moyenne_vl",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "acces_vehicule_leger",
+     "gType": "Text",
+     "label": "acces_vehicule_leger",
+     "name": "acces_vehicule_leger",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "acces_pieton",
+     "gType": "Text",
+     "label": "acces_pieton",
+     "name": "acces_pieton",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "periode_de_fermeture",
+     "gType": "Text",
+     "label": "periode_de_fermeture",
+     "name": "periode_de_fermeture",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature_de_la_restriction",
+     "gType": "Text",
+     "label": "nature_de_la_restriction",
+     "name": "nature_de_la_restriction",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "restriction_de_hauteur",
+     "gType": "Text",
+     "label": "restriction_de_hauteur",
+     "name": "restriction_de_hauteur",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "restriction_de_poids_total",
+     "gType": "Text",
+     "label": "restriction_de_poids_total",
+     "name": "restriction_de_poids_total",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "restriction_de_poids_par_essieu",
+     "gType": "Text",
+     "label": "restriction_de_poids_par_essieu",
+     "name": "restriction_de_poids_par_essieu",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "restriction_de_largeur",
+     "gType": "Text",
+     "label": "restriction_de_largeur",
+     "name": "restriction_de_largeur",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "restriction_de_longueur",
+     "gType": "Text",
+     "label": "restriction_de_longueur",
+     "name": "restriction_de_longueur",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "matieres_dangereuses_interdites",
+     "gType": "Text",
+     "label": "matieres_dangereuses_interdites",
+     "name": "matieres_dangereuses_interdites",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_debut_gauche",
+     "gType": "Text",
+     "label": "borne_debut_gauche",
+     "name": "borne_debut_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_debut_droite",
+     "gType": "Text",
+     "label": "borne_debut_droite",
+     "name": "borne_debut_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_fin_gauche",
+     "gType": "Text",
+     "label": "borne_fin_gauche",
+     "name": "borne_fin_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "borne_fin_droite",
+     "gType": "Text",
+     "label": "borne_fin_droite",
+     "name": "borne_fin_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "insee_commune_gauche",
+     "gType": "Text",
+     "label": "insee_commune_gauche",
+     "name": "insee_commune_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "insee_commune_droite",
+     "gType": "Text",
+     "label": "insee_commune_droite",
+     "name": "insee_commune_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "alias_gauche",
+     "gType": "Text",
+     "label": "alias_gauche",
+     "name": "alias_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "alias_droit",
+     "gType": "Text",
+     "label": "alias_droit",
+     "name": "alias_droit",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "date_de_mise_en_service",
+     "gType": "Text",
+     "label": "date_de_mise_en_service",
+     "name": "date_de_mise_en_service",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "liens_vers_route_nommee",
+     "gType": "Text",
+     "label": "liens_vers_route_nommee",
+     "name": "liens_vers_route_nommee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "liens_vers_itineraire_autre",
+     "gType": "Text",
+     "label": "liens_vers_itineraire_autre",
+     "name": "liens_vers_itineraire_autre",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_numero",
+     "gType": "Text",
+     "label": "cpx_numero",
+     "name": "cpx_numero",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_numero_route_europeenne",
+     "gType": "Text",
+     "label": "cpx_numero_route_europeenne",
+     "name": "cpx_numero_route_europeenne",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_classement_administratif",
+     "gType": "Text",
+     "label": "cpx_classement_administratif",
+     "name": "cpx_classement_administratif",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_gestionnaire",
+     "gType": "Text",
+     "label": "cpx_gestionnaire",
+     "name": "cpx_gestionnaire",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_toponyme_route_nommee",
+     "gType": "Text",
+     "label": "cpx_toponyme_route_nommee",
+     "name": "cpx_toponyme_route_nommee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_toponyme_itineraire_cyclable",
+     "gType": "Text",
+     "label": "cpx_toponyme_itineraire_cyclable",
+     "name": "cpx_toponyme_itineraire_cyclable",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_toponyme_voie_verte",
+     "gType": "Text",
+     "label": "cpx_toponyme_voie_verte",
+     "name": "cpx_toponyme_voie_verte",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_nature_itineraire_autre",
+     "gType": "Text",
+     "label": "cpx_nature_itineraire_autre",
+     "name": "cpx_nature_itineraire_autre",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "cpx_toponyme_itineraire_autre",
+     "gType": "Text",
+     "label": "cpx_toponyme_itineraire_autre",
+     "name": "cpx_toponyme_itineraire_autre",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "delestage",
+     "gType": "Text",
+     "label": "delestage",
+     "name": "delestage",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "source_voie_ban_gauche",
+     "gType": "Text",
+     "label": "source_voie_ban_gauche",
+     "name": "source_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "source_voie_ban_droite",
+     "gType": "Text",
+     "label": "source_voie_ban_droite",
+     "name": "source_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_voie_ban_gauche",
+     "gType": "Text",
+     "label": "nom_voie_ban_gauche",
+     "name": "nom_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nom_voie_ban_droite",
+     "gType": "Text",
+     "label": "nom_voie_ban_droite",
+     "name": "nom_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lieux_dits_ban_gauche",
+     "gType": "Text",
+     "label": "lieux_dits_ban_gauche",
+     "name": "lieux_dits_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "lieux_dits_ban_droite",
+     "gType": "Text",
+     "label": "lieux_dits_ban_droite",
+     "name": "lieux_dits_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiant_voie_ban_gauche",
+     "gType": "Text",
+     "label": "identifiant_voie_ban_gauche",
+     "name": "identifiant_voie_ban_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "identifiant_voie_ban_droite",
+     "gType": "Text",
+     "label": "identifiant_voie_ban_droite",
+     "name": "identifiant_voie_ban_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sens_amenagement_cyclable_gauche",
+     "gType": "Text",
+     "label": "sens_amenagement_cyclable_gauche",
+     "name": "sens_amenagement_cyclable_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sens_amenagement_cyclable_droit",
+     "gType": "Text",
+     "label": "sens_amenagement_cyclable_droit",
+     "name": "sens_amenagement_cyclable_droit",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "amenagement_cyclable_gauche",
+     "gType": "Text",
+     "label": "amenagement_cyclable_gauche",
+     "name": "amenagement_cyclable_gauche",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "amenagement_cyclable_droit",
+     "gType": "Text",
+     "label": "amenagement_cyclable_droit",
+     "name": "amenagement_cyclable_droit",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "aire_de_retournement_dfci",
+     "gType": "Text",
+     "label": "aire_de_retournement_dfci",
+     "name": "aire_de_retournement_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "gabarit_dfci",
+     "gType": "Text",
+     "label": "gabarit_dfci",
+     "name": "gabarit_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "impasse_dfci",
+     "gType": "Text",
+     "label": "impasse_dfci",
+     "name": "impasse_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "nature_detaillee_dfci",
+     "gType": "Text",
+     "label": "nature_detaillee_dfci",
+     "name": "nature_detaillee_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "ouvrage_d_art_limitant_dfci",
+     "gType": "Text",
+     "label": "ouvrage_d_art_limitant_dfci",
+     "name": "ouvrage_d_art_limitant_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "pente_maximale_dfci",
+     "gType": "Text",
+     "label": "pente_maximale_dfci",
+     "name": "pente_maximale_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "piste_dfci",
+     "gType": "Text",
+     "label": "piste_dfci",
+     "name": "piste_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "piste_dfci_debroussaillee",
+     "gType": "Text",
+     "label": "piste_dfci_debroussaillee",
+     "name": "piste_dfci_debroussaillee",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "piste_dfci_fosses",
+     "gType": "Text",
+     "label": "piste_dfci_fosses",
+     "name": "piste_dfci_fosses",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "sens_de_circulation_dfci",
+     "gType": "Text",
+     "label": "sens_de_circulation_dfci",
+     "name": "sens_de_circulation_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "tout_terrain_dfci",
+     "gType": "Text",
+     "label": "tout_terrain_dfci",
+     "name": "tout_terrain_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vitesse_moyenne_dfci",
+     "gType": "Text",
+     "label": "vitesse_moyenne_dfci",
+     "name": "vitesse_moyenne_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "zone_de_croisement_dfci",
+     "gType": "Text",
+     "label": "zone_de_croisement_dfci",
+     "name": "zone_de_croisement_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "categorie_dfci",
+     "gType": "Text",
+     "label": "categorie_dfci",
+     "name": "categorie_dfci",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "vitesse_collaborative",
+     "gType": "Text",
+     "label": "vitesse_collaborative",
+     "name": "vitesse_collaborative",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "id_ban_odonyme_droite",
+     "gType": "Text",
+     "label": "id_ban_odonyme_droite",
+     "name": "id_ban_odonyme_droite",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "id_ban_odonyme_gauche",
+     "gType": "Text",
+     "label": "id_ban_odonyme_gauche",
+     "name": "id_ban_odonyme_gauche",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": false,
+   "name": "Voirie_4eme_clippee",
+   "style": {
+    "categories": [
+     {
+      "color": null,
+      "label": "Double sens",
+      "value": "Double sens"
+     },
+     {
+      "color": null,
+      "label": "Autre",
+      "value": "Sans objet"
+     },
+     {
+      "color": null,
+      "label": "Sens unique",
+      "value": "Sens direct"
+     },
+     {
+      "color": null,
+      "label": "Sens unique inverse",
+      "value": "Sens inverse"
+     }
+    ],
+    "field": "sens_de_circulation",
+    "type": "categorizedSymbol"
+   },
+   "features": {
+    "compte": 0,
+    "premieres": [],
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}

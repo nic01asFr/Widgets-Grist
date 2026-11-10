@@ -1,0 +1,1048 @@
+{
+ "sanitizeTableName": [
+  [
+   "Bâtiments 4ème",
+   "Batiments_4eme"
+  ],
+  [
+   "1abc",
+   "T1abc"
+  ],
+  [
+   "foo bar",
+   "Foo_bar"
+  ],
+  [
+   "",
+   "Couche"
+  ],
+  [
+   "__x__",
+   "X"
+  ],
+  [
+   "POI (clippée)",
+   "POI_clippee"
+  ],
+  [
+   "élève",
+   "Eleve"
+  ],
+  [
+   "a--b",
+   "A_b"
+  ],
+  [
+   "Voirie 4eme (clippee)",
+   "Voirie_4eme_clippee"
+  ],
+  [
+   "ça_va",
+   "Ca_va"
+  ]
+ ],
+ "sanitizeColName": [
+  [
+   "class",
+   "class_col"
+  ],
+  [
+   "id",
+   "id_col"
+  ],
+  [
+   "manualSort",
+   "manualSort_col"
+  ],
+  [
+   "gristHelper_x",
+   "col_gristHelper_x"
+  ],
+  [
+   "1er",
+   "c1er"
+  ],
+  [
+   "Été",
+   "Ete"
+  ],
+  [
+   "a b",
+   "a_b"
+  ],
+  [
+   "",
+   "col"
+  ],
+  [
+   "None",
+   "None_col"
+  ],
+  [
+   "sens de circulation",
+   "sens_de_circulation"
+  ],
+  [
+   "ID",
+   "ID_col"
+  ],
+  [
+   "Class",
+   "Class_col"
+  ],
+  [
+   "__",
+   "col"
+  ],
+  [
+   "x.y",
+   "x_y"
+  ]
+ ],
+ "inferType": [
+  "string",
+  "string",
+  "boolean",
+  "boolean",
+  "integer",
+  "integer",
+  "double",
+  "integer",
+  "string",
+  "string",
+  "string"
+ ],
+ "jsTypeToGrist": [
+  "Text",
+  "Text",
+  "Bool",
+  "Bool",
+  "Int",
+  "Int",
+  "Numeric",
+  "Int",
+  "Text",
+  "Text",
+  "Text"
+ ],
+ "qgsTypeToGrist": [
+  [
+   "integer",
+   "Int"
+  ],
+  [
+   "Integer64",
+   "Int"
+  ],
+  [
+   "long",
+   "Int"
+  ],
+  [
+   "double",
+   "Numeric"
+  ],
+  [
+   "real",
+   "Numeric"
+  ],
+  [
+   "float",
+   "Numeric"
+  ],
+  [
+   "numeric",
+   "Numeric"
+  ],
+  [
+   "bool",
+   "Bool"
+  ],
+  [
+   "boolean",
+   "Bool"
+  ],
+  [
+   "datetime",
+   "DateTime"
+  ],
+  [
+   "date",
+   "Date"
+  ],
+  [
+   "time",
+   "Text"
+  ],
+  [
+   "string",
+   "Text"
+  ],
+  [
+   "text",
+   "Text"
+  ],
+  [
+   "QString",
+   "Text"
+  ],
+  [
+   "",
+   "Text"
+  ]
+ ],
+ "rgbaCssToHex": [
+  [
+   "rgba(255,0,0,1)",
+   "#ff0000"
+  ],
+  [
+   "rgb(10, 20, 30)",
+   "#0a141e"
+  ],
+  [
+   "#ABCDEF12",
+   "#abcdef"
+  ],
+  [
+   "#abc",
+   "#abc"
+  ],
+  [
+   "rgba(1.4,2.6,3,0.5)",
+   "#010303"
+  ],
+  [
+   "red",
+   null
+  ],
+  [
+   "",
+   null
+  ],
+  [
+   null,
+   null
+  ]
+ ],
+ "resolveRefType": [
+  [
+   [
+    "Ref:A",
+    "A",
+    {}
+   ],
+   "Ref:A"
+  ],
+  [
+   [
+    "Ref:A",
+    "A",
+    {
+     "A": "A_1"
+    }
+   ],
+   "Ref:A_1"
+  ],
+  [
+   [
+    "RefList:A",
+    "A",
+    {
+     "A": "A_2"
+    }
+   ],
+   "RefList:A_2"
+  ],
+  [
+   [
+    "Text",
+    null,
+    {}
+   ],
+   "Text"
+  ],
+  [
+   [
+    "RefList:B",
+    "B",
+    {}
+   ],
+   "RefList:B"
+  ]
+ ],
+ "normalizeGeomType": [
+  [
+   [
+    "Point",
+    ""
+   ],
+   "Point"
+  ],
+  [
+   [
+    "LineString",
+    ""
+   ],
+   "Line"
+  ],
+  [
+   [
+    "Polygon",
+    ""
+   ],
+   "Polygon"
+  ],
+  [
+   [
+    "MultiPolygon",
+    ""
+   ],
+   "Polygon"
+  ],
+  [
+   [
+    "CurvePolygon",
+    ""
+   ],
+   "Polygon"
+  ],
+  [
+   [
+    "No geometry",
+    ""
+   ],
+   "No geometry"
+  ],
+  [
+   [
+    "None",
+    ""
+   ],
+   "No geometry"
+  ],
+  [
+   [
+    "",
+    "MultiPolygonZ"
+   ],
+   "Polygon"
+  ],
+  [
+   [
+    "",
+    "LineString25D"
+   ],
+   "Line"
+  ],
+  [
+   [
+    "",
+    "PointZ"
+   ],
+   "Point"
+  ],
+  [
+   [
+    "",
+    ""
+   ],
+   "Point"
+  ],
+  [
+   [
+    null,
+    null
+   ],
+   "Point"
+  ]
+ ],
+ "linearizeArc3": [
+  [
+   [
+    0,
+    0
+   ],
+   [
+    0.166667,
+    0.152778
+   ],
+   [
+    0.333333,
+    0.277778
+   ],
+   [
+    0.5,
+    0.375
+   ],
+   [
+    0.666667,
+    0.444444
+   ],
+   [
+    0.833333,
+    0.486111
+   ],
+   [
+    1,
+    0.5
+   ],
+   [
+    1.166667,
+    0.486111
+   ],
+   [
+    1.333333,
+    0.444444
+   ],
+   [
+    1.5,
+    0.375
+   ],
+   [
+    1.666667,
+    0.277778
+   ],
+   [
+    1.833333,
+    0.152778
+   ],
+   [
+    2,
+    0
+   ]
+  ],
+  [
+   [
+    0,
+    0
+   ],
+   [
+    0.5,
+    0.375
+   ],
+   [
+    1,
+    0.5
+   ],
+   [
+    1.5,
+    0.375
+   ],
+   [
+    2,
+    0
+   ]
+  ],
+  [
+   [
+    0,
+    0
+   ],
+   [
+    0.166667,
+    0
+   ],
+   [
+    0.333333,
+    0
+   ],
+   [
+    0.5,
+    0
+   ],
+   [
+    0.666667,
+    0
+   ],
+   [
+    0.833333,
+    0
+   ],
+   [
+    1,
+    0
+   ],
+   [
+    1.166667,
+    0
+   ],
+   [
+    1.333333,
+    0
+   ],
+   [
+    1.5,
+    0
+   ],
+   [
+    1.666667,
+    0
+   ],
+   [
+    1.833333,
+    0
+   ],
+   [
+    2,
+    0
+   ]
+  ]
+ ],
+ "buildLayerFromGeojson": {
+  "lignes": {
+   "datasource": "(GeoJSON)",
+   "displayName": "Couche lignes (test)",
+   "featureCount": 2,
+   "features": {
+    "compte": 2,
+    "derniere": null,
+    "empreinte": "6fe7b5e21e735553-9p",
+    "premieres": [
+     {
+      "_localId": 1,
+      "centroid_lat": 43.15,
+      "centroid_lon": 5.161728,
+      "geometry_json": "{\"type\":\"LineString\",\"coordinates\":[[5.12346,43.1],[5.2,43.2]]}",
+      "sens": "double"
+     },
+     {
+      "_localId": 2,
+      "centroid_lat": 43.25,
+      "centroid_lon": 5.25,
+      "geometry_json": "{\"type\":\"MultiLineString\",\"coordinates\":[[[5.1,43.1],[5.2,43.2]],[[5.3,43.3],[5.4,43.4]]]}",
+      "sens": "direct"
+     }
+    ]
+   },
+   "fields": [
+    {
+     "_rawKey": "sens",
+     "gType": "Text",
+     "label": "sens",
+     "name": "sens",
+     "qType": "string"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Line",
+   "hasData": true,
+   "name": "Couche_lignes_test"
+  },
+  "points": {
+   "datasource": "(GeoJSON)",
+   "displayName": "Couche points (test)",
+   "featureCount": 3,
+   "features": {
+    "compte": 3,
+    "derniere": null,
+    "empreinte": "1840f130f7a3dc38-9e",
+    "premieres": [
+     {
+      "_localId": 1,
+      "class_col": "c",
+      "id_col": 7,
+      "latitude": 43.3,
+      "longitude": 5.4,
+      "n": 1,
+      "nom": "A",
+      "ok": true,
+      "x": 1.5
+     },
+     {
+      "_localId": 2,
+      "class_col": null,
+      "id_col": null,
+      "latitude": 43.31,
+      "longitude": 5.41,
+      "n": 2,
+      "nom": "B",
+      "ok": false,
+      "x": null
+     },
+     {
+      "_localId": 3,
+      "class_col": null,
+      "id_col": null,
+      "latitude": null,
+      "longitude": null,
+      "n": null,
+      "nom": "C",
+      "ok": null,
+      "x": null
+     }
+    ]
+   },
+   "fields": [
+    {
+     "_rawKey": "nom",
+     "gType": "Text",
+     "label": "nom",
+     "name": "nom",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "n",
+     "gType": "Int",
+     "label": "n",
+     "name": "n",
+     "qType": "integer"
+    },
+    {
+     "_rawKey": "x",
+     "gType": "Numeric",
+     "label": "x",
+     "name": "x",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "ok",
+     "gType": "Bool",
+     "label": "ok",
+     "name": "ok",
+     "qType": "boolean"
+    },
+    {
+     "_rawKey": "class",
+     "gType": "Text",
+     "label": "class",
+     "name": "class_col",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "id",
+     "gType": "Int",
+     "label": "id",
+     "name": "id_col",
+     "qType": "integer"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Latitude",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Longitude",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": true,
+   "name": "Couche_points_test"
+  },
+  "polygones": {
+   "datasource": "(GeoJSON)",
+   "displayName": "Couche polygones (test)",
+   "featureCount": 2,
+   "features": {
+    "compte": 2,
+    "derniere": null,
+    "empreinte": "22ca875e1eecfd4e-bp",
+    "premieres": [
+     {
+      "Hauteur_m": 12.5,
+      "_localId": 1,
+      "centroid_lat": 43.125,
+      "centroid_lon": 5.15,
+      "e": 1,
+      "geometry_json": "{\"type\":\"Polygon\",\"coordinates\":[[[5.1,43.1],[5.2,43.1],[5.2,43.2],[5.1,43.1]]]}",
+      "usage_du_sol": "bati"
+     },
+     {
+      "Hauteur_m": 3,
+      "_localId": 2,
+      "centroid_lat": 43.325,
+      "centroid_lon": 5.35,
+      "e": null,
+      "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.3,43.3],[5.4,43.3],[5.4,43.4],[5.3,43.3]]]]}",
+      "usage_du_sol": "jardin"
+     }
+    ]
+   },
+   "fields": [
+    {
+     "_rawKey": "Hauteur (m)",
+     "gType": "Numeric",
+     "label": "Hauteur (m)",
+     "name": "Hauteur_m",
+     "qType": "double"
+    },
+    {
+     "_rawKey": "usage du sol",
+     "gType": "Text",
+     "label": "usage du sol",
+     "name": "usage_du_sol",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "é",
+     "gType": "Int",
+     "label": "é",
+     "name": "e",
+     "qType": "integer"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Couche_polygones_test"
+  },
+  "sansGeometrie": {
+   "datasource": "(GeoJSON)",
+   "displayName": "Couche sansGeometrie (test)",
+   "featureCount": 1,
+   "features": {
+    "compte": 1,
+    "derniere": null,
+    "empreinte": "7286afcaccbc3d57-29",
+    "premieres": [
+     {
+      "_localId": 1,
+      "a": 1,
+      "centroid_lat": null,
+      "centroid_lon": null,
+      "geometry_json": null
+     }
+    ]
+   },
+   "fields": [
+    {
+     "_rawKey": "a",
+     "gType": "Int",
+     "label": "a",
+     "name": "a",
+     "qType": "integer"
+    },
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": true,
+   "name": "Couche_sansGeometrie_test"
+  },
+  "vide": {
+   "datasource": "(GeoJSON)",
+   "displayName": "Couche vide (test)",
+   "featureCount": 0,
+   "features": {
+    "compte": 0,
+    "derniere": null,
+    "empreinte": "488bdcb81aee8d83-0",
+    "premieres": []
+   },
+   "fields": [
+    {
+     "gType": "Text",
+     "label": "GeoJSON",
+     "name": "geometry_json",
+     "qType": "string"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lat",
+     "name": "centroid_lat",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Centroid Lon",
+     "name": "centroid_lon",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Polygon",
+   "hasData": false,
+   "name": "Couche_vide_test"
+  }
+ },
+ "detectGeomTypeFromFeatures": [
+  [
+   "points",
+   "Point"
+  ],
+  [
+   "polygones",
+   "Polygon"
+  ],
+  [
+   "lignes",
+   "Line"
+  ],
+  [
+   "vide",
+   "Polygon"
+  ],
+  [
+   "sansGeometrie",
+   "Polygon"
+  ]
+ ],
+ "flattenGeoJsonFeatures": {
+  "point": [
+   {
+    "_localId": 1,
+    "latitude": 43.3,
+    "longitude": 5.4,
+    "n": 1,
+    "nom": "A"
+   },
+   {
+    "_localId": 2,
+    "latitude": 43.31,
+    "longitude": 5.41,
+    "n": 2,
+    "nom": "B"
+   },
+   {
+    "_localId": 3,
+    "n": null,
+    "nom": "C"
+   }
+  ],
+  "polygone": [
+   {
+    "_localId": 1,
+    "centroid_lat": 43.125,
+    "centroid_lon": 5.15,
+    "geometry_json": "{\"type\":\"Polygon\",\"coordinates\":[[[5.1,43.1],[5.2,43.1],[5.2,43.2],[5.1,43.1]]]}",
+    "n": null,
+    "nom": null
+   },
+   {
+    "_localId": 2,
+    "centroid_lat": 43.325,
+    "centroid_lon": 5.35,
+    "geometry_json": "{\"type\":\"MultiPolygon\",\"coordinates\":[[[[5.3,43.3],[5.4,43.3],[5.4,43.4],[5.3,43.3]]]]}",
+    "n": null,
+    "nom": null
+   }
+  ]
+ },
+ "topoSortByRefs": [
+  "grand",
+  "parent",
+  "enfant",
+  "orpheline",
+  "cycleB",
+  "cycleA"
+ ],
+ "buildRefLookupNeeds": {
+  "absente": [
+   "k"
+  ],
+  "cycleA": [
+   "id"
+  ],
+  "cycleB": [
+   "id"
+  ],
+  "grand": [
+   "gid"
+  ],
+  "parent": [
+   "code"
+  ]
+ },
+ "parseGpkgGeom": {
+  "avecEnveloppe": {
+   "coordinates": [
+    5.4,
+    43.3
+   ],
+   "type": "Point"
+  },
+  "courbeCirculaire": {
+   "coordinates": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     2,
+     0
+    ]
+   ],
+   "type": "CircularString"
+  },
+  "ewkbAvecSrid": {
+   "coordinates": [
+    1,
+    2
+   ],
+   "type": "Point"
+  },
+  "ligne": {
+   "coordinates": [
+    [
+     0,
+     0
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "type": "LineString"
+  },
+  "multiPoint": {
+   "coordinates": [
+    [
+     5.4,
+     43.3
+    ],
+    [
+     5.4,
+     43.3
+    ]
+   ],
+   "type": "MultiPoint"
+  },
+  "pasUnBuffer": null,
+  "point": {
+   "coordinates": [
+    5.4,
+    43.3
+   ],
+   "type": "Point"
+  },
+  "pointZ": {
+   "coordinates": [
+    5.4,
+    43.3
+   ],
+   "type": "Point"
+  },
+  "polygone": {
+   "coordinates": [
+    [
+     [
+      0,
+      0
+     ],
+     [
+      1,
+      0
+     ],
+     [
+      1,
+      1
+     ],
+     [
+      0,
+      0
+     ]
+    ]
+   ],
+   "type": "Polygon"
+  },
+  "tropCourt": null,
+  "typeInvalide": null,
+  "vide": null
+ },
+ "parseQgis2webStyleBody": {
+  "categorise": {
+   "categories": [
+    {
+     "color": "#ff0000",
+     "label": "bati",
+     "value": "bati"
+    },
+    {
+     "color": "#00ff00",
+     "label": "jardin",
+     "value": "jardin"
+    }
+   ],
+   "field": "usage",
+   "type": "categorizedSymbol"
+  },
+  "gradue": {
+   "categories": [
+    {
+     "color": "#ffffb2",
+     "label": "0–5",
+     "lower": 0,
+     "upper": 5,
+     "value": "0–5"
+    },
+    {
+     "color": "#fd8d3c",
+     "label": "5–10",
+     "lower": 5,
+     "upper": 10,
+     "value": "5–10"
+    },
+    {
+     "color": "#bd0026",
+     "label": ">10",
+     "lower": 10,
+     "upper": {
+      "__nombre": "Infinity"
+     },
+     "value": ">10"
+    }
+   ],
+   "field": "hauteur",
+   "type": "graduatedSymbol"
+  },
+  "sansChamp": null,
+  "vide": null
+ }
+}

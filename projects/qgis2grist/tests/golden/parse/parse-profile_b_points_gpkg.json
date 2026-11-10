@@ -1,0 +1,80 @@
+{
+ "fixture": "profile_b_points_gpkg",
+ "fichier": "profile_b_points.gpkg",
+ "extension": "gpkg",
+ "nbCouches": 1,
+ "couches": [
+  {
+   "datasource": "(GeoJSON)",
+   "displayName": "profile_b_points",
+   "featureCount": 55000,
+   "fields": [
+    {
+     "_rawKey": "zone",
+     "gType": "Text",
+     "label": "zone",
+     "name": "zone",
+     "qType": "string"
+    },
+    {
+     "_rawKey": "score",
+     "gType": "Int",
+     "label": "score",
+     "name": "score",
+     "qType": "integer"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Latitude",
+     "name": "latitude",
+     "qType": "double"
+    },
+    {
+     "gType": "Numeric",
+     "label": "Longitude",
+     "name": "longitude",
+     "qType": "double"
+    }
+   ],
+   "geomType": "Point",
+   "hasData": true,
+   "name": "Profile_b_points",
+   "features": {
+    "compte": 55000,
+    "premieres": [
+     {
+      "_localId": 1,
+      "latitude": 43.29,
+      "longitude": 5.36,
+      "score": 0,
+      "zone": "Z0"
+     },
+     {
+      "_localId": 2,
+      "latitude": 43.29,
+      "longitude": 5.36015,
+      "score": 1,
+      "zone": "Z1"
+     },
+     {
+      "_localId": 3,
+      "latitude": 43.29,
+      "longitude": 5.3603,
+      "score": 2,
+      "zone": "Z2"
+     }
+    ],
+    "derniere": {
+     "_localId": 55000,
+     "latitude": 43.3251,
+     "longitude": 5.36135,
+     "score": 99,
+     "zone": "Z3"
+    },
+    "empreinte": "a1404dcc692846ad-2m05q"
+   }
+  }
+ ],
+ "meta": null,
+ "erreur": null
+}
