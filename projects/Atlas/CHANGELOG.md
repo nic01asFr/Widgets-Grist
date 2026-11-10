@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## Non publié — démarrage sans clignotement : marque neutre par défaut, thème avant les données
+
+- **Marque : neutre par défaut, partout.** Sans `?marque=`, ni glyphe ni nom : le nom du projet seul (widget Grist, application installée, démo web seule). Le choix est fait dans le script de tête de page : le logo n'apparaît plus pour disparaître ensuite (avant, la règle « pas de logo en widget » n'arrivait à la fin du démarrage). `?marque=icone` rend le glyphe seul, `?marque=atlas` le glyphe et le nom : inchangés.
+- **Le menu principal garde son indice sans marque** (application connectée) : un chevron suit le nom du projet, et le bouton de menu de la carte montre trois traits au lieu du glyphe.
+- **Thème avant les données (widget Grist).** `chargerThemeDocument()` (thème du document, sinon thème de l'instance) part juste après `grist.ready()`, en parallèle des droits et du jeton, et s'attend avant le chargement de la scène et des couches. Avant, il venait après les formulaires : les couches se dessinaient aux couleurs d'origine, puis tout changeait. Une lecture de thème qui échoue ne bloque pas le démarrage.
+- Sans effet sur le composant carte BI (`?bi=1`, déjà voilé jusqu'à la scène et au thème de l'hôte), le contrat 0.8 et le client d'hôte. Tests : `marque-neutre`, `demarrage-theme-avant-donnees` ; suite complète 3 191 verts. À vérifier dans un vrai Grist : mesure du premier affichage avec et sans mémoire de démarrage.
+
 ## 1.44.0 — contrat 0.8 : altitudes, récit piloté, figure papier ; client 6 (04/11/2026)
 
 Contrat **0.8**, additif : une commande 0.2 à 0.7 reste servie, un client plus ancien reste compris. Nouveau client de l'hôte : `VERSION_CLIENT` **6**, nouvelle empreinte (voir la table ci-dessus) : annoncée aux hôtes avant publication.

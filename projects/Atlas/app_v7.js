@@ -13986,6 +13986,9 @@ async function initGrist() {
     try {
         grist.ready({ requiredAccess: acc.requiredAccess });
         CONFIG.grist.ready = true;
+        // Le thème d'abord : celui du document, sinon celui de l'instance Grist, se lit et s'applique AVANT la scène et les couches (avant, il venait après les formulaires : les couches
+        // se dessinaient aux couleurs d'origine, puis tout changeait). La lecture part ici, en parallèle des droits et du jeton, et s'attend juste avant les données.
+        const themePret = chargerThemeDocument().catch((e) => { console.warn('[Atlas] thème au démarrage', e && e.message); });
         surveillerEcritures(grist.docApi);
         brancherSelectionGrist();
         CONFIG.viewMode = acc.viewMode;
@@ -14045,6 +14048,7 @@ async function initGrist() {
         if (grist.user?.email || grist.user?.name) setUserIdentity(grist.user);
         applyViewModeChrome();
         CONFIG.docMode = await detectDocMode(grist.docApi);
+        await themePret;   // le thème est posé avant le premier dessin des couches
         if (CONFIG.docMode === 'scene-manifest') {
             await loadFromSceneManifest();
             startSceneManifestPolling();
@@ -14054,7 +14058,6 @@ async function initGrist() {
         }
         await syncStoryFromGrist();
         await chargerFormulaires();
-        await chargerThemeDocument();
         // Ce qu'on peut proposer dépend des formulaires : la posture d'ouverture se
         // choisit maintenant (dernier choix retenu, ou Exploiter dans l'application).
         await choisirPostureAuDemarrage();

@@ -12,7 +12,7 @@
     <link rel="icon" href="data:," />
     <title>Atlas</title>
 
-    <script>try { var mq = new URLSearchParams(location.search).get('marque'); document.documentElement.setAttribute('data-marque', mq === 'atlas' || mq === 'aucune' ? mq : 'icone'); } catch (e) { document.documentElement.setAttribute('data-marque', 'icone'); /* adresse illisible : le glyphe seul */ }</script>
+    <script>try { var mq = new URLSearchParams(location.search).get('marque'); document.documentElement.setAttribute('data-marque', mq === 'atlas' || mq === 'aucune' || mq === 'icone' ? mq : 'aucune'); } catch (e) { document.documentElement.setAttribute('data-marque', 'aucune'); /* adresse illisible : sans marque */ }</script>
     <script>
         /* Mémoire de démarrage (lib/demarrage-cache.js) : embarqué (widget Grist), Atlas relit AVANT le premier affichage le dernier thème appliqué et la dernière vue pour cette instance,
            pour que la première image soit déjà la bonne ; les textes provisoires (nom du projet, légende vide) restent cachés jusqu'à ce que les données soient là (classe `atlas-demarrage`,
@@ -289,9 +289,14 @@
         .brand-logo-trait { stroke: var(--surface); }
         .brand-name { font-family: var(--serif); font-size: 19px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; }
         .brand-sep { color: var(--muted-light); font-size: 13px; }
-        /* La marque de l'en-tête, réglée par `?marque=` : « icone » (défaut : le glyphe seul), « atlas » (le glyphe et le nom), « aucune » (ni glyphe ni nom : le nom du projet seul ; c'est le défaut en widget Grist). */
+        /* La marque de l'en-tête, réglée par `?marque=` : « aucune » (DÉFAUT, ni glyphe ni nom : le nom du projet seul, décidé en tête de page donc sans clignotement), « icone » (le glyphe seul), « atlas » (le glyphe et le nom). */
         html[data-marque="icone"] .brand-name, html[data-marque="icone"] .brand-chevron { display: none !important; }
         html[data-marque="aucune"] .brand > svg, html[data-marque="aucune"] .brand-name, html[data-marque="aucune"] .brand-chevron, html[data-marque="aucune"] .brand-sep { display: none !important; }
+        /* Sans marque, le menu principal garde son indice : le chevron suit le nom du projet (l'application seulement : `.brand-menu` n'existe pas en widget Grist), et le bouton de la carte montre trois traits à la place du glyphe. */
+        html[data-marque="aucune"] .brand.brand-menu .brand-chevron { display: inline !important; order: 9; }
+        .commande-hote .ic-menu { display: none; }
+        html[data-marque="aucune"] .commande-hote .brand-logo { display: none; }
+        html[data-marque="aucune"] .commande-hote .ic-menu { display: block; }
         .brand-project { font-size: 13px; color: var(--text); font-weight: 500; }
         .dirty-dot { width: 6px; height: 6px; border-radius: 3px; background: var(--accent); margin-left: 4px; display: none; }
         .dirty .dirty-dot { display: inline-block; }
@@ -2127,6 +2132,7 @@
                      ce qu'elle portait passe ici (voir `appliquerBarre`). -->
                 <div class="commandes-hote" id="commandes-hote">
                     <button type="button" class="commande-hote" id="hote-menu" title="Menu principal" aria-label="Menu principal">
+                        <svg class="ic ic-menu" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
                         <svg class="brand-logo" width="22" height="22" viewBox="0 0 32 32" fill="none" aria-hidden="true">
                             <path class="brand-logo-corps" d="M4 24 16 6l12 18-12 4z" />
                             <path class="brand-logo-trait" d="M16 6v22" stroke-width="1.2" />

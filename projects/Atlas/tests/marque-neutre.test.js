@@ -1,6 +1,7 @@
 /**
- * La marque d'Atlas est neutre par défaut : le glyphe seul, aux couleurs de la charte (jeton --accent), pas de nom dans la barre, un titre d'onglet sans version ni slogan ;
- * en widget Grist, pas de logo sans demande. `?marque=atlas` rend le nom, `?marque=aucune` retire aussi le glyphe.
+ * La marque d'Atlas est neutre PAR DÉFAUT, partout (widget Grist, application installée, démo web seule) : ni glyphe ni nom, le nom du projet seul, décidé dans le script de tête de page
+ * donc sans logo qui apparaît puis disparaît ; un titre d'onglet sans version ni slogan. `?marque=icone` rend le glyphe seul (aux couleurs de la charte, jeton --accent),
+ * `?marque=atlas` le glyphe et le nom.
  * node --test projects/Atlas/tests/marque-neutre.test.js
  */
 import test from 'node:test';
@@ -22,11 +23,21 @@ function marqueDe(recherche) {
   return attrs['data-marque'];
 }
 
-test('défaut : le glyphe seul ; atlas : avec le nom ; aucune : sans glyphe ; valeur inconnue : le défaut', () => {
-  assert.equal(marqueDe(''), 'icone');
+test('défaut : sans marque ; icone : le glyphe seul ; atlas : avec le nom ; valeur inconnue : le défaut', () => {
+  assert.equal(marqueDe(''), 'aucune');
+  assert.equal(marqueDe('?access=full&readonly=false'), 'aucune', 'l\x27adresse d\x27un widget Grist');
+  assert.equal(marqueDe('?marque=icone'), 'icone');
   assert.equal(marqueDe('?marque=atlas'), 'atlas');
   assert.equal(marqueDe('?marque=aucune'), 'aucune');
-  assert.equal(marqueDe('?marque=n-importe-quoi'), 'icone');
+  assert.equal(marqueDe('?marque=n-importe-quoi'), 'aucune');
+});
+
+test('sans marque, le menu principal garde son indice : chevron après le nom du projet, trois traits sur le bouton de la carte', () => {
+  const a = 'html[data-marque="aucune"]';
+  assert.ok(html.includes(a + ' .brand.brand-menu .brand-chevron { display: inline !important; order: 9; }'));
+  assert.ok(html.includes(a + ' .commande-hote .brand-logo { display: none; }'));
+  assert.ok(html.includes(a + ' .commande-hote .ic-menu { display: block; }'));
+  assert.match(html, /<button[^>]*id="hote-menu"[^>]*>\s*<svg class="ic ic-menu"/);
 });
 
 test('le glyphe est générique : aucune couleur figée, il prend --accent et --surface (donc la charte et le thème du document)', () => {
