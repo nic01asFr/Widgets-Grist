@@ -234,6 +234,15 @@ describe('écrire la lecture d\'un texte dans le FormDef', () => {
     b.onExtractionChamp(0, 0, 'lieu', false);
     assert.deepEqual(d.sections[0].fields[0].options.extraction.champs, ['urgence']);
   });
+  it('cocher ou décocher marque le document comme modifié et redessine le panneau', () => {
+    const d = def(); const b = banc(d);
+    b.onExtractionChamp(0, 0, 'lieu', true);
+    assert.equal(b.appels.modifies, 1, 'le document est marqué modifié : sans cela, rien n\'est enregistré');
+    assert.equal(b.appels.rendus, 1);
+    b.onExtractionChamp(0, 0, 'lieu', false);
+    assert.equal(b.appels.modifies, 2);
+    assert.equal(b.appels.rendus, 2);
+  });
   it('cocher deux fois ne double pas', () => {
     const d = def(); const b = banc(d);
     b.onExtractionChamp(0, 0, 'lieu', true);
