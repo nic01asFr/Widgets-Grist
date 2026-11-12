@@ -38,6 +38,12 @@
     // Une adresse choisie dans une liste vaut mieux qu'une adresse inventee.
     { key: 'adresse', type: 'Text', widget: 'text', kind: 'referentiel', label: 'Adresse (propositions)' },
     { key: 'signature', type: 'Attachments', widget: 'dessin', label: 'Signature' },
+    // Les saisies mobiles : un geste que l'hôte sert s'il le peut (micro, appareil photo, lecteur de codes), un champ
+    // ordinaire sinon. Le compositeur le dit : `renderBesoinsHote`.
+    { key: 'photo', type: 'Attachments', widget: 'photo', label: 'Photo(s) prises sur place' },
+    { key: 'audio', type: 'Attachments', widget: 'audio', label: 'Enregistrement sonore' },
+    { key: 'voix', type: 'Text', widget: 'voix', label: 'Dictée (texte dit à voix haute)' },
+    { key: 'scan', type: 'Text', widget: 'scan', label: 'Code lu par l’appareil (scan)' },
     // La case a cocher reste disponible : une acceptation de conditions n'est
     // pas une question a deux reponses, c'est un accord qu'on donne ou non.
     { key: 'etiquettes', type: 'ChoiceList', widget: 'etiquettes', label: 'Étiquettes libres' },
@@ -148,6 +154,9 @@
       var usage = field.options && field.options.dessin && field.options.dessin.usage;
       return usage === 'signature' ? 'signature' : 'dessin';
     }
+    // Une photo et un enregistrement sont des pièces jointes : c'est le widget qui les distingue d'un fichier envoyé.
+    if (field.widget === 'photo') return 'photo';
+    if (field.widget === 'audio') return 'audio';
     if (field.widget === 'file' || field.type === 'Attachments') return 'file';
     var all = SIMPLE_TYPES.concat(ADVANCED_TYPES);
     var i;
