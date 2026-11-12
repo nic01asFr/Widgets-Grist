@@ -1,8 +1,8 @@
 # Cadrage — entrées mobiles dans le FormDef (voix, photo, position, scan) et contrat d'hôte
 
-*08/11/2026. Cadrage à valider avant tout code. Il part d'une demande de l'offre de service (saisie terrain : GPS, photo, voix, extraction par modèle de langage, sans widget autonome) et la traite comme ce qu'elle est : une évolution du **FormDef**, brique commune à Form Builder, Atlas, qgis2grist, au kit déclaratif et aux agents. Ce qui se produit ici doit pouvoir être réemployé tel quel par les autres.*
+*08/11/2026, mis à jour le 12/11/2026 (voir §12 bis : état d'avancement). Cadrage validé par Nicolas le 08/11 (D1 à D8) puis complété (D9 à D18). Il part d'une demande de l'offre de service (saisie terrain : GPS, photo, voix, extraction par modèle de langage, sans widget autonome) et la traite comme ce qu'elle est : une évolution du **FormDef**, brique commune à Form Builder, Atlas, qgis2grist, au kit déclaratif et aux agents. Ce qui se produit ici doit pouvoir être réemployé tel quel par les autres.*
 
-*S'appuie sur `CATALOGUE-SAISIES.md` (ce qui existe), `ETUDE-MODES-ET-ACCES.md` (modes et hébergements), `ENVOI-EXTERNE.md` (limites hors Grist), `projects/Atlas/docs/CADRAGE-APPLICATION-TERRAIN.md` (hôte Atlas), `projects/terrain/ARCHITECTURE.md` (socle terrain) et `WIDGETS-AUTO-DESCRIPTIFS.md` (registre de commandes). Rien n'est codé ni publié.*
+*S'appuie sur `CATALOGUE-SAISIES.md` (ce qui existe), `ETUDE-MODES-ET-ACCES.md` (modes et hébergements), `ENVOI-EXTERNE.md` (limites hors Grist), `projects/Atlas/docs/CADRAGE-APPLICATION-TERRAIN.md` (hôte Atlas), `projects/terrain/ARCHITECTURE.md` (socle terrain) et `WIDGETS-AUTO-DESCRIPTIFS.md` (registre de commandes). Le code est écrit en local sur une branche, jamais poussé ni publié.*
 
 ---
 
@@ -392,6 +392,32 @@ Chaque lot : tests verts avant le suivant ; rien publié sans accord explicite ;
 | **4** | Compositeur (palette, pastilles, avertissements, aperçu avec repli) ; mode hors Grist (dégradation) ; synthèse ; commande `forms_besoins_hote` + fiche | 2-3 | compositeur éprouvé en Grist réel |
 | **5** | Hôte Atlas : plugins, coffre, services (**chantier Atlas**), puis jeux d'essai de l'offre de service (ses types de relevé) | 3 | relevé de bout en bout sur téléphone |
 | **6** | PWA (si retenue) : même contrat d'hôte ; file hors ligne des pièces jointes | 5, cadrage hors ligne d'Atlas | à cadrer à part |
+
+### 12 bis. État d'avancement au 12/11/2026
+
+Tout est **local, sur la branche `grist-forms-cadrage-mobile`**, rien n'est poussé ni publié. Suite de Form Builder : 2196 tests verts, 0 échec.
+
+| Lot | État |
+|---|---|
+| **0** Mesures | **Fait sur ordinateur** (§9.1) : position et micro refusés dans l'iframe de Grist, audio léger, aucun plugin dans l'application Atlas. **Reste, avec un téléphone** : M2, M4, M5, M7 (photo), WebView Capacitor (§9.2). |
+| **1** Contrat | **Fait.** Table unique (`noyau-saisies.js`), `hote-capacites-0.1` et son validateur, règles des saisies mobiles d'un FormDef, test « aucune clé ». Le schéma `formdef-1.0` ne change que par la description de `widget` et par la propriété facultative `extraction` à la racine. L'entrée au catalogue des contrats **attend la publication**. |
+| **2** Moteur | **Fait** pour le repli des quatre saisies, la relecture des pièces jointes (un défaut corrigé : une photo n'arrivait jamais à l'envoi), l'option `hote`, l'option `capteurs`, la position selon l'hôte, `options.libelles`. **Pas fait** : le **scan en direct** (lecture de codes par l'appareil). |
+| **3** Voix | **Fait** : dictée (micro, capteur, service de transcription), lecture d'un texte avec propositions Utiliser, Corriger, Ignorer ; vérifié avec de faux capteurs et de faux services. **Pas fait** : l'**enregistrement audio direct**. |
+| **4** Compositeur et registre | **Fait** : palette, ce que la saisie demande à l'hôte, éditeur de la lecture, commande `forms_besoins_hote` et fiche. **Pas fait** : la dégradation du **mode hors Grist** (le plan le détecte déjà par le type pièce jointe), la **synthèse**, l'épreuve du compositeur en Grist réel. |
+| **5** Hôte natif | Hors Form Builder (Atlas-BI, TaskFlow). Rien n'est lancé : go séparé de Nicolas. |
+| **6** PWA | Non cadré. |
+| *Hors lots* | **Adaptateurs de services** d'IA (D17) : fait, à éprouver sur de vrais services. **Noyau** copié dans le kit par appkit : à sa charge, après ses propres lots. |
+
+**Avant de publier (rien de ceci n'est fait, tout demande l'accord explicite de Nicolas).**
+
+1. Republier le schéma : `published/schemas/formdef-1.0.schema.json` et son index. Tant que ce n'est pas fait, `scripts/schemas.test.js` est **rouge**, par construction : la copie publiée doit rester identique à la source.
+2. Embarquer les nouveaux modules `shared/` (noyau, contrat d'hôte, saisies mobiles, adaptateurs) dans la copie publiée du widget et dans les pages qui chargent le moteur ; le moteur les cherche en option, une copie qui ne les a pas garde son comportement.
+3. Régénérer et republier le registre (fiche, commandes, aide, compétence), la page WebMCP et la vitrine ; incrémenter la version du widget et tenir son journal.
+4. Faire entrer `hote-capacites-0.1` au catalogue des contrats.
+5. **Ne pas fusionner la branche dans `main` avant 1 à 4.**
+6. Prévenir Atlas-BI : le re-vendorage du moteur gagne deux fichiers et trois options.
+
+**Décisions encore ouvertes, qui ne sont pas à Form Builder** : où vit l'écran de réglages « Services » et le stockage sécurisé de la clé (hôte natif, règle D18) ; la mesure de la politique d'origine croisée des services depuis un navigateur ; l'évolution `themedef-1.1` (appkit, Atlas-BI), qui toucherait le lecteur de thème de Form Builder.
 
 **Hors périmètre de ce cadrage** : la file d'attente hors ligne des écritures et des pièces jointes (traitée par le cadrage terrain d'Atlas et le socle terrain ; ici seulement une dépendance), le suivi de trajet, la vidéo, la reconnaissance d'images, tout changement des douze types logiques du kit.
 

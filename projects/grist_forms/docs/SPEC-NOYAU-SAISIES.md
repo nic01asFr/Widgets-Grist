@@ -1,6 +1,6 @@
 # Spec — le noyau commun de saisies mobiles (`noyau-saisies`)
 
-État : **spec, sans code**, 09/11/2026. Décision D9 (option C) et D10 (forme) du cadrage `CADRAGE-ENTREES-MOBILES.md`, confirmées par Nicolas. Ce document est à relire par appkit **avant tout fichier de code** ; rien n'est écrit dans le dépôt de personne d'autre.
+État : **spec relue par appkit (09/11/2026), puis implémentée en local le 09-12/11/2026** : `shared/noyau-saisies.js`, sa sortie ESM, `shared/adaptateurs-services.js`, leurs vecteurs communs (`tests/fixtures/noyau-saisies/`) et leurs tests. Décision D9 (option C) et D10 (forme) du cadrage `CADRAGE-ENTREES-MOBILES.md`, confirmées par Nicolas. Ce qui est écrit ci-dessous est la spec telle que relue ; l'écart avec le code, quand il y en a un, est dans le code et ses tests. Rien n'est écrit dans le dépôt de personne d'autre : la copie dans le kit est à la charge d'appkit.
 
 ## 1. À quoi il sert
 
