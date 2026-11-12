@@ -62,8 +62,8 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Couleur | sélecteur de couleur | Text `#rrggbb` | absent | TaskFlow l'a (`input type=color`) |
 | Texte riche / Markdown | éditeur | Text | absent | Grist natif propose Markdown en lecture |
 | Lien | champ url + aperçu | Text | absent | Grist natif : HyperLink |
-| Dictée vocale | micro → texte | Text | absent | l'app de terrain a la voix (projets `terrain-*`, non relus) |
-| Scan de code (QR, code-barres) | caméra → texte | Text | absent | complète le QR par l'adresse de la page ; `BarcodeDetector` ou bibliothèque |
+| Dictée vocale | micro → texte | Text | partiel (`voix`) | **livré en repli** (zone de texte) ; la dictée directe demande un hôte qui déclare le micro et fournit un service de transcription, voir §8 |
+| Scan de code (QR, code-barres) | caméra → texte | Text | partiel (`scan`) | **livré en repli** (champ où taper le code) ; la lecture par l'appareil demande un hôte qui déclare le lecteur de codes (`BarcodeDetector` est absent de Chrome sur ordinateur, mesuré), voir §8 |
 | Identifiant généré | UUID côté Grist | Text | absent | formule `UUID()` ; QGIS : `UuidGenerator` |
 | Étiquettes libres | puces + bouton Ajouter, suggestions | ChoiceList | livré (`etiquettes`) | sans doublon (casse ignorée), 40 caractères, 20 au plus ; un mot tapé et non ajouté est gardé à l'envoi |
 | Clé/valeur, liste JSON | tableau de paires | Text JSON | absent | QGIS : `KeyValue`, `List` ; TaskFlow : checklist en JSON |
@@ -152,10 +152,10 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Saisie | Présentation / geste | Écrit | État | Remarque |
 |---|---|---|---|---|
 | Fichier(s) | sélecteur de fichiers, `accept`, `maxFiles` | Attachments | livré (`file`) | |
-| Photo sur place | caméra arrière (`capture=environment`) | Attachments | livré | |
+| Photo sur place | caméra arrière (`capture=environment`) | Attachments | livré (`photo`, aussi par `file`) | `photo` est un usage déclaré de `file` : mêmes pièces jointes, accepte les images par défaut. Un défaut corrigé : ses fichiers étaient relus comme une chaîne vide |
 | Dessin / annotation | canevas sur fond | Attachments (PNG) | livré (`dessin`) | |
 | Signature | canevas | Attachments (PNG) | livré (`dessin`) | même widget que le dessin |
-| Enregistrement audio | micro | Attachments | absent | |
+| Enregistrement audio | micro | Attachments | partiel (`audio`) | **livré en repli** : sélecteur de fichier sonore, et sur téléphone « Enregistrer un son » par l'enregistreur du système (effet non mesuré sur Android et iOS) ; l'enregistrement direct n'est pas fait |
 | Vidéo | caméra | Attachments | absent | |
 | Scan de document | caméra + recadrage | Attachments | absent | |
 | Glisser-déposer de fichiers | zone de dépôt | Attachments | non vérifié | |
@@ -203,12 +203,12 @@ Règle de décision : si une saisie **change ce qui est écrit dans la table** (
 | Liste / boutons / cases | choix | livré |
 | Sélecteur du système (date, heure) | dates | livré pour la date ; **heure seule absente** |
 | Toucher la carte | point, ligne, surface | livré |
-| Position GPS | point | livré |
+| Position GPS | point | livré ; **masqué quand l'hôte déclaré ne l'offre pas** (un widget Grist la refuse, mesuré) |
 | Appareil photo | photo | livré |
 | Doigt sur canevas | dessin, signature | livré |
 | Glisser (curseur, ordre) | nombre, rang | partiel (classement par rangs, pas de glisser) |
-| Micro | texte dicté, audio | absent |
-| Scanner (QR, code-barres) | identifiant | absent |
+| Micro | texte dicté, audio | partiel : dictée servie quand l'hôte déclare le micro et un service de transcription ; refusé dans un widget Grist (mesuré) |
+| Scanner (QR, code-barres) | identifiant | repli seulement (champ texte) ; la lecture par l'appareil n'est pas faite |
 | NFC | identifiant | absent |
 | Boussole, mouvement | cap | absent |
 | Adresse de la page | valeur | livré |
@@ -239,7 +239,7 @@ Constats faits en préparant ce catalogue :
 4. **`kind: echelle` et `kind: geometrie` ne changent rien au moteur** : ce sont des marqueurs. À dire, ou à supprimer au profit du widget.
 5. ~~**`options.min` / `max` ne sont pas lues par le navigateur.**~~ *Corrigé.*
 6. **Doublons** : `polarity` (champ) et `polarite` (options) ; `profile`, `theme`, `cascade` au niveau du champ.
-7. **Pas de registre unique.** La liste des saisies est recopiée dans le compositeur (`ux.js`), le moteur (renderers), la projection de colonnes (`ensure-schema.js`), le mode externe (`externe.js`) et le schéma. Le test de conformité (`contrat.test.js`) empêche qu'elles divergent sans bruit ; il ne les réunit pas.
+7. **Pas de registre unique.** La liste des saisies est recopiée dans le compositeur (`ux.js`), le moteur (renderers), la projection de colonnes (`ensure-schema.js`), le mode externe (`externe.js`) et le schéma. Le test de conformité (`contrat.test.js`) empêche qu'elles divergent sans bruit ; il ne les réunit pas. *Pour les saisies mobiles, on n'a pas ajouté de copie :* la table widget → geste → capacité → repli → type Grist vit **uniquement** dans `shared/noyau-saisies.js` (`TABLE_GESTES`), lue par le moteur, la validation du FormDef et la commande de registre.
 8. **Un défaut trouvé par ce test** : une question « Dessin » ou « Signature » se relisait comme « Fichier(s) » dans le compositeur. *Corrigé* (l'usage déclaré les distingue).
 
 ## 7. Ordre proposé pour combler
@@ -247,9 +247,39 @@ Constats faits en préparant ce catalogue :
 1. ~~Valeurs de départ~~ — *livré*.
 2. ~~Nombre borné : bornes, curseur, compteur, pas, unité~~ — *livré*.
 3. ~~Heure seule et période~~ — *livré*.
-4. **Désigner un objet sur la carte**, et **scanner un code** depuis le formulaire.
+4. **Désigner un objet sur la carte**, et **scanner un code** depuis le formulaire (le repli du scan est livré ; la lecture par l'appareil reste à faire).
 5. **Liste d'éléments répétés** (les étiquettes libres et les pastilles colorées sont livrées).
 6. Petits : **couleur**, **clavier adapté**, **interrupteur**, **formats** supplémentaires (url, plaque, NIR).
-7. **Mesures d'une géométrie**, **micro** (dictée, audio).
+7. **Mesures d'une géométrie**. *Micro : la dictée est livrée côté moteur pour un hôte qui la sert ; l'enregistrement direct reste à faire.*
 
 Chaque ajout passe par le même geste : une entrée dans le registre (type, widget, kind éventuel, options typées, colonnes, règle Python), un test de conformité, une ligne ici.
+
+## 8. Capacités et hôtes
+
+Une saisie mobile (voix, audio, scan, photo, position) a une part **logique**, identique partout, et une part **d'interface**, propre à chaque rendu. Le FormDef décrit le **geste**, jamais l'appareil, le service ni une clé. L'**hôte** (la page, l'application) déclare ce qu'il sait faire par le contrat `hote-capacites-0.1` ; ce qu'il ne sait pas faire, la saisie le remplace par un champ ordinaire, **jamais par une erreur**.
+
+| Widget | Écrit | Capacité | Service | Repli sans la capacité |
+|---|---|---|---|---|
+| `voix` | Text | micro | transcrire (dictée), extraire (lecture du texte) | zone de texte |
+| `audio` | Attachments | micro | — | sélecteur de fichier sonore |
+| `scan` | Text | scanner | — | champ texte |
+| `photo` | Attachments | camera | — | sélecteur d'images (la prise de vue du système sur téléphone) |
+| `geo` | Text | position | — | carte, adresse ou saisie à la main |
+
+**Ce qui est mesuré.** Dans un widget Grist, l'iframe ne délègue que `clipboard-write` : la position et le micro sont refusés (mesuré en Grist réel, version 1.7.22). Un hôte « widget Grist » ne déclare donc aucune capacité de capteur et tout retombe sur le repli. Mesures sur appareil (Android, iOS, WebView) : à faire avec un téléphone, protocole dans `CADRAGE-ENTREES-MOBILES.md` §9.2.
+
+**Ce qui est livré, dans le code de Form Builder.**
+
+| Pièce | Fichier |
+|---|---|
+| La table geste → capacité → repli → type, la résolution, l'appel typé d'un service, la vérification de ce qu'un service propose, l'état d'une suggestion | `shared/noyau-saisies.js` (et sa sortie ESM `.mjs`, engendrée) |
+| Le contrat d'hôte et son validateur, qui refuse toute clé, adresse ou nom de modèle | `shared/hote-capacites.js` |
+| Les règles d'un FormDef avec saisies mobiles (type écrit, capacité, lecture, libellés, aucun secret) | `shared/saisies-mobiles.js` |
+| Les services d'IA choisis par la personne (compatible OpenAI, Anthropic pour lire un texte, local) | `shared/adaptateurs-services.js` |
+| Le rendu : repli, dictée, lecture d'un texte avec propositions, position selon l'hôte | `runtime/engine.js` (options `hote`, `capteurs`, `normaliseur` de `monter`) |
+| La commande de registre « ce qu'un FormDef demande à son hôte » | `forms_besoins_hote` |
+| La palette et les réglages | `shared/ux.js`, `builder.html` |
+
+**Options d'un champ** (dans le sac `options`, déclarées au schéma sans en changer la structure) : `capacite`, `extraction` (`consigne`, `champs`), `libelles` (un libellé distinct de la valeur d'un choix). `extraction` existe aussi à la racine du FormDef, valeur par défaut du formulaire ; le champ la surcharge.
+
+**Ce qui n'est pas fait.** L'enregistrement audio et la lecture de codes par l'appareil en direct ; l'écran de réglages des services et le stockage sécurisé de la clé (chantier de l'hôte natif) ; la mesure de la politique d'origine croisée des services depuis un navigateur ; l'entrée au catalogue des contrats de `hote-capacites-0.1` (elle attend la publication).
