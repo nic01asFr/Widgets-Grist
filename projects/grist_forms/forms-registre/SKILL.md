@@ -40,6 +40,8 @@ Version 1.7.1. Généré depuis `fiche-capacites.json` (contrat fiche-capacites-
 
 - `forms_valider_formdef` : Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. `conforme` ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. `plan_realisable` dit si le plan serait calculé sur une table à créer, et `avertissements` rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.
   Entrée requise : `formdef` ; calcul pur ; n’écrit rien.
+- `forms_besoins_hote` : Dit ce qu’un FormDef demande à son hôte : micro, caméra, position, scan, et les services de transcription et de lecture d’un texte. Sans `hote`, rend ce que le formulaire demande (`saisies`, `capacites_requises`, `services_requis`). Avec `hote` (sa déclaration : capacités vraies ou fausses, services avec leur `sortant`), dit pour chaque saisie si elle sera servie (`mode` direct) ou remplacée (`mode` repli) et par quoi, et liste ce qui manque (`manquants`). Une saisie à qui il manque une capacité retombe toujours sur un champ ordinaire, jamais sur une erreur : c’est le repli. Un widget Grist ne déclare aucune capacité de capteur (mesuré). La déclaration ne porte jamais de clé, d’adresse ni de nom de modèle : ce qui en porte est écarté et dit dans `ecarts`. Aucune capture ne se pilote par commande : un agent n’a pas de micro, il passe la valeur directement.
+  Entrée requise : `formdef` ; calcul pur ; n’écrit rien.
 - `forms_valider_condition` : Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; `bloquant` dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».
   Entrée requise : `condition` ; calcul pur ; n’écrit rien.
 - `forms_verifier_format` : Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (`connu: false`). `message_si_invalide` est le message à montrer si la valeur est invalide, pas un verdict : le verdict est `valide`. Pour attacher un format à une question d’un FormDef, ajouter au champ `validation: { "format": "courriel" }` (mode `verifier` par défaut : une réponse non conforme est refusée ; `corriger` remet la forme en ordre sans refuser, réservé aux noms).
@@ -73,6 +75,7 @@ Verbes sans commande : editer, exploiter, recolter.
 - Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.
 - Appliquer un plan de schéma ou de publication n’est pas encore une commande.
 - Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.
+- Aucune capture ne se pilote par commande : un agent n’a pas de micro ni de caméra, il passe la valeur directement.
 - Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée.
 
 ## Règles d’écriture
