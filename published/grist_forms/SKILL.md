@@ -7,7 +7,7 @@ description: "Form Builder : Compose un formulaire Grist, le relie à sa table, 
 
 Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document.
 
-Version 1.7.1. Généré depuis `fiche-capacites.json` (contrat fiche-capacites-0.1) et `commandes.json` : ne pas modifier à la main.
+Version 1.8.0. Généré depuis `fiche-capacites.json` (contrat fiche-capacites-0.1) et `commandes.json` : ne pas modifier à la main.
 
 ## Interfaces
 
