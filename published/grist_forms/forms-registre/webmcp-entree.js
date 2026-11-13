@@ -18,7 +18,8 @@
     '../shared/conditions.js', '../shared/limites.js', '../runtime/engine.js', '../shared/formdef-from-table.js',
     '../shared/formdef-from-grist-form.js', '../shared/survey-project.js', '../shared/ensure-schema.js', '../shared/theme.js',
     '../shared/theme-instance.js', '../shared/derivation-valeurs.js', '../shared/themedef.js', '../shared/publish.js',
-    '../shared/synthese.js', '../shared/valider-schema.js', 'registre.js', 'navigateur.js'
+    '../shared/synthese.js', '../shared/valider-schema.js',
+    '../shared/noyau-saisies.js', '../shared/hote-capacites.js', '../shared/saisies-mobiles.js', 'registre.js', 'navigateur.js'
   ];
 
   var base = (function () {

@@ -38,6 +38,7 @@
               ],
               "structurer": [
                 "forms_valider_formdef",
+                "forms_besoins_hote",
                 "forms_valider_condition",
                 "forms_verifier_format",
                 "forms_formdef_vers_manifeste_enquete",
@@ -112,6 +113,7 @@
               "Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.",
               "Appliquer un plan de schéma ou de publication n’est pas encore une commande.",
               "Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.",
+              "Aucune capture ne se pilote par commande : un agent n’a pas de micro ni de caméra, il passe la valeur directement.",
               "Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée."
             ],
             "exemples": [
@@ -119,6 +121,7 @@
               "forms_formdef_depuis_colonnes",
               "forms_formdef_depuis_formulaire_grist",
               "forms_valider_formdef",
+              "forms_besoins_hote",
               "forms_valider_condition",
               "forms_verifier_format",
               "forms_formdef_vers_manifeste_enquete",
@@ -428,6 +431,244 @@
             "avertissements": [
               "Champ « atelier » : choices manquants pour Choice"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "nom": "forms_besoins_hote",
+      "verbe": "structurer",
+      "description": "Dit ce qu’un FormDef demande à son hôte : micro, caméra, position, scan, et les services de transcription et de lecture d’un texte. Sans `hote`, rend ce que le formulaire demande (`saisies`, `capacites_requises`, `services_requis`). Avec `hote` (sa déclaration : capacités vraies ou fausses, services avec leur `sortant`), dit pour chaque saisie si elle sera servie (`mode` direct) ou remplacée (`mode` repli) et par quoi, et liste ce qui manque (`manquants`). Une saisie à qui il manque une capacité retombe toujours sur un champ ordinaire, jamais sur une erreur : c’est le repli. Un widget Grist ne déclare aucune capacité de capteur (mesuré). La déclaration ne porte jamais de clé, d’adresse ni de nom de modèle : ce qui en porte est écarté et dit dans `ecarts`. Aucune capture ne se pilote par commande : un agent n’a pas de micro, il passe la valeur directement.",
+      "entree": {
+        "type": "object",
+        "required": [
+          "formdef"
+        ],
+        "properties": {
+          "formdef": {
+            "type": "object"
+          },
+          "hote": {
+            "type": "object",
+            "description": "La déclaration de l’hôte : { \"capacites\": { \"micro\": true, \"camera\": true, \"position\": false, \"scanner\": false }, \"services\": { \"transcrire\": { \"sortant\": \"tiers\" }, \"extraire\": { \"sortant\": \"local\" } } }. Capacités : camera, micro, position, orientation, scanner. Services : transcrire, extraire. Jamais de clé, d’adresse ni de nom de modèle."
+          }
+        }
+      },
+      "sortie": {
+        "type": "object",
+        "required": [
+          "conforme",
+          "saisies",
+          "capacites_requises",
+          "services_requis",
+          "manquants",
+          "ecarts"
+        ]
+      },
+      "nature": "pure",
+      "ecrit": "rien",
+      "exemples": [
+        {
+          "titre": "Ce qu’un formulaire de relevé demande, sans hôte",
+          "entree": {
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "releve",
+              "title": "Relevé",
+              "tableId": "Releve",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Relevé",
+                  "fields": [
+                    {
+                      "colId": "constat",
+                      "label": "Constat",
+                      "type": "Text",
+                      "widget": "voix",
+                      "options": {
+                        "extraction": {
+                          "consigne": "Relève le lieu.",
+                          "champs": [
+                            "lieu"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "colId": "lieu",
+                      "label": "Lieu",
+                      "type": "Text",
+                      "widget": "text"
+                    },
+                    {
+                      "colId": "vue",
+                      "label": "Photos",
+                      "type": "Attachments",
+                      "widget": "photo"
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          },
+          "sortie": {
+            "conforme": true,
+            "saisies": [
+              {
+                "colId": "constat",
+                "widget": "voix",
+                "geste": "voix",
+                "capacite": "micro",
+                "services": [
+                  "transcrire",
+                  "extraire"
+                ],
+                "repli": "une zone de texte à écrire ou à coller",
+                "champs_lus": [
+                  "lieu"
+                ]
+              },
+              {
+                "colId": "vue",
+                "widget": "photo",
+                "geste": "photo",
+                "capacite": "camera",
+                "services": [],
+                "repli": "un sélecteur d’images (sur téléphone, la prise de vue du système)"
+              }
+            ],
+            "capacites_requises": [
+              "micro",
+              "camera"
+            ],
+            "services_requis": [
+              "transcrire",
+              "extraire"
+            ],
+            "manquants": [],
+            "ecarts": [],
+            "hote": null
+          }
+        },
+        {
+          "titre": "Le même formulaire dans un widget Grist, qui ne déclare aucune capacité de capteur",
+          "entree": {
+            "hote": {
+              "capacites": {},
+              "services": {}
+            },
+            "formdef": {
+              "manifest_version": "1.0.0",
+              "id": "releve",
+              "title": "Relevé",
+              "tableId": "Releve",
+              "composeMode": "bind",
+              "sections": [
+                {
+                  "id": "main",
+                  "label": "Relevé",
+                  "fields": [
+                    {
+                      "colId": "constat",
+                      "label": "Constat",
+                      "type": "Text",
+                      "widget": "voix",
+                      "options": {
+                        "extraction": {
+                          "consigne": "Relève le lieu.",
+                          "champs": [
+                            "lieu"
+                          ]
+                        }
+                      }
+                    },
+                    {
+                      "colId": "lieu",
+                      "label": "Lieu",
+                      "type": "Text",
+                      "widget": "text"
+                    },
+                    {
+                      "colId": "vue",
+                      "label": "Photos",
+                      "type": "Attachments",
+                      "widget": "photo"
+                    }
+                  ]
+                }
+              ],
+              "choices": {}
+            }
+          },
+          "sortie": {
+            "conforme": true,
+            "saisies": [
+              {
+                "colId": "constat",
+                "widget": "voix",
+                "geste": "voix",
+                "capacite": "micro",
+                "services": [
+                  "transcrire",
+                  "extraire"
+                ],
+                "repli": "une zone de texte à écrire ou à coller",
+                "champs_lus": [
+                  "lieu"
+                ],
+                "mode": "repli",
+                "raison": "capacite-absente",
+                "dictee": false,
+                "lecture": false
+              },
+              {
+                "colId": "vue",
+                "widget": "photo",
+                "geste": "photo",
+                "capacite": "camera",
+                "services": [],
+                "repli": "un sélecteur d’images (sur téléphone, la prise de vue du système)",
+                "mode": "repli",
+                "raison": "capacite-absente"
+              }
+            ],
+            "capacites_requises": [
+              "micro",
+              "camera"
+            ],
+            "services_requis": [
+              "transcrire",
+              "extraire"
+            ],
+            "manquants": [
+              {
+                "colId": "constat",
+                "genre": "capacite",
+                "besoin": "micro",
+                "repli": "une zone de texte à écrire ou à coller"
+              },
+              {
+                "colId": "constat",
+                "genre": "service",
+                "besoin": "extraire",
+                "repli": "les champs visés restent à saisir à la main"
+              },
+              {
+                "colId": "vue",
+                "genre": "capacite",
+                "besoin": "camera",
+                "repli": "un sélecteur d’images (sur téléphone, la prise de vue du système)"
+              }
+            ],
+            "ecarts": [],
+            "hote": {
+              "contrat": "hote-capacites-0.1",
+              "capacites": {},
+              "services": {}
+            }
           }
         }
       ]

@@ -285,6 +285,10 @@
   },
   "journal": [
     {
+      "version": "v1.8.0",
+      "texte": "Quatre saisies pour le terrain : une photo prise sur place, un enregistrement sonore, une dictée vocale et la lecture d'un code. Dans un document Grist, rien ne change pour qui remplit : un widget Grist n'a accès ni au micro ni à la position, alors chaque saisie s'affiche comme un champ ordinaire (choisir un fichier image ou sonore, une zone de texte, un champ où taper le code), jamais comme une erreur. Aucun service d'intelligence artificielle n'est appelé depuis Grist. Une application qui sait faire mieux le déclare par un contrat, « hote-capacites-0.1 » : le formulaire utilise alors le micro ou la position, la dictée s'ajoute au texte sans jamais l'écraser, et l'avertissement dit à quel service part le son. Le service, l'adresse et la clé restent le choix de la personne et n'entrent jamais dans la définition du formulaire. Un choix peut aussi s'afficher avec un libellé différent de la valeur enregistrée. Une commande de plus pour les agents, « forms_besoins_hote », dit ce qu'un formulaire demande à son application. Les formulaires existants sont lus et rendus exactement comme avant."
+    },
+    {
       "version": "v1.7.1",
       "texte": "Les outils proposés aux agents suivent la forme actuelle de WebMCP. La page « Pour un agent » les enregistre par `document.modelContext`, la forme que décrit la documentation de Chrome, et garde l'ancienne forme en repli : un navigateur qui expose l'une ou l'autre reçoit les douze commandes de calcul, rendues en texte, toutes marquées sans conséquence puisqu'aucune n'écrit dans un document. Rien ne change pour qui lit la page ou appelle les commandes à la main."
     },

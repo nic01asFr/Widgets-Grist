@@ -25,6 +25,15 @@
   /** Ce que la fiche dit ne pas couvrir en v1 : déclaré, jamais passé sous silence. */
   var NON_COUVERTS = ['editer', 'exploiter', 'recolter'];
 
+  /** Par quoi une saisie mobile est remplacée quand l'hôte ne sait pas la servir : toujours un champ ordinaire, jamais une erreur. */
+  var REPLIS = {
+    voix: 'une zone de texte à écrire ou à coller',
+    audio: 'un sélecteur de fichier sonore',
+    scan: 'un champ texte où taper le code',
+    photo: 'un sélecteur d’images (sur téléphone, la prise de vue du système)',
+    geo: 'la carte, une adresse ou la saisie à la main'
+  };
+
   var OBJET = { type: 'object' };
   var LISTE = { type: 'array' };
   var TEXTE = { type: 'string' };
@@ -123,6 +132,110 @@
             avertissements = plan.ok ? [] : (plan.errors || []);
           }
           return { conforme: ecarts.length === 0, ecarts: ecarts, plan_realisable: ecarts.length === 0 && avertissements.length === 0, avertissements: avertissements };
+        }
+      },
+      {
+        nom: 'forms_besoins_hote',
+        verbe: 'structurer',
+        description: 'Dit ce qu’un FormDef demande à son hôte : micro, caméra, position, scan, et les services de transcription et de lecture d’un texte. Sans `hote`, rend ce que le formulaire demande (`saisies`, `capacites_requises`, `services_requis`). Avec `hote` (sa déclaration : capacités vraies ou fausses, services avec leur `sortant`), dit pour chaque saisie si elle sera servie (`mode` direct) ou remplacée (`mode` repli) et par quoi, et liste ce qui manque (`manquants`). Une saisie à qui il manque une capacité retombe toujours sur un champ ordinaire, jamais sur une erreur : c’est le repli. Un widget Grist ne déclare aucune capacité de capteur (mesuré). La déclaration ne porte jamais de clé, d’adresse ni de nom de modèle : ce qui en porte est écarté et dit dans `ecarts`. Aucune capture ne se pilote par commande : un agent n’a pas de micro, il passe la valeur directement.',
+        entree: {
+          type: 'object', required: ['formdef'],
+          properties: {
+            formdef: OBJET,
+            hote: { type: 'object', description: 'La déclaration de l’hôte : { "capacites": { "micro": true, "camera": true, "position": false, "scanner": false }, "services": { "transcrire": { "sortant": "tiers" }, "extraire": { "sortant": "local" } } }. Capacités : camera, micro, position, orientation, scanner. Services : transcrire, extraire. Jamais de clé, d’adresse ni de nom de modèle.' }
+          }
+        },
+        sortie: { type: 'object', required: ['conforme', 'saisies', 'capacites_requises', 'services_requis', 'manquants', 'ecarts'] },
+        nature: 'pure',
+        ecrit: 'rien',
+        exemples: [
+          {
+            titre: 'Ce qu’un formulaire de relevé demande, sans hôte',
+            entree: { formdef: { manifest_version: '1.0.0', id: 'releve', title: 'Relevé', tableId: 'Releve', composeMode: 'bind', sections: [{ id: 'main', label: 'Relevé', fields: [
+              { colId: 'constat', label: 'Constat', type: 'Text', widget: 'voix', options: { extraction: { consigne: 'Relève le lieu.', champs: ['lieu'] } } },
+              { colId: 'lieu', label: 'Lieu', type: 'Text', widget: 'text' },
+              { colId: 'vue', label: 'Photos', type: 'Attachments', widget: 'photo' }
+            ] }], choices: {} } }
+          },
+          {
+            titre: 'Le même formulaire dans un widget Grist, qui ne déclare aucune capacité de capteur',
+            entree: { hote: { capacites: {}, services: {} }, formdef: { manifest_version: '1.0.0', id: 'releve', title: 'Relevé', tableId: 'Releve', composeMode: 'bind', sections: [{ id: 'main', label: 'Relevé', fields: [
+              { colId: 'constat', label: 'Constat', type: 'Text', widget: 'voix', options: { extraction: { consigne: 'Relève le lieu.', champs: ['lieu'] } } },
+              { colId: 'lieu', label: 'Lieu', type: 'Text', widget: 'text' },
+              { colId: 'vue', label: 'Photos', type: 'Attachments', widget: 'photo' }
+            ] }], choices: {} } }
+          }
+        ],
+        executer: function (e) {
+          var N = exiger('NoyauSaisies');
+          var S = exiger('SaisiesMobiles');
+          var H = exiger('HoteCapacites');
+          var formdef = e.formdef;
+          var ecarts = S.validerSaisiesMobiles(formdef).ecarts.slice();
+
+          var declare = e.hote !== undefined && e.hote !== null;
+          var pseudo = null;
+          var hoteDeclare = null;
+          if (declare && (typeof e.hote !== 'object' || Array.isArray(e.hote))) {
+            ecarts.push('hote : un objet est attendu');
+            declare = false;
+          }
+          if (declare) {
+            H.clesInterditesDans(e.hote, 'hote', []).forEach(function (chemin) {
+              ecarts.push(chemin + ' : une déclaration d’hôte ne porte ni clé, ni jeton, ni adresse, ni nom de modèle : écarté');
+            });
+            hoteDeclare = H.declaration(Object.assign({ contrat: H.CONTRAT }, e.hote));
+            pseudo = { contrat: H.CONTRAT, capacites: hoteDeclare.capacites || {}, services: {} };
+            Object.keys(hoteDeclare.services || {}).forEach(function (nom) {
+              pseudo.services[nom] = { sortant: hoteDeclare.services[nom].sortant, nom: hoteDeclare.services[nom].nom, appeler: function () { return null; } };
+            });
+          }
+
+          var sections = formdef && Array.isArray(formdef.sections) ? formdef.sections : [];
+          var colIds = [];
+          sections.forEach(function (s) { (s && Array.isArray(s.fields) ? s.fields : []).forEach(function (c) { if (c && c.colId) colIds.push(c.colId); }); });
+          var general = formdef && formdef.extraction && typeof formdef.extraction === 'object' ? formdef.extraction : {};
+
+          var saisies = [];
+          var capacitesRequises = [];
+          var servicesRequis = [];
+          var manquants = [];
+          function noter(liste, v) { if (v && liste.indexOf(v) === -1) liste.push(v); }
+
+          sections.forEach(function (s) {
+            (s && Array.isArray(s.fields) ? s.fields : []).forEach(function (c) {
+              if (!c || typeof c !== 'object') return;
+              var info = N.resoudreSaisie(c, pseudo, []);
+              if (info.raison === 'aucun-geste') return;
+
+              // La lecture d'un texte : une consigne et des champs visés qui existent, comme le moteur les exige.
+              var propre = c.options && c.options.extraction && typeof c.options.extraction === 'object' ? c.options.extraction : {};
+              var consigne = typeof propre.consigne === 'string' && propre.consigne.trim() ? propre.consigne.trim() : (typeof general.consigne === 'string' ? general.consigne.trim() : '');
+              var liste = Array.isArray(propre.champs) ? propre.champs : (Array.isArray(general.champs) ? general.champs : []);
+              var visees = liste.filter(function (x) { return typeof x === 'string' && x !== c.colId && colIds.indexOf(x) !== -1; });
+              var lit = c.widget === 'voix' && !!consigne && visees.length > 0;
+
+              var entree = { colId: c.colId, widget: c.widget, geste: info.geste, capacite: info.capacite, services: [], repli: REPLIS[c.widget] || null };
+              if (c.widget === 'voix') entree.services.push('transcrire');
+              if (lit) { entree.services.push('extraire'); entree.champs_lus = visees; }
+              noter(capacitesRequises, info.capacite);
+              entree.services.forEach(function (x) { noter(servicesRequis, x); });
+
+              if (pseudo) {
+                var dictee = c.widget === 'voix' && info.mode === 'direct' && info.transcription;
+                var lecture = lit && !!pseudo.services.extraire;
+                entree.mode = c.widget === 'voix' ? (dictee || lecture ? 'direct' : 'repli') : info.mode;
+                entree.raison = entree.mode === 'repli' ? (info.raison || 'service-absent') : null;
+                if (c.widget === 'voix') { entree.dictee = dictee; entree.lecture = lecture; }
+                if (info.mode === 'repli' && info.capacite) manquants.push({ colId: c.colId, genre: 'capacite', besoin: info.capacite, repli: entree.repli });
+                if (c.widget === 'voix' && info.mode === 'direct' && !info.transcription) manquants.push({ colId: c.colId, genre: 'service', besoin: 'transcrire', repli: entree.repli });
+                if (lit && !pseudo.services.extraire) manquants.push({ colId: c.colId, genre: 'service', besoin: 'extraire', repli: 'les champs visés restent à saisir à la main' });
+              }
+              saisies.push(entree);
+            });
+          });
+
+          return { conforme: ecarts.length === 0, saisies: saisies, capacites_requises: capacitesRequises, services_requis: servicesRequis, manquants: manquants, ecarts: ecarts, hote: hoteDeclare };
         }
       },
       {
@@ -345,6 +458,7 @@
           'Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.',
           'Appliquer un plan de schéma ou de publication n’est pas encore une commande.',
           'Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.',
+          'Aucune capture ne se pilote par commande : un agent n’a pas de micro ni de caméra, il passe la valeur directement.',
           'Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée.'
         ],
         exemples: commandes.filter(function (c) { return c.exemples.length; }).map(function (c) { return c.nom; }),

@@ -16,6 +16,7 @@
     ],
     "structurer": [
       "forms_valider_formdef",
+      "forms_besoins_hote",
       "forms_valider_condition",
       "forms_verifier_format",
       "forms_formdef_vers_manifeste_enquete",
@@ -90,6 +91,7 @@
     "Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.",
     "Appliquer un plan de schéma ou de publication n’est pas encore une commande.",
     "Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.",
+    "Aucune capture ne se pilote par commande : un agent n’a pas de micro ni de caméra, il passe la valeur directement.",
     "Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée."
   ],
   "exemples": [
@@ -97,6 +99,7 @@
     "forms_formdef_depuis_colonnes",
     "forms_formdef_depuis_formulaire_grist",
     "forms_valider_formdef",
+    "forms_besoins_hote",
     "forms_valider_condition",
     "forms_verifier_format",
     "forms_formdef_vers_manifeste_enquete",
