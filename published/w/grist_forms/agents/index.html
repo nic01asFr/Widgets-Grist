@@ -4,19 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Pour un agent — Form Builder</title>
-<meta name="description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.1).">
+<meta name="description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.8.0).">
 <link rel="canonical" href="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/agents/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Widgets Grist">
 <meta property="og:locale" content="fr_FR">
 <meta property="og:url" content="https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/agents/">
 <meta property="og:title" content="Pour un agent — Form Builder">
-<meta property="og:description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.1).">
+<meta property="og:description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.8.0).">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Pour un agent — Form Builder">
-<meta name="twitter:description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.1).">
+<meta name="twitter:description" content="Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.8.0).">
 <link rel="alternate" type="text/plain" href="../../../grist_forms/llms.txt" title="llms.txt">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Pour un agent — Form Builder","description":"Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.1).","url":"https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/agents/","about":{"@type":"SoftwareApplication","name":"Form Builder","applicationCategory":"BusinessApplication","softwareVersion":"1.7.1"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Pour un agent — Form Builder","description":"Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.8.0).","url":"https://nic01asfr.github.io/Widgets-Grist/w/grist_forms/agents/","about":{"@type":"SoftwareApplication","name":"Form Builder","applicationCategory":"BusinessApplication","softwareVersion":"1.8.0"}}</script>
 <style>
 :root { --papier: #F6F6F6; --surface: #FFFFFF; --encre: #161616; --plume: #666666; --filet: #DDDDDD; --accent: #000091; }
 
@@ -256,7 +256,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   <a class="retour" href="../">← Form Builder</a>
   <p class="eyebrow">Form Builder</p>
   <h1>Pour un agent</h1>
-  <p class="chapeau">Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.7.1).</p>
+  <p class="chapeau">Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document. Cette page est écrite à partir de la fiche de capacités du widget : elle ne peut pas dire autre chose que ce qu’il sait faire (version 1.8.0).</p>
   <section class="annexe-bloc">
     <h2>Ce qu’un agent peut faire</h2>
     <p>Chaque commande reçoit une entrée au format JSON et rend une sortie au format JSON. Les commandes ci-dessous sont celles que ce widget propose aujourd’hui.</p>
@@ -264,7 +264,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
     
     <table class="comparaison">
       <thead><tr><th scope="col">Commande</th><th scope="col">Verbe</th><th scope="col">Ce qu’elle fait</th></tr></thead>
-      <tbody><tr><th scope="row"><code>forms_capacites</code></th><td>Présenter</td><td>Présente Form Builder : ce qu’il sait faire (les commandes par verbe), ce qu’il ne couvre pas encore, les contrats qu’il produit et lit, ses limites. À appeler en premier.</td></tr><tr><th scope="row"><code>forms_plan_schema</code></th><td>Configurer</td><td>Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il ne lit AUCUN document : il compare le FormDef à <code>colonnes_existantes</code> et <code>table_existe</code>, que l’appelant doit fournir. Sans eux, il suppose une table sans colonne et prévoit un AddColumn par champ, sans AddTable. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante. Il refuse (<code>ok: false</code>, <code>errors</code>) un Choice ou ChoiceList sans liste de choix (dans <code>choices[colId]</code> à la racine ou <code>options.choices</code> du champ).</td></tr><tr><th scope="row"><code>forms_formdef_depuis_colonnes</code></th><td>Créer</td><td>Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes et colonnes calculées). Rend <code>formdef: null</code> quand aucune colonne ne donne de question. Les choix d’une colonne Choice ou ChoiceList sont lus dans son <code>widgetOptions</code> (chaîne JSON <code>{&quot;choices&quot;:[&quot;a&quot;,&quot;b&quot;]}</code>) et rangés dans <code>options.choices</code> du champ ; sans <code>widgetOptions</code>, le champ n’a pas de choix et forms_plan_schema le refusera. La racine <code>choices</code> du FormDef rendu reste <code>{}</code> : les choix vivent dans le champ.</td></tr><tr><th scope="row"><code>forms_formdef_depuis_formulaire_grist</code></th><td>Créer</td><td>Lit les formulaires natifs d’un document Grist et rend chacun en FormDef. L’entrée est le contenu des tables de métadonnées (tables, colonnes, vues, sections, champs), tel que fetchTable le rend.</td></tr><tr><th scope="row"><code>forms_valider_formdef</code></th><td>Structurer</td><td>Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. <code>conforme</code> ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. <code>plan_realisable</code> dit si le plan serait calculé sur une table à créer, et <code>avertissements</code> rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.</td></tr><tr><th scope="row"><code>forms_valider_condition</code></th><td>Structurer</td><td>Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; <code>bloquant</code> dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».</td></tr><tr><th scope="row"><code>forms_verifier_format</code></th><td>Structurer</td><td>Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (<code>connu: false</code>). <code>message_si_invalide</code> est le message à montrer si la valeur est invalide, pas un verdict : le verdict est <code>valide</code>. Pour attacher un format à une question d’un FormDef, ajouter au champ <code>validation: { &quot;format&quot;: &quot;courriel&quot; }</code> (mode <code>verifier</code> par défaut : une réponse non conforme est refusée ; <code>corriger</code> remet la forme en ordre sans refuser, réservé aux noms).</td></tr><tr><th scope="row"><code>forms_formdef_vers_manifeste_enquete</code></th><td>Structurer</td><td>Convertit un FormDef en manifeste d’enquête (survey-manifest). Sens inverse : forms_manifeste_enquete_vers_formdef.</td></tr><tr><th scope="row"><code>forms_manifeste_enquete_vers_formdef</code></th><td>Structurer</td><td>Convertit un manifeste d’enquête en FormDef. Sens inverse : forms_formdef_vers_manifeste_enquete.</td></tr><tr><th scope="row"><code>forms_resoudre_theme</code></th><td>Personnaliser</td><td>Dérive les variables de thème (--kit-*) d’un ThemeDef 1.0 à partir de ses couleurs de départ, pour un mode clair ou sombre. Un thème illisible est refusé en entier.</td></tr><tr><th scope="row"><code>forms_plan_publication</code></th><td>Publier</td><td>Calcule les actions qui créent une page personnalisée liée à une table, et les options de la vue qui porte le formulaire (HTML et JS déjà assemblés). Il rend le plan sans l’appliquer.</td></tr><tr><th scope="row"><code>forms_synthese</code></th><td>Traiter</td><td>Relit les réponses d’un formulaire avec le FormDef qui les a produites : fréquences, échelles, classements, listes. La table seule n’est pas lisible, le FormDef sait ce que chaque colonne veut dire.</td></tr></tbody>
+      <tbody><tr><th scope="row"><code>forms_capacites</code></th><td>Présenter</td><td>Présente Form Builder : ce qu’il sait faire (les commandes par verbe), ce qu’il ne couvre pas encore, les contrats qu’il produit et lit, ses limites. À appeler en premier.</td></tr><tr><th scope="row"><code>forms_plan_schema</code></th><td>Configurer</td><td>Calcule le plan d’actions Grist qui crée la table et les colonnes manquantes d’un FormDef. Il ne lit AUCUN document : il compare le FormDef à <code>colonnes_existantes</code> et <code>table_existe</code>, que l’appelant doit fournir. Sans eux, il suppose une table sans colonne et prévoit un AddColumn par champ, sans AddTable. Il rend le plan sans l’appliquer ; il ne change jamais le type d’une colonne existante. Il refuse (<code>ok: false</code>, <code>errors</code>) un Choice ou ChoiceList sans liste de choix (dans <code>choices[colId]</code> à la racine ou <code>options.choices</code> du champ).</td></tr><tr><th scope="row"><code>forms_formdef_depuis_colonnes</code></th><td>Créer</td><td>Déduit un FormDef des colonnes d’une table Grist (une question par colonne, hors colonnes internes et colonnes calculées). Rend <code>formdef: null</code> quand aucune colonne ne donne de question. Les choix d’une colonne Choice ou ChoiceList sont lus dans son <code>widgetOptions</code> (chaîne JSON <code>{&quot;choices&quot;:[&quot;a&quot;,&quot;b&quot;]}</code>) et rangés dans <code>options.choices</code> du champ ; sans <code>widgetOptions</code>, le champ n’a pas de choix et forms_plan_schema le refusera. La racine <code>choices</code> du FormDef rendu reste <code>{}</code> : les choix vivent dans le champ.</td></tr><tr><th scope="row"><code>forms_formdef_depuis_formulaire_grist</code></th><td>Créer</td><td>Lit les formulaires natifs d’un document Grist et rend chacun en FormDef. L’entrée est le contenu des tables de métadonnées (tables, colonnes, vues, sections, champs), tel que fetchTable le rend.</td></tr><tr><th scope="row"><code>forms_valider_formdef</code></th><td>Structurer</td><td>Contrôle un FormDef contre son contrat (formdef-1.0) et rend les écarts. <code>conforme</code> ne dit QUE le respect du contrat : il ne garantit pas que forms_plan_schema produira un plan. <code>plan_realisable</code> dit si le plan serait calculé sur une table à créer, et <code>avertissements</code> rend les motifs de refus du plan (par exemple « choices manquants » pour un Choice sans choix). Un FormDef conforme rend une liste d’écarts vide.</td></tr><tr><th scope="row"><code>forms_besoins_hote</code></th><td>Structurer</td><td>Dit ce qu’un FormDef demande à son hôte : micro, caméra, position, scan, et les services de transcription et de lecture d’un texte. Sans <code>hote</code>, rend ce que le formulaire demande (<code>saisies</code>, <code>capacites_requises</code>, <code>services_requis</code>). Avec <code>hote</code> (sa déclaration : capacités vraies ou fausses, services avec leur <code>sortant</code>), dit pour chaque saisie si elle sera servie (<code>mode</code> direct) ou remplacée (<code>mode</code> repli) et par quoi, et liste ce qui manque (<code>manquants</code>). Une saisie à qui il manque une capacité retombe toujours sur un champ ordinaire, jamais sur une erreur : c’est le repli. Un widget Grist ne déclare aucune capacité de capteur (mesuré). La déclaration ne porte jamais de clé, d’adresse ni de nom de modèle : ce qui en porte est écarté et dit dans <code>ecarts</code>. Aucune capture ne se pilote par commande : un agent n’a pas de micro, il passe la valeur directement.</td></tr><tr><th scope="row"><code>forms_valider_condition</code></th><td>Structurer</td><td>Contrôle une condition d’affichage (grammaire conditions-1.0). Rend les erreurs avec leur chemin ; <code>bloquant</code> dit si la condition serait refusée. Un opérateur inconnu est une faute, jamais « vrai ».</td></tr><tr><th scope="row"><code>forms_verifier_format</code></th><td>Structurer</td><td>Éprouve une valeur contre un format nommé (iban, siren, siret, codePostal, insee, heure, courriel, nom, prenom, nomComplet, telephone) et rend la forme normalisée. Un format inconnu laisse tout passer et le dit (<code>connu: false</code>). <code>message_si_invalide</code> est le message à montrer si la valeur est invalide, pas un verdict : le verdict est <code>valide</code>. Pour attacher un format à une question d’un FormDef, ajouter au champ <code>validation: { &quot;format&quot;: &quot;courriel&quot; }</code> (mode <code>verifier</code> par défaut : une réponse non conforme est refusée ; <code>corriger</code> remet la forme en ordre sans refuser, réservé aux noms).</td></tr><tr><th scope="row"><code>forms_formdef_vers_manifeste_enquete</code></th><td>Structurer</td><td>Convertit un FormDef en manifeste d’enquête (survey-manifest). Sens inverse : forms_manifeste_enquete_vers_formdef.</td></tr><tr><th scope="row"><code>forms_manifeste_enquete_vers_formdef</code></th><td>Structurer</td><td>Convertit un manifeste d’enquête en FormDef. Sens inverse : forms_formdef_vers_manifeste_enquete.</td></tr><tr><th scope="row"><code>forms_resoudre_theme</code></th><td>Personnaliser</td><td>Dérive les variables de thème (--kit-*) d’un ThemeDef 1.0 à partir de ses couleurs de départ, pour un mode clair ou sombre. Un thème illisible est refusé en entier.</td></tr><tr><th scope="row"><code>forms_plan_publication</code></th><td>Publier</td><td>Calcule les actions qui créent une page personnalisée liée à une table, et les options de la vue qui porte le formulaire (HTML et JS déjà assemblés). Il rend le plan sans l’appliquer.</td></tr><tr><th scope="row"><code>forms_synthese</code></th><td>Traiter</td><td>Relit les réponses d’un formulaire avec le FormDef qui les a produites : fréquences, échelles, classements, listes. La table seule n’est pas lisible, le FormDef sait ce que chaque colonne veut dire.</td></tr></tbody>
     </table>
     
   </section>
@@ -298,7 +298,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
 {
   &quot;contrat&quot;: &quot;fiche-capacites-0.1&quot;,
   &quot;widget&quot;: &quot;forms&quot;,
-  &quot;version&quot;: &quot;1.7.1&quot;,
+  &quot;version&quot;: &quot;1.8.0&quot;,
   &quot;presentation&quot;: {
     &quot;titre&quot;: &quot;Form Builder&quot;,
     &quot;resume&quot;: &quot;Compose un formulaire Grist, le relie à sa table, le publie dans le document et relit les réponses. Ces commandes ne font que lire et calculer : elles rendent des plans, elles n’écrivent rien dans un document.&quot;
@@ -313,6 +313,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
     ],
     &quot;structurer&quot;: [
       &quot;forms_valider_formdef&quot;,
+      &quot;forms_besoins_hote&quot;,
       &quot;forms_valider_condition&quot;,
       &quot;forms_verifier_format&quot;,
       &quot;forms_formdef_vers_manifeste_enquete&quot;,
@@ -465,6 +466,102 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   ],
   &quot;plan_realisable&quot;: false,
   &quot;avertissements&quot;: []
+}</code></pre>
+    </div>
+    
+    
+  </section>
+  <section class="annexe-bloc">
+    <h2>forms_besoins_hote</h2>
+    <p>Dit ce qu’un FormDef demande à son hôte : micro, caméra, position, scan, et les services de transcription et de lecture d’un texte. Sans <code>hote</code>, rend ce que le formulaire demande (<code>saisies</code>, <code>capacites_requises</code>, <code>services_requis</code>). Avec <code>hote</code> (sa déclaration : capacités vraies ou fausses, services avec leur <code>sortant</code>), dit pour chaque saisie si elle sera servie (<code>mode</code> direct) ou remplacée (<code>mode</code> repli) et par quoi, et liste ce qui manque (<code>manquants</code>). Une saisie à qui il manque une capacité retombe toujours sur un champ ordinaire, jamais sur une erreur : c’est le repli. Un widget Grist ne déclare aucune capacité de capteur (mesuré). La déclaration ne porte jamais de clé, d’adresse ni de nom de modèle : ce qui en porte est écarté et dit dans <code>ecarts</code>. Aucune capture ne se pilote par commande : un agent n’a pas de micro, il passe la valeur directement.</p>
+    <p>N’écrit rien.</p>
+    
+    <div class="bloc-code" role="group" aria-label="Exemple : Ce qu’un formulaire de relevé demande, sans hôte">
+      <div class="entete-code"><span>Exemple : Ce qu’un formulaire de relevé demande, sans hôte</span><button type="button" class="copier" hidden>Copier</button></div>
+      <pre><code class="langage-json">// entrée
+{
+  &quot;formdef&quot;: {
+    &quot;manifest_version&quot;: &quot;1.0.0&quot;,
+    &quot;id&quot;: &quot;releve&quot;,
+    &quot;title&quot;: &quot;Relevé&quot;,
+    &quot;tableId&quot;: &quot;Releve&quot;,
+    &quot;composeMode&quot;: &quot;bind&quot;,
+    &quot;sections&quot;: [
+      {
+        &quot;id&quot;: &quot;main&quot;,
+        &quot;label&quot;: &quot;Relevé&quot;,
+        &quot;fields&quot;: [
+          {
+            &quot;colId&quot;: &quot;constat&quot;,
+            &quot;label&quot;: &quot;Constat&quot;,
+            &quot;type&quot;: &quot;Text&quot;,
+            &quot;widget&quot;: &quot;voix&quot;,
+            &quot;options&quot;: {
+              &quot;extraction&quot;: {
+                &quot;consigne&quot;: &quot;Relève le lieu.&quot;,
+                &quot;champs&quot;: [
+                  &quot;lieu&quot;
+                ]
+              }
+            }
+          },
+          {
+            &quot;colId&quot;: &quot;lieu&quot;,
+            &quot;label&quot;: &quot;Lieu&quot;,
+            &quot;type&quot;: &quot;Text&quot;,
+            &quot;widget&quot;: &quot;text&quot;
+          },
+          {
+            &quot;colId&quot;: &quot;vue&quot;,
+            &quot;label&quot;: &quot;Photos&quot;,
+            &quot;type&quot;: &quot;Attachments&quot;,
+            &quot;widget&quot;: &quot;photo&quot;
+          }
+        ]
+      }
+    ],
+    &quot;choices&quot;: {}
+  }
+}
+
+// sortie
+{
+  &quot;conforme&quot;: true,
+  &quot;saisies&quot;: [
+    {
+      &quot;colId&quot;: &quot;constat&quot;,
+      &quot;widget&quot;: &quot;voix&quot;,
+      &quot;geste&quot;: &quot;voix&quot;,
+      &quot;capacite&quot;: &quot;micro&quot;,
+      &quot;services&quot;: [
+        &quot;transcrire&quot;,
+        &quot;extraire&quot;
+      ],
+      &quot;repli&quot;: &quot;une zone de texte à écrire ou à coller&quot;,
+      &quot;champs_lus&quot;: [
+        &quot;lieu&quot;
+      ]
+    },
+    {
+      &quot;colId&quot;: &quot;vue&quot;,
+      &quot;widget&quot;: &quot;photo&quot;,
+      &quot;geste&quot;: &quot;photo&quot;,
+      &quot;capacite&quot;: &quot;camera&quot;,
+      &quot;services&quot;: [],
+      &quot;repli&quot;: &quot;un sélecteur d’images (sur téléphone, la prise de vue du système)&quot;
+    }
+  ],
+  &quot;capacites_requises&quot;: [
+    &quot;micro&quot;,
+    &quot;camera&quot;
+  ],
+  &quot;services_requis&quot;: [
+    &quot;transcrire&quot;,
+    &quot;extraire&quot;
+  ],
+  &quot;manquants&quot;: [],
+  &quot;ecarts&quot;: [],
+  &quot;hote&quot;: null
 }</code></pre>
     </div>
     
@@ -902,7 +999,7 @@ main > .chapeau + .annexe-bloc { margin-top: 2.6rem; }
   <section class="annexe-bloc">
     <h2>Limites</h2>
     
-    <ul class="liste-simple"><li>Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.</li><li>Appliquer un plan de schéma ou de publication n’est pas encore une commande.</li><li>Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.</li><li>Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée.</li></ul>
+    <ul class="liste-simple"><li>Version 1 en lecture seule : aucune commande n’écrit dans un document Grist.</li><li>Appliquer un plan de schéma ou de publication n’est pas encore une commande.</li><li>Le formulaire vivant (rendu, saisie, envoi) ne se pilote pas par ces commandes : il vit dans une page.</li><li>Aucune capture ne se pilote par commande : un agent n’a pas de micro ni de caméra, il passe la valeur directement.</li><li>Les commandes ne se connectent à aucun document : les tables et les réponses sont données en entrée.</li></ul>
     
     
     
