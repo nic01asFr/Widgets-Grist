@@ -17,7 +17,8 @@
  */
 
 import { echapper } from './html.js?v=20261010a';
-import { creerClientPg, texteErreur } from './pg-passerelle.js?v=20261109a';
+import { texteErreur } from './pg-passerelle.js?v=20261122b';
+import { creerClientAuto } from './pg-postgrest.js?v=20261122a';
 import {
   champsEditables, texteDeValeur, valeursModifiees, operationModifier, operationInserer, operationEtat, pointGeoJSON,
   droitsFiche, insertionPossible, interpreter, cleDeFeature, lireCle,
@@ -116,7 +117,7 @@ const idempotence = () => (globalThis.crypto && globalThis.crypto.randomUUID ? g
 export function ouvrirEdition({ hote, entree, decl, meta, clientLecture, accesEcriture, typeGeometrie = null, retour }) {
   const { carte } = hote;
   const p = entree.params;
-  const clientEcriture = creerClientPg({ url: entree.url, acces: accesEcriture });
+  const clientEcriture = creerClientAuto({ url: entree.url, acces: accesEcriture });
   const lectureSeule = !!hote.lectureSeule();
   const etat = {
     libelle: entree.libelle, decl, phase: 'choix', ligne: null, champs: [], erreurs: {}, resultat: null, occupe: false, lectureSeule,

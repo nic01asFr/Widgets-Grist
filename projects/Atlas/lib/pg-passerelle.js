@@ -9,7 +9,7 @@
  */
 
 export const COTES = Object.freeze({
-  requete: 'votre demande', base: 'la base de données', serveur: 'la passerelle', modele: 'le modèle de langue',
+  requete: 'votre demande', base: 'la base de données', serveur: 'la passerelle', modele: 'le modèle de langue', grist: 'Grist',
 });
 
 /** Une erreur de passerelle, lisible : le message, de quel côté elle vient, le code pour les tests. */

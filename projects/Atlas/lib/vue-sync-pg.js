@@ -17,7 +17,8 @@
 import { echapper } from './html.js?v=20261010a';
 import { NATURES_CONFLIT, planifier, resumer } from './pg-sync.js?v=20261109a';
 import { comparer, appliquer, simulerPoussee, ErreurSync } from './pg-sync-session.js?v=20261109f';
-import { texteErreur, creerClientPg } from './pg-passerelle.js?v=20261109a';
+import { texteErreur } from './pg-passerelle.js?v=20261122b';
+import { creerClientAuto } from './pg-postgrest.js?v=20261122a';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 
 const nombre = (n) => Number(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
@@ -158,7 +159,7 @@ export function ouvrirSynchro({ hote, copie, clientLecture, accesEcriture, retou
   const e = { copie, phase: 'repos', choix: {}, lectureSeule: !!hote.lectureSeule() };
   let racine = null;
   let etats = null;
-  const clientEcriture = creerClientPg({ url: copie.config.url, acces: accesEcriture });
+  const clientEcriture = creerClientAuto({ url: copie.config.url, acces: accesEcriture });
 
   const vivant = () => !!racine && racine.isConnected && hote.corps.contains(racine);
   function monter() {

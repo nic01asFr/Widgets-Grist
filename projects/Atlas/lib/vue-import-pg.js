@@ -23,16 +23,17 @@
 import { echapper } from './html.js?v=20261010a';
 import { mettreAPlat } from './vue-import.js?v=20260911a';
 import { creerAccesPg } from './pg-acces.js?v=20261109a';
-import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acces-grist.js?v=20261122a';
-import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261109a';
+import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acces-grist.js?v=20261122b';
+import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
+import { creerClientAuto } from './pg-postgrest.js?v=20261122a';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
-import { ouvrirEdition } from './vue-edition-pg.js?v=20261109f';
+import { ouvrirEdition } from './vue-edition-pg.js?v=20261122a';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109f';
 import { lireTout } from './pg-lecture.js?v=20261109a';
 import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109f';
-import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122a';
+import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122b';
 import {
   listerTables, htmlBase, htmlDirectes, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, nombre,
 } from './vue-pg-rendu.js?v=20261122b';
@@ -313,7 +314,7 @@ export async function ouvrirImportPg(hote) {
     if (!l) return;
     // L'identité (ou le jeton) n'est demandée qu'ici, pour l'origine de CETTE liaison, qui est affichée dans la ligne.
     demarrerDirecte({
-      clientDirect: creerClientPg({ url: l.url, acces }), url: l.url, connexion: l.connexion, schema: l.schema, table: l.table,
+      clientDirect: creerClientAuto({ url: l.url, acces }), url: l.url, connexion: l.connexion, schema: l.schema, table: l.table,
       couleur: l.color || COULEURS_DIRECT[0], gristId: l.gristId,
     });
   }
@@ -391,7 +392,7 @@ export async function ouvrirImportPg(hote) {
     ouvrirSynchro({
       hote, copie, accesEcriture: accesEcriturePartage, detacher: detacherCopie,
       // La lecture n'a besoin que de l'accès en lecture, pour l'origine de CETTE copie (affichée dans la ligne).
-      clientLecture: creerClientPg({ url: copie.config.url, acces }),
+      clientLecture: creerClientAuto({ url: copie.config.url, acces }),
       retour: () => ouvrirImportPg(hote),
     });
   }
@@ -415,7 +416,7 @@ export async function ouvrirImportPg(hote) {
     const saisie = (champ ? champ.value : etat.url).trim();
     etat.url = saisie;
     ecrireUrl(saisie);
-    client = creerClientPg({ url: saisie, acces });
+    client = creerClientAuto({ url: saisie, acces });
     etat.enCours = true; etat.connecte = false; etat.erreurConnexion = ''; etat.fiche = 'connexion';
     dessinerBase(); poserFiche();
     dire('Connexion…');

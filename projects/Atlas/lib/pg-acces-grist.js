@@ -123,7 +123,14 @@ export async function sonderIdentite(url, fetchImpl = (...a) => fetch(...a)) {
   try {
     const signal = typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(DELAI_SONDE_MS) : undefined;
     const rep = await fetchImpl(origine + '/v1/identite', { credentials: 'omit', ...(signal ? { signal } : {}) });
-    if (rep.status === 404) return false; // passerelle d'avant ce mode
+    if (rep.status === 404) {
+      // Ni passerelle de ce mode : un ÉCHANGEUR (services/pg-echangeur) se reconnaît à `/v1/echangeur` et ne connaît que l'identité Grist.
+      try {
+        const e = await fetchImpl(String(url).split('/v1/')[0].replace(/\/+$/, '') + '/v1/echangeur', { credentials: 'omit', ...(signal ? { signal } : {}) });
+        if (e.ok) { const j = await e.json(); if (j && j.echangeur === true) return true; }
+      } catch { /* indéterminé : on s'en tient à « pas de mode Grist annoncé » */ }
+      return false; // passerelle d'avant ce mode
+    }
     if (!rep.ok) return null;
     const d = await rep.json();
     return !!d && d.grist === true;

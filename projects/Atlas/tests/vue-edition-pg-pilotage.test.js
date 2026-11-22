@@ -49,6 +49,8 @@ describe('vue-edition-pg : pilotage', () => {
     version = 3;
     lectures = 0;
     globalThis.fetch = async (adresse, opts) => {
+      // La sonde « est-ce un échangeur ? » (GET /v1/echangeur) précède la première commande : une passerelle y répond 404.
+      if (String(adresse).endsWith('/v1/echangeur')) return { status: 404, ok: false, json: async () => ({}) };
       const corps = JSON.parse(opts.body);
       ecritures.push({ adresse, corps });
       version += 1;

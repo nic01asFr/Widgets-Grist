@@ -19,7 +19,7 @@
  * Module sans DOM : la carte, le client et le minuteur sont injectés ; il se teste sous Node.
  */
 
-import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261109a';
+import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
 
 export const DELAI_ANTIREBOND_MS = 400;
 export const LIMITE_DIRECT = 5000;
