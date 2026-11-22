@@ -31,6 +31,14 @@ export const MARGE_JETON_MS = 30000;
 export const DELAI_SONDE_MS = 5000;
 export const MONDE = Object.freeze([-180, -90, 180, 90]);
 
+/** Ce qu'une table doit porter pour être modifiable depuis Atlas (convention de nommage, sans table de déclaration) : voir `declarationModifiable`. */
+export const COLONNE_VERSION = 'version';
+export const COLONNE_ETAT = 'actif';
+/** Une opération = une requête : le lot est borné pour qu'une écriture ne dure pas des minutes. */
+export const LOT_MAX = 200;
+const IDENTIFIANT = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const ENTIERS = /^(smallint|integer|bigint)$/;
+
 const origineDe = (url) => { try { return new URL(String(url)).origin; } catch { return null; } };
 const nettoyer = (url) => String(url || '').replace(/\/+$/, '');
 
@@ -54,6 +62,58 @@ export function sousTypeGeometrie(typeFormate) {
 }
 
 /**
+ * Les valeurs d'une écriture, à la forme que PostgREST attend : les dates arrivent d'Atlas en secondes (convention de lecture de Grist, à l'envers)
+ * et partent en ISO ; le reste passe tel quel (une géométrie est un objet GeoJSON WGS84, PostGIS la convertit).
+ */
+export function valeurPourPg(valeur, typeFormate) {
+  if (valeur === null || valeur === undefined) return null;
+  const t = String(typeFormate || '').toLowerCase();
+  if (typeof valeur === 'number' && Number.isFinite(valeur)) {
+    if (t === 'date') return new Date(valeur * 1000).toISOString().slice(0, 10);
+    if (t.startsWith('timestamp')) return new Date(valeur * 1000).toISOString();
+  }
+  return valeur;
+}
+
+/**
+ * Une table est-elle modifiable depuis Atlas ? Oui si l'éditeur peut y écrire, qu'elle a une clé primaire ET une colonne entière « version »
+ * (sans elle, aucun conflit ne serait détecté : Atlas n'écrase jamais). Une colonne booléenne « actif » donne les opérations désactiver et
+ * réactiver ; sans elle, le droit de suppression donne « supprimer ».
+ * @param {object} ligne  une ligne de `/rpc/tables_editeur`
+ * @param {object[]} colonnes  `/rpc/colonnes`
+ * @returns {{decl: object|null, raison: string|null}}
+ */
+export function declarationModifiable(ligne, colonnes) {
+  const nom = `${ligne.schema_nom}.${ligne.table_nom}`;
+  if (!ligne.insertion && !ligne.modification) return { decl: null, raison: null }; // lecture seule : rien à dire
+  if (ligne.nature !== 'table') return { decl: null, raison: `${nom} : une vue ne se modifie pas depuis Atlas.` };
+  if (!(ligne.cle || []).length) return { decl: null, raison: `${nom} : sans clé primaire, ses lignes ne peuvent pas être désignées.` };
+  const version = (colonnes || []).find((c) => c.nom === COLONNE_VERSION && ENTIERS.test(String(c.type)));
+  if (!version) {
+    return { decl: null, raison: `${nom} : sans colonne entière « ${COLONNE_VERSION} », Atlas ne peut pas détecter un conflit et ne la propose pas en modification (atlas.poser_trigger_version).` };
+  }
+  const etat = (colonnes || []).find((c) => c.nom === COLONNE_ETAT && String(c.type) === 'boolean');
+  const geometrie = (colonnes || []).find((c) => c.geometrie);
+  const colonnesEcrivables = (colonnes || [])
+    .filter((c) => c.ecrivable && !ligne.cle.includes(c.nom) && c.nom !== COLONNE_VERSION && !(etat && c.nom === COLONNE_ETAT))
+    .map((c) => c.nom);
+  const operations = [];
+  if (ligne.insertion) operations.push('inserer');
+  if (ligne.modification) operations.push('modifier');
+  if (etat && ligne.modification) operations.push('desactiver', 'reactiver');
+  if (!etat && ligne.suppression) operations.push('supprimer');
+  return {
+    raison: null,
+    decl: {
+      schema: ligne.schema_nom, table: ligne.table_nom, cle: [...ligne.cle], colonnes: colonnesEcrivables,
+      geometrie: geometrie ? geometrie.nom : null, version: COLONNE_VERSION,
+      suppression: etat ? `etat:${COLONNE_ETAT}` : (ligne.suppression ? 'reelle' : 'interdite'), operations,
+      srid_geometrie: geometrie ? geometrie.srid ?? null : null,
+    },
+  };
+}
+
+/**
  * Une erreur de l'échangeur ou de PostgREST, dite avec son côté.
  *  - échangeur : `{ erreur: { code, message, cote } }` (cote : requete, serveur, grist) ;
  *  - PostgREST : `{ code, message, details, hint }` ; un code de cinq caractères est une erreur de la BASE (SQLSTATE), `PGRST1xx` une
@@ -72,6 +132,10 @@ export function erreurDepuisReponse(statut, corps) {
     else if (code === '22023') cote = 'requete'; // « zone invalide », « table sans géométrie » : la demande
     else if (/^[0-9A-Z]{5}$/.test(code) && !code.startsWith('PGRST')) cote = 'base';
     else if (/^PGRST/.test(code) && statut < 500) cote = 'serveur';
+    if (code === 'PGRST106') {
+      return new ErreurPasserelle(`${corps.message} — le schéma de la table doit figurer dans pgrst.db_schemas (ALTER ROLE atlas_authenticator SET pgrst.db_schemas = 'atlas, <schéma>' puis NOTIFY pgrst, 'reload config').`,
+        { code, cote: 'serveur', statut });
+    }
     const suite = [corps.details, corps.hint].filter((x) => typeof x === 'string' && x.trim()).join(' — ');
     return new ErreurPasserelle(suite ? `${corps.message} (${suite})` : corps.message, { code, cote, statut });
   }
@@ -238,7 +302,218 @@ export function creerClientPostgrest({ url, acces, annonce = null, fetchImpl = (
     return col;
   });
 
+  const tablesEditeur = (rafraichir = false) => memoriser('tables_editeur', () => rpcLire('tables_editeur'), rafraichir);
+
+  /** Les tables modifiables et ce qui en écarte d'autres : `{ declarations, raisons }`. Gardé jusqu'à `rafraichir`. */
+  async function modifiables(rafraichir = false) {
+    return memoriser('modifiables', async () => {
+      const lignes = await tablesEditeur(rafraichir);
+      const candidates = lignes.filter((t) => t.insertion || t.modification);
+      const colonnes = await Promise.all(candidates.map((t) => colonnesDe(t.schema_nom, t.table_nom, rafraichir)));
+      const declarations = [];
+      const raisons = [];
+      candidates.forEach((t, i) => {
+        const r = declarationModifiable(t, colonnes[i]);
+        if (r.decl) declarations.push(r.decl);
+        else if (r.raison) raisons.push(r.raison);
+      });
+      return { declarations, raisons };
+    }, rafraichir);
+  }
+
+  async function declaration(schema, table) {
+    const { declarations } = await modifiables();
+    const d = declarations.find((x) => x.schema === schema && x.table === table);
+    if (!d) {
+      throw new ErreurPasserelle(`« ${schema}.${table} » n’est pas modifiable depuis Atlas (droits d’écriture de l’éditeur, clé primaire et colonne « ${COLONNE_VERSION} » entière requis).`,
+        { code: 'table_non_modifiable', cote: 'requete', statut: 403 });
+    }
+    return d;
+  }
+
+  const cleDe = (decl, ligne) => Object.fromEntries(decl.cle.map((c) => [c, ligne[c] ?? null]));
+  const valeursDe = (decl, ligne) => Object.fromEntries(decl.colonnes.map((c) => [c, ligne[c] ?? null]));
+  const ligneAtlas = (decl, ligne) => ({
+    cle: cleDe(decl, ligne), valeurs: valeursDe(decl, ligne), version: ligne[decl.version] ?? null,
+    ...(decl.suppression.startsWith('etat:') ? { actif: ligne[decl.suppression.slice(5)] !== false } : {}),
+  });
+
+  /** Les lignes d'une table, par clés ou par pages, avec leur version : la base reprojette les géométries (WGS84). */
+  async function lignesDe(decl, { cles, limite, decalage, niveau = 'lecture' } = {}) {
+    const corps = { schema_nom: decl.schema, table_nom: decl.table };
+    if (Array.isArray(cles)) corps.cles = cles;
+    if (Number.isInteger(limite) && limite > 0) corps.limite = limite;
+    if (Number.isInteger(decalage) && decalage >= 0) corps.decalage = decalage;
+    return (await appeler('POST', '/rpc/lignes', { niveau, corps, profil: SCHEMA_CONTRAT })).donnees;
+  }
+
+  /** Le filtre PostgREST qui désigne UNE ligne à la version lue : `id=eq.3&version=eq.5`. */
+  function filtreLigne(decl, cle, version) {
+    const q = new URLSearchParams();
+    for (const c of decl.cle) {
+      if (!cle || cle[c] === undefined || cle[c] === null) {
+        throw new ErreurPasserelle(`La clé « ${c} » manque : la ligne ne peut pas être désignée.`, { code: 'cle_incomplete', cote: 'requete' });
+      }
+      if (!IDENTIFIANT.test(c)) throw new ErreurPasserelle(`La colonne de clé « ${c} » a un nom que Atlas ne sait pas envoyer.`, { code: 'colonne_non_prise_en_charge', cote: 'requete' });
+      q.append(c, 'eq.' + String(cle[c]));
+    }
+    q.append(decl.version, 'eq.' + String(version));
+    q.append('select', [...decl.cle, decl.version].join(','));
+    return q.toString();
+  }
+
+  const resultat = (index, operation, statut, plus = {}) => ({ index, operation, statut, ...plus });
+
+  /** Une écriture qui n'a touché AUCUNE ligne : conflit, ligne disparue, ou refus de la base — jamais confondus. */
+  async function expliquerAbsence(decl, index, operation, cle, versionAttendue) {
+    const lu = (await lignesDe(decl, { cles: [cle], niveau: 'ecriture' })).lignes || [];
+    if (!lu.length) {
+      return resultat(index, operation, 'introuvable', {
+        code: 'ligne_introuvable', cote: 'base', cle,
+        message: 'La ligne n’existe plus, ou la base ne vous la montre pas (sécurité par ligne).',
+      });
+    }
+    const actuelle = ligneAtlas(decl, lu[0]);
+    if (String(actuelle.version) !== String(versionAttendue)) {
+      return resultat(index, operation, 'conflit', {
+        code: 'version_changee', cote: 'base', cle, message: 'La ligne a changé depuis votre lecture : rien n’a été écrit.',
+        version_actuelle: actuelle.version, valeurs_actuelles: actuelle.valeurs,
+      });
+    }
+    return resultat(index, operation, 'refuse', {
+      code: 'ligne_non_modifiee', cote: 'base', cle,
+      message: 'La base n’a modifié aucune ligne : un droit ou la sécurité par ligne refuse cette écriture.',
+    });
+  }
+
+  /** Une erreur de la BASE devient le résultat de CETTE opération ; une panne du serveur interrompt tout. */
+  const refusDeLaBase = (index, operation, e, cle) => {
+    if (!e || e.cote !== 'base') throw e;
+    return resultat(index, operation, 'refuse', { code: e.code, cote: 'base', message: e.message, ...(cle ? { cle } : {}) });
+  };
+
+  const operationFermee = (decl, nom, index) => resultat(index, nom || '?', 'refuse', {
+    code: 'operation_non_ouverte', cote: 'requete', message: `L’opération « ${nom} » n’est pas ouverte sur ${decl.schema}.${decl.table}.`,
+  });
+
+  async function appliquerOperation(decl, op, index, colonnesTable) {
+    const nom = op && op.op;
+    if (!decl.operations.includes(nom)) return operationFermee(decl, nom, index);
+    const types = new Map(colonnesTable.map((c) => [c.nom, c.type]));
+    const envoi = (valeurs) => {
+      const sortie = {};
+      for (const [c, v] of Object.entries(valeurs || {})) {
+        if (!decl.colonnes.includes(c) && !decl.cle.includes(c)) {
+          throw Object.assign(new Error(`La colonne « ${c} » n’est pas modifiable sur ${decl.schema}.${decl.table}.`), { refus: 'colonne_non_ouverte' });
+        }
+        if (!IDENTIFIANT.test(c)) throw Object.assign(new Error(`La colonne « ${c} » a un nom que Atlas ne sait pas envoyer.`), { refus: 'colonne_non_prise_en_charge' });
+        sortie[c] = valeurPourPg(v, types.get(c));
+      }
+      return sortie;
+    };
+    try {
+      if (nom === 'inserer') {
+        const corps = envoi({ ...(op.cle || {}), ...(op.valeurs || {}) });
+        const q = new URLSearchParams({ select: [...decl.cle, decl.version].join(',') }).toString();
+        const rep = await appeler('POST', `/${encodeURIComponent(decl.table)}?${q}`, { niveau: 'ecriture', corps, profil: decl.schema, entetes: { Prefer: 'return=representation' } });
+        const ligne = Array.isArray(rep.donnees) ? rep.donnees[0] : null;
+        if (!ligne) return resultat(index, nom, 'erreur', { code: 'aucune_ligne_rendue', cote: 'serveur', message: 'PostgREST n’a pas rendu la ligne insérée.' });
+        return resultat(index, nom, 'ok', { cle: cleDe(decl, ligne), version: ligne[decl.version] ?? null });
+      }
+      if (op.version_attendue === undefined || op.version_attendue === null) {
+        return resultat(index, nom, 'refuse', { code: 'version_attendue_absente', cote: 'requete', message: 'La version lue est obligatoire : Atlas n’écrase jamais une ligne sans l’avoir lue.' });
+      }
+      const cle = op.cle || {};
+      const filtre = filtreLigne(decl, cle, op.version_attendue);
+      const adresse = `/${encodeURIComponent(decl.table)}?${filtre}`;
+      let rep;
+      if (nom === 'supprimer') {
+        rep = await appeler('DELETE', adresse, { niveau: 'ecriture', profil: decl.schema, entetes: { Prefer: 'return=representation' } });
+      } else {
+        const corps = nom === 'modifier' ? envoi(op.valeurs) : { [decl.suppression.slice(5)]: nom === 'reactiver' }; // desactiver : actif = faux
+        if (nom === 'modifier' && !Object.keys(corps).length) {
+          return resultat(index, nom, 'refuse', { code: 'aucune_valeur', cote: 'requete', cle, message: 'Aucune valeur à modifier.' });
+        }
+        rep = await appeler('PATCH', adresse, { niveau: 'ecriture', corps, profil: decl.schema, entetes: { Prefer: 'return=representation' } });
+      }
+      const touchees = Array.isArray(rep.donnees) ? rep.donnees : [];
+      if (!touchees.length) return await expliquerAbsence(decl, index, nom, cle, op.version_attendue);
+      return resultat(index, nom, 'ok', { cle: cleDe(decl, touchees[0]), version: touchees[0][decl.version] ?? null });
+    } catch (e) {
+      if (e && e.refus) return resultat(index, nom || '?', 'refuse', { code: e.refus, cote: 'requete', message: e.message });
+      // Une demande que le client refuse lui-même (clé incomplète, nom de colonne inenvoyable) : le refus de CETTE opération, pas la fin du lot.
+      if (e && e.name === 'ErreurPasserelle' && e.cote === 'requete' && !e.statut) return resultat(index, nom || '?', 'refuse', { code: e.code, cote: 'requete', message: e.message });
+      return refusDeLaBase(index, nom || '?', e, op && op.cle);
+    }
+  }
+
+  /** Simuler : on LIT (existence et version), on n'écrit rien. Les contraintes et les droits d'écriture ne sont pas éprouvés : dit. */
+  async function simulerOperation(decl, op, index) {
+    const nom = op && op.op;
+    if (!decl.operations.includes(nom)) return operationFermee(decl, nom, index);
+    if (nom === 'inserer') return resultat(index, nom, 'ok', { message: 'Non éprouvé : une simulation ne vérifie pas les contraintes de la base.' });
+    if (op.version_attendue === undefined || op.version_attendue === null) {
+      return resultat(index, nom, 'refuse', { code: 'version_attendue_absente', cote: 'requete', message: 'La version lue est obligatoire.' });
+    }
+    const cle = op.cle || {};
+    const r = await expliquerAbsence(decl, index, nom, cle, op.version_attendue);
+    if (r.statut === 'refuse' && r.code === 'ligne_non_modifiee') {
+      return resultat(index, nom, 'ok', { cle, message: 'Ligne présente à la version lue ; une simulation ne vérifie ni les droits d’écriture ni les contraintes.' });
+    }
+    return r;
+  }
+
   const commandes = {
+    async pg_gateway_tables_modifiables() {
+      const { declarations, raisons } = await modifiables(true);
+      return { connexion: ALIAS, tables: declarations, lot_max: LOT_MAX, avertissements: raisons };
+    },
+
+    async pg_gateway_lire({ schema, table, cles, limite, decalage }) {
+      const decl = await declaration(schema, table);
+      const r = await lignesDe(decl, { cles, limite, decalage });
+      const lignes = (r.lignes || []).map((l) => ligneAtlas(decl, l));
+      const tronque = r.truncated === true;
+      const debut = Number.isInteger(r.decalage) ? r.decalage : 0;
+      return {
+        connexion: ALIAS, schema, table, lignes, nb_lignes: lignes.length, tronque, decalage: debut,
+        suivant: tronque ? debut + (Number.isInteger(r.limite) ? r.limite : lignes.length) : null, avertissements: [],
+      };
+    },
+
+    /**
+     * Écrire, une requête par opération (PATCH, POST, DELETE sur la table), chacune à la version lue. Pas de lot atomique de plusieurs
+     * opérations (`atomique: false`, ou une seule opération), pas de clé d'idempotence : dit, jamais ignoré en silence.
+     */
+    async pg_gateway_ecrire({ schema, table, operations, mode = 'appliquer', atomique = true, cle_idempotence: cleIdempotence }) {
+      if (!Array.isArray(operations) || !operations.length) {
+        throw new ErreurPasserelle('Aucune opération à écrire.', { code: 'operations_absentes', cote: 'requete' });
+      }
+      if (operations.length > LOT_MAX) {
+        throw new ErreurPasserelle(`Trop d’opérations dans un lot (${operations.length}, au plus ${LOT_MAX}).`, { code: 'lot_trop_grand', cote: 'requete' });
+      }
+      if (atomique !== false && operations.length > 1) {
+        throw new ErreurPasserelle('Un lot de plusieurs opérations ne peut pas être atomique avec PostgREST : demandez-le opération par opération (atomique: false).',
+          { code: 'atomique_non_pris_en_charge', cote: 'requete' });
+      }
+      const decl = await declaration(schema, table);
+      const colonnesTable = await colonnesDe(schema, table);
+      const simuler = mode === 'simuler';
+      const resultats = [];
+      for (let i = 0; i < operations.length; i++) {
+        resultats.push(simuler ? await simulerOperation(decl, operations[i], i) : await appliquerOperation(decl, operations[i], i, colonnesTable));
+      }
+      const ok = resultats.filter((r) => r.statut === 'ok').length;
+      const conflits = resultats.filter((r) => r.statut === 'conflit').length;
+      const avertissements = [];
+      if (simuler) avertissements.push('Simulation partielle : les versions et l’existence des lignes sont vérifiées, pas les droits d’écriture ni les contraintes de la base.');
+      if (cleIdempotence) avertissements.push('La clé d’idempotence n’existe pas avec PostgREST : rejouer ce lot le réapplique (une modification déjà faite ressortira en conflit).');
+      return {
+        connexion: ALIAS, schema, table, mode: simuler ? 'simuler' : 'appliquer', atomique: atomique !== false, ok, conflits,
+        refus: resultats.length - ok - conflits, resultats, rejoue: false, applique: !simuler && ok > 0, avertissements,
+      };
+    },
+
     async pg_gateway_connexions() {
       const c = await contrat(true);
       const libelle = `PostgreSQL ${String(c.postgresql || '').split(' ')[0]} · PostGIS ${c.postgis || '?'}`.trim();

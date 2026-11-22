@@ -18,7 +18,7 @@
 
 import { echapper } from './html.js?v=20261010a';
 import { texteErreur } from './pg-passerelle.js?v=20261122b';
-import { creerClientAuto } from './pg-postgrest.js?v=20261122a';
+import { creerClientAuto } from './pg-postgrest.js?v=20261122b';
 import {
   champsEditables, texteDeValeur, valeursModifiees, operationModifier, operationInserer, operationEtat, pointGeoJSON,
   droitsFiche, insertionPossible, interpreter, cleDeFeature, lireCle,

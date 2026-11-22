@@ -25,15 +25,15 @@ import { mettreAPlat } from './vue-import.js?v=20260911a';
 import { creerAccesPg } from './pg-acces.js?v=20261109a';
 import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acces-grist.js?v=20261122b';
 import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
-import { creerClientAuto } from './pg-postgrest.js?v=20261122a';
+import { creerClientAuto } from './pg-postgrest.js?v=20261122b';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
-import { ouvrirEdition } from './vue-edition-pg.js?v=20261122a';
+import { ouvrirEdition } from './vue-edition-pg.js?v=20261122b';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109f';
 import { lireTout } from './pg-lecture.js?v=20261109a';
 import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109f';
-import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122b';
+import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122c';
 import {
   listerTables, htmlBase, htmlDirectes, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, nombre,
 } from './vue-pg-rendu.js?v=20261122b';
