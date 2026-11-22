@@ -5933,6 +5933,8 @@ function openModule(name) {
         return;
     }
     STATE.currentModule = name;
+    // Quitter le panneau PostgreSQL emporte sa fiche.
+    retirerFichePg(false);
     // Choisir un module est explicite : il revient, même s'il avait cédé la place à la fiche.
     $('module-panel').classList.remove('module-cede');
     _moduleImpose = $('inspector')?.classList.contains('open') && STATE.selection.mode;
@@ -6225,27 +6227,28 @@ function fermerMenuCouche() {
 function _fermetureMenuCouche(e) { if (!e.target.closest?.('#menu-couche')) fermerMenuCouche(); }
 function _toucheMenuCouche(e) { if (e.key === 'Escape') { e.stopPropagation(); fermerMenuCouche(); } }
 
-/** Le menu des actions rares d'une ligne de couche : le zoom reste sur la ligne, ce qui détruit ou recharge passe ici. */
-function ouvrirMenuCouche(layer, ancre) {
+/**
+ * Un menu d'actions ancré sur un bouton « ⋯ » : le même pour une couche d'Atlas et pour une ligne du panneau PostgreSQL.
+ * @param {Element|null} ancre
+ * @param {string} titre  lu par les lecteurs d'écran
+ * @param {{id:string, nom:string, ic?:string, danger?:boolean}[]} items  `ic` : un nom de `IC`
+ * @param {(id:string)=>void} choisir
+ */
+function ouvrirMenuActions(ancre, titre, items, choisir) {
     fermerMenuCouche();
     const menu = document.createElement('div');
     menu.id = 'menu-couche';
     menu.className = 'posture-menu';
     menu.setAttribute('role', 'menu');
-    menu.setAttribute('aria-label', `Actions pour ${layer.name}`);
-    const items = [];
-    if (isLinkedTableLayer(layer)) items.push({ id: 'rafraichir', nom: 'Rafraîchir depuis la table', ic: IC.rafraichir });
-    items.push({ id: 'supprimer', nom: 'Supprimer la couche', ic: IC.corbeille, danger: true });
-    menu.innerHTML = items.map((i) => `<button type="button" role="menuitem" class="posture-choix menu-couche-item${i.danger ? ' danger' : ''}" data-act="${i.id}">
-        <span class="posture-nom">${icTrait(i.ic, 16)} ${echapper(i.nom)}</span></button>`).join('');
+    menu.setAttribute('aria-label', titre);
+    menu.innerHTML = items.map((i) => `<button type="button" role="menuitem" class="posture-choix menu-couche-item${i.danger ? ' danger' : ''}" data-act="${echapper(i.id)}">
+        <span class="posture-nom">${i.ic && IC[i.ic] ? icTrait(IC[i.ic], 16) : ''} ${echapper(i.nom)}</span></button>`).join('');
     document.body.appendChild(menu);
     menu.addEventListener('click', (ev) => {
         const b = ev.target.closest('[data-act]');
         if (!b) return;
         fermerMenuCouche();
-        const evenement = { stopPropagation() {} };
-        if (b.dataset.act === 'rafraichir') A.refreshLayer(layer.id, evenement);
-        else A.deleteLayer(layer.id, evenement);
+        choisir(b.dataset.act);
     });
     if (ancre && !surTelephone()) {
         const r = ancre.getBoundingClientRect();
@@ -6257,6 +6260,18 @@ function ouvrirMenuCouche(layer, ancre) {
     document.addEventListener('pointerdown', _fermetureMenuCouche, true);
     document.addEventListener('keydown', _toucheMenuCouche, true);
     menu.querySelector('.menu-couche-item')?.focus();
+}
+
+/** Le menu des actions rares d'une ligne de couche : le zoom reste sur la ligne, ce qui détruit ou recharge passe ici. */
+function ouvrirMenuCouche(layer, ancre) {
+    const items = [];
+    if (isLinkedTableLayer(layer)) items.push({ id: 'rafraichir', nom: 'Rafraîchir depuis la table', ic: 'rafraichir' });
+    items.push({ id: 'supprimer', nom: 'Supprimer la couche', ic: 'corbeille', danger: true });
+    ouvrirMenuActions(ancre, 'Actions pour ' + layer.name, items, (id) => {
+        const evenement = { stopPropagation() {} };
+        if (id === 'rafraichir') A.refreshLayer(layer.id, evenement);
+        else A.deleteLayer(layer.id, evenement);
+    });
 }
 
 function renderLayersPanelLecture() {
@@ -9099,6 +9114,8 @@ function closeInspectorByUser() {
     inspectorUserClosed = true;
     // Fermer le panneau ferme aussi la liste : elle serait sinon rouverte.
     if (_liste) { _liste = null; document.body.classList.remove('mode-liste'); }
+    // Fermer le panneau ferme aussi la fiche PostgreSQL : elle serait sinon rouverte au prochain rendu.
+    _fichePg = null;
     closeInspectorPanel();
     // Fermer la fiche d'un objet, c'est le laisser : sans cela la sélection
     // restait (halo, barre ◀ ▶), et la fiche revenait au prochain module ouvert
@@ -9126,6 +9143,12 @@ function renderInspector() {
     if (_liste) {
         inspectorUserClosed = false;
         renderListeObjets();
+        openInspectorPanel();
+        return;
+    }
+    if (_fichePg) {
+        inspectorUserClosed = false;
+        renderFichePg();
         openInspectorPanel();
         return;
     }
@@ -15282,6 +15305,48 @@ function ouvrirObjet(layer, idx, { lngLat = null, feature = null, suite = null }
 // ---- La liste ----------------------------------------------------------
 
 /** La liste ouverte : `{ coucheId, requete, tri, visites }`, ou `null`. */
+/**
+ * La fiche que le panneau PostgreSQL pose dans l'inspecteur (à droite) : la connexion, le détail d'une table. Elle passe avant la
+ * symbolisation d'une couche mais cède à la fiche d'un objet. Le panneau PG garde la main sur son contenu (`poser`) ; Atlas
+ * ne fait que l'héberger, la rendre et la retirer quand on quitte le panneau.
+ */
+let _fichePg = null;
+let _fichePgEcouteurs = false;
+function retirerFichePg(rendre = true) {
+    if (!_fichePg) return;
+    _fichePg = null;
+    if (rendre) renderInspector();
+}
+let _fichePgJeton = 0;
+function renderFichePg() {
+    const f = _fichePg;
+    const corps = $('insp-body');
+    // Atlas redessine l'inspecteur pour mille raisons (carte, sélection) : tant que la fiche n'a pas changé, on ne touche à rien,
+    // sinon une adresse en cours de saisie reprendrait sa valeur d'avant.
+    if (!f.aRendre && corps.firstElementChild && corps.firstElementChild.dataset.fichePg === String(f.jeton)) return;
+    f.aRendre = false;
+    $('insp-head').innerHTML = f.tete;
+    $('insp-tabs').innerHTML = '';
+    corps.innerHTML = `<div data-fiche-pg="${f.jeton}">${f.corps}</div>`;
+    $('insp-foot').innerHTML = f.pied || '';
+}
+const fichePg = {
+    /** @param {{tete:string, corps:string, pied?:string, surClic?:(e:Event)=>void, surSaisie?:(e:Event)=>void}} f  HTML déjà échappé par l'appelant */
+    poser(f) {
+        if (!_fichePgEcouteurs) {
+            _fichePgEcouteurs = true;
+            const insp = $('inspector');
+            insp.addEventListener('click', (e) => { if (_fichePg && _fichePg.surClic) _fichePg.surClic(e); });
+            insp.addEventListener('input', (e) => { if (_fichePg && _fichePg.surSaisie) _fichePg.surSaisie(e); });
+            insp.addEventListener('keydown', (e) => { if (_fichePg && _fichePg.surTouche) _fichePg.surTouche(e); });
+        }
+        _fichePg = { pied: '', ...f, jeton: ++_fichePgJeton, aRendre: true };
+        inspectorUserClosed = false;
+        renderInspector();
+    },
+    retirer: () => retirerFichePg(),
+};
+
 let _liste = null;
 /** L'index de recherche par couche, refait quand la couche est relue. */
 const _indexListe = new Map();   // coucheId -> { geojson, entrees }
@@ -16196,7 +16261,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261122a').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261122c').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     openIGN: () => import('./lib/vue-import-ign.js?v=20261010a').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {

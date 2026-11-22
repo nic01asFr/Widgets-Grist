@@ -27,15 +27,18 @@ const STYLE_REFUS = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:
 const STYLE_OK = 'margin:8px 0;padding:8px 10px;font-size:12.5px;line-height:1.4;border-left:3px solid #2e8b57;background:rgba(46,139,87,.1);border-radius:4px';
 const LIGNES_MAX = 30;
 
-/** Les copies du document, avec un bouton pour chacune. */
+/** Les copies synchronisées du document : une ligne par copie, comme une couche, avec son bouton. */
 export function htmlCopies(copies) {
   if (!copies.length) return '';
-  return `<div class="section" style="margin-top:12px"><div class="range-info"><strong>Copies synchronisables</strong></div>${copies.map((c) => `
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:8px 0">
-      <span style="font-size:12.5px;min-width:0;flex:1 1 140px;overflow-wrap:anywhere">${echapper(c.tableGrist)}<br>
-        <span class="range-info">${echapper(c.config.schema)}.${echapper(c.config.table)} · ${echapper(origineLisible(c.config.url))}</span></span>
-      <button type="button" class="btn" data-sync="${echapper(String(c.rowId))}" aria-label="Synchroniser ${echapper(c.tableGrist)}">Synchroniser</button>
-    </div>`).join('')}</div>`;
+  return `<div class="section"><div class="section-title">Copies synchronisées <span class="range-info" style="text-transform:none;letter-spacing:0">${copies.length}</span></div>
+    <div class="layer-list" role="list">${copies.map((c) => `
+    <div class="layer-item pg-ligne" role="listitem">
+      <div class="layer-info">
+        <div class="layer-name" title="${echapper(c.tableGrist)}">${echapper(c.tableGrist)}</div>
+        <div class="layer-meta"><span>⇄ ${echapper(c.config.schema)}.${echapper(c.config.table)}</span><span title="Passerelle">${echapper(origineLisible(c.config.url))}</span></div>
+      </div>
+      <button type="button" class="btn btn-soft" data-sync="${echapper(String(c.rowId))}" aria-label="Synchroniser ${echapper(c.tableGrist)}">Synchroniser</button>
+    </div>`).join('')}</div></div>`;
 }
 
 /** Le résumé des écarts, en phrases. */

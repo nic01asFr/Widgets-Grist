@@ -86,7 +86,10 @@ describe('vue-sync-pg : correctifs de l’essai réel', () => {
     assert.match(h, /Interrompu : jeton refusé/);
   });
 
-  it('la liste des copies passe à la ligne au lieu de déborder', () => {
-    assert.match(htmlCopies([copie]), /flex-wrap:wrap/);
+  it('une copie est une ligne comme une couche : le nom se coupe proprement, son nom complet est en infobulle', () => {
+    const h = htmlCopies([copie]);
+    assert.match(h, /class="layer-item pg-ligne"/);
+    assert.match(h, /class="layer-name" title="Interventions"/);
+    assert.match(h, /data-sync="/);
   });
 });

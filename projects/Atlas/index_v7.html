@@ -1214,6 +1214,27 @@
         .btn-lien[aria-pressed="true"] { color: var(--ink); font-weight: 600; text-decoration: none; }
         .btn-lien:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
         .layer-list + .section, .layer-list + .empty { margin-top: 20px; }
+        /* Panneau « Base PostgreSQL » : mêmes lignes que les couches et les tables du document, trois classes de plus. */
+        .pg-base { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 4px 10px; padding: 10px; margin-bottom: 10px; border: 1px solid var(--hairline); border-radius: 8px; }
+        .pg-pastille { width: 9px; height: 9px; border-radius: 50%; background: var(--muted-light); flex-shrink: 0; }
+        .pg-pastille.ok { background: var(--green); }
+        .pg-base .layer-meta.pg-base-meta { grid-column: 2 / 4; display: block; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+        .pg-base-actions { display: flex; gap: 6px; }
+        #pg-racine .section { margin-top: 14px; }
+        #pg-etat:empty { display: none; }
+        .pg-ligne .layer-meta { flex-wrap: wrap; }
+        .pg-ligne .layer-meta > span { min-width: 0; overflow-wrap: anywhere; }
+        .pg-table .layer-meta { flex-wrap: wrap; overflow: visible; white-space: normal; }
+        .pg-ligne button.layer-vis { background: transparent; border: none; padding: 0; display: inline-flex; align-items: center; }
+        .pg-ligne.masquee .layer-name, .pg-ligne.masquee .layer-swatch { opacity: 0.5; }
+        .pg-ligne { cursor: default; }
+        .pg-table { align-items: flex-start; }
+        .pg-table .table-nom { display: flex; flex-direction: column; gap: 1px; white-space: normal; }
+        .pg-table[disabled] { opacity: 0.45; cursor: default; }
+        .table-item.actif { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 20%, transparent); }
+        .pg-choix { border: 1px solid var(--hairline); border-radius: 8px; padding: 10px; margin: 10px 0; }
+        .pg-choix-titre { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+        .pg-choix .range-info { margin-bottom: 8px; }
         .table-liste { display: flex; flex-direction: column; }
         .table-item {
             display: flex; align-items: center; gap: 8px; width: 100%; min-height: 38px; padding: 6px 10px;

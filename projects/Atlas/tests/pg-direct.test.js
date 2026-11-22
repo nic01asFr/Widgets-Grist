@@ -170,17 +170,18 @@ describe('pg-direct — la couche en direct', () => {
 });
 
 describe('vue — les couches directes', () => {
-  it('liste vide : rien ; sinon état et bouton Retirer, tout échappé', () => {
+  it('liste vide : rien ; sinon une ligne par couche, œil et menu, tout échappé', () => {
     assert.equal(htmlDirectes([]), '');
-    const h = htmlDirectes([{ id: 'a', couleur: '#d62728', libelle: 'bati.<b>', etat: '12 entités' }]);
-    assert.match(h, /data-retirer="a"/);
-    assert.match(h, /cette session seulement/);
+    const h = htmlDirectes([{ id: 'a', couleur: '#d62728', libelle: 'bati.<b>', etat: '12 entités', visible: true }]);
+    assert.match(h, /data-pg-bascule="a"/);
+    assert.match(h, /data-pg-menu="a"/);
+    assert.match(h, /12 entités/);
     assert.doesNotMatch(h, /<b>/);
   });
 
-  it('le bouton « Lier en direct » est proposé avec l’aperçu, sans dépendre du document', () => {
+  it('« Afficher sur la carte » est proposé avec l’aperçu, sans dépendre du document', () => {
     const h = htmlApercu({ table: { schema: 'a', table: 'b' }, phase: 'pret', couche: { nb_entites: 1, avertissements: [] }, plan: { ok: false, erreur: 'x' }, sansDocument: true, lectureSeule: true, nom: 'B' });
-    assert.match(h, /data-act="direct"[^>]*>Lier en direct/);
+    assert.match(h, /data-act="direct"[^>]*>Afficher sur la carte/);
     assert.doesNotMatch(h, /data-act="direct"[^>]*disabled/);
   });
 });
