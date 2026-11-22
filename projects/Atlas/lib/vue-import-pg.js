@@ -10,6 +10,10 @@
  * ni dans le stockage du navigateur ni dans le document. Seule l'ADRESSE de la passerelle est mémorisée (`localStorage`, avec
  * repli silencieux si le navigateur le refuse).
  *
+ * Si la passerelle annonce l'identité Grist (`GET /v1/identite`), aucun jeton n'est saisi : le widget présente le jeton d'accès que
+ * Grist lui donne (`pg-acces-grist.js`), après une confirmation par passerelle et par ouverture de la page. Le choix se fait au
+ * premier refus (401) d'une passerelle ; une passerelle sans ce mode garde la boîte de saisie.
+ *
  * Les fonctions `html*` sont pures : elles rendent du texte HTML à partir d'un état, et échappent tout ce qui vient des données.
  *
  * L'import « en direct » (couche relue à chaque déplacement de la vue, `pg-direct.js`) est une couche de SESSION : rien n'est écrit
@@ -19,6 +23,7 @@
 import { echapper } from './html.js?v=20261010a';
 import { mettreAPlat } from './vue-import.js?v=20260911a';
 import { creerAccesPg } from './pg-acces.js?v=20261109a';
+import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acces-grist.js?v=20261122a';
 import { creerClientPg, bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261109a';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
@@ -166,6 +171,39 @@ export function demanderJeton(doc, { origine, refuse, ecriture = false }) {
   });
 }
 
+/**
+ * La boîte de confirmation de l'identité Grist, rendue dans `document`. Rend `true` seulement si la personne autorise.
+ * Une fois par passerelle et par ouverture de la page : sans cette question, une adresse de passerelle modifiée par quelqu'un
+ * recevrait en silence le jeton d'accès du document.
+ */
+export function confirmerIdentite(doc, { origine }) {
+  return new Promise((resolve) => {
+    const fond = doc.createElement('div');
+    fond.setAttribute('role', 'dialog');
+    fond.setAttribute('aria-modal', 'true');
+    fond.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.45)';
+    const boite = doc.createElement('div');
+    boite.style.cssText = 'background:var(--bg,#fff);color:var(--text,#222);padding:16px;border-radius:8px;max-width:340px;width:90%';
+    const titre = doc.createElement('strong'); titre.textContent = 'Identité Grist';
+    const texte = doc.createElement('div'); texte.style.cssText = 'margin:8px 0';
+    texte.textContent = `Envoyer votre identité Grist à ${origine} ? La passerelle la fera valider par Grist et lira vos droits dans l’annuaire du document. Aucun jeton à saisir.`;
+    const note = doc.createElement('div'); note.textContent = 'Valable pour cette page seulement, rien n’est enregistré.'; note.style.cssText = 'font-size:11.5px;opacity:.7;margin-bottom:8px';
+    const barre = doc.createElement('div'); barre.style.cssText = 'display:flex;gap:8px;justify-content:flex-end';
+    const refuser = doc.createElement('button'); refuser.type = 'button'; refuser.className = 'btn btn-soft'; refuser.textContent = 'Refuser';
+    const autoriser = doc.createElement('button'); autoriser.type = 'button'; autoriser.className = 'btn'; autoriser.textContent = 'Autoriser';
+    barre.append(refuser, autoriser);
+    boite.append(titre, texte, note, barre);
+    fond.append(boite);
+    const fermer = (v) => { doc.removeEventListener('keydown', touche, true); fond.remove(); resolve(v); };
+    const touche = (e) => { if (e.key === 'Escape') { e.preventDefault(); fermer(false); } };
+    doc.addEventListener('keydown', touche, true);
+    refuser.addEventListener('click', () => fermer(false));
+    autoriser.addEventListener('click', () => fermer(true));
+    doc.body.append(fond);
+    refuser.focus(); // le refus est le choix par défaut : une touche Entrée distraite n'envoie rien
+  });
+}
+
 function lireUrl() { try { return globalThis.localStorage.getItem(CLE_URL) || ''; } catch { return ''; } }
 function ecrireUrl(u) { try { globalThis.localStorage.setItem(CLE_URL, u); } catch { /* navigation privée : on ne retient pas */ } }
 
@@ -175,6 +213,35 @@ const directes = new Map(); // id -> { couche, couleur, libelle, etat }
 // Le jeton survit à la fermeture du panneau, pas à celle de la page.
 let accesPartage = null;
 let accesEcriturePartage = null;
+// L'hôte courant : le jeton Grist est demandé à CE document, à chaque demande (la page garde les accès, pas l'hôte).
+let hoteCourant = null;
+
+/**
+ * Le jeton d'accès que Grist donne au widget pour ce document. `readOnly` : lecture seule (la passerelle refuse d'écrire avec).
+ * @returns {Promise<{token:string, ttlMsecs?:number}>}
+ */
+function jetonGrist(readOnly) {
+  const api = hoteCourant && hoteCourant.docApi ? hoteCourant.docApi() : null;
+  if (!api || typeof api.getAccessToken !== 'function') return Promise.reject(new Error('ce widget n’est pas ouvert dans un document Grist'));
+  return api.getAccessToken({ readOnly });
+}
+
+/**
+ * Un accès à une passerelle : l'identité Grist si la passerelle l'annonce, sinon le jeton saisi.
+ * @param {Document} doc
+ * @param {boolean} ecriture  jeton d'écriture (Grist : pas en lecture seule ; saisie : boîte « jeton d'ÉCRITURE »)
+ * @param {(q:{origine:string})=>Promise<boolean>} confirmer  partagé entre lecture et écriture : une seule question par passerelle
+ * @param {boolean} dansGrist  l'hôte sait donner un jeton Grist
+ */
+function creerAccesPage(doc, ecriture, confirmer, dansGrist) {
+  const jeton = creerAccesPg({ demander: (q) => demanderJeton(doc, ecriture ? { ...q, ecriture: true } : q) });
+  const grist = dansGrist ? creerAccesGrist({
+    jeton: () => jetonGrist(!ecriture),
+    confirmer,
+    signaler: (t) => { if (hoteCourant && hoteCourant.annoncer) hoteCourant.annoncer(t, 'error'); },
+  }) : null;
+  return creerAccesAuto({ jeton, grist });
+}
 
 /**
  * @param {object} hote
@@ -190,8 +257,13 @@ let accesEcriturePartage = null;
 export async function ouvrirImportPg(hote) {
   if (nettoyageCourant) nettoyageCourant();
   const doc = hote.corps.ownerDocument;
-  if (!accesPartage) accesPartage = creerAccesPg({ demander: (q) => demanderJeton(doc, q) });
-  if (!accesEcriturePartage) accesEcriturePartage = creerAccesPg({ demander: (q) => demanderJeton(doc, { ...q, ecriture: true }) });
+  hoteCourant = hote;
+  if (!accesPartage || !accesEcriturePartage) {
+    const confirmer = memoriserConfirmation((q) => confirmerIdentite(doc, q));
+    const dansGrist = typeof hote.docApi === 'function';
+    if (!accesPartage) accesPartage = creerAccesPage(doc, false, confirmer, dansGrist);
+    if (!accesEcriturePartage) accesEcriturePartage = creerAccesPage(doc, true, confirmer, dansGrist);
+  }
   const acces = accesPartage;
 
   const etat = { url: lireUrl(), connexions: [], connexion: '', schema: null, filtre: '', table: null, couche: null, plan: null, nom: '', phase: 'repos', erreur: '', lectureSeule: !!hote.lectureSeule(), peutEnregistrer: false, modifiables: null, modifiable: null, copies: [] };
