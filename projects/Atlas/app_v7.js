@@ -32,7 +32,7 @@ import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=2026
 import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=20260925c';
 import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=20260925a';
 import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20261002g';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=20260925b';
+import { batimentsProches, geometrieMurs, batisDeCoucheAtlas } from './lib/facades-eclairees.js?v=20261011b';
 import { capacites, peutSAuthentifier } from './lib/data-client.js?v=20261001a';
 import {
   detectDocMode,
@@ -2875,6 +2875,13 @@ const Eclairage = {
     facadesDemandees: (() => {
         try { return new URLSearchParams(location.search).get('eclairage_facades') === '1'; } catch (_) { return false; }
     })(),
+    /**
+     * L'ombre portée des bâtiments sur ces façades (lib/ombres-facades.js, E7) : un mur n'est recopié que là où une source le voit. Active avec les
+     * façades ; `?eclairage_ombres=0` rend le comportement d'avant (tout mur proche recopié entier, lumière « à travers » les immeubles).
+     */
+    ombresFacades: (() => {
+        try { return new URLSearchParams(location.search).get('eclairage_ombres') !== '0'; } catch (_) { return true; }
+    })(),
     majFacades(permis) {
         const lum = this.lum;
         const actif = this.facadesDemandees && permis && !STATE.settings.terrain3D && map.getZoom() >= 17;
@@ -2898,11 +2905,22 @@ const Eclairage = {
             if (map.getLayoutProperty(l.id, 'visibility') === 'none') continue;
             try { feats.push(...map.querySourceFeatures(l.source, { sourceLayer: l['source-layer'] })); } catch (_) { /* source absente */ }
         }
+        // Le bâti des couches Atlas (bâtis importés, maquette) : surfaces extrudées dont l'épaisseur vient d'un champ ou d'une valeur fixe.
+        // Une hauteur graduée n'est pas lue (pas de valeur par entité à ce niveau) : cette couche ne reçoit pas de façade.
+        for (const layer of STATE.layers) {
+            if (layer.visible === false || layer._distant || layer._raster) continue;
+            if (layer.geometryType !== 'Polygon' && layer.geometryType !== 'MultiPolygon') continue;
+            if (layer.style?.polygonMode === 'flat') continue;
+            const sym = initSymbolization(layer);
+            if (!layer.heightField && sym.size?.mode === 'graduated') continue;
+            feats.push(...batisDeCoucheAtlas(filteredGeoJSON(layer)?.features || [], {
+                champ: layer.heightField || null, fixe: sym.size?.value || 12, base: sym.extrusion?.base, idCouche: layer.id }));
+        }
         const versLocal = (lng, lat) => { const m = Models3D.localMeters(lng, lat); return { x: m.x, z: -m.y }; };
         const bats = batimentsProches(feats, sources, rayon, versLocal);
-        const g = geometrieMurs(bats, undefined, undefined, { sources, rayon });
+        const g = geometrieMurs(bats, undefined, undefined, { sources, rayon, ...(this.ombresFacades ? { ombres: { hauteurFeu: Math.max(hFeu, 1) } } : {}) });
         lum.definirFacades(g);
-        this._facades = { batiments: bats.length, triangles: g.triangles, rayon };
+        this._facades = { batiments: bats.length, triangles: g.triangles, rayon, ombres: !!this.ombresFacades };
     },
 
     /** Relief recalé : reposer les luminaires sur le nouveau sol. */
