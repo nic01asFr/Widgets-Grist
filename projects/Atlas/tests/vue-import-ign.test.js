@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { ICONES, htmlGrille, htmlDetail, htmlProgression, texteProgression, dureeDite } from '../lib/vue-import-ign.js';
+import { ICONES, htmlGrille, htmlDetail, htmlProgression, texteProgression, dureeDite, doitMontrerLeDetail } from '../lib/vue-import-ign.js';
 import { PRESETS, presetsParGroupe, listerPresets, metadonneesCouche } from '../lib/import-ign.js';
 import { evaluerVolume } from '../lib/import-lots.js';
 import { decisionImport } from '../lib/import-ign.js';
@@ -183,5 +183,21 @@ describe('vue-import-ign — le bas du panneau, phase par phase', () => {
       const h = htmlDetail(etat({ phase, jeu, estimation: estimation(100), progression: { fait: 1, total: 2, pct: 50, resteS: 1, refuses: 0 }, resultat: resultat() }));
       assert.doesNotMatch(h, /onclick=/, phase);
     }
+  });
+});
+
+describe('vue-import-ign — le défilement du panneau', () => {
+  it('à l’ouverture, le panneau ne descend pas : au premier dessin le bas est vide', () => {
+    assert.equal(doitMontrerLeDetail('choix', null), false);
+  });
+
+  it('un choix de jeu fait défiler vers l’estimation et le bouton', () => {
+    assert.equal(doitMontrerLeDetail('estimation', 'choix'), true);
+    assert.equal(doitMontrerLeDetail('pret', 'estimation'), true);
+    assert.equal(doitMontrerLeDetail('termine', 'import'), true);
+  });
+
+  it('la même phase ne fait pas défiler (progression d’un import)', () => {
+    assert.equal(doitMontrerLeDetail('import', 'import'), false);
   });
 });

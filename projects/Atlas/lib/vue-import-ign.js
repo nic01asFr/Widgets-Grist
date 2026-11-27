@@ -192,6 +192,16 @@ let nettoyageCourant = null;
  * @param {() => void} hote.retour revient au panneau des couches
  * @returns {Promise<{session: object, fermer: () => void}>}
  */
+/**
+ * Faut-il faire défiler jusqu'au bas du panneau, là où l'estimation et le bouton apparaissent ? Seulement quand la phase CHANGE après un premier dessin :
+ * au premier dessin (`precedente` nul) le bas est vide, et y défiler ouvrait le panneau déjà descendu au pied de la liste des jeux.
+ * @param {string} phase
+ * @param {string|null} precedente
+ */
+export function doitMontrerLeDetail(phase, precedente) {
+  return precedente !== null && phase !== precedente;
+}
+
 export async function ouvrirImportIgn(hote) {
   if (nettoyageCourant) nettoyageCourant();
   installerStyle(hote.corps.ownerDocument);
@@ -281,7 +291,7 @@ export async function ouvrirImportIgn(hote) {
         : (etat.phase === 'termine' ? '#ign-resume' : (etat.phase === 'annule' || etat.phase === 'erreur' ? '[data-act="reprendre"], [data-act="reessayer"]' : null));
       if (cible) detail.querySelector(cible)?.focus();
       // Les jeux sont nombreux : le bas du panneau, où l'estimation et le bouton apparaissent, doit rester à l'écran.
-      detail.scrollIntoView?.({ block: 'nearest' });
+      if (doitMontrerLeDetail(etat.phase, phasePrecedente)) detail.scrollIntoView?.({ block: 'nearest' });
     }
     if (etat.phase === 'termine' && etat.phase !== phasePrecedente) {
       hote.annoncer(`${nombre(etat.resultat.importes)} objet${pluriel(etat.resultat.importes, '', 's')} importé${pluriel(etat.resultat.importes, '', 's')} (IGN)`, etat.resultat.importes ? 'success' : 'warning');
