@@ -59,6 +59,8 @@ test('KTX2 qui échoue (constructeur ou détection du GPU) : le chargeur reste u
 
 test('câblage : l\'application construit le chargeur des dalles par chargeurDalles, avec le moteur de rendu et le transcodeur de la carte d\'import', () => {
   const app = fs.readFileSync(path.join(ICI, '..', 'app_v7.js'), 'utf8');
-  assert.match(app, /creerChargeur: \(renderer\) => chargeurDalles\(\{ GLTFLoader, MeshoptDecoder, KTX2Loader, renderer, chemin: cheminTranscodeur\(/);
+  // three.js se charge à la demande : les trois chargeurs viennent de `chargerThree()` (liaisons locales de monterDallesHote), pas des liaisons du module, nulles tant que Models3D n'est pas activé
+  assert.match(app, /creerChargeur: \(renderer\) => chargeurDalles\(\{ GLTFLoader: three\.GLTFLoader, MeshoptDecoder: three\.MeshoptDecoder, KTX2Loader: three\.KTX2Loader, renderer, chemin: cheminTranscodeur\(/);
+  assert.match(app, /const three = await chargerThree\(\);/);
   assert.ok(!/creerChargeur: \(\) => \{ const l = new GLTFLoader\(\); l\.setMeshoptDecoder/.test(app), 'l\'ancien chargeur sans KTX2 a disparu');
 });
