@@ -16,6 +16,10 @@
   "points": [],
   "journal": [
     {
+      "version": "v1.46.0",
+      "texte": "Atlas s’ouvre plus vite : la page n’attend plus les formulaires, l’import et l’export de fichiers ni la 3D tant qu’on n’en a pas besoin (premier affichage de la page autonome de 660 à 204 ms en local). La nuit, l’ombre des bâtiments sur les façades éclairées par les lampadaires peut être activée en option. Pour les applications qui intègrent la carte : un avertissement dit maintenant qu’une couche de tuiles ou de service (xyz, WMS…) reste vide dans la carte nue, et le contrat précise la durée d’un déplacement animé. Le composant carte BI, le contrat 0.8 et le client d’hôte ne changent pas."
+    },
+    {
       "version": "v1.45.0",
       "texte": "Atlas démarre sans clignotement et aux couleurs de l’instance Grist DINUM. Plus de logo qui apparaît puis disparaît : sans réglage, ni logo ni nom, le nom du projet seul. Dans un document Grist, le thème du document ou de l’instance est lu avant la scène et les couches, au lieu d’arriver après et de tout recolorer. L’apparence d’origine, sans thème d’hôte, est celle de l’instance (bleu, polices de l’instance) au lieu de la palette crème et terre cuite, qui reste disponible avec ?theme=atlas. Le texte secondaire et les liens de l’écran d’accueil sont plus lisibles. Le composant carte BI et le contrat 0.8 ne changent pas."
     },
@@ -1222,7 +1226,7 @@
   },
   "statut": {
     "niveau": "En service",
-    "texte": "Version 1.45.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, un composant de carte pour les applications externes, qui lit maintenant les altitudes, joue le récit et fournit une image de la carte. L’application Android reste une version de test, non signée."
+    "texte": "Version 1.46.0 : objets réalistes réglables à trois niveaux, éclairage qui s’allume selon le statut et le soleil, relevés de terrain avec droits par table et postures, formulaires créés depuis Atlas, contextes à tournée avec leur pastille et une bulle qui passe d’un objet au suivant, dessin et modification des géométries, scènes qui se retrouvent et se préparent hors ligne, import et export de fichiers, import des données de l’IGN, trafic simulé sur les routes, récit avec trajet optionnel, scènes externes et couches distantes, itinéraires qui respectent les sens uniques, un composant de carte pour les applications externes, qui lit maintenant les altitudes, joue le récit et fournit une image de la carte. L’application Android reste une version de test, non signée."
   },
   "constat": "Grist embarque un widget de carte : il place des marqueurs à partir de colonnes de latitude et de longitude. C’est utile, et cela s’arrête là — pas de lignes, pas de polygones, pas de symbolisation par la donnée, pas de relief.\n\nAlors on sort les données vers un PDF ou une plateforme cartographique, et la carte se fige le jour de l’export pendant que la donnée continue de vivre. Atlas essaie l’inverse : lire les tables là où elles sont — et, quand on publie une scène, la montrer aussi hors document.",
   "usages": [

@@ -13,6 +13,13 @@ Adresse publique : `https://nic01asfr.github.io/Widgets-Grist/atlas/` (elle suit
 
 Une nouvelle empreinte du client s'accompagne d'une nouvelle `VERSION_CLIENT`, annoncée sur le fil des hôtes **avant** publication.
 
+## 1.46.0 — chargement à la demande, ombre des bâtiments sur les façades, avertissement pour les sources non lues (27/11/2026)
+
+- **Page autonome plus rapide à l'ouverture.** MapLibre et SunCalc se chargent en `defer` (ils ne bloquent plus l'analyse de la page), le moteur de formulaire (sept scripts de `grist_forms` et sa feuille de style) ne se charge qu'à la lecture d'un document Grist, l'import et l'export de fichiers (`ouvrir-fichier`, `import-formats`, `export-formats`) qu'au premier fichier, three.js et ses extensions (luminaires, ombres) que si la scène a de quoi les remplir (`Models3D.besoin3D()`). Mesuré en local, cache ignoré : premier affichage de la page autonome 660 ms -> 204 ms, de la scène d'éclairage 808 -> 344 ms ; aucune régression sur le temps d'allumage des luminaires. Trois chemins qui supposaient three.js chargé (dalles 3D, export 3D de la scène, trafic) l'attendent maintenant.
+- **Ombre portée des bâtiments sur les façades éclairées (E7)**, derrière `?eclairage_facades=1` : `lib/ombres-facades.js` découpe les murs en cellules et ne garde éclairée que la cellule qu'une source voit ; un bâtiment de hauteur inconnue ne projette aucune ombre.
+- **Composant carte BI : un avertissement dit qu'une couche `xyz`, `tms`, `wms`, `wmts`, `wfs`, `raster`, `vector`, `pmtiles` ou `mvt` sans Features reste vide** (`_avertissements` de `setScene`, `lib/bi/diagnostic-donnees.js`) ; un fond de tuiles se règle par `setFond`. Le contrat dit aussi la durée d'un `flyTo({ duration })` (600 ms par défaut, 0 = instantané).
+- **Contrat 0.8, client de l'hôte (`VERSION_CLIENT` 6) et son empreinte : inchangés.** Rien à faire pour les applications hôtes.
+
 ## 1.45.0 — démarrage sans clignotement : marque neutre, thème avant les données, apparence d'origine de l'instance Grist DINUM (10/11/2026)
 
 - **Marque : neutre par défaut, partout.** Sans `?marque=`, ni glyphe ni nom : le nom du projet seul (widget Grist, application installée, démo web seule). Le choix est fait dans le script de tête de page : le logo n'apparaît plus pour disparaître ensuite (avant, la règle « pas de logo en widget » n'arrivait à la fin du démarrage). `?marque=icone` rend le glyphe seul, `?marque=atlas` le glyphe et le nom : inchangés.
