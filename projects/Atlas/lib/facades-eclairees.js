@@ -20,7 +20,9 @@
  *   pas de 12 m inventés pour un bâtiment sans hauteur).
  */
 
-export const VERSION = '0.1.0';
+import { indexerAretes, cellulesEclairees } from './ombres-facades.js';
+
+export const VERSION = '0.2.0';
 
 /** Décalage des murs recopiés vers l'extérieur, en mètres. */
 export const DECALAGE_M = 0.1;
@@ -47,6 +49,28 @@ export function hauteursBatiment(props) {
 }
 
 /**
+ * Le bâti d'une COUCHE ATLAS (bâtis importés d'une source ouverte, maquette, saisie) : des surfaces extrudées dont la hauteur vient d'un champ ou
+ * d'une valeur fixe, au format que `batimentsProches` lit (`render_height`, `render_min_height`). Une entité sans hauteur lisible n'a pas de mur.
+ * @param {object[]} entites  les entités GeoJSON de la couche (déjà filtrées)
+ * @param {{ champ?: string|null, fixe?: number|null, base?: number, idCouche?: string }} [o]
+ *   `champ` : propriété qui porte l'épaisseur de l'extrusion ; `fixe` : épaisseur commune quand il n'y a pas de champ ; `base` : hauteur du dessous
+ * @returns {object[]}
+ */
+export function batisDeCoucheAtlas(entites, { champ = null, fixe = null, base = 0, idCouche = 'couche' } = {}) {
+  const sortie = [];
+  const dessous = Number.isFinite(base) && base > 0 ? base : 0;
+  (entites || []).forEach((f, i) => {
+    const t = f?.geometry?.type;
+    if (t !== 'Polygon' && t !== 'MultiPolygon') return;
+    const v = champ ? f.properties?.[champ] : fixe;
+    const h = v === null || v === undefined || v === '' ? NaN : Number(v);
+    if (!Number.isFinite(h) || h <= 0) return;
+    sortie.push({ id: `${idCouche}:${f.id ?? i}`, geometry: f.geometry, properties: { render_height: dessous + h, render_min_height: dessous } });
+  });
+  return sortie;
+}
+
+/**
  * Les anneaux extérieurs d'une géométrie GeoJSON (Polygon, MultiPolygon), en
  * [lng, lat]. Les trous ne portent pas de façade visible de la rue.
  */
@@ -55,6 +79,43 @@ export function anneauxExterieurs(geometrie) {
   if (geometrie.type === 'Polygon') return geometrie.coordinates?.[0] ? [geometrie.coordinates[0]] : [];
   if (geometrie.type === 'MultiPolygon') return (geometrie.coordinates || []).map((p) => p?.[0]).filter(Boolean);
   return [];
+}
+
+/**
+ * Un index en grille des sources : pour un segment, on ne mesure que les sources des cases que sa boîte, élargie de `rayon`, touche. Avant, chaque arête
+ * était comparée à TOUTES les sources (arêtes × sources) : au Jarret, un îlot fusionné compte 32 000 arêtes. Le résultat est identique à la comparaison
+ * exhaustive (même test de distance, seuls les candidats changent).
+ * @param {{ x: number, z: number }[]} sources
+ * @param {number} rayon  mètres, repère local
+ * @returns {{ proche: (p: {x:number,z:number}, q: {x:number,z:number}) => boolean, comparaisons: number }}
+ */
+export function indexerSources(sources, rayon) {
+  const taille = Math.max(rayon, 1);
+  const r2 = rayon * rayon;
+  const cases = new Map();
+  const cle = (i, j) => i * 73856093 ^ j * 19349663;
+  for (const s of sources || []) {
+    const k = cle(Math.floor(s.x / taille), Math.floor(s.z / taille));
+    let l = cases.get(k); if (!l) cases.set(k, l = []); l.push(s);
+  }
+  const index = { comparaisons: 0,
+    /** Les sources des cases voisines d'un point (au moins toutes celles à moins de `rayon`) : un superset, jamais un oubli. */
+    autour(x, z) {
+      const i = Math.floor(x / taille), j = Math.floor(z / taille); const sortie = [];
+      for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { const l = cases.get(cle(i + di, j + dj)); if (l) for (const s of l) sortie.push(s); }
+      return sortie;
+    },
+    proche(p, q) {
+    if (!cases.size) return false;
+    const i0 = Math.floor((Math.min(p.x, q.x) - rayon) / taille), i1 = Math.floor((Math.max(p.x, q.x) + rayon) / taille);
+    const j0 = Math.floor((Math.min(p.z, q.z) - rayon) / taille), j1 = Math.floor((Math.max(p.z, q.z) + rayon) / taille);
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      const l = cases.get(cle(i, j)); if (!l) continue;
+      for (const s of l) { index.comparaisons++; if (distance2Segment(s, p, q) <= r2) return true; }
+    }
+    return false;
+  } };
+  return index;
 }
 
 /**
@@ -71,7 +132,7 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
   const out = [];
   if (!sources?.length) return out;
   const vus = new Set();
-  const r2 = rayon * rayon;
+  const index = indexerSources(sources, rayon);
   for (const f of batiments || []) {
     const h = hauteursBatiment(f?.properties);
     if (!h) continue;
@@ -84,9 +145,7 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
       for (let i = 0; i < a.length && !proche; i++) {
         const p = a[i];
         const q = a[(i + 1) % a.length];
-        for (const s of sources) {
-          if (distance2Segment(s, p, q) <= r2) { proche = true; break; }
-        }
+        if (index.proche(p, q)) proche = true;
       }
       if (proche) break;
     }
@@ -104,16 +163,14 @@ export function batimentsProches(batiments, sources, rayon, versLocal) {
  * `pres` : ne garder que les murs dont l'arête passe à moins de `rayon` d'une
  * des `sources` — un îlot fusionné du fond peut compter des milliers d'arêtes
  * (mesuré au Jarret : un seul bâtiment « proche », 32 000 arêtes).
- * @param {{ sources: {x:number,z:number}[], rayon: number }} [pres]
+ * @param {{ sources: {x:number,z:number}[], rayon: number, ombres?: { hauteurFeu: number, pas?: number, bande?: number } }} [pres]
+ *   `ombres` : l'ombre portée des bâtiments (E7, `lib/ombres-facades.js`) ; sans elle, tout mur proche est recopié entier, comme avant.
  * @returns {{ positions: Float32Array, normales: Float32Array, triangles: number }}
  */
 export function geometrieMurs(batiments, decalage = DECALAGE_M, sol = () => 0, pres = null) {
-  const r2 = pres ? pres.rayon * pres.rayon : 0;
-  const assezPres = (p, q) => {
-    if (!pres) return true;
-    for (const s of pres.sources) if (distance2Segment(s, p, q) <= r2) return true;
-    return false;
-  };
+  const indexPres = pres ? indexerSources(pres.sources, pres.rayon) : null;
+  const ombres = pres && pres.ombres ? { sources: pres.sources, autour: indexPres.autour, rayon: pres.rayon, hauteurFeu: pres.ombres.hauteurFeu, pas: pres.ombres.pas, bande: pres.ombres.bande, index: indexerAretes(batiments) } : null;
+  const assezPres = (p, q) => (indexPres ? indexPres.proche(p, q) : true);
   const pos = [];
   const nor = [];
   for (const b of batiments) {
@@ -144,6 +201,16 @@ export function geometrieMurs(batiments, decalage = DECALAGE_M, sol = () => 0, p
         const oz = nz * decalage;
         const s0 = sol(p.x, p.z);
         const s1 = sol(q.x, q.z);
+        if (ombres) {
+          // seules les cellules qu'une source voit sont recopiées ; un mur entièrement éclairé reste un seul rectangle
+          for (const c of cellulesEclairees(p, q, b.base, b.haut, { x: nx, z: nz }, ombres)) {
+            const xa = p.x + dx * c.t0 + ox, za = p.z + dz * c.t0 + oz, xb = p.x + dx * c.t1 + ox, zb = p.z + dz * c.t1 + oz;
+            const sa = s0 + (s1 - s0) * c.t0, sb = s0 + (s1 - s0) * c.t1;
+            const c0 = [xa, sa + c.y0, za], c1 = [xb, sb + c.y0, zb], c2 = [xb, sb + c.y1, zb], c3 = [xa, sa + c.y1, za];
+            for (const v of [c0, c1, c2, c0, c2, c3]) { pos.push(v[0], v[1], v[2]); nor.push(nx, 0, nz); }
+          }
+          continue;
+        }
         const p0 = [p.x + ox, s0 + b.base, p.z + oz];
         const p1 = [q.x + ox, s1 + b.base, q.z + oz];
         const p2 = [q.x + ox, s1 + b.haut, q.z + oz];

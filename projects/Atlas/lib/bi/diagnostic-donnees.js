@@ -15,6 +15,8 @@ const EXEMPLES = 3;
 
 /** Au-delà, la carte reste utilisable mais l'envoi et le montage pèsent (mesuré : 0,36 s à 50 000 entités, 0,96 s à 100 000, filtre et rendu moins fluides) : on conseille d'agréger. */
 export const SEUIL_VOLUME = 50000;
+/** Les types de source que la carte nue ne sait pas lire (tuiles raster ou vectorielles, services OGC). */
+export const SOURCES_NON_OFFERTES = Object.freeze(['xyz', 'tms', 'wms', 'wmts', 'wfs', 'raster', 'vector', 'pmtiles', 'mvt']);
 
 const estObjet = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
@@ -40,6 +42,12 @@ function positions(g, sortie = []) {
 export function diagnostiquerCouche(def, source) {
   const id = (def && def.id) || '?';
   const avertissements = [];
+  // Une couche qui déclare une source de tuiles ou de service (xyz, wms...) sans fournir de Features : la carte nue ne lit que du GeoJSON donné par la page,
+  // la couche se monte VIDE et `setScene` répondait `0` sans un mot (constaté le 27/11/2026 par un hôte). Dit ici ; le fond se règle par `setFond`.
+  const typeSource = def && def.source && typeof def.source === 'object' ? def.source.type : undefined;
+  if (typeof typeSource === 'string' && SOURCES_NON_OFFERTES.includes(typeSource.toLowerCase()) && (source === undefined || source === null || (Array.isArray(source) && source.length === 0))) {
+    avertissements.push(`source « ${typeSource.slice(0, 20)} » non offerte par la carte nue : la couche reste vide (elle ne lit que des Features GeoJSON fournies par la page, dans donnees["${id}"] ou geojson) ; un fond de tuiles se règle par setFond`);
+  }
   if (source === undefined || source === null) return { erreur: null, avertissements };   // aucune donnée fournie : couche vide, comme avant
   if (!Array.isArray(source)) {
     if (estObjet(source) && source.type === 'FeatureCollection') {

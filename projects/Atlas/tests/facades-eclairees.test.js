@@ -68,3 +68,90 @@ test('murs : seules les arêtes proches d’une source sont gardées (îlot fusi
   const g = geometrieMurs([b], DECALAGE_M, () => 0, { sources: [{ x: 50, z: -5 }], rayon: 20 });
   assert.equal(g.triangles, 2, 'la seule arête à moins de 20 m');
 });
+
+/* ---- index en grille des sources (E7) : même résultat que la comparaison exhaustive, bien moins de comparaisons ---- */
+import { indexerSources, distance2Segment } from '../lib/facades-eclairees.js';
+
+function graine(n) { let s = n >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+
+test('indexerSources : mêmes réponses que la comparaison exhaustive, sur des segments et des sources tirés au hasard', () => {
+  const alea = graine(42);
+  const sources = Array.from({ length: 300 }, () => ({ x: alea() * 1000 - 500, z: alea() * 1000 - 500 }));
+  const rayon = 25; const r2 = rayon * rayon;
+  const index = indexerSources(sources, rayon);
+  let proches = 0;
+  for (let n = 0; n < 2000; n++) {
+    const p = { x: alea() * 1200 - 600, z: alea() * 1200 - 600 };
+    const q = { x: p.x + (alea() - 0.5) * 80, z: p.z + (alea() - 0.5) * 80 };
+    const attendu = sources.some((s) => distance2Segment(s, p, q) <= r2);
+    assert.equal(index.proche(p, q), attendu, 'segment ' + n);
+    if (attendu) proches++;
+  }
+  assert.ok(proches > 100 && proches < 1900, 'le tirage couvre les deux cas (' + proches + ' proches sur 2000)');
+  assert.ok(index.comparaisons < 2000 * sources.length * 0.05, 'moins de 5 % des comparaisons exhaustives (' + index.comparaisons + ')');
+});
+
+test('indexerSources : une source exactement à la distance limite est proche, un mètre de plus ne l\'est pas ; coordonnées négatives', () => {
+  const idx = indexerSources([{ x: -50, z: -50 }], 10);
+  const seg = (dx) => [{ x: -50 + dx, z: -80 }, { x: -50 + dx, z: -60 }];
+  assert.equal(idx.proche(...seg(0)), true, 'à 10 m exactement (segment à z=-60)');
+  assert.equal(indexerSources([{ x: -50, z: -50 }], 10).proche({ x: -50, z: -61 }, { x: -50, z: -90 }), false, 'à 11 m');
+  assert.equal(indexerSources([], 10).proche({ x: 0, z: 0 }, { x: 1, z: 1 }), false, 'aucune source');
+  assert.equal(indexerSources(undefined, 10).proche({ x: 0, z: 0 }, { x: 1, z: 1 }), false, 'sources absentes');
+});
+
+test('batimentsProches et geometrieMurs donnent la même chose avec l\'index que sans (sélection et triangles)', () => {
+  const alea = graine(7);
+  const sources = Array.from({ length: 40 }, () => ({ x: alea() * 400, z: alea() * 400 }));
+  const batis = Array.from({ length: 150 }, (_, i) => carre(i, alea() * 400, alea() * 400, 6 + alea() * 14, 5 + alea() * 20));
+  const rayon = 20;
+  const naif = batis.filter((b) => {
+    const a = b.geometry.coordinates[0].map(([x, z]) => ({ x, z }));
+    return a.some((p, i) => sources.some((s) => distance2Segment(s, p, a[(i + 1) % a.length]) <= rayon * rayon));
+  }).map((b) => b.id);
+  const proches = batimentsProches(batis, sources, rayon, identite);
+  assert.deepEqual(proches.map((b) => b.id).sort((a, b) => a - b), naif.sort((a, b) => a - b));
+  const g = geometrieMurs(proches, DECALAGE_M, () => 0, { sources, rayon });
+  assert.ok(g.triangles > 0);
+  assert.equal(g.positions.length, g.triangles * 9);
+});
+
+/* ---- le bâti des couches Atlas (bâtis importés, maquette) ---- */
+import { batisDeCoucheAtlas } from '../lib/facades-eclairees.js';
+
+const surface = (props, id) => ({ id, type: 'Feature', properties: props, geometry: { type: 'Polygon', coordinates: [[[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]] } });
+
+test('batisDeCoucheAtlas : la hauteur vient d\'un champ, sinon d\'une valeur fixe, et se lit comme un bâtiment du fond', () => {
+  const champ = batisDeCoucheAtlas([surface({ hauteur: 12 }, 1), surface({ hauteur: '8.5' }, 2)], { champ: 'hauteur', idCouche: 'bdtopo' });
+  assert.deepEqual(champ.map((b) => b.properties), [{ render_height: 12, render_min_height: 0 }, { render_height: 8.5, render_min_height: 0 }]);
+  assert.deepEqual(champ.map((b) => b.id), ['bdtopo:1', 'bdtopo:2']);
+  const fixe = batisDeCoucheAtlas([surface({}, 1)], { fixe: 15, idCouche: 'maq' });
+  assert.deepEqual(fixe[0].properties, { render_height: 15, render_min_height: 0 });
+  assert.deepEqual(hauteursBatiment(fixe[0].properties), { base: 0, haut: 15 });
+});
+
+test('batisDeCoucheAtlas : la base décale le toit ; sans hauteur lisible, pas de mur ; seules les surfaces comptent', () => {
+  const sureleve = batisDeCoucheAtlas([surface({ h: 6 }, 1)], { champ: 'h', base: 4 });
+  assert.deepEqual(sureleve[0].properties, { render_height: 10, render_min_height: 4 });
+  const sans = batisDeCoucheAtlas([surface({ h: null }, 1), surface({ h: '' }, 2), surface({}, 3), surface({ h: 'x' }, 4), surface({ h: 0 }, 5), surface({ h: -3 }, 6)], { champ: 'h' });
+  assert.deepEqual(sans, []);
+  const point = { type: 'Feature', properties: { h: 9 }, geometry: { type: 'Point', coordinates: [0, 0] } };
+  assert.deepEqual(batisDeCoucheAtlas([point], { champ: 'h' }), []);
+  assert.deepEqual(batisDeCoucheAtlas(undefined), []);
+  assert.deepEqual(batisDeCoucheAtlas([surface({}, 1)], { fixe: 0 }), [], 'une épaisseur nulle n\'est pas un bâtiment');
+});
+
+test('batisDeCoucheAtlas : l\'identifiant évite les doublons entre couches et entités sans id', () => {
+  const a = batisDeCoucheAtlas([surface({ h: 5 }), surface({ h: 5 })], { champ: 'h', idCouche: 'A' });
+  assert.deepEqual(a.map((b) => b.id), ['A:0', 'A:1']);
+  const b = batisDeCoucheAtlas([surface({ h: 5 }, 1)], { champ: 'h', idCouche: 'B' });
+  assert.notEqual(a[0].id, b[0].id);
+});
+
+test('un bâti de couche Atlas reçoit ses façades comme celui du fond', () => {
+  const batis = batisDeCoucheAtlas([carre(1, 0, 0, 10, 1)].map((c) => ({ ...c, properties: { h: 10 } })), { champ: 'h', idCouche: 'imp' });
+  const proches = batimentsProches(batis, [{ x: -6, z: 5 }], 12, identite);
+  assert.equal(proches.length, 1);
+  const g = geometrieMurs(proches, DECALAGE_M, () => 0, { sources: [{ x: -6, z: 5 }], rayon: 12, ombres: { hauteurFeu: 6 } });
+  assert.equal(g.triangles, 2, 'le mur qui regarde la lampe, entier');
+});
