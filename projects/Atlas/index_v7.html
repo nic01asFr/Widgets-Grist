@@ -98,12 +98,15 @@
 
 
     <!-- MapLibre GL JS (remplace Mapbox) -->
-    <!-- MapLibre GL JS v5 (projection globe native) -->
-    <script src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
+    <!-- MapLibre GL JS v5 (projection globe native).
+         MapLibre et SunCalc sont `defer` : ils ne bloquent plus l'analyse du HTML (le téléchargement part tout de suite, l'exécution attend la fin de l'analyse)
+         et s'exécutent AVANT `app_v7.js`, module différé qui vient après eux dans le document : les globales `maplibregl` et `SunCalc` y sont présentes
+         comme avant. Gardé par tests/page-chargement.test.js. -->
+    <script defer src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css" rel="stylesheet" />
 
     <!-- SunCalc : position solaire réaliste -->
-    <script src="https://unpkg.com/suncalc@1.8.0/suncalc.js"></script>
+    <script defer src="https://unpkg.com/suncalc@1.8.0/suncalc.js"></script>
 
     <!-- Grist Plugin API : chargee des l'analyse de la page (meme moment qu'avant), SAUF en mode composant (parametre bi=1), ou elle ne sert a rien :
          967 Ko non compresses, jamais appelee, et c'est la que l'hote embarque Atlas. app_v7.js attend `window.__gristApi` avant de demarrer. -->
