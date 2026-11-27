@@ -4,36 +4,31 @@
 // Fork propre depuis app_v6.js — v6 reste inchangée.
 // ============================================================
 
-import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=1.45.0';
-import { origineGrist } from './lib/charte/origine-grist.js?v=1.45.0';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { seuilDecoupe, cheminTranscodeur, chargeurDalles } from './lib/gltf-chargeur.js?v=1.45.0';
-import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.45.0';
-import { VERSION_ATLAS } from './lib/version-atlas.js?v=1.45.0';
-import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.45.0';
+import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=1.46.0';
+import { origineGrist } from './lib/charte/origine-grist.js?v=1.46.0';
+import { chargerThree } from './lib/three-differe.js?v=1.46.0';
+import { seuilDecoupe, cheminTranscodeur, chargeurDalles } from './lib/gltf-chargeur.js?v=1.46.0';
+import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=1.46.0';
+import { VERSION_ATLAS } from './lib/version-atlas.js?v=1.46.0';
+import { idObjet, estIdObjet, typeDeIdObjet, fichesObjets, ficheDeId } from './lib/modele-id.js?v=1.46.0';
 import {
     descripteursDuType, proprietesEffectives, appliquerComportement, parametresDeCoucheValides, parametresDObjetValides,
     resoudreParametre, validerSaisie, avecReglageDeCouche, avecLiaison, champPropose, bilanParametre, phraseBilan,
     formaterValeur, libelleOrigine, groupesDeFamille,
-} from './lib/parametres-objet.js?v=1.45.0';
-import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.45.0';
-import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.45.0';
-import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.45.0';
-import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.45.0';
-import { normaliserSetSun, reglageDepuisInstant, etatSoleil, blocSoleilExport, creerSignalSoleil } from './lib/soleil-hote.js?v=1.45.0';
-import { resumerRecit, resoudreEtape, normaliserOptionsAller, etatEtape } from './lib/recit-hote.js?v=1.45.0';
-import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.45.0';
-import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.45.0';
-import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=1.45.0';
-import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.45.0';
-import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.45.0';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=1.45.0';
-import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=1.45.0';
-import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.45.0';
+} from './lib/parametres-objet.js?v=1.46.0';
+import { planFiger, FIGES_PAR_DEFAUT } from './lib/parametres-figer.js?v=1.46.0';
+import { instantScene, fuseauScene, fuseauValide, dateLocaleScene, dateValide, horlogeDepuisReglages, soleilMemorise } from './lib/horloge-scene.js?v=1.46.0';
+import { etatPointLumineux, heureLocale, instantLocal } from './lib/eclairage-profil.js?v=1.46.0';
+import { coucherLever, positionSoleil } from './lib/soleil.js?v=1.46.0';
+import { normaliserSetSun, reglageDepuisInstant, etatSoleil, blocSoleilExport, creerSignalSoleil } from './lib/soleil-hote.js?v=1.46.0';
+import { resumerRecit, resoudreEtape, normaliserOptionsAller, etatEtape } from './lib/recit-hote.js?v=1.46.0';
+import { minutesDepuisPosition, positionDepuisMinutes, courbeHauteurs, geometrieArc, libelleHeure, minutesApresTouche } from './lib/arc-solaire.js?v=1.46.0';
+import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat, resumerEtats, pastilleEtat, luminairesDessinables, penteAuPied, luminairesHorsScene } from './lib/eclairage-rendu.js?v=1.46.0';
+import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=1.46.0';
+import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=1.46.0';
+import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=1.46.0';
+import { batimentsProches, geometrieMurs, batisDeCoucheAtlas } from './lib/facades-eclairees.js?v=1.46.0';
+import { capacites, peutSAuthentifier } from './lib/data-client.js?v=1.46.0';
 import {
   detectDocMode,
   loadLatestSceneManifest,
@@ -41,65 +36,64 @@ import {
   loadSceneManifestLayers,
   materializeDeferredLayer,
   boundsFromVisibleLayers,
-} from './lib/scene-loader.js?v=1.45.0';
-import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.45.0';
+} from './lib/scene-loader.js?v=1.46.0';
+import { boundsFromGeoJSON, COLONNES_INTERNES_GRIST } from './lib/grist-rows.js?v=1.46.0';
 import {
   moteurDisponible, valeursPourMoteur, pontFormulaire,
-  lireFormulaires, reglagesFormulaire, libelleFormulaire,
+  reglagesFormulaire, libelleFormulaire,
   saisieHorsEdition, formulairesPourCouche, formulairesOffertsEnLecture,
   raisonNonRetirable, formulairesEnPlace, COLONNES_ATLAS,
   gesteDEnregistrement, idFormulaireLibre, titreLibre,
   formDefCadre, nbChampsDef, champsDuFormulaire, champsDependants, colonnesHorsFormulaire,
   departsPossibles, LIBELLES_DEPART, valeursDeDepart, aRetenir, phrasePreremplis, moiDansTable, tableDePersonnes,
-} from './lib/fiche-formulaire.js?v=1.45.0';
-import { chargerSchema, chargerMeta, schemaDepuisMeta, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.45.0';
-import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.45.0';
-import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.45.0';
+} from './lib/fiche-formulaire.js?v=1.46.0';
+import { chargerSchema, typeColonneDepuisValeurs, tablesReferencant } from './lib/schema-grist.js?v=1.46.0';
+import { lireFormulairesDuDocument } from './lib/formulaires-document.js?v=1.46.0';
+import { pointFallbackZoom, centroidCollection, featureCentroid } from './lib/point-fallback.js?v=1.46.0';
+import { construireReseau, itineraire as calculerItineraire } from './lib/itineraire.js?v=1.46.0';
 import {
   stopsDepuisSeuils, seuilsDeStops, seuilsAutomatiques, inverserCouleurs, comptesParClasse, libelleClasse,
   stopsPourCarte, TRANSPARENT, COULEURS_PAR_DEFAUT,
-} from './lib/classes.js?v=1.45.0';
+} from './lib/classes.js?v=1.46.0';
 import {
   GRAPPES_DEFAUT, configGrappes, grappable, grappesActives, optionsGrappes, couleurGrappe, pireDisponible,
   zoomFormes, FILTRE_GRAPPE, FILTRE_ISOLE, RAYON_GRAPPE,
-} from './lib/grappes.js?v=1.45.0';
-import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.45.0';
+} from './lib/grappes.js?v=1.46.0';
+import { isModelLayer, objectInspectorTabs, ONGLET_3D, ONGLET_SPECS, ONGLET_FICHE } from './lib/model-layer.js?v=1.46.0';
 import {
   moveSequence, displayOrder, moveLayerInStack, insertionIndex, sortByRank,
   dropIndex, reorderByDrop, ancreAuDessus, layerGfxIds, SUFFIXES_HABILLAGE,
-} from './lib/layer-order.js?v=1.45.0';
+} from './lib/layer-order.js?v=1.46.0';
 import {
   candidatsReference, analyserReference, entreesReference, categoriesDepuisReference,
   expressionRang, expressionIcone, idImage, tableReferencee, champsAvecImages,
-} from './lib/table-reference.js?v=1.45.0';
+} from './lib/table-reference.js?v=1.46.0';
 import {
   bulleParDefaut, colonneDate, derniereLigneLiee, nombreLignesLiees, dateCourte,
   lienItineraire, modeleBulle, idsPiecesJointes,
-} from './lib/bulle-objet.js?v=1.45.0';
-import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.45.0';
-import { attributionSure } from './lib/attribution.js?v=1.45.0';
-import { creerToast } from './lib/toast.js?v=1.45.0';
-import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.45.0';
-import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.45.0';
-import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.45.0';
-import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.45.0';
-import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.45.0';
-import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.45.0';
-import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.45.0';
-import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=1.45.0';
-import { creerAccesDalles } from './lib/dalles3d-acces.js?v=1.45.0';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.45.0';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=1.45.0';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=1.45.0';
-import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.45.0';
-import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.45.0';
-import { edgeScrollStep } from './lib/edge-scroll.js?v=1.45.0';
-import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.45.0';
+} from './lib/bulle-objet.js?v=1.46.0';
+import { echapper, chaineJs, assainirTexte } from './lib/html.js?v=1.46.0';
+import { attributionSure } from './lib/attribution.js?v=1.46.0';
+import { creerToast } from './lib/toast.js?v=1.46.0';
+import { contextesProposes, contexteDeCle, usageDe, avecUsage, relevesDe, releveProposeDans, basculerReleve, tourneeDe, pastillesDe, pastilleOfferte } from './lib/contextes.js?v=1.46.0';
+import { ordonnerLeLong, rangDansTournee, voisinDansTournee, direLongueur, departDeTournee } from './lib/tournee.js?v=1.46.0';
+import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib/volume-relief.js?v=1.46.0';
+import { nomDeTableLibre } from './lib/atlas-tables.js?v=1.46.0';
+import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=1.46.0';
+import { decisionOuverture } from './lib/ouvrir-objet.js?v=1.46.0';
+import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=1.46.0';
+import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=1.46.0';
+import { creerAccesDalles } from './lib/dalles3d-acces.js?v=1.46.0';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=1.46.0';
+import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=1.46.0';
+import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=1.46.0';
+import { edgeScrollStep } from './lib/edge-scroll.js?v=1.46.0';
+import { basemapLayerIds, quandNouveauStyle } from './lib/basemap-layers.js?v=1.46.0';
 import {
   extrusionExpressions,
   paliersDemDifferents, altitudeOrigineStable, ecartAuSol,
   garderDemAuRechargement, optionsSourceGeojson, evenementMntArrive, cleAltitude,
-} from './lib/terrain-base.js?v=1.45.0';
+} from './lib/terrain-base.js?v=1.46.0';
 import {
   loadLayerPrefs,
   clePrefsCouche,
@@ -117,20 +111,20 @@ import {
   colonnesEcrivables,
   lignePrefs,
   ATLAS_PREFS_SCHEMA,
-} from './lib/grist-sync.js?v=1.45.0';
+} from './lib/grist-sync.js?v=1.46.0';
 import {
   TYPES_COUCHE, LIBELLES_TYPE, planNouvelleCouche, colonneGeometrieNouvelleCouche,
   actionsNouvelleCouche, lireCreation, messageRefus,
-} from './lib/nouvelle-couche.js?v=1.45.0';
+} from './lib/nouvelle-couche.js?v=1.46.0';
 import {
   TYPES_CHAMP, typeChamp, planAjoutChamp, planReleveLie, champDepuisPlan, defAvecChamp, defPourReleve,
   phraseAjoutChamp, phraseReleveLie, messageRefusChamp, SOURCES_PAR_GEOMETRIE, libelleSource, sourcesRetenues, indexDatePrincipale, champSymbolisable,
-} from './lib/champ-formulaire.js?v=1.45.0';
+} from './lib/champ-formulaire.js?v=1.46.0';
 import {
   creationPossible, creationProposeeEnExploitation, pointDepuisClic, cellulesPourCouche, actionCreation, rowIdCree, libellePoint,
   formeValidee, libelleMesures, pointAccroche, actionInverse,
   modificationPossible, aDesAltitudes, ligneDepuisTable, cellulesDeLigne, decisionModification, actionModification,
-} from './lib/saisie-objet.js?v=1.45.0';
+} from './lib/saisie-objet.js?v=1.46.0';
 import {
   colonnesGeometrie,
   nomsColonnesGeometrie,
@@ -138,7 +132,7 @@ import {
   rangsDepuisRowIds,
   familleGeometrie,
   mesurerGeometrie,
-} from './lib/geometrie-saisie.js?v=1.45.0';
+} from './lib/geometrie-saisie.js?v=1.46.0';
 import {
   syncColorCategoriesFromFeatures,
   applyCategoryColorsToFeatures,
@@ -150,14 +144,14 @@ import {
   resolveFeaturePropertyKey,
   graduatedStops,
   recolorStops,
-} from './lib/declarative-style.js?v=1.45.0';
+} from './lib/declarative-style.js?v=1.46.0';
 import {
   scanGeoTables,
   detectGeometryColumn,
   tableToGeoJSON,
   isLinkedTableLayer,
   formatGeometrie,
-} from './lib/geo-tables.js?v=1.45.0';
+} from './lib/geo-tables.js?v=1.46.0';
 import {
   layerFieldNames,
   controlFieldType,
@@ -182,7 +176,7 @@ import {
   pasDuCurseur,
   valeurDuCurseur,
   MAX_VALEURS_LISTE,
-} from './lib/controls.js?v=1.45.0';
+} from './lib/controls.js?v=1.46.0';
 import {
   captureStoryState,
   saveStoryToGrist,
@@ -190,7 +184,7 @@ import {
   assurerCles,
   storyToManifestFragment,
   coucheDuRecit,
-} from './lib/story.js?v=1.45.0';
+} from './lib/story.js?v=1.46.0';
 import {
   copieLineaire,
   estLineaire,
@@ -212,11 +206,11 @@ import {
   retirerTrace,
   objetsAutour,
   objetsLeLong,
-} from './lib/trajet.js?v=1.45.0';
+} from './lib/trajet.js?v=1.46.0';
 import {
   syncLayerDeclarative,
   declarativeFromAtlasLayer,
-} from './lib/manifest-binding.js?v=1.45.0';
+} from './lib/manifest-binding.js?v=1.46.0';
 import {
   cameraStorageKey as viewportCameraKey,
   shouldAutoFitInitialBounds,
@@ -229,7 +223,7 @@ import {
   margesCarte,
   dureeRestante,
   moduleCedeALaFiche,
-} from './lib/viewport.js?v=1.45.0';
+} from './lib/viewport.js?v=1.46.0';
 import {
   parseAtlasMode,
   resolveAccess,
@@ -244,37 +238,36 @@ import {
   probeCanWriteDoc,
   sonderEcritureDoc,
   isWriteAclError,
-} from './lib/view-mode.js?v=1.45.0';
-import { mettreAPlat } from './lib/vue-import.js?v=1.45.0';
-import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.45.0';
-import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.45.0';
-import { enTetesOsm, messageRefusOsm, avecReprises, requeteOsm, repliWeb } from './lib/osm-requete.js?v=1.45.0';
-import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.45.0';
-import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.45.0';
-import { capUtilisable } from './lib/cap-position.js?v=1.45.0';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=1.45.0';
+} from './lib/view-mode.js?v=1.46.0';
+import { mettreAPlat } from './lib/vue-import.js?v=1.46.0';
+import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=1.46.0';
+import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=1.46.0';
+import { enTetesOsm, messageRefusOsm, avecReprises, requeteOsm, repliWeb } from './lib/osm-requete.js?v=1.46.0';
+import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=1.46.0';
+import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=1.46.0';
+import { capUtilisable } from './lib/cap-position.js?v=1.46.0';
 import {
   etageCoteACote,
   legendeAuRas,
   margeBasseRecit,
   pastilleLocalisationRequise,
   formeBandeauInfos,
-} from './lib/habillage-carte.js?v=1.45.0';
+} from './lib/habillage-carte.js?v=1.46.0';
 import {
   createDefaultViewerControls,
   getViewerControl,
   setViewerExposed as setViewerExposedFn,
   parseViewerControls,
-} from './lib/viewer-controls.js?v=1.45.0';
+} from './lib/viewer-controls.js?v=1.46.0';
 import {
   loadScenePrefs,
   saveScenePrefs,
-} from './lib/scene-prefs.js?v=1.45.0';
-import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.45.0';
-import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.45.0';
-import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.45.0';
-import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE, GLYPHES_EMBARQUES } from './lib/fonds-base.js?v=1.45.0';
-import { ecrireCache } from './lib/demarrage-cache.js?v=1.45.0';
+} from './lib/scene-prefs.js?v=1.46.0';
+import { ouvertureEffective, normaliserExposition, expositionVide } from './lib/exposition.js?v=1.46.0';
+import { cadrageEffectif, centreDesBornes } from './lib/cadrage.js?v=1.46.0';
+import { exposerCarte, signalerCartePrete, styleDeBaseIllisible } from './lib/acces-carte.js?v=1.46.0';
+import { STYLE_BASE_URL, STYLE_HORS_RESEAU, LOCALE_CARTE, GLYPHES_EMBARQUES } from './lib/fonds-base.js?v=1.46.0';
+import { ecrireCache } from './lib/demarrage-cache.js?v=1.46.0';
 
 // Le style de base est demandé dès le chargement du module (pendant que l'API de plugin et le document se chargent) : la carte est créée déjà peinte aux couleurs du thème, sans
 // image intermédiaire aux couleurs d'origine (voir `initMap`). Hors réseau ou en échec : null, et la carte retombe sur l'adresse du style, comme avant.
@@ -1701,6 +1694,14 @@ let _recalageTimer = null;
 /** Regroupe l'arrivee des tuiles MNT : elles tombent par dizaines, un seul recalage suffit. */
 let _tuilesDemTimer = null;
 
+/**
+ * three.js et ce qui en depend (lampes, casters d'ombre) sont CHARGES A LA DEMANDE
+ * (lib/three-differe.js) : ces liaisons restent nulles tant que `Models3D.activer`
+ * n'a pas tourne, et rien de ce qui les lit ne s'execute avant (`besoin3D`, `build`).
+ */
+let THREE = null, GLTFLoader = null, KTX2Loader = null, MeshoptDecoder = null, mergeGeometries = null;
+let creerLuminaires3D = null, marquerPochoirModele = null, creerCasters = null;
+
 const Models3D = {
     layerId: 'three-models-3d',
     scene: null, camera: null, renderer: null,
@@ -1711,14 +1712,50 @@ const Models3D = {
     extrusionShadows: [],   // Mesh[] — casters invisibles pour bâti fill-extrusion
     origin: null, originMC: null, originScale: 1, originElev: 0,
     elevCache: new Map(),
-    sunDir: new THREE.Vector3(0.4, 0.7, 0.4).normalize(),
+    sunDir: null,
     dirLight: null, ambLight: null, hemiLight: null, groundShadow: null, _shadowFeasible: false,
     _buildTimer: null, _cullTimer: null, _driftTimer: null, _lastOriginElev: undefined,
     _wCanvas: 0, _hCanvas: 0,   // derniere taille de canvas appliquee au renderer
-    _m4Origin: new THREE.Matrix4(), _m4VP: new THREE.Matrix4(),
-    _mRotX: new THREE.Matrix4().makeRotationX(Math.PI / 2),
-    _vScale: new THREE.Vector3(), _obj: new THREE.Object3D(), _m4: new THREE.Matrix4(),
-    _cNuit: new THREE.Color(1, 1, 1),
+    _m4Origin: null, _m4VP: null, _mRotX: null, _vScale: null, _obj: null, _m4: null, _cNuit: null,
+    _m: null, _gl: null,       // la carte et son contexte GL, gardes par `onAdd` pour monter le moteur plus tard
+    _soleil: null,             // dernier soleil demande, rejoue a l'activation
+    _activation: null,         // promesse de `activer`
+
+    /**
+     * Faut-il le moteur three.js ? Une scene sans modele a l'ecran, sans lampe et sans
+     * ombre portee de bati n'en a pas besoin : on ne telecharge pas 1,5 Mo pour la peindre.
+     * Les conditions sont celles des consommateurs (`collect`, `collectExtrusionsForShadow`,
+     * `Eclairage.couches`) ; `build` les reverifie a chaque mouvement de la carte.
+     */
+    besoin3D() {
+        if (!map) return false;
+        if (Eclairage.couches().length) return true;
+        if (this._disabled || CONFIG.light3d) return false;
+        const ombres = !!STATE.settings.shadows && !STATE.settings.terrain3D && map.getZoom() >= 14
+            && STATE.layers.some((l) => l.visible !== false && l.style?.polygonMode !== 'flat'
+                && (l.geometryType === 'Polygon' || l.geometryType === 'MultiPolygon'));
+        return ombres || this.collect().length > 0;
+    },
+    /** Charge three.js (une fois) puis monte le moteur sur le calque deja declare dans le style. */
+    activer() {
+        if (!this._activation) {
+            this._activation = chargerThree().then((lib) => {
+                ({ THREE, GLTFLoader, KTX2Loader, MeshoptDecoder, mergeGeometries, creerLuminaires3D, marquerPochoirModele, creerCasters } = lib);
+                this.creerOutils();
+                if (this._m && map?.getLayer(this.layerId)) this.monter(this._m, this._gl);
+                if (this._soleil) this.setSun(...this._soleil);
+            }).catch((e) => { this._activation = null; console.warn('[Atlas] moteur 3D indisponible :', e.message); });
+        }
+        return this._activation;
+    },
+    /** Les objets de calcul de three.js : crees a l'activation, pas a l'import du module. */
+    creerOutils() {
+        this.sunDir = new THREE.Vector3(0.4, 0.7, 0.4).normalize();
+        this._m4Origin = new THREE.Matrix4(); this._m4VP = new THREE.Matrix4();
+        this._mRotX = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+        this._vScale = new THREE.Vector3(); this._obj = new THREE.Object3D(); this._m4 = new THREE.Matrix4();
+        this._cNuit = new THREE.Color(1, 1, 1);
+    },
 
     scheduleBuild() { clearTimeout(this._buildTimer); this._buildTimer = setTimeout(() => this.build(), 60); },
     forceBuild() { clearTimeout(this._buildTimer); this._buildTimer = null; this.build(); }, // rebuild immédiat (changement de modèle)
@@ -1792,40 +1829,44 @@ const Models3D = {
         if (this.groundShadow) this.groundShadow.position.set(cx, 0.02, cz);
     },
 
+    /** Cree la scene, les lumieres et le renderer sur le contexte GL de MapLibre. Ne tourne qu'une fois three.js charge. */
+    monter(m, gl) {
+        const self = this;
+        self.camera = new THREE.Camera();
+        self.scene = new THREE.Scene();
+        self.ambLight = new THREE.AmbientLight(0xffffff, 1.0);
+        self.dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        self.dirLight.position.copy(self.sunDir).multiplyScalar(100);
+        self.hemiLight = new THREE.HemisphereLight(0xbcd4e8, 0x55492f, 0.45);
+        self.scene.add(self.ambLight, self.dirLight, self.hemiLight);
+        self.renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
+        self.renderer.autoClear = false;
+        // Ombres portées (shadow maps) — actives seulement hors terrain 3D
+        // (avec terrain MapLibre rend dans un FBO offscreen incompatible).
+        try {
+            self.renderer.shadowMap.enabled = true;
+            self.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            self.dirLight.castShadow = true;
+            const sh = self.dirLight.shadow;
+            sh.mapSize.set(2048, 2048);
+            sh.camera.near = 1; sh.camera.far = 2500;
+            // Frustum initial ; recalé chaque frame sur l'emprise visible (cf. syncShadowRig).
+            sh.camera.left = -600; sh.camera.right = 600; sh.camera.top = 600; sh.camera.bottom = -600;
+            sh.camera.updateProjectionMatrix();
+            sh.bias = -0.0008; sh.normalBias = 0.35;
+            self.scene.add(self.dirLight.target);
+            const g = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.ShadowMaterial({ opacity: 0.32 }));
+            g.rotation.x = -Math.PI / 2; g.position.y = 0.02; g.receiveShadow = true; g.frustumCulled = false;
+            self.groundShadow = g; self.scene.add(g);
+        } catch (e) { console.warn('shadow setup', e.message); }
+        self.build();
+    },
+
     makeLayer() {
         const self = this;
         return {
             id: self.layerId, type: 'custom', renderingMode: '3d',
-            onAdd(m, gl) {
-                self.camera = new THREE.Camera();
-                self.scene = new THREE.Scene();
-                self.ambLight = new THREE.AmbientLight(0xffffff, 1.0);
-                self.dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
-                self.dirLight.position.copy(self.sunDir).multiplyScalar(100);
-                self.hemiLight = new THREE.HemisphereLight(0xbcd4e8, 0x55492f, 0.45);
-                self.scene.add(self.ambLight, self.dirLight, self.hemiLight);
-                self.renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
-                self.renderer.autoClear = false;
-                // Ombres portées (shadow maps) — actives seulement hors terrain 3D
-                // (avec terrain MapLibre rend dans un FBO offscreen incompatible).
-                try {
-                    self.renderer.shadowMap.enabled = true;
-                    self.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                    self.dirLight.castShadow = true;
-                    const sh = self.dirLight.shadow;
-                    sh.mapSize.set(2048, 2048);
-                    sh.camera.near = 1; sh.camera.far = 2500;
-                    // Frustum initial ; recalé chaque frame sur l'emprise visible (cf. syncShadowRig).
-                    sh.camera.left = -600; sh.camera.right = 600; sh.camera.top = 600; sh.camera.bottom = -600;
-                    sh.camera.updateProjectionMatrix();
-                    sh.bias = -0.0008; sh.normalBias = 0.35;
-                    self.scene.add(self.dirLight.target);
-                    const g = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.ShadowMaterial({ opacity: 0.32 }));
-                    g.rotation.x = -Math.PI / 2; g.position.y = 0.02; g.receiveShadow = true; g.frustumCulled = false;
-                    self.groundShadow = g; self.scene.add(g);
-                } catch (e) { console.warn('shadow setup', e.message); }
-                self.build();
-            },
+            onAdd(m, gl) { self._m = m; self._gl = gl; if (THREE) self.monter(m, gl); },
             render(gl, matrix) {
                 if (!self.renderer || !self.origin) {
                     self._skipReason = !self.renderer ? 'no-renderer' : 'no-origin';
@@ -2097,7 +2138,10 @@ const Models3D = {
      */
     vehicules: null,
     async vehiculesPreparer() {
-        if (this._disabled || CONFIG.light3d || !this.scene) return false;
+        if (this._disabled || CONFIG.light3d) return false;
+        // le trafic simulé dessine ses véhicules dans la scène three.js : sans modèle ni lampe elle n'existe pas encore, il la demande (c'est lui qui en a besoin)
+        if (!this.scene) await this.activer();
+        if (!this.scene) return false;
         if (this.vehicules) return true;
         if (this._vehiculesEnCours) return this._vehiculesEnCours;
         this._vehiculesEnCours = (async () => {
@@ -2387,42 +2431,16 @@ const Models3D = {
 
     buildExtrusionShadowMeshes(items) {
         if (!this.scene || !this.origin || !items?.length) return;
-        // Empreintes exactes fusionnées en un seul Mesh (même matériau que les
-        // ombres GLB). Les AABB axis-alignées dépassaient / décalaieent du bâti.
-        const mat = new THREE.MeshStandardMaterial({
-            color: 0x111111,
-            roughness: 1,
-            metalness: 0,
-            side: THREE.DoubleSide,
-            shadowSide: THREE.DoubleSide,
-            colorWrite: false,
-            depthWrite: false,
-        });
-        const toLocal = (lng, lat) => this.localMeters(lng, lat);
-        const geoms = [];
-        for (const it of items) {
-            const geom = extrudeFeatureToGeometry(it.feature, Math.max(it.height || 8, 2), toLocal);
-            if (!geom) continue;
-            // Shape XY = est/nord, +Z = hauteur → Y-up / Z=-nord
-            geom.rotateX(-Math.PI / 2);
-            geoms.push(geom);
-        }
-        if (!geoms.length) return;
-        const merged = geoms.length === 1 ? geoms[0] : mergeGeometries(geoms, false);
-        if (!merged) {
-            geoms.forEach((g) => g.dispose?.());
-            return;
-        }
-        if (geoms.length > 1) geoms.forEach((g) => g.dispose?.());
-        const mesh = new THREE.Mesh(merged, mat);
-        mesh.castShadow = true;
-        mesh.receiveShadow = false;
-        mesh.frustumCulled = false;
+        // Empreintes exactes fusionnees en un seul Mesh (lib/extrusion-ombres.js).
+        const mesh = creerCasters({ THREE, mergeGeometries }, items, (lng, lat) => this.localMeters(lng, lat));
+        if (!mesh) return;
         this.scene.add(mesh);
         this.extrusionShadows.push(mesh);
     },
 
     async build() {
+        // three.js n'est charge que si la scene a de quoi le remplir (montee par `activer`, qui rappelle `build`).
+        if (!THREE) { if (this.besoin3D()) await this.activer(); return; }
         // 3D allégée (téléphone en lecture, `?no3d=1`) : pas de modèles, mais
         // les luminaires restent — lampes, halos et taches ne coûtent presque
         // rien, et sans eux une scène d'éclairage n'a plus d'objet (point P6).
@@ -2606,6 +2624,8 @@ const Models3D = {
     },
 
     setSun(azimuthDeg, altitudeDeg, moon) {
+        this._soleil = [azimuthDeg, altitudeDeg, moon];
+        if (!THREE) return;      // `activer` le rejouera
         const az = deg2rad(azimuthDeg), al = deg2rad(Math.max(-0.1, altitudeDeg));
         // espace scène local : X=est, Y=haut, Z=-nord
         this.sunDir.set(Math.sin(az) * Math.cos(al), Math.sin(al), -Math.cos(az) * Math.cos(al)).normalize();
@@ -2875,6 +2895,13 @@ const Eclairage = {
     facadesDemandees: (() => {
         try { return new URLSearchParams(location.search).get('eclairage_facades') === '1'; } catch (_) { return false; }
     })(),
+    /**
+     * L'ombre portée des bâtiments sur ces façades (lib/ombres-facades.js, E7) : un mur n'est recopié que là où une source le voit. Active avec les
+     * façades ; `?eclairage_ombres=0` rend le comportement d'avant (tout mur proche recopié entier, lumière « à travers » les immeubles).
+     */
+    ombresFacades: (() => {
+        try { return new URLSearchParams(location.search).get('eclairage_ombres') !== '0'; } catch (_) { return true; }
+    })(),
     majFacades(permis) {
         const lum = this.lum;
         const actif = this.facadesDemandees && permis && !STATE.settings.terrain3D && map.getZoom() >= 17;
@@ -2898,11 +2925,22 @@ const Eclairage = {
             if (map.getLayoutProperty(l.id, 'visibility') === 'none') continue;
             try { feats.push(...map.querySourceFeatures(l.source, { sourceLayer: l['source-layer'] })); } catch (_) { /* source absente */ }
         }
+        // Le bâti des couches Atlas (bâtis importés, maquette) : surfaces extrudées dont l'épaisseur vient d'un champ ou d'une valeur fixe.
+        // Une hauteur graduée n'est pas lue (pas de valeur par entité à ce niveau) : cette couche ne reçoit pas de façade.
+        for (const layer of STATE.layers) {
+            if (layer.visible === false || layer._distant || layer._raster) continue;
+            if (layer.geometryType !== 'Polygon' && layer.geometryType !== 'MultiPolygon') continue;
+            if (layer.style?.polygonMode === 'flat') continue;
+            const sym = initSymbolization(layer);
+            if (!layer.heightField && sym.size?.mode === 'graduated') continue;
+            feats.push(...batisDeCoucheAtlas(filteredGeoJSON(layer)?.features || [], {
+                champ: layer.heightField || null, fixe: sym.size?.value || 12, base: sym.extrusion?.base, idCouche: layer.id }));
+        }
         const versLocal = (lng, lat) => { const m = Models3D.localMeters(lng, lat); return { x: m.x, z: -m.y }; };
         const bats = batimentsProches(feats, sources, rayon, versLocal);
-        const g = geometrieMurs(bats, undefined, undefined, { sources, rayon });
+        const g = geometrieMurs(bats, undefined, undefined, { sources, rayon, ...(this.ombresFacades ? { ombres: { hauteurFeu: Math.max(hFeu, 1) } } : {}) });
         lum.definirFacades(g);
-        this._facades = { batiments: bats.length, triangles: g.triangles, rayon };
+        this._facades = { batiments: bats.length, triangles: g.triangles, rayon, ombres: !!this.ombresFacades };
     },
 
     /** Relief recalé : reposer les luminaires sur le nouveau sol. */
@@ -3211,102 +3249,6 @@ function featureExtrusionHeightM(feature, layer) {
     return Number.isFinite(v) && v > 0 ? v : 12;
 }
 
-function simplifyRingLngLat(ring, maxPts = 28) {
-    if (!ring?.length) return [];
-    // drop closing duplicate
-    const open = ring.length > 1
-        && ring[0][0] === ring[ring.length - 1][0]
-        && ring[0][1] === ring[ring.length - 1][1]
-        ? ring.slice(0, -1)
-        : ring.slice();
-    if (open.length <= maxPts) return open;
-    const step = Math.ceil(open.length / maxPts);
-    const out = [];
-    for (let i = 0; i < open.length; i += step) out.push(open[i]);
-    const last = open[open.length - 1];
-    if (out[out.length - 1] !== last) out.push(last);
-    return out;
-}
-
-/** Emprise approx. en mètres locaux (bbox) pour caster d'ombre bâti. */
-function featureFootprintMeters(feature, toLocal) {
-    const g = feature?.geometry;
-    let ring = null;
-    if (g?.type === 'Polygon') ring = g.coordinates?.[0];
-    else if (g?.type === 'MultiPolygon') ring = g.coordinates?.[0]?.[0];
-    if (!ring?.length) return { w: 8, d: 8 };
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    for (const pt of ring) {
-        if (pt?.[0] == null) continue;
-        const lm = toLocal(pt[0], pt[1]);
-        if (lm.x < minX) minX = lm.x;
-        if (lm.x > maxX) maxX = lm.x;
-        if (lm.y < minY) minY = lm.y;
-        if (lm.y > maxY) maxY = lm.y;
-    }
-    if (!Number.isFinite(minX)) return { w: 8, d: 8 };
-    return { w: Math.min(maxX - minX, 80), d: Math.min(maxY - minY, 80) };
-}
-
-/**
- * Emprise GeoJSON → ExtrudeGeometry en mètres locaux (plan XY = est/nord).
- * `toLocal(lng,lat) -> {x,y}` avec y = nord.
- * Conservé pour debug / raffinement futur (casters footprint exact).
- */
-function extrudeFeatureToGeometry(feature, heightM, toLocal) {
-    const g = feature?.geometry;
-    if (!g || !(heightM > 0)) return null;
-    const polys = g.type === 'Polygon' ? [g.coordinates]
-        : g.type === 'MultiPolygon' ? g.coordinates
-            : null;
-    if (!polys?.length) return null;
-    // Plus grand anneau extérieur
-    let best = null, bestArea = -1;
-    for (const poly of polys) {
-        const outer = poly?.[0];
-        if (!outer || outer.length < 3) continue;
-        let a = 0;
-        for (let i = 0; i < outer.length - 1; i++) {
-            a += outer[i][0] * outer[i + 1][1] - outer[i + 1][0] * outer[i][1];
-        }
-        a = Math.abs(a);
-        if (a > bestArea) { bestArea = a; best = poly; }
-    }
-    if (!best) return null;
-    const ring = simplifyRingLngLat(best[0]);
-    if (ring.length < 3) return null;
-    const shape = new THREE.Shape();
-    ring.forEach((pt, i) => {
-        const lm = toLocal(pt[0], pt[1]);
-        if (i === 0) shape.moveTo(lm.x, lm.y);
-        else shape.lineTo(lm.x, lm.y);
-    });
-    shape.closePath();
-    // Trous (cours intérieures) — utile pour l'écrin Vieille Charité
-    for (let h = 1; h < best.length; h++) {
-        const holeRing = simplifyRingLngLat(best[h], 20);
-        if (holeRing.length < 3) continue;
-        const hole = new THREE.Path();
-        holeRing.forEach((pt, i) => {
-            const lm = toLocal(pt[0], pt[1]);
-            if (i === 0) hole.moveTo(lm.x, lm.y);
-            else hole.lineTo(lm.x, lm.y);
-        });
-        hole.closePath();
-        shape.holes.push(hole);
-    }
-    try {
-        return new THREE.ExtrudeGeometry(shape, {
-            depth: heightM,
-            bevelEnabled: false,
-            curveSegments: 1,
-        });
-    } catch (e) {
-        console.warn('[Atlas] extrusion ombre', e.message);
-        return null;
-    }
-}
-
 function getLayerModelUrl(layer) {
     const s = layer.style;
     if (!s) return null;
@@ -3374,7 +3316,7 @@ async function initMap() {
     if (!_fondDeRepli && _bm === BASEMAPS.theme) {
         try {
             const mem = (typeof window !== 'undefined' && window.__atlasDemarrage && window.__atlasDemarrage.theme) || null;
-            _fondThemeModule = await import('./lib/fond-theme.js?v=1.45.0');
+            _fondThemeModule = await import('./lib/fond-theme.js?v=1.46.0');
             if (mem && mem.plan && mem.plan.fond) _planTheme = { ...mem.plan }; else await rafraichirFondTheme();
             const json = await _styleBasePrefetch;
             if (json && Array.isArray(json.layers) && _planTheme) styleInitial = _fondThemeModule.themerStyle(json, _planTheme);
@@ -3452,10 +3394,9 @@ async function initMap() {
         if (!evenementMntArrive(e)) return;
         clearTimeout(_tuilesDemTimer);
         // Le cache d'altitude n'a pas à être purgé ici : `recalerRelief` appelle
-        // `Models3D.recomputeAll()`, qui le vide en entrée. Vérifié — l'origine
-        // est toujours posée (à défaut de modèle, sur le centre de la carte) et
-        // la scène three.js est créée inconditionnellement, donc la garde de
-        // `recomputeAll` est franchie et la purge a bien lieu.
+        // `Models3D.recomputeAll()`, qui le vide en entrée. Sans moteur 3D (rien à
+        // peindre, `besoin3D`), la garde de `recomputeAll` n'est pas franchie : le
+        // cache est vide aussi, `elevRaw` ne servant qu'à placer des objets.
         _tuilesDemTimer = setTimeout(() => recalerRelief(0), 600);
     });
 
@@ -3803,7 +3744,7 @@ function appliquerFondTheme() {
 }
 async function rafraichirFondTheme() {
     try {
-        const [FT, RS, SC] = await Promise.all([import('./lib/fond-theme.js?v=1.45.0'), import('./lib/charte/resolution.js'), import('./lib/charte/schema.js')]);
+        const [FT, RS, SC] = await Promise.all([import('./lib/fond-theme.js?v=1.46.0'), import('./lib/charte/resolution.js'), import('./lib/charte/schema.js')]);
         const hote = _charteDuFond ? SC.assainir(_charteDuFond).charte : {};
         _planTheme = { ...RS.resoudre({ hote }).charte.fond.plan };
         _fondThemeModule = FT;
@@ -7953,6 +7894,7 @@ async function creerCoucheLiee(plan, tables) {
  * obligatoires). Proposé, il rejoint aussi les formulaires que la couche offre, comme `exposerFormulaire` le fait.
  */
 async function enregistrerNouveauFormulaire(couche, plan, tables, { expose = false } = {}) {
+    await assurerMoteurFormulaire();
     const T = window.FormulairesTable;
     const D = window.FormDefFromTable;
     if (!T || !D) throw new Error('Module formulaires indisponible');
@@ -12792,8 +12734,10 @@ function ajouterCoucheGeoJSON(nom, geojson) {
  * une. Un projet Atlas donné ici devenait une couche absurde, sans erreur.
  */
 /** Un GPX, un KML ou un CSV devient une ou plusieurs couches ; ce qui est écarté se dit. */
-function importerFichierFormat(nomFichier, contenu) {
-    const res = lireFichier(nomFichier, contenu);
+/** La décision d'ouverture d'un fichier (lib/ouvrir-fichier.js), chargée au premier fichier ouvert. */
+const decisionFichier = (nom, contenu) => import('./lib/ouvrir-fichier.js?v=1.46.0').then((m) => m.decisionFichier(nom, contenu));
+
+function importerCouches(res) {
     let total = 0;
     for (const c of res.couches) total += ajouterCoucheGeoJSON(c.nom, c.geojson);
     if (!total) { showToast('Rien à importer dans ce fichier', 'warning'); return; }
@@ -12804,13 +12748,11 @@ function importerFichierFormat(nomFichier, contenu) {
 async function processFile(file) {
     showLoading('Lecture du fichier…');
     try {
-        const contenu = await file.text();
-        if (natureFichier(file.name, contenu)) { hideLoading(); importerFichierFormat(file.name, contenu); return; }
-        const obj = JSON.parse(contenu);
-        const nature = natureJson(obj);
+        const d = await decisionFichier(file.name, await file.text());
         hideLoading();
-        if (nature !== 'geojson') { showToast(messageNature(nature), nature ? 'info' : 'error'); return; }
-        const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), obj);
+        if (d.action === 'couches') { importerCouches(d); return; }
+        if (d.action !== 'geojson') { showToast(d.message, d.niveau); return; }
+        const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), d.obj);
         if (n) showToast(`${n} élément${n > 1 ? 's' : ''} importé${n > 1 ? 's' : ''}`, 'success');
     } catch (e) { hideLoading(); showToast('Fichier illisible : ' + e.message, 'error'); }
 }
@@ -12933,10 +12875,10 @@ async function chargerThemeDocument() {
         if (!CONFIG.grist.ready) return;
         suivrePreferenceContraste();
         // « Sans thème » (`?theme=aucun`, à mettre dans l'adresse du widget) : les valeurs d'origine d'Atlas, ni le document ni l'instance Grist ; un choix explicite passe avant les deux.
-        if (themeAucunDemande()) { _themeDocumentActif = false; const AP = await import('./lib/charte/application.js?v=1.45.0'); poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = charteOrigineInitiale(); void rafraichirFondTheme(); return; }   // et on efface ce que la mémoire de démarrage avait déjà posé
+        if (themeAucunDemande()) { _themeDocumentActif = false; const AP = await import('./lib/charte/application.js?v=1.46.0'); poserHabillageApplication({}, AP.VARIABLES); _charteDuFond = charteOrigineInitiale(); void rafraichirFondTheme(); return; }   // et on efface ce que la mémoire de démarrage avait déjà posé
         const tables = await grist.docApi.listTables();
         if (tables.includes('Theme_document')) {
-            const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=1.45.0'), import('./lib/charte/application.js?v=1.45.0')]);
+            const [TD, AP] = await Promise.all([import('./lib/charte/theme-document.js?v=1.46.0'), import('./lib/charte/application.js?v=1.46.0')]);
             const theme = TD.themeDuDocument(await grist.docApi.fetchTable('Theme_document'), { mode: apparenceGrist() === 'dark' ? 'sombre' : 'clair' });
             if (theme.avertissements.length) console.warn('[Atlas] thème du document :', theme.avertissements.map((a) => a.code).join(', '));
             // Un thème refusé est DIT à la personne (la raison nommée), jamais appliqué à moitié ni en silence ; aucun thème, ou « sans mode sombre », reste sans bruit.
@@ -13002,7 +12944,7 @@ function brancherThemeInstance() {
 async function appliquerThemeInstance() {
     try {
         if (_themeDocumentActif || !CONFIG.grist.ready || themeAucunDemande()) return;
-        const [TI, TD, TDoc, AP] = await Promise.all([import('./lib/charte/theme-instance.js?v=1.45.0'), import('./lib/charte/depuis-themedef.js?v=1.45.0'), import('./lib/charte/theme-document.js?v=1.45.0'), import('./lib/charte/application.js?v=1.45.0')]);
+        const [TI, TD, TDoc, AP] = await Promise.all([import('./lib/charte/theme-instance.js?v=1.46.0'), import('./lib/charte/depuis-themedef.js?v=1.46.0'), import('./lib/charte/theme-document.js?v=1.46.0'), import('./lib/charte/application.js?v=1.46.0')]);
         const racine = document.documentElement;
         const lireVariable = (nom) => getComputedStyle(racine).getPropertyValue(nom).trim();
         const theme = _themeInstance || { appearance: apparenceGrist() };
@@ -13026,39 +12968,30 @@ async function appliquerThemeInstance() {
 }
 
 async function chargerFormulaires() {
-    // La pastille « Releve » depend des formulaires, qui arrivent APRES la
-    // carte : sans ce rafraichissement, elle n'apparaitrait qu'au prochain
-    // geste qui redessine le dock — c'est-a-dire, pour un lecteur, jamais.
-    try { await lireFormulairesDuDocument(); } finally { refreshControlsDock(); }
-}
-
-async function lireFormulairesDuDocument() {
     STATE.formulaires = [];
     STATE.formulairesGrist = [];
     STATE.formulairesTable = false;
-    // Le schema porte les types des colonnes, donc les `Ref:` qui disent quelles
-    // tables referencent une couche, et de quoi deduire un formulaire de celles
-    // qui n'en ont pas. Sans lui il ne reste que l'enregistre.
-    //
-    // Les memes metadonnees portent les formulaires natifs de Grist : ceux que
-    // l'equipe a deja soignes (questions, ordre, obligatoires) servent tels
-    // quels, sans rien recomposer ici.
-    const meta = CONFIG.grist.ready ? await chargerMeta(grist.docApi, { vues: true }) : null;
-    STATE.schema = meta ? schemaDepuisMeta(meta.tables, meta.colonnes) : {};
-    if (meta?.sections && window.FormDefFromGristForm) {
-        try { STATE.formulairesGrist = window.FormDefFromGristForm.formulairesGrist(meta); } catch (e) {
-            console.warn('[Atlas formulaire] formulaires Grist', e.message);
-        }
-    }
-    if (!CONFIG.grist.ready) return;
+    // La pastille « Releve » depend des formulaires, qui arrivent APRES la
+    // carte : sans ce rafraichissement, elle n'apparaitrait qu'au prochain
+    // geste qui redessine le dock — c'est-a-dire, pour un lecteur, jamais.
     try {
-        const tables = await grist.docApi.listTables();
-        if (!tables.includes('Formulaires')) return;
-        STATE.formulairesTable = true;
-        STATE.formulaires = lireFormulaires(await grist.docApi.fetchTable('Formulaires'));
-    } catch (e) {
-        console.warn('[Atlas formulaire] chargement', e.message);
-    }
+        Object.assign(STATE, await lireFormulairesDuDocument({
+            docApi: CONFIG.grist.ready ? grist.docApi : null,
+            assurerMoteur: assurerMoteurFormulaire,
+            portee: window,
+        }));
+    } finally { refreshControlsDock(); }
+}
+
+/**
+ * Le moteur de formulaire est charge A LA DEMANDE (lib/moteur-formulaire.js) :
+ * jamais en import statique, ni en <script> de la page. Rend true s'il est la ;
+ * sinon la fiche de repli (champs devines) reste le comportement.
+ */
+function assurerMoteurFormulaire() {
+    return import('./lib/moteur-formulaire.js?v=1.46.0')
+        .then((m) => m.assurerMoteurFormulaire())
+        .catch((e) => { console.warn('[Atlas] moteur de formulaire :', e.message); return false; });
 }
 
 /**
@@ -13567,7 +13500,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.45.0');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=1.46.0');
     return Feuille;
 }
 
@@ -13788,10 +13721,10 @@ async function cablerMenuPrincipal() {
     const marque = document.querySelector('.brand');
     if (!marque) return;
     let hote;
-    try { hote = await import('./lib/hote-ui.js?v=1.45.0'); } catch (_) { return; }
+    try { hote = await import('./lib/hote-ui.js?v=1.46.0'); } catch (_) { return; }
     let caps;
     try {
-        const dc = await import('./lib/data-client.js?v=1.45.0');
+        const dc = await import('./lib/data-client.js?v=1.46.0');
         caps = dc.capacites();
     } catch (_) { return; }
     // Widget : rien au-dessus de la scene. Navigateur sans compte : le menu
@@ -14483,12 +14416,14 @@ async function lireReponseDalles(url, maxOctets, lecture) {
 
 /** Monte une maquette en dalles 3D désignée par l'adresse de son manifeste de grille. Chargé À LA DEMANDE : rien de tout cela sans une scène de dalles. */
 async function monterDallesHote({ id, grille }) {
-    const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=1.45.0');
+    const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=1.46.0');
+    // three.js se charge à la demande : les dalles en ont besoin, la scène n'a peut-être aucun autre objet 3D. Liaisons LOCALES : celles du module ne se posent qu'à l'activation de `Models3D`.
+    const three = await chargerThree();
     const cle = 'dalles:' + id;
     if (_dallesHote.has(cle)) { _dallesHote.get(cle).retirer(); _dallesHote.delete(cle); }
     const couche = creerCoucheDalles({
-        id, urlGrille: grille, THREE, carte: map, altitudeBase: altitudeBaseDalle, attributionSure, journal: console,
-        creerChargeur: (renderer) => chargeurDalles({ GLTFLoader, MeshoptDecoder, KTX2Loader, renderer, chemin: cheminTranscodeur(import.meta.resolve?.bind(import.meta)) }),
+        id, urlGrille: grille, THREE: three.THREE, carte: map, altitudeBase: altitudeBaseDalle, attributionSure, journal: console,
+        creerChargeur: (renderer) => chargeurDalles({ GLTFLoader: three.GLTFLoader, MeshoptDecoder: three.MeshoptDecoder, KTX2Loader: three.KTX2Loader, renderer, chemin: cheminTranscodeur(import.meta.resolve?.bind(import.meta)) }),
         fetchJson: (u) => lireReponseDalles(u, 2 * 1024 * 1024, (r) => r.json()),
         fetchOctets: (u, max) => lireReponseDalles(u, max, (r) => r.arrayBuffer()),
     });
@@ -14810,16 +14745,14 @@ function loadProject() {
         inp.value = '';
         if (!file) return;
         try {
-            const contenu = await file.text();
             // « Ouvrir » reconnaît aussi un GPX, un KML ou un CSV : ils s'ajoutent comme couches.
-            if (natureFichier(file.name, contenu)) { importerFichierFormat(file.name, contenu); return; }
-            const obj = JSON.parse(contenu);
-            const nature = natureJson(obj);
-            if (nature === 'projet') await restoreProject(obj);
-            else if (nature === 'geojson') {
-                const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), obj);
+            const d = await decisionFichier(file.name, await file.text());
+            if (d.action === 'couches') { importerCouches(d); return; }
+            if (d.action === 'projet') await restoreProject(d.obj);
+            else if (d.action === 'geojson') {
+                const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), d.obj);
                 if (n) showToast(`${n} élément${n > 1 ? 's' : ''} ajouté${n > 1 ? 's' : ''} comme couche`, 'success');
-            } else showToast(messageNature(nature), nature ? 'info' : 'error');
+            } else showToast(d.message, d.niveau);
         } catch (err) {
             showToast('Fichier illisible : ' + err.message, 'error');
         }
@@ -14847,7 +14780,7 @@ function couchesExportables() {
  * n'a rien à exporter : ses entités sont ailleurs. Un fichier vide est un export **réussi** jusqu'à ce qu'on l'ouvre ;
  * mieux vaut ne rien produire et dire pourquoi.
  */
-function exporterCouches(format, couches) {
+async function exporterCouches(format, couches) {
     const { absentes } = couchesExportables();
     if (!couches.length) {
         showToast(absentes.some((l) => l._distant)
@@ -14857,6 +14790,7 @@ function exporterCouches(format, couches) {
     }
     const base = couches.length === 1 ? couches[0].name : (STATE.projectName || STATE.location?.name || 'atlas_export');
     let blob, ext, libelle, note = '';
+    const { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } = await import('./lib/export-formats.js?v=1.46.0');
     if (format === 'geojson') {
         blob = new Blob([JSON.stringify(versGeoJSON(couches), null, 2)], { type: 'application/geo+json' });
         ext = 'geojson'; libelle = 'GeoJSON';
@@ -14885,8 +14819,9 @@ function exporterImageCarte() {
     if (!map) return;
     // Le tampon de dessin n'est valable que pendant le rendu : on le lit dans le même tour.
     map.once('render', () => {
-        map.getCanvas().toBlob((blob) => {
+        map.getCanvas().toBlob(async (blob) => {
             if (!blob) { showToast('Image impossible à produire sur cet appareil', 'error'); return; }
+            const { nomDeFichier } = await import('./lib/export-formats.js?v=1.46.0');
             telecharger(blob, nomDeFichier(STATE.projectName || STATE.location?.name || 'atlas_carte', 'png'));
             showToast('Image de la carte (PNG)', 'success');
         }, 'image/png');
@@ -15707,6 +15642,7 @@ const A = {
             // Un formulaire enregistré fige sa définition : le champ doit y entrer, sinon la colonne existerait sans
             // jamais se saisir par ce formulaire.
             const ligne = f.derive ? null : STATE.formulaires.find((e) => e.formId === f.id);
+            await assurerMoteurFormulaire();
             const T = window.FormulairesTable;
             if (ligne?.rowId && T) {
                 const champ = champDepuisPlan(plan.colonne, window.FormDefFromTable, { requis: plan.requis });
@@ -15918,6 +15854,7 @@ const A = {
         const couche = STATE.layers.find((l) => l.id === layerId);
         const f = couche && formulairesDeLaCouche(couche).find((x) => x.id === formId);
         if (!f || !f.derive || !f.def) return;
+        await assurerMoteurFormulaire();
         const T = window.FormulairesTable;
         if (!T) { showToast('Module formulaires indisponible', 'error'); return; }
         try {
@@ -15962,6 +15899,7 @@ const A = {
         const geste = gesteDEnregistrement(f, STATE.formulaires);
         if (!geste) return;
 
+        await assurerMoteurFormulaire();
         const T = window.FormulairesTable;
         if (!T || !f.def) { showToast('Module formulaires indisponible', 'error'); return; }
         try {
@@ -16077,7 +16015,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openIGN: () => import('./lib/vue-import-ign.js?v=1.45.0').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
+    openIGN: () => import('./lib/vue-import-ign.js?v=1.46.0').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {
             A.zoomLayer(id);
@@ -16929,7 +16867,7 @@ const A = {
     /** Envoyer la scène faite sur l'appareil dans un document Grist neuf (écran de l'accueil, `ouvrirEnvoi`). */
     async envoyerSceneLocale() {
         fermerPanneauSynchro();
-        try { (await import('./lib/hote-ui.js?v=1.45.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
+        try { (await import('./lib/hote-ui.js?v=1.46.0')).ouvrirEnvoi(); } catch (e) { showToast('Envoi impossible : ' + e.message, 'error'); }
     },
     async synchroReessayer(id) { await clientHorsLigne()?.reessayer(id); },
     async synchroAbandonner(id) {
@@ -16975,7 +16913,7 @@ const A = {
         const layer = coucheDeRoutes(layerId || _traficReglages.layerId);
         if (!layer) { showToast('Aucune couche de routes à animer : importez les routes de l’IGN ou d’OpenStreetMap', 'warning'); return null; }
         try {
-            const m = await import('./lib/trafic-couche.js?v=1.45.0');
+            const m = await import('./lib/trafic-couche.js?v=1.46.0');
             // de près, des modèles 3D du catalogue (voiture, bus) à la place des points : prêts avant le premier dessin, ou les points restent
             _traficRepli3d = false;
             if (_traficReglages.rendu !== 'points') {
@@ -17585,6 +17523,7 @@ const A = {
      * Usage : await A.validateBatiShadows()
      */
     async validateBatiShadows() {
+        await Models3D.activer();   // le moteur 3D se charge a la demande
         if (!map || !Models3D.scene) return { ok: false, err: 'map/scene absents' };
         const bati = STATE.layers.find((l) => /bati/i.test(l.id) || /bati/i.test(l.name));
         if (!bati) return { ok: false, err: 'pas de couche bâti' };
@@ -18626,9 +18565,9 @@ async function demarrer() {
     }
     if (MODE_BI) return demarrerBi();   // ni accueil ni document : les données viennent de l'hôte
     try {
-        const { capacites } = await import('./lib/data-client.js?v=1.45.0');
+        const { capacites } = await import('./lib/data-client.js?v=1.46.0');
         if (capacites().mode === 'grist') return init();
-        const { accueillir } = await import('./lib/hote-ui.js?v=1.45.0');
+        const { accueillir } = await import('./lib/hote-ui.js?v=1.46.0');
         const pret = await accueillir();
         if (!pret) return;          // l'accueil garde l'ecran : rien a demarrer
     } catch (e) {
@@ -18651,8 +18590,8 @@ function nomLicence(spdx) {
  * ne bouge pas. Rend le canevas, si le fond est photographique (JPEG plutôt que PNG) et les attributions déclarées par les sources du fond.
  */
 async function rendreFondAPlat(bbox, resolution) {
-    const FT = await import('./lib/fond-theme.js?v=1.45.0');
-    const E = await import('./lib/export-scene3d.js?v=1.45.0');
+    const FT = await import('./lib/fond-theme.js?v=1.46.0');
+    const E = await import('./lib/export-scene3d.js?v=1.46.0');
     const merc = (lng, lat) => maplibregl.MercatorCoordinate.fromLngLat([lng, lat]);
     const nw = merc(bbox[0], bbox[3]), se = merc(bbox[2], bbox[1]);
     const rapport = (se.x - nw.x) / (se.y - nw.y);
@@ -18698,7 +18637,7 @@ async function rendreFondAPlat(bbox, resolution) {
  */
 /** Une tuile d'altitude (terrarium) décodée en RGBA, pour `exportScene3D` (`relief`) : lue directement, sans passer par la carte (le relief affiché peut être éteint ou d'une autre source). */
 async function lireTuileRelief(z, x, y) {
-    const R = await import('./lib/export-relief.js?v=1.45.0');
+    const R = await import('./lib/export-relief.js?v=1.46.0');
     // un appel borné par l'horloge (sur l'application, le client natif ignore `AbortController`)
     let minuteur;
     const horloge = new Promise((_, ko) => { minuteur = setTimeout(() => ko(new Error('tuile ' + z + '/' + x + '/' + y + ' : pas de réponse en 20 s')), 20000); });
@@ -18718,9 +18657,12 @@ async function lireTuileRelief(z, x, y) {
 }
 
 async function exporter3dScene(entree) {
-    const E = await import('./lib/export-scene3d.js?v=1.45.0');
+    const E = await import('./lib/export-scene3d.js?v=1.46.0');
     const opt = E.normaliserOptions(entree);
     if (!map || !Models3D) throw new Error('exportScene3D : la carte n\'est pas prête');
+    // three.js se charge à la demande : l'export lit les modèles par le moteur (`ensureMonumentRoot`) et construit sa scène avec THREE ; une scène sans modèle ni lampe ne l'a pas encore chargé.
+    await Models3D.activer();
+    if (!THREE) throw new Error('exportScene3D : le moteur 3D n\'a pas pu être chargé (three.js indisponible)');
     let bbox = opt.bbox;
     if (!bbox) { const b = map.getBounds(); bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]; E.normaliserOptions({ bbox }); }
     const ancre = opt.ancre || E.centreDe(bbox);
@@ -18730,7 +18672,7 @@ async function exporter3dScene(entree) {
     const ancreLocale = versLocal(ancre.lng, ancre.lat);
     const attributions = [], avertissements = [];
     const objets = [], extrusions = [];
-    const RL = await import('./lib/export-relief.js?v=1.45.0');
+    const RL = await import('./lib/export-relief.js?v=1.46.0');
     const emprise = RL.elargir(bbox, opt.sol ? opt.sol.marge : 0);   // l'emprise du sol : celle de l'export, plus la marge demandée
     // Le relief (sur demande) : altitudes lues dans les tuiles terrarium, relatives à l'altitude de l'ancre (y = 0 à l'ancre), exagération comprise. Une source en panne laisse l'export à plat, dit.
     let relief = null;
@@ -18910,7 +18852,7 @@ async function demarrerBi() {
         CONFIG.defaultPitch = 0;
         Object.assign(STATE.settings, { projection: 'mercator', sky: false, buildings3D: false });
     }
-    const chargement = import('./lib/bi/montage.js?v=1.45.0');
+    const chargement = import('./lib/bi/montage.js?v=1.46.0');
     chargement.catch(() => {});
     try {
         await init();
@@ -18927,7 +18869,7 @@ async function demarrerBi() {
                 // Un manifeste BI porte sa propre légende (interface.legende) : celle de l'application, qui ne connaît pas ses couches, se tait.
                 sceneBi: (oui) => document.body.classList.toggle('scene-bi', !!oui),
                 habiller: async (lecture) => {
-                    const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=1.45.0');
+                    const { variablesApplication, VARIABLES } = await import('./lib/charte/application.js?v=1.46.0');
                     const { variables, notes } = variablesApplication(lecture);
                     poserHabillageApplication(variables, VARIABLES);
                     return notes;
