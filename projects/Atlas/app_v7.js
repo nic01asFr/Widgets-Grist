@@ -6,11 +6,7 @@
 
 import { urlSceneDepuisParam, chargerSceneExterne, VERSIONS_LUES, deballerScene, verifierFormeScene, adresseAdmise } from './lib/scene-externe.js?v=20260827a';
 import { origineGrist } from './lib/charte/origine-grist.js?v=20261110a';
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { chargerThree } from './lib/three-differe.js?v=20261010a';
 import { seuilDecoupe, cheminTranscodeur, chargeurDalles } from './lib/gltf-chargeur.js?v=20261031a';
 import { lireCatalogue, resoudreObjet, choisirCatalogue } from './lib/catalogue-objets.js?v=20261002g';
 import { VERSION_ATLAS } from './lib/version-atlas.js?v=20261026a';
@@ -31,7 +27,6 @@ import { estPointLumineux, profilDuPoint, poseLuminaire, libelleEtat, detailEtat
 import { ratioMaxDemande, plafondLePlusStrict } from './lib/ratio-hote.js?v=20261016a';
 import { PALIERS, indicePalier, objectifImages, palierInitial, budgetDuPalier, ratioApplique, creerRegulateur } from './lib/qualite-eclairage.js?v=20260925c';
 import { opaciteNuit, facteursNuit, creerCoucheNuit, estNonEclaire, couleurSousNuit, LUMIERE_BATI_NUIT, AMBIANCE_NUIT } from './lib/nuit-rendu.js?v=20260925a';
-import { creerLuminaires3D, marquerPochoirModele } from './lib/luminaires-three.js?v=20261002g';
 import { batimentsProches, geometrieMurs } from './lib/facades-eclairees.js?v=20260925b';
 import { capacites, peutSAuthentifier } from './lib/data-client.js?v=20261001a';
 import {
@@ -1699,6 +1694,14 @@ let _recalageTimer = null;
 /** Regroupe l'arrivee des tuiles MNT : elles tombent par dizaines, un seul recalage suffit. */
 let _tuilesDemTimer = null;
 
+/**
+ * three.js et ce qui en depend (lampes, casters d'ombre) sont CHARGES A LA DEMANDE
+ * (lib/three-differe.js) : ces liaisons restent nulles tant que `Models3D.activer`
+ * n'a pas tourne, et rien de ce qui les lit ne s'execute avant (`besoin3D`, `build`).
+ */
+let THREE = null, GLTFLoader = null, KTX2Loader = null, MeshoptDecoder = null, mergeGeometries = null;
+let creerLuminaires3D = null, marquerPochoirModele = null, creerCasters = null;
+
 const Models3D = {
     layerId: 'three-models-3d',
     scene: null, camera: null, renderer: null,
@@ -1709,14 +1712,50 @@ const Models3D = {
     extrusionShadows: [],   // Mesh[] — casters invisibles pour bâti fill-extrusion
     origin: null, originMC: null, originScale: 1, originElev: 0,
     elevCache: new Map(),
-    sunDir: new THREE.Vector3(0.4, 0.7, 0.4).normalize(),
+    sunDir: null,
     dirLight: null, ambLight: null, hemiLight: null, groundShadow: null, _shadowFeasible: false,
     _buildTimer: null, _cullTimer: null, _driftTimer: null, _lastOriginElev: undefined,
     _wCanvas: 0, _hCanvas: 0,   // derniere taille de canvas appliquee au renderer
-    _m4Origin: new THREE.Matrix4(), _m4VP: new THREE.Matrix4(),
-    _mRotX: new THREE.Matrix4().makeRotationX(Math.PI / 2),
-    _vScale: new THREE.Vector3(), _obj: new THREE.Object3D(), _m4: new THREE.Matrix4(),
-    _cNuit: new THREE.Color(1, 1, 1),
+    _m4Origin: null, _m4VP: null, _mRotX: null, _vScale: null, _obj: null, _m4: null, _cNuit: null,
+    _m: null, _gl: null,       // la carte et son contexte GL, gardes par `onAdd` pour monter le moteur plus tard
+    _soleil: null,             // dernier soleil demande, rejoue a l'activation
+    _activation: null,         // promesse de `activer`
+
+    /**
+     * Faut-il le moteur three.js ? Une scene sans modele a l'ecran, sans lampe et sans
+     * ombre portee de bati n'en a pas besoin : on ne telecharge pas 1,5 Mo pour la peindre.
+     * Les conditions sont celles des consommateurs (`collect`, `collectExtrusionsForShadow`,
+     * `Eclairage.couches`) ; `build` les reverifie a chaque mouvement de la carte.
+     */
+    besoin3D() {
+        if (!map) return false;
+        if (Eclairage.couches().length) return true;
+        if (this._disabled || CONFIG.light3d) return false;
+        const ombres = !!STATE.settings.shadows && !STATE.settings.terrain3D && map.getZoom() >= 14
+            && STATE.layers.some((l) => l.visible !== false && l.style?.polygonMode !== 'flat'
+                && (l.geometryType === 'Polygon' || l.geometryType === 'MultiPolygon'));
+        return ombres || this.collect().length > 0;
+    },
+    /** Charge three.js (une fois) puis monte le moteur sur le calque deja declare dans le style. */
+    activer() {
+        if (!this._activation) {
+            this._activation = chargerThree().then((lib) => {
+                ({ THREE, GLTFLoader, KTX2Loader, MeshoptDecoder, mergeGeometries, creerLuminaires3D, marquerPochoirModele, creerCasters } = lib);
+                this.creerOutils();
+                if (this._m && map?.getLayer(this.layerId)) this.monter(this._m, this._gl);
+                if (this._soleil) this.setSun(...this._soleil);
+            }).catch((e) => { this._activation = null; console.warn('[Atlas] moteur 3D indisponible :', e.message); });
+        }
+        return this._activation;
+    },
+    /** Les objets de calcul de three.js : crees a l'activation, pas a l'import du module. */
+    creerOutils() {
+        this.sunDir = new THREE.Vector3(0.4, 0.7, 0.4).normalize();
+        this._m4Origin = new THREE.Matrix4(); this._m4VP = new THREE.Matrix4();
+        this._mRotX = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+        this._vScale = new THREE.Vector3(); this._obj = new THREE.Object3D(); this._m4 = new THREE.Matrix4();
+        this._cNuit = new THREE.Color(1, 1, 1);
+    },
 
     scheduleBuild() { clearTimeout(this._buildTimer); this._buildTimer = setTimeout(() => this.build(), 60); },
     forceBuild() { clearTimeout(this._buildTimer); this._buildTimer = null; this.build(); }, // rebuild immédiat (changement de modèle)
@@ -1790,40 +1829,44 @@ const Models3D = {
         if (this.groundShadow) this.groundShadow.position.set(cx, 0.02, cz);
     },
 
+    /** Cree la scene, les lumieres et le renderer sur le contexte GL de MapLibre. Ne tourne qu'une fois three.js charge. */
+    monter(m, gl) {
+        const self = this;
+        self.camera = new THREE.Camera();
+        self.scene = new THREE.Scene();
+        self.ambLight = new THREE.AmbientLight(0xffffff, 1.0);
+        self.dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        self.dirLight.position.copy(self.sunDir).multiplyScalar(100);
+        self.hemiLight = new THREE.HemisphereLight(0xbcd4e8, 0x55492f, 0.45);
+        self.scene.add(self.ambLight, self.dirLight, self.hemiLight);
+        self.renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
+        self.renderer.autoClear = false;
+        // Ombres portées (shadow maps) — actives seulement hors terrain 3D
+        // (avec terrain MapLibre rend dans un FBO offscreen incompatible).
+        try {
+            self.renderer.shadowMap.enabled = true;
+            self.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            self.dirLight.castShadow = true;
+            const sh = self.dirLight.shadow;
+            sh.mapSize.set(2048, 2048);
+            sh.camera.near = 1; sh.camera.far = 2500;
+            // Frustum initial ; recalé chaque frame sur l'emprise visible (cf. syncShadowRig).
+            sh.camera.left = -600; sh.camera.right = 600; sh.camera.top = 600; sh.camera.bottom = -600;
+            sh.camera.updateProjectionMatrix();
+            sh.bias = -0.0008; sh.normalBias = 0.35;
+            self.scene.add(self.dirLight.target);
+            const g = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.ShadowMaterial({ opacity: 0.32 }));
+            g.rotation.x = -Math.PI / 2; g.position.y = 0.02; g.receiveShadow = true; g.frustumCulled = false;
+            self.groundShadow = g; self.scene.add(g);
+        } catch (e) { console.warn('shadow setup', e.message); }
+        self.build();
+    },
+
     makeLayer() {
         const self = this;
         return {
             id: self.layerId, type: 'custom', renderingMode: '3d',
-            onAdd(m, gl) {
-                self.camera = new THREE.Camera();
-                self.scene = new THREE.Scene();
-                self.ambLight = new THREE.AmbientLight(0xffffff, 1.0);
-                self.dirLight = new THREE.DirectionalLight(0xffffff, 2.0);
-                self.dirLight.position.copy(self.sunDir).multiplyScalar(100);
-                self.hemiLight = new THREE.HemisphereLight(0xbcd4e8, 0x55492f, 0.45);
-                self.scene.add(self.ambLight, self.dirLight, self.hemiLight);
-                self.renderer = new THREE.WebGLRenderer({ canvas: m.getCanvas(), context: gl, antialias: true });
-                self.renderer.autoClear = false;
-                // Ombres portées (shadow maps) — actives seulement hors terrain 3D
-                // (avec terrain MapLibre rend dans un FBO offscreen incompatible).
-                try {
-                    self.renderer.shadowMap.enabled = true;
-                    self.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                    self.dirLight.castShadow = true;
-                    const sh = self.dirLight.shadow;
-                    sh.mapSize.set(2048, 2048);
-                    sh.camera.near = 1; sh.camera.far = 2500;
-                    // Frustum initial ; recalé chaque frame sur l'emprise visible (cf. syncShadowRig).
-                    sh.camera.left = -600; sh.camera.right = 600; sh.camera.top = 600; sh.camera.bottom = -600;
-                    sh.camera.updateProjectionMatrix();
-                    sh.bias = -0.0008; sh.normalBias = 0.35;
-                    self.scene.add(self.dirLight.target);
-                    const g = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), new THREE.ShadowMaterial({ opacity: 0.32 }));
-                    g.rotation.x = -Math.PI / 2; g.position.y = 0.02; g.receiveShadow = true; g.frustumCulled = false;
-                    self.groundShadow = g; self.scene.add(g);
-                } catch (e) { console.warn('shadow setup', e.message); }
-                self.build();
-            },
+            onAdd(m, gl) { self._m = m; self._gl = gl; if (THREE) self.monter(m, gl); },
             render(gl, matrix) {
                 if (!self.renderer || !self.origin) {
                     self._skipReason = !self.renderer ? 'no-renderer' : 'no-origin';
@@ -2095,7 +2138,10 @@ const Models3D = {
      */
     vehicules: null,
     async vehiculesPreparer() {
-        if (this._disabled || CONFIG.light3d || !this.scene) return false;
+        if (this._disabled || CONFIG.light3d) return false;
+        // le trafic simulé dessine ses véhicules dans la scène three.js : sans modèle ni lampe elle n'existe pas encore, il la demande (c'est lui qui en a besoin)
+        if (!this.scene) await this.activer();
+        if (!this.scene) return false;
         if (this.vehicules) return true;
         if (this._vehiculesEnCours) return this._vehiculesEnCours;
         this._vehiculesEnCours = (async () => {
@@ -2385,42 +2431,16 @@ const Models3D = {
 
     buildExtrusionShadowMeshes(items) {
         if (!this.scene || !this.origin || !items?.length) return;
-        // Empreintes exactes fusionnées en un seul Mesh (même matériau que les
-        // ombres GLB). Les AABB axis-alignées dépassaient / décalaieent du bâti.
-        const mat = new THREE.MeshStandardMaterial({
-            color: 0x111111,
-            roughness: 1,
-            metalness: 0,
-            side: THREE.DoubleSide,
-            shadowSide: THREE.DoubleSide,
-            colorWrite: false,
-            depthWrite: false,
-        });
-        const toLocal = (lng, lat) => this.localMeters(lng, lat);
-        const geoms = [];
-        for (const it of items) {
-            const geom = extrudeFeatureToGeometry(it.feature, Math.max(it.height || 8, 2), toLocal);
-            if (!geom) continue;
-            // Shape XY = est/nord, +Z = hauteur → Y-up / Z=-nord
-            geom.rotateX(-Math.PI / 2);
-            geoms.push(geom);
-        }
-        if (!geoms.length) return;
-        const merged = geoms.length === 1 ? geoms[0] : mergeGeometries(geoms, false);
-        if (!merged) {
-            geoms.forEach((g) => g.dispose?.());
-            return;
-        }
-        if (geoms.length > 1) geoms.forEach((g) => g.dispose?.());
-        const mesh = new THREE.Mesh(merged, mat);
-        mesh.castShadow = true;
-        mesh.receiveShadow = false;
-        mesh.frustumCulled = false;
+        // Empreintes exactes fusionnees en un seul Mesh (lib/extrusion-ombres.js).
+        const mesh = creerCasters({ THREE, mergeGeometries }, items, (lng, lat) => this.localMeters(lng, lat));
+        if (!mesh) return;
         this.scene.add(mesh);
         this.extrusionShadows.push(mesh);
     },
 
     async build() {
+        // three.js n'est charge que si la scene a de quoi le remplir (montee par `activer`, qui rappelle `build`).
+        if (!THREE) { if (this.besoin3D()) await this.activer(); return; }
         // 3D allégée (téléphone en lecture, `?no3d=1`) : pas de modèles, mais
         // les luminaires restent — lampes, halos et taches ne coûtent presque
         // rien, et sans eux une scène d'éclairage n'a plus d'objet (point P6).
@@ -2604,6 +2624,8 @@ const Models3D = {
     },
 
     setSun(azimuthDeg, altitudeDeg, moon) {
+        this._soleil = [azimuthDeg, altitudeDeg, moon];
+        if (!THREE) return;      // `activer` le rejouera
         const az = deg2rad(azimuthDeg), al = deg2rad(Math.max(-0.1, altitudeDeg));
         // espace scène local : X=est, Y=haut, Z=-nord
         this.sunDir.set(Math.sin(az) * Math.cos(al), Math.sin(al), -Math.cos(az) * Math.cos(al)).normalize();
@@ -3209,102 +3231,6 @@ function featureExtrusionHeightM(feature, layer) {
     return Number.isFinite(v) && v > 0 ? v : 12;
 }
 
-function simplifyRingLngLat(ring, maxPts = 28) {
-    if (!ring?.length) return [];
-    // drop closing duplicate
-    const open = ring.length > 1
-        && ring[0][0] === ring[ring.length - 1][0]
-        && ring[0][1] === ring[ring.length - 1][1]
-        ? ring.slice(0, -1)
-        : ring.slice();
-    if (open.length <= maxPts) return open;
-    const step = Math.ceil(open.length / maxPts);
-    const out = [];
-    for (let i = 0; i < open.length; i += step) out.push(open[i]);
-    const last = open[open.length - 1];
-    if (out[out.length - 1] !== last) out.push(last);
-    return out;
-}
-
-/** Emprise approx. en mètres locaux (bbox) pour caster d'ombre bâti. */
-function featureFootprintMeters(feature, toLocal) {
-    const g = feature?.geometry;
-    let ring = null;
-    if (g?.type === 'Polygon') ring = g.coordinates?.[0];
-    else if (g?.type === 'MultiPolygon') ring = g.coordinates?.[0]?.[0];
-    if (!ring?.length) return { w: 8, d: 8 };
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    for (const pt of ring) {
-        if (pt?.[0] == null) continue;
-        const lm = toLocal(pt[0], pt[1]);
-        if (lm.x < minX) minX = lm.x;
-        if (lm.x > maxX) maxX = lm.x;
-        if (lm.y < minY) minY = lm.y;
-        if (lm.y > maxY) maxY = lm.y;
-    }
-    if (!Number.isFinite(minX)) return { w: 8, d: 8 };
-    return { w: Math.min(maxX - minX, 80), d: Math.min(maxY - minY, 80) };
-}
-
-/**
- * Emprise GeoJSON → ExtrudeGeometry en mètres locaux (plan XY = est/nord).
- * `toLocal(lng,lat) -> {x,y}` avec y = nord.
- * Conservé pour debug / raffinement futur (casters footprint exact).
- */
-function extrudeFeatureToGeometry(feature, heightM, toLocal) {
-    const g = feature?.geometry;
-    if (!g || !(heightM > 0)) return null;
-    const polys = g.type === 'Polygon' ? [g.coordinates]
-        : g.type === 'MultiPolygon' ? g.coordinates
-            : null;
-    if (!polys?.length) return null;
-    // Plus grand anneau extérieur
-    let best = null, bestArea = -1;
-    for (const poly of polys) {
-        const outer = poly?.[0];
-        if (!outer || outer.length < 3) continue;
-        let a = 0;
-        for (let i = 0; i < outer.length - 1; i++) {
-            a += outer[i][0] * outer[i + 1][1] - outer[i + 1][0] * outer[i][1];
-        }
-        a = Math.abs(a);
-        if (a > bestArea) { bestArea = a; best = poly; }
-    }
-    if (!best) return null;
-    const ring = simplifyRingLngLat(best[0]);
-    if (ring.length < 3) return null;
-    const shape = new THREE.Shape();
-    ring.forEach((pt, i) => {
-        const lm = toLocal(pt[0], pt[1]);
-        if (i === 0) shape.moveTo(lm.x, lm.y);
-        else shape.lineTo(lm.x, lm.y);
-    });
-    shape.closePath();
-    // Trous (cours intérieures) — utile pour l'écrin Vieille Charité
-    for (let h = 1; h < best.length; h++) {
-        const holeRing = simplifyRingLngLat(best[h], 20);
-        if (holeRing.length < 3) continue;
-        const hole = new THREE.Path();
-        holeRing.forEach((pt, i) => {
-            const lm = toLocal(pt[0], pt[1]);
-            if (i === 0) hole.moveTo(lm.x, lm.y);
-            else hole.lineTo(lm.x, lm.y);
-        });
-        hole.closePath();
-        shape.holes.push(hole);
-    }
-    try {
-        return new THREE.ExtrudeGeometry(shape, {
-            depth: heightM,
-            bevelEnabled: false,
-            curveSegments: 1,
-        });
-    } catch (e) {
-        console.warn('[Atlas] extrusion ombre', e.message);
-        return null;
-    }
-}
-
 function getLayerModelUrl(layer) {
     const s = layer.style;
     if (!s) return null;
@@ -3450,10 +3376,9 @@ async function initMap() {
         if (!evenementMntArrive(e)) return;
         clearTimeout(_tuilesDemTimer);
         // Le cache d'altitude n'a pas à être purgé ici : `recalerRelief` appelle
-        // `Models3D.recomputeAll()`, qui le vide en entrée. Vérifié — l'origine
-        // est toujours posée (à défaut de modèle, sur le centre de la carte) et
-        // la scène three.js est créée inconditionnellement, donc la garde de
-        // `recomputeAll` est franchie et la purge a bien lieu.
+        // `Models3D.recomputeAll()`, qui le vide en entrée. Sans moteur 3D (rien à
+        // peindre, `besoin3D`), la garde de `recomputeAll` n'est pas franchie : le
+        // cache est vide aussi, `elevRaw` ne servant qu'à placer des objets.
         _tuilesDemTimer = setTimeout(() => recalerRelief(0), 600);
     });
 
@@ -14474,11 +14399,13 @@ async function lireReponseDalles(url, maxOctets, lecture) {
 /** Monte une maquette en dalles 3D désignée par l'adresse de son manifeste de grille. Chargé À LA DEMANDE : rien de tout cela sans une scène de dalles. */
 async function monterDallesHote({ id, grille }) {
     const { creerCoucheDalles } = await import('./lib/dalles3d-couche.js?v=20261017a');
+    // three.js se charge à la demande : les dalles en ont besoin, la scène n'a peut-être aucun autre objet 3D. Liaisons LOCALES : celles du module ne se posent qu'à l'activation de `Models3D`.
+    const three = await chargerThree();
     const cle = 'dalles:' + id;
     if (_dallesHote.has(cle)) { _dallesHote.get(cle).retirer(); _dallesHote.delete(cle); }
     const couche = creerCoucheDalles({
-        id, urlGrille: grille, THREE, carte: map, altitudeBase: altitudeBaseDalle, attributionSure, journal: console,
-        creerChargeur: (renderer) => chargeurDalles({ GLTFLoader, MeshoptDecoder, KTX2Loader, renderer, chemin: cheminTranscodeur(import.meta.resolve?.bind(import.meta)) }),
+        id, urlGrille: grille, THREE: three.THREE, carte: map, altitudeBase: altitudeBaseDalle, attributionSure, journal: console,
+        creerChargeur: (renderer) => chargeurDalles({ GLTFLoader: three.GLTFLoader, MeshoptDecoder: three.MeshoptDecoder, KTX2Loader: three.KTX2Loader, renderer, chemin: cheminTranscodeur(import.meta.resolve?.bind(import.meta)) }),
         fetchJson: (u) => lireReponseDalles(u, 2 * 1024 * 1024, (r) => r.json()),
         fetchOctets: (u, max) => lireReponseDalles(u, max, (r) => r.arrayBuffer()),
     });
@@ -17578,6 +17505,7 @@ const A = {
      * Usage : await A.validateBatiShadows()
      */
     async validateBatiShadows() {
+        await Models3D.activer();   // le moteur 3D se charge a la demande
         if (!map || !Models3D.scene) return { ok: false, err: 'map/scene absents' };
         const bati = STATE.layers.find((l) => /bati/i.test(l.id) || /bati/i.test(l.name));
         if (!bati) return { ok: false, err: 'pas de couche bâti' };
@@ -18714,6 +18642,9 @@ async function exporter3dScene(entree) {
     const E = await import('./lib/export-scene3d.js?v=20261102b');
     const opt = E.normaliserOptions(entree);
     if (!map || !Models3D) throw new Error('exportScene3D : la carte n\'est pas prête');
+    // three.js se charge à la demande : l'export lit les modèles par le moteur (`ensureMonumentRoot`) et construit sa scène avec THREE ; une scène sans modèle ni lampe ne l'a pas encore chargé.
+    await Models3D.activer();
+    if (!THREE) throw new Error('exportScene3D : le moteur 3D n\'a pas pu être chargé (three.js indisponible)');
     let bbox = opt.bbox;
     if (!bbox) { const b = map.getBounds(); bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()]; E.normaliserOptions({ bbox }); }
     const ancre = opt.ancre || E.centreDe(bbox);
