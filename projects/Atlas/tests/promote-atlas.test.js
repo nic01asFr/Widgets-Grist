@@ -30,6 +30,7 @@ function bac({ meta = META_OK, sansFichierMoteur = null } = {}) {
   copyFileSync(SCRIPT, (mkdirSync(join(racine, 'scripts')), join(racine, 'scripts', 'promote-atlas.js')));
   ecrire('published/atlas/package.json', JSON.stringify({ version: '9.9.9' }));
   ecrire('projects/Atlas/index_v7.html', PAGE(meta));
+  ecrire('projects/Atlas/index_bi.html', '<!DOCTYPE html><html><head><title>Atlas — carte</title></head><body></body></html>');   // la promotion lit aussi la page maigre du composant BI
   ecrire('projects/Atlas/app_v7.js', "import { x } from './lib/chargement-paresseux.js?v=20261010a';\nimport('./lib/moteur-formulaire.js?v=20261010a');\n");
   ecrire('projects/Atlas/lib/chargement-paresseux.js', 'export const x = 1;\n');
   ecrire('projects/Atlas/lib/moteur-formulaire.js', "export const URL_FEUILLE = new URL('./formulaire-atlas.css?v=20261003h', import.meta.url).href;\n");
