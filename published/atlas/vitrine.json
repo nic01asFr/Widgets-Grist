@@ -495,7 +495,7 @@
                 {
                   "titre": "Du trafic sur vos routes",
                   "image": "cas-trafic.jpg",
-                  "alt": "Des véhicules blancs et orange qui roulent sur les rues de l’IGN autour du Palais Longchamp",
+                  "alt": "Des voitures et des bus en 3D qui roulent sur les rues de l’IGN autour du Palais Longchamp",
                   "legende": "Des véhicules (blanc : voitures, orange : poids lourds) sur les rues importées de l’IGN ; les allées du parc, à droite, restent vides. Trafic simulé.",
                   "texte": "Sur des routes importées, « Animer le trafic » fait rouler voitures et poids lourds, qui respectent les sens uniques et cèdent le passage aux giratoires. Les allées et sentiers restent vides. La densité et les destinations sont des hypothèses : Atlas dit que c’est simulé.",
                   "etiquettes": [
