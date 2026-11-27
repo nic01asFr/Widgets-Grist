@@ -86,3 +86,27 @@ test('plus de 50 000 entités dans une couche : la couche se monte, avec le cons
   assert.match(r.avertissements[0], /50001 entités.*agrégez/);
   assert.deepEqual(diagnostiquerCouche({ id: 'g' }, grosse.slice(0, 50000)).avertissements, []);
 });
+
+test('diagnostic : une couche qui déclare une source de tuiles ou de service, sans Features, est dite (la carte nue ne lit que du GeoJSON)', () => {
+  for (const type of ['xyz', 'wms', 'WMTS', 'wfs', 'pmtiles']) {
+    const r = diagnostiquerCouche({ id: 'fond', source: { type, url: 'https://exemple.test/{z}/{x}/{y}.png' } }, []);
+    assert.equal(r.erreur, null, 'la couche reste montée : seule la parole change');
+    assert.equal(r.avertissements.length, 1, type);
+    assert.match(r.avertissements[0], /non offerte par la carte nue/);
+    assert.match(r.avertissements[0], /setFond/);
+  }
+  assert.equal(diagnostiquerCouche({ id: 'fond', source: { type: 'xyz' } }, undefined).avertissements.length, 1, 'aucune donnée fournie : même avertissement');
+});
+
+test('diagnostic : pas d\'avertissement de source quand la page fournit les Features, ou pour une source qui n\'est pas un service', () => {
+  assert.deepEqual(diagnostiquerCouche({ id: 'a', source: { type: 'xyz' } }, [pt(1, 5, 43)]), { erreur: null, avertissements: [] }, 'des Features sont données : la source déclarée est sans effet');
+  assert.deepEqual(diagnostiquerCouche({ id: 'a', source: { type: 'table' } }, []), { erreur: null, avertissements: [] });
+  assert.deepEqual(diagnostiquerCouche({ id: 'a', source: 'qgis2grist' }, []), { erreur: null, avertissements: [] });
+  assert.deepEqual(diagnostiquerCouche({ id: 'a' }, []), { erreur: null, avertissements: [] });
+});
+
+test('setScene : la couche à source xyz sans données remonte dans _avertissements du retour', async () => {
+  const rt = attacher(carteSimulee());
+  const r = await rt.api.setScene({ layers: [{ id: 'fond', name: 'Fond', geometry_type: 'polygon', source: { type: 'xyz' } }] }, {});
+  assert.ok(r._avertissements && r._avertissements.fond && /non offerte/.test(r._avertissements.fond[0]), JSON.stringify(r));
+});
