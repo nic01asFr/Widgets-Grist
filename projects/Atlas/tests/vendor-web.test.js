@@ -38,9 +38,9 @@ test('la page : après réécriture, plus aucune adresse de CDN ; chaque adresse
 
 test('la page réécrite vise vendor/ pour MapLibre, SunCalc, three.js (et ses extensions), terra-draw, et la feuille de polices locale', () => {
   const apres = html.reecrireHtml(PAGE, manifeste);
-  assert.match(apres, /<script src="\.\/vendor\/maplibre-gl\/maplibre-gl\.js">/);
+  assert.match(apres, /<script(?: defer)? src="\.\/vendor\/maplibre-gl\/maplibre-gl\.js">/);
   assert.match(apres, /<link href="\.\/vendor\/maplibre-gl\/maplibre-gl\.css" rel="stylesheet" \/>/);
-  assert.match(apres, /<script src="\.\/vendor\/suncalc\/suncalc\.js">/);
+  assert.match(apres, /<script(?: defer)? src="\.\/vendor\/suncalc\/suncalc\.js">/);
   assert.match(apres, /"three": "\.\/vendor\/three\/three\.module\.js"/);
   assert.match(apres, /"three\/addons\/": "\.\/vendor\/three\/addons\/"/);
   assert.match(apres, /"terra-draw": "\.\/vendor\/terra-draw\/terra-draw\.module\.js"/);
