@@ -71,6 +71,12 @@ function sourcesChargees() {
   for (const rel of [...HTML.matchAll(/<script[^>]+src="(\.\.\/grist_forms\/[^"?]+)/g)].map((m) => m[1])) {
     fichiers.push(path.join(RACINE, rel));
   }
+  // Le moteur de formulaire se charge A LA DEMANDE (lib/moteur-formulaire.js) : la page ne le déclare plus, la liste de ses fichiers est dans ce module.
+  const moteur = fs.readFileSync(path.join(RACINE, 'lib', 'moteur-formulaire.js'), 'utf8');
+  for (const m of moteur.matchAll(/'((?:shared|runtime)\/[^']+\.js)'/g)) {
+    const f = path.join(RACINE, '..', 'grist_forms', m[1]);
+    if (!fichiers.includes(f)) fichiers.push(f);
+  }
   return fichiers.map((f) => ({ f: path.relative(PROJETS, f).replace(/\\/g, '/'), src: fs.readFileSync(f, 'utf8') }));
 }
 
