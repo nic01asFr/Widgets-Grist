@@ -90,8 +90,6 @@ import { creerDroits, apprendre, categorieTable, configurationEcrivable, posture
 import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=20261031a';
 import { creerAccesDalles } from './lib/dalles3d-acces.js?v=20261031a';
 import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
-import { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } from './lib/export-formats.js?v=20261002f';
-import { lireFichier, natureFichier } from './lib/import-formats.js?v=20261002f';
 import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=20261003g';
 import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=20261002g';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
@@ -253,7 +251,6 @@ import { enTetesOsm, messageRefusOsm, avecReprises, requeteOsm, repliWeb } from 
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
 import { capUtilisable } from './lib/cap-position.js?v=20261010a';
-import { natureJson, messageNature } from './lib/ouvrir-fichier.js?v=20260916a';
 import {
   etageCoteACote,
   legendeAuRas,
@@ -12812,8 +12809,10 @@ function ajouterCoucheGeoJSON(nom, geojson) {
  * une. Un projet Atlas donné ici devenait une couche absurde, sans erreur.
  */
 /** Un GPX, un KML ou un CSV devient une ou plusieurs couches ; ce qui est écarté se dit. */
-function importerFichierFormat(nomFichier, contenu) {
-    const res = lireFichier(nomFichier, contenu);
+/** La décision d'ouverture d'un fichier (lib/ouvrir-fichier.js), chargée au premier fichier ouvert. */
+const decisionFichier = (nom, contenu) => import('./lib/ouvrir-fichier.js?v=20260916a').then((m) => m.decisionFichier(nom, contenu));
+
+function importerCouches(res) {
     let total = 0;
     for (const c of res.couches) total += ajouterCoucheGeoJSON(c.nom, c.geojson);
     if (!total) { showToast('Rien à importer dans ce fichier', 'warning'); return; }
@@ -12824,13 +12823,11 @@ function importerFichierFormat(nomFichier, contenu) {
 async function processFile(file) {
     showLoading('Lecture du fichier…');
     try {
-        const contenu = await file.text();
-        if (natureFichier(file.name, contenu)) { hideLoading(); importerFichierFormat(file.name, contenu); return; }
-        const obj = JSON.parse(contenu);
-        const nature = natureJson(obj);
+        const d = await decisionFichier(file.name, await file.text());
         hideLoading();
-        if (nature !== 'geojson') { showToast(messageNature(nature), nature ? 'info' : 'error'); return; }
-        const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), obj);
+        if (d.action === 'couches') { importerCouches(d); return; }
+        if (d.action !== 'geojson') { showToast(d.message, d.niveau); return; }
+        const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), d.obj);
         if (n) showToast(`${n} élément${n > 1 ? 's' : ''} importé${n > 1 ? 's' : ''}`, 'success');
     } catch (e) { hideLoading(); showToast('Fichier illisible : ' + e.message, 'error'); }
 }
@@ -14821,16 +14818,14 @@ function loadProject() {
         inp.value = '';
         if (!file) return;
         try {
-            const contenu = await file.text();
             // « Ouvrir » reconnaît aussi un GPX, un KML ou un CSV : ils s'ajoutent comme couches.
-            if (natureFichier(file.name, contenu)) { importerFichierFormat(file.name, contenu); return; }
-            const obj = JSON.parse(contenu);
-            const nature = natureJson(obj);
-            if (nature === 'projet') await restoreProject(obj);
-            else if (nature === 'geojson') {
-                const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), obj);
+            const d = await decisionFichier(file.name, await file.text());
+            if (d.action === 'couches') { importerCouches(d); return; }
+            if (d.action === 'projet') await restoreProject(d.obj);
+            else if (d.action === 'geojson') {
+                const n = ajouterCoucheGeoJSON(file.name.replace(/\.[^.]+$/, ''), d.obj);
                 if (n) showToast(`${n} élément${n > 1 ? 's' : ''} ajouté${n > 1 ? 's' : ''} comme couche`, 'success');
-            } else showToast(messageNature(nature), nature ? 'info' : 'error');
+            } else showToast(d.message, d.niveau);
         } catch (err) {
             showToast('Fichier illisible : ' + err.message, 'error');
         }
@@ -14858,7 +14853,7 @@ function couchesExportables() {
  * n'a rien à exporter : ses entités sont ailleurs. Un fichier vide est un export **réussi** jusqu'à ce qu'on l'ouvre ;
  * mieux vaut ne rien produire et dire pourquoi.
  */
-function exporterCouches(format, couches) {
+async function exporterCouches(format, couches) {
     const { absentes } = couchesExportables();
     if (!couches.length) {
         showToast(absentes.some((l) => l._distant)
@@ -14868,6 +14863,7 @@ function exporterCouches(format, couches) {
     }
     const base = couches.length === 1 ? couches[0].name : (STATE.projectName || STATE.location?.name || 'atlas_export');
     let blob, ext, libelle, note = '';
+    const { nomDeFichier, versGeoJSON, versCsv, versKml, versGpx } = await import('./lib/export-formats.js?v=20261002f');
     if (format === 'geojson') {
         blob = new Blob([JSON.stringify(versGeoJSON(couches), null, 2)], { type: 'application/geo+json' });
         ext = 'geojson'; libelle = 'GeoJSON';
@@ -14896,8 +14892,9 @@ function exporterImageCarte() {
     if (!map) return;
     // Le tampon de dessin n'est valable que pendant le rendu : on le lit dans le même tour.
     map.once('render', () => {
-        map.getCanvas().toBlob((blob) => {
+        map.getCanvas().toBlob(async (blob) => {
             if (!blob) { showToast('Image impossible à produire sur cet appareil', 'error'); return; }
+            const { nomDeFichier } = await import('./lib/export-formats.js?v=20261002f');
             telecharger(blob, nomDeFichier(STATE.projectName || STATE.location?.name || 'atlas_carte', 'png'));
             showToast('Image de la carte (PNG)', 'success');
         }, 'image/png');
