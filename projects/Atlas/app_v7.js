@@ -13823,16 +13823,24 @@ function allumerOngletMobile(module) {
 }
 
 /** La feuille des modules que la barre du bas ne peut pas porter. */
+/** La feuille « Plus » est-elle ouverte ? */
+const feuillePlusOuverte = () => { const f = $('mobile-plus'); return !!f && !f.hidden; };
+
+/** La referme. L'onglet « Plus » ne reste pas actif : il ouvre, il ne sélectionne pas. */
+function fermerFeuillePlus() {
+    const f = $('mobile-plus');
+    if (!f || f.hidden) return;
+    f.hidden = true;
+    allumerOngletMobile(STATE.currentModule);
+}
+
 function ouvrirFeuilleModules() {
     const f = $('mobile-plus');
     if (!f) return;
     f.hidden = false;
-    const fermer = () => {
-        f.hidden = true;
-        // L'onglet « Plus » ne reste pas actif : il ouvre, il ne selectionne pas.
-        allumerOngletMobile(STATE.currentModule);
-    };
+    const fermer = fermerFeuillePlus;
     f.querySelector('.mp-fond').onclick = fermer;
+    f.querySelector('[data-fermer-plus]').onclick = fermer;
     f.querySelectorAll('[data-module-plus]').forEach((b) => {
         // En lecture, `openModule` refuse ces modules avec un message. Les
         // laisser visibles offrirait quatre boutons qui disent tous non —
@@ -13861,6 +13869,8 @@ function wireMobileNav() {
             // Toucher l'onglet deja ouvert referme la feuille : c'est ce qui
             // remplace l'ancien onglet « Carte », sous le doigt plutot qu'a
             // l'autre bout de la barre — et sous la feuille qu'il fallait ecarter.
+            // Retoucher « Plus » alors que sa feuille est ouverte la referme (la barre reste visible dessous).
+            if (tab === 'plus' && feuillePlusOuverte()) { fermerFeuillePlus(); return; }
             const F = await chargerFeuille();
             const actif = document.querySelector('#mobile-nav [data-mobile-tab].active')?.dataset.mobileTab;
             if (tab !== 'plus' && F.ancrageApresOnglet({

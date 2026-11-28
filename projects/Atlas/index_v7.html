@@ -1811,7 +1811,8 @@
            (`pastilleRecitRequise`, lib/view-mode.js). */
 
         /* Feuille des modules supplémentaires — mobile seulement. */
-        #mobile-plus { position: fixed; inset: 0; z-index: 60; }
+        /* La barre du bas reste visible et touchable sous la feuille : on ferme en retouchant « Plus », ou par la croix. */
+        #mobile-plus { position: fixed; inset: 0 0 calc(56px + env(safe-area-inset-bottom, 0px)) 0; z-index: 60; }
         #mobile-plus[hidden] { display: none; }
         #mobile-plus .mp-fond { position: absolute; inset: 0; background: rgba(31,27,20,.38); }
         #mobile-plus .mp-feuille {
@@ -1820,12 +1821,19 @@
             padding: 14px 12px calc(18px + env(safe-area-inset-bottom, 0px));
             box-shadow: 0 -8px 30px rgba(0,0,0,.18);
             display: flex; flex-direction: column; gap: 2px;
+            max-height: calc(100dvh - 56px - env(safe-area-inset-bottom, 0px) - 64px); overflow-y: auto;
         }
         #mobile-plus .mp-groupe { padding: 14px 18px 4px; font-size: 11px; letter-spacing: .08em;
             text-transform: uppercase; color: var(--muted); }
         .mp-titre {
             font-family: var(--serif); font-size: 15px; color: var(--ink);
             padding: 2px 8px 10px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        /* Croix de fermeture : 44 px de côté au moins, pour le doigt. */
+        #mobile-plus .mp-feuille .mp-fermer {
+            flex: none; width: 44px; height: 44px; padding: 0; margin: -8px -4px -8px 0;
+            justify-content: center; border-radius: 50%; color: var(--muted);
         }
         #mobile-plus .mp-feuille button {
             display: flex; align-items: center; gap: 12px;
@@ -2271,7 +2279,9 @@
     <div id="mobile-plus" hidden>
         <div class="mp-fond"></div>
         <div class="mp-feuille" role="dialog" aria-label="Autres réglages">
-            <div class="mp-titre">Plus</div>
+            <div class="mp-titre"><span>Plus</span>
+                <button type="button" class="mp-fermer" data-fermer-plus aria-label="Fermer"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+            </div>
             <div class="mp-groupe">Modules</div>
             <button type="button" data-module-plus="lieu"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg><span>Lieu</span></button>
             <button type="button" data-module-plus="soleil"><svg class="ic-trait" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg><span>Soleil</span></button>
