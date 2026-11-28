@@ -245,7 +245,7 @@ export function htmlCouchesPgPanneau(items, { icone = () => '' } = {}) {
       <span class="layer-swatch" style="background:${echapper(c.couleur || '#d62728')}"></span>
       <div class="layer-info">
         <div class="layer-name" title="${nom}">${nom}</div>
-        <div class="layer-meta"><span>${echapper(c.etat || '')}</span><span style="background:var(--muted);color:#fff;padding:1px 4px;border-radius:3px;font-size:8.5px" title="Lue directement dans PostgreSQL${c.origine ? ' (' + echapper(c.origine) + ')' : ''}, relue à chaque déplacement de la carte">PostgreSQL</span>${c.enregistree ? '<span style="background:var(--green);color:#fff;padding:1px 4px;border-radius:3px;font-size:8.5px" title="Gardée dans le document : elle reviendra à la prochaine ouverture">gardée</span>' : ''}</div>
+        <div class="layer-meta"><span>${echapper(c.etat || '')}</span><span style="background:var(--muted);color:#fff;padding:1px 4px;border-radius:3px;font-size:8.5px" title="Lue directement dans PostgreSQL${c.origine ? ' (' + echapper(c.origine) + ')' : ''}, relue à chaque déplacement de la carte">PostgreSQL${c.mode === 'tuiles' ? ' · tuiles' : ''}</span>${c.enregistree ? '<span style="background:var(--green);color:#fff;padding:1px 4px;border-radius:3px;font-size:8.5px" title="Gardée dans le document : elle reviendra à la prochaine ouverture">gardée</span>' : ''}</div>
       </div>
       <button class="layer-act layer-act-zoom" onclick="A.pgZoom('${id}', event)" title="Zoomer sur ce qui est chargé" aria-label="Zoomer sur ${nom}">${icone('cible')}</button>
       <button class="layer-act" onclick="A.pgMenu('${id}', event)" title="Autres actions" aria-label="Autres actions pour ${nom}" aria-haspopup="menu">${icone('plusieurs')}</button>

@@ -245,6 +245,12 @@ describe('vue-pg-rendu — la section « Base PostgreSQL » du panneau Couches',
     assert.equal((h.match(/>PostgreSQL</g) || []).length, 2, 'chaque ligne dit d’où elle vient');
   });
 
+  it('une couche en tuiles le dit dans son badge', () => {
+    const h = htmlCouchesPgPanneau([{ ...items[0], mode: 'tuiles' }, { ...items[1], mode: 'geojson' }], { icone });
+    assert.equal((h.match(/PostgreSQL · tuiles</g) || []).length, 1);
+    assert.equal((h.match(/>PostgreSQL</g) || []).length, 1, 'l’autre reste « PostgreSQL »');
+  });
+
   it('un nom, une origine ou une couleur hostiles ne sortent jamais du texte', () => {
     const h = htmlCouchesPgPanneau([{ id: "a'b", libelle: '<img src=x onerror=alert(1)>', couleur: '"><script>x</script>', visible: true, etat: '<b>', origine: '<i>', enregistree: false }], { icone });
     assert.doesNotMatch(h, /<img src=x|<script>|<b>|<i>/);

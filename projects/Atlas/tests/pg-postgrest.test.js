@@ -414,3 +414,66 @@ describe('pg-postgrest — une table en FeatureCollection (zone)', () => {
     await assert.rejects(client(monde()).commande('pg_gateway_inconnue', {}), (e) => e.code === 'commande_inconnue');
   });
 });
+
+describe('pg-postgrest — le jeton et l’adresse pour les couches en tuiles', () => {
+  it('les capacités du contrat sont rendues à la connexion', async () => {
+    const m = monde();
+    m.contrat = { ...m.contrat, capacites: ['tables', 'colonnes', 'zone', 'tuiles'] };
+    const info = await client(m).connexions();
+    assert.deepEqual(info.capacites, ['tables', 'colonnes', 'zone', 'tuiles']);
+  });
+
+  it('`tuiles()` garantit un jeton de lecture et rend l’adresse de PostgREST', async () => {
+    const m = monde();
+    const c = client(m);
+    assert.equal(c.jetonCourant(), null, 'pas de jeton avant d’en avoir demandé un');
+    const r = await c.tuiles();
+    assert.equal(r.racine, PG);
+    assert.equal(c.jetonCourant(), 'jeton1l');
+    assert.deepEqual(m.emis.map((e) => e.ecriture), [false], 'jamais un jeton d’écriture pour lire des tuiles');
+    assert.equal(appelsPg(m).length, 0, 'aucune requête à PostgREST : la carte lira elle-même les tuiles');
+  });
+
+  it('le jeton courant se lit de façon synchrone tant qu’il est valable, plus après sa marge', async () => {
+    const m = monde({ dureeJeton: 120 });
+    const c = client(m);
+    await c.tuiles();
+    m.horloge += 120_000 - MARGE_JETON_MS - 1;
+    assert.equal(c.jetonCourant(), 'jeton1l');
+    m.horloge += 2;
+    assert.equal(c.jetonCourant(), null, 'dans la marge : on ne le présente plus');
+    assert.equal(await c.garantirJeton(), 'jeton2l', 'garantirJeton le renouvelle');
+    assert.equal(c.jetonCourant(), 'jeton2l');
+  });
+
+  it('`renouveler()` demande un nouveau jeton tout de suite (après un 401)', async () => {
+    const m = monde();
+    const c = client(m);
+    await c.tuiles();
+    assert.equal(await c.renouveler(), 'jeton2l');
+    assert.equal(c.jetonCourant(), 'jeton2l');
+    assert.equal(m.emis.length, 2);
+  });
+
+  it('une adresse de PostgREST non sûre est refusée avant tout jeton', async () => {
+    const m = monde({ annonce: { echangeur: true, postgrest: 'http://pg.exemple.fr' } });
+    await assert.rejects(client(m).tuiles(), (e) => e.code === 'adresse_refusee' && e.cote === 'requete');
+    assert.equal(m.emis.length, 0);
+  });
+
+  it('un échangeur qui n’annonce pas PostgREST le dit', async () => {
+    const m = monde({ annonce: { echangeur: true, postgrest: null } });
+    const c = creerClientPostgrest({ url: ECH, acces: acces(), annonce: m.annonce, fetchImpl: m.fetch, maintenant: () => m.horloge });
+    await assert.rejects(c.tuiles(), (e) => e.code === 'postgrest_inconnu');
+  });
+
+  it('le client automatique ne propose les tuiles que pour un échangeur', async () => {
+    const m = monde();
+    const a = creerClientAuto({ url: ECH, acces: acces(), fetchImpl: m.fetch, maintenant: () => m.horloge });
+    const t = await a.fournisseurTuiles();
+    assert.equal(typeof t.tuiles, 'function');
+    const passerelle = async (url) => (url.endsWith('/v1/echangeur') ? json({ detail: 'Not Found' }, 404) : json({ connexions: [] }));
+    const b = creerClientAuto({ url: 'https://pg.exemple.fr', acces: { entetes: () => ({}), apres401: async () => false }, fetchImpl: passerelle });
+    assert.equal(await b.fournisseurTuiles(), null, 'une passerelle /v1/ ne sert pas de tuiles');
+  });
+});

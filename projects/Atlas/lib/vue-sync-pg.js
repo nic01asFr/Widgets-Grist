@@ -18,7 +18,7 @@ import { echapper } from './html.js?v=20261010a';
 import { NATURES_CONFLIT, planifier, resumer } from './pg-sync.js?v=20261109a';
 import { comparer, appliquer, simulerPoussee, ErreurSync } from './pg-sync-session.js?v=20261109f';
 import { texteErreur } from './pg-passerelle.js?v=20261122b';
-import { creerClientAuto } from './pg-postgrest.js?v=20261122b';
+import { creerClientAuto } from './pg-postgrest.js?v=20261128a';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 
 const nombre = (n) => Number(n).toLocaleString('fr-FR').replace(/ | /g, ' ');

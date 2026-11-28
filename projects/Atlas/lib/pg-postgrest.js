@@ -522,6 +522,7 @@ export function creerClientPostgrest({ url, acces, annonce = null, fetchImpl = (
         limite_max: Number.isInteger(c.limite_max) ? c.limite_max : null,
         avertissements: [],
         contrat: c.contrat,
+        capacites: Array.isArray(c.capacites) ? c.capacites : [],
         postgresql: c.postgresql,
         postgis: c.postgis,
       };
@@ -600,6 +601,21 @@ export function creerClientPostgrest({ url, acces, annonce = null, fetchImpl = (
     connexions: () => commande('pg_gateway_connexions'),
     schema: (connexion, rafraichir = false) => commande('pg_gateway_schema', { connexion, ...(rafraichir ? { rafraichir: true } : {}) }),
     couche: (e) => commande('pg_gateway_couche', e),
+    /**
+     * Pour les couches en TUILES (`pg-tuiles.js`) : MapLibre lit lui-même les tuiles, l'en-tête du jeton est posé de façon SYNCHRONE par la carte.
+     * `tuiles()` garantit un jeton de lecture et rend l'adresse de PostgREST (admise : https, ou localhost) ; `jetonCourant()` rend le jeton tant qu'il est valable,
+     * `garantirJeton()` le renouvelle avant son expiration, `renouveler()` en demande un nouveau tout de suite (après un 401).
+     */
+    async tuiles() {
+      const racine = await adressePg();
+      const refus = adresseAdmisePg(racine);
+      if (refus) throw new ErreurPasserelle(`Adresse de PostgREST refusée (${refus}).`, { code: 'adresse_refusee', cote: 'requete' });
+      await jeton('lecture');
+      return { racine };
+    },
+    jetonCourant(niveau = 'lecture') { const j = jetons.get(niveau); return j && maintenant() < j.expire ? j.valeur : null; },
+    garantirJeton: (niveau = 'lecture') => jeton(niveau),
+    async renouveler(niveau = 'lecture') { jetons.delete(niveau); return jeton(niveau); },
     /** Pour les tests et le diagnostic : ce que l'échangeur a annoncé. */
     adressePostgrest: adressePg,
     /** Oublier les jetons et le catalogue (changement de personne, d'adresse). */
@@ -638,6 +654,8 @@ export function creerClientAuto({ url, acces, fetchImpl = (...a) => fetch(...a),
     connexions: async () => (await client()).connexions(),
     schema: async (connexion, rafraichir = false) => (await client()).schema(connexion, rafraichir),
     couche: async (e) => (await client()).couche(e),
+    /** Le client des tuiles (jeton, adresse) si l'adresse est un échangeur ; `null` pour une passerelle `/v1/`. */
+    fournisseurTuiles: async () => { const c = await client(); return c.mode === 'postgrest' ? c : null; },
     /** `'postgrest'`, `'passerelle'`, ou `null` tant qu'aucune commande n'a été envoyée. */
     mode: () => (choisi ? (choisi.mode === 'postgrest' ? 'postgrest' : 'passerelle') : null),
   };

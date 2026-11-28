@@ -25,10 +25,11 @@ import { mettreAPlat } from './vue-import.js?v=20260911a';
 import { creerAccesPg } from './pg-acces.js?v=20261109a';
 import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acces-grist.js?v=20261122b';
 import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
-import { creerClientAuto } from './pg-postgrest.js?v=20261122b';
+import { creerClientAuto } from './pg-postgrest.js?v=20261128a';
 import { lireAdresseDocument, demarrage, adresseAEnregistrer } from './pg-adresse.js?v=20261128a';
 import { planImportPg } from './pg-import.js?v=20261109a';
-import { creerCoucheDirecte, libelleEtat, empriseEntites } from './pg-direct.js?v=20261128a';
+import { creerCoucheDirecte, libelleEtat, empriseEntites } from './pg-direct.js?v=20261128b';
+import { creerCoucheTuiles, modeDe } from './pg-tuiles.js?v=20261128b';
 import { ouvrirEdition } from './vue-edition-pg.js?v=20261122b';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109f';
@@ -37,7 +38,7 @@ import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109f';
 import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122c';
 import {
   listerTables, htmlBase, htmlDirectes, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, nombre,
-} from './vue-pg-rendu.js?v=20261128c';
+} from './vue-pg-rendu.js?v=20261128d';
 
 // Le rendu pur vit dans `vue-pg-rendu.js` ; ces noms restent exportés d'ici pour qui les importait.
 export { listerTables, htmlTables, htmlApercu, htmlDirectes };
@@ -138,7 +139,7 @@ const noterChangement = () => { if (hoteCourant && typeof hoteCourant.rafraichir
  */
 export function listerCouchesPg() {
   return [...directes.entries()].map(([id, d]) => ({
-    id, libelle: d.libelle, couleur: d.couleur, visible: d.visible, etat: d.visible ? d.etat : 'masquée', enregistree: d.gristId != null, origine: d.url ? origineLisible(d.url) : '',
+    id, libelle: d.libelle, couleur: d.couleur, visible: d.visible, etat: d.visible ? d.etat : 'masquée', enregistree: d.gristId != null, origine: d.url ? origineLisible(d.url) : '', mode: d.mode || 'geojson',
   }));
 }
 /** L'œil d'une couche PostgreSQL du panneau Couches : montrer ou masquer. */
@@ -154,6 +155,11 @@ export function zoomCouchePg(id) {
   const d = directes.get(id);
   if (!d || !hoteCourant || !hoteCourant.carte) return false;
   const e = empriseEntites(d.couche.entites());
+  if (!e) {
+    // Une couche en tuiles ne charge rien hors de son zoom : on revient à la dernière vue où elle montrait quelque chose.
+    const v = typeof d.couche.derniereVue === 'function' ? d.couche.derniereVue() : null;
+    if (v && typeof hoteCourant.carte.easeTo === 'function') { hoteCourant.carte.easeTo({ center: v.centre, zoom: v.zoom }); return true; }
+  }
   if (!e) { hoteCourant.annoncer(`« ${d.libelle} » : aucune entité chargée à cadrer. Déplacez ou zoomez la carte sur la zone.`, 'warning'); return false; }
   hoteCourant.carte.fitBounds([[e[0], e[1]], [e[2], e[3]]], { padding: 60, maxZoom: 17 });
   return true;
@@ -193,6 +199,24 @@ function creerAccesPage(doc, ecriture, confirmer, dansGrist) {
     signaler: (t) => { if (hoteCourant && hoteCourant.annoncer) hoteCourant.annoncer(t, 'error'); },
   }) : null;
   return creerAccesAuto({ jeton, grist });
+}
+
+/**
+ * Ce que le mode tuiles demande au client : l'adresse de PostgREST et le jeton (lu de façon synchrone par la carte). Résolu à la demande : le client de la
+ * page est celui d'une adresse qui peut être une passerelle `/v1/`, qui ne sert pas de tuiles (erreur dite, pas de repli silencieux).
+ */
+function clientDeTuiles(clientDirect) {
+  let reel = null;
+  return {
+    async tuiles() {
+      reel = typeof clientDirect.fournisseurTuiles === 'function' ? await clientDirect.fournisseurTuiles() : null;
+      if (!reel) throw new Error('Cette adresse n’est pas un échangeur : elle ne sert pas de tuiles.');
+      return reel.tuiles();
+    },
+    jetonCourant: () => (reel ? reel.jetonCourant() : null),
+    garantirJeton: () => (reel ? reel.garantirJeton() : Promise.resolve(null)),
+    renouveler: () => (reel ? reel.renouveler() : Promise.resolve(null)),
+  };
 }
 
 /**
@@ -337,13 +361,30 @@ export async function ouvrirImportPg(hote) {
     const id = idDirecte(connexion, schema, table);
     if (directes.has(id)) { hote.annoncer('Cette table est déjà sur la carte.', 'warning'); return null; }
     const entree = { couleur, url, gristId, client: clientDirect, libelle: `${schema}.${table}`, etat: 'lecture de la zone visible…', couche: null, visible: true };
-    entree.couche = creerCoucheDirecte({
-      carte: hote.carte, client: clientDirect, id, couleur, params: { connexion, schema, table },
-      surEtat: (e) => { if (entree.visible) entree.etat = libelleEtat(e); if (e.phase === 'ok' && e.tronque) hote.annoncer(`${entree.libelle} : résultat tronqué, zoomez.`, 'warning'); dessinerDirectes(); },
-    });
+    const surEtat = (e) => {
+      if (entree.visible) entree.etat = libelleEtat(e);
+      if (e.phase === 'ok' && e.tronque) hote.annoncer(`${entree.libelle} : résultat tronqué, zoomez.`, 'warning');
+      if (e.phase === 'erreur' && e.erreur) hote.annoncer(`${entree.libelle} : ${e.erreur}`, 'error');
+      dessinerDirectes();
+    };
+    // Le mode suit la TAILLE de la table : une grande table (contrat à jour, PostGIS 3.1 ou plus) se lit en tuiles PBF, les autres en GeoJSON.
+    const info = etat.schema ? listerTables(etat.schema, '', etat.modifiables).find((x) => x.schema === schema && x.table === table) : null;
+    const mode = modeDe({ lignesEstimees: info ? info.lignes : null, capacites: etat.capacites || [] });
+    if (mode === 'tuiles') {
+      entree.couche = creerCoucheTuiles({
+        carte: hote.carte, client: clientDeTuiles(clientDirect), id, couleur, params: { connexion, schema, table }, lignesEstimees: info.lignes, surEtat,
+      });
+    } else {
+      entree.couche = creerCoucheDirecte({ carte: hote.carte, client: clientDirect, id, couleur, params: { connexion, schema, table }, surEtat });
+    }
+    entree.mode = mode;
     directes.set(id, entree);
     dessinerDirectes();
-    entree.couche.demarrer();
+    Promise.resolve(entree.couche.demarrer()).catch((e) => {
+      entree.etat = texteErreur(e);
+      hote.annoncer(`${entree.libelle} : ${texteErreur(e)}`, 'error');
+      dessinerDirectes();
+    });
     return { id, entree };
   }
   async function garder(id) {
@@ -483,6 +524,7 @@ export async function ouvrirImportPg(hote) {
       const info = await client.connexions();
       etat.connexions = info.connexions;
       etat.limiteMax = Number.isInteger(info.limite_max) && info.limite_max > 0 ? info.limite_max : null;
+      etat.capacites = Array.isArray(info.capacites) ? info.capacites : [];
       (info.avertissements || []).forEach((a) => hote.annoncer(a, 'warning'));
       etat.modeAcces = acces.mode ? acces.mode(saisie) : null;
       if (!info.connexions.length) {

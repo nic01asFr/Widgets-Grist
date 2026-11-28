@@ -74,6 +74,7 @@ export function libelleEtat(etat) {
   if (etat.phase === 'lecture') return 'lecture de la zone visible…';
   if (etat.phase === 'erreur') return etat.erreur;
   if (etat.phase === 'ok') {
+    if (etat.message) return etat.message; // le mode tuiles dit lui-même ce qu'il montre (zoom minimal, entités affichées)
     const n = `${Number(etat.nb).toLocaleString('fr-FR')} entité${etat.nb > 1 ? 's' : ''}`;
     return etat.tronque ? `${n} (tronqué : zoomez)` : n;
   }
