@@ -477,3 +477,36 @@ describe('pg-postgrest — le jeton et l’adresse pour les couches en tuiles', 
     assert.equal(await b.fournisseurTuiles(), null, 'une passerelle /v1/ ne sert pas de tuiles');
   });
 });
+
+describe('pg-postgrest — les colonnes et les statistiques d’une grosse table', () => {
+  it('les statistiques demandent la base, par `/rpc/stats`, avec les champs voulus', async () => {
+    const m = monde();
+    const normal = m.fetch;
+    const vus = [];
+    m.fetch = async (url, o = {}) => {
+      if (url.endsWith('/rpc/stats')) { vus.push(JSON.parse(o.body)); return json({ total: 6, colonnes: { population: { min: 0, max: 8900, nuls: 0, valeurs_completes: false } } }); }
+      return normal(url, o);
+    };
+    const c = creerClientPostgrest({ url: ECH, acces: acces(), annonce: m.annonce, fetchImpl: m.fetch, maintenant: () => m.horloge });
+    const st = await c.stats('metier', 'zones', ['population']);
+    assert.equal(st.total, 6);
+    assert.deepEqual(vus[0], { schema_nom: 'metier', table_nom: 'zones', colonnes: ['population'] });
+    await c.stats('metier', 'zones');
+    assert.deepEqual(vus[1], { schema_nom: 'metier', table_nom: 'zones' }, 'sans liste : tous les champs, la base décide');
+  });
+
+  it('une erreur de la base sur les statistiques dit son côté', async () => {
+    const m = monde();
+    const normal = m.fetch;
+    m.fetch = async (url, o = {}) => (url.endsWith('/rpc/stats') ? json({ code: '22023', message: 'colonne(s) inconnue(s) de metier.zones : fantome' }, 400) : normal(url, o));
+    const c = creerClientPostgrest({ url: ECH, acces: acces(), annonce: m.annonce, fetchImpl: m.fetch, maintenant: () => m.horloge });
+    await assert.rejects(c.stats('metier', 'zones', ['fantome']), (e) => e.code === '22023' && e.cote === 'requete' && /fantome/.test(e.message));
+  });
+
+  it('les colonnes d’une table se lisent par le client des tuiles', async () => {
+    const m = monde();
+    const c = client(m);
+    const cols = await c.colonnes('metier', 'batiment');
+    assert.deepEqual(cols.map((x) => x.nom), ['id', 'nom', 'hauteur', 'geom']);
+  });
+});

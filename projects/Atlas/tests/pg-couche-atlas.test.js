@@ -1,7 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { cleApparence, typeDepuisCatalogue, typeDominant, identifiantsCoucheAtlas } from '../lib/pg-couche-atlas.js';
+import {
+  cleApparence, typeDepuisCatalogue, typeDominant, identifiantsCoucheAtlas, valeursDepuisStats, bornesDepuisStats, champsDepuisColonnes,
+} from '../lib/pg-couche-atlas.js';
 import { creerCoucheDirecte } from '../lib/pg-direct.js';
 
 const f = (type, coordinates = [0, 0]) => ({ type: 'Feature', geometry: { type, coordinates }, properties: {} });
@@ -122,6 +124,13 @@ describe('garde-fous du branchement dans l’application', () => {
     assert.match(corps, /_pgLive/);
   });
 
+  it('le projet (fichier téléchargé, copie locale du navigateur) ne contient jamais les entités d’une couche PostgreSQL', () => {
+    const debutProjet = app.indexOf('function buildProject');
+    const projet = app.slice(debutProjet, app.indexOf('\nfunction saveProject', debutProjet));
+    assert.ok(debutProjet > 0);
+    assert.match(projet, /STATE\.layers\.filter\(\(l\) => !l\._pgLive\)/, 'les couches PostgreSQL sont écartées avant la sérialisation');
+  });
+
   it('supprimer la couche dans Atlas arrête ses lectures', () => {
     assert.match(app, /if \(l\._pgLive && STATE\.pgVue\) STATE\.pgVue\.retirerCoucheParAtlas\(l\.id\)/);
   });
@@ -131,5 +140,73 @@ describe('garde-fous du branchement dans l’application', () => {
     const couche = { id: 'pg-x', manifestLayerId: 'pg:https://a.exemple.fr:base:metier.zones', _pgLive: {}, source: 'postgresql' };
     assert.equal(clePrefsCouche(couche), 'pg:https://a.exemple.fr:base:metier.zones');
     assert.equal(ligneInventaireRequise(couche), false, 'pas de ligne d’inventaire (donc rien dans Maquette_Layers)');
+  });
+});
+
+describe('pg-couche-atlas — les statistiques de la base à la place des entités', () => {
+  it('les valeurs distinctes : au format de la symbologie, la plus fréquente d’abord, en texte', () => {
+    const stat = { valeurs_completes: true, valeurs: [{ valeur: '5', n: 55771 }, { valeur: '7', n: 55662 }, { valeur: '0', n: 28072 }] };
+    assert.deepEqual(valeursDepuisStats(stat), [{ value: '5', count: 55771 }, { value: '7', count: 55662 }, { value: '0', count: 28072 }]);
+    assert.equal(valeursDepuisStats(stat, 2).length, 2, 'le plafond de la symbologie est respecté');
+  });
+
+  it('jamais une liste coupée présentée comme complète : trop de valeurs distinctes, rien', () => {
+    assert.equal(valeursDepuisStats({ valeurs_completes: false, distinctes: 99327 }), null);
+    assert.equal(valeursDepuisStats({ valeurs: [{ valeur: 'a', n: 1 }] }), null, 'sans la garantie « complètes », on ne s’en sert pas');
+    assert.equal(valeursDepuisStats(undefined), null);
+    assert.equal(valeursDepuisStats(null), null);
+  });
+
+  it('les bornes numériques et le nombre de valeurs non nulles', () => {
+    assert.deepEqual(bornesDepuisStats({ min: 0.01, max: 1000, nuls: 10 }, 500000), { min: 0.01, max: 1000, count: 499990 });
+    assert.deepEqual(bornesDepuisStats({ min: '8', max: '12.5', nuls: 0 }, 2), { min: 8, max: 12.5, count: 2 }, 'des nombres écrits en texte sont lus');
+  });
+
+  it('pas de bornes quand il n’y en a pas : texte, table vide, valeur non finie', () => {
+    assert.equal(bornesDepuisStats({ nuls: 0, distinctes: 3 }, 10), null, 'un champ texte n’a ni min ni max');
+    assert.equal(bornesDepuisStats({ min: null, max: null, nuls: 0 }, 0), null, 'table vide');
+    assert.equal(bornesDepuisStats({ min: 'abc', max: 'xyz' }, 10), null);
+    assert.equal(bornesDepuisStats(undefined, 10), null);
+  });
+
+  it('une borne à zéro est une borne (pas une absence)', () => {
+    assert.deepEqual(bornesDepuisStats({ min: 0, max: 9, nuls: 0 }, 5), { min: 0, max: 9, count: 5 });
+  });
+
+  it('les champs d’une symbologie : tout sauf la géométrie, avec le type Grist qui fait autorité', () => {
+    const colonnes = [{ nom: 'id', type: 'integer' }, { nom: 'nom', type: 'text' }, { nom: 'geom', type: 'geometry(Point,4326)', geometrie: true }, { nom: 'valeur', type: 'numeric(8,2)' }];
+    const typeGrist = (t) => (/^(integer|numeric)/.test(t) ? 'Numeric' : 'Text');
+    assert.deepEqual(champsDepuisColonnes(colonnes, typeGrist), [
+      { name: 'id', label: 'id', gType: 'Numeric' }, { name: 'nom', label: 'nom', gType: 'Text' }, { name: 'valeur', label: 'valeur', gType: 'Numeric' },
+    ]);
+    assert.deepEqual(champsDepuisColonnes(undefined, typeGrist), []);
+  });
+});
+
+describe('garde-fous du branchement d’une grosse table dans l’application', () => {
+  const app = readFileSync(new URL('../app_v7.js', import.meta.url), 'utf8');
+  const debut = app.indexOf('function creerRenduTuilesAtlas');
+  const corps = app.slice(debut, app.indexOf('\nfunction renderLayersPanelLecture', debut));
+
+  it('une couche en tuiles est une couche DISTANTE (Atlas ne détient pas ses entités) portant une clé d’apparence, sans écriture', () => {
+    assert.ok(debut > 0);
+    assert.match(corps, /layer\._distant = true/);
+    assert.match(corps, /layer\.manifestLayerId = cle/);
+    assert.match(corps, /layer\._pgLive = /);
+    assert.doesNotMatch(corps, /saveLayerToGrist|Maquette_Layers|AddRecord|applyUserActions/);
+  });
+
+  it('elle s’ajoute à la carte comme source VECTORIELLE, et seules les couches de style dont la source est une couche en tuiles reçoivent le nom de la couche de tuile', () => {
+    assert.match(app, /if \(layer\._tuilesPg\) return addTuilesPgToMap\(layer\)/);
+    assert.match(app, /type: 'vector', tiles: \[layer\._tuilesPg\.gabarit\]/);
+    const enveloppe = app.slice(app.indexOf('function installerSourceLayerPg'), app.indexOf('function addTuilesPgToMap'));
+    assert.match(enveloppe, /STATE\.layers\.find\(\(l\) => l\._tuilesPg && l\.id === spec\.source\)/, 'une spécification sans cette source passe inchangée');
+    assert.match(enveloppe, /if \(!c\) return ajouter\(spec, avant\)/);
+    assert.match(enveloppe, /'source-layer': c\._tuilesPg\.table/);
+  });
+
+  it('les classes et les catégories viennent des statistiques de la base', () => {
+    assert.match(app, /valeursDepuisStats\(layer\?\._stats\?\.\[field\], max\)/);
+    assert.match(app, /bornesDepuisStats\(layer\?\._stats\?\.\[field\], layer\?\._statsTotal\)/);
   });
 });

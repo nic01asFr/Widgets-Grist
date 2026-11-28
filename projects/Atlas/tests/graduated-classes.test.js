@@ -115,6 +115,15 @@ test('single : la couleur, sans expression inutile', () => {
   assert.equal(expressionCouleurDeclarative(null), null, 'sans declaratif, rien a dire');
 });
 
+test('categorized : une catégorie numérique (3) se compare à son libellé texte (« 3 ») — une tuile vectorielle rend des entiers', () => {
+  const decl = { kind: 'categorized', field: 'categorie', stops: [{ value: 3, color: '#ff0000' }, { value: '4', color: '#00ff00' }] };
+  const e = expressionCouleurDeclarative(decl, '#808080');
+  assert.deepEqual(e[1], ['to-string', ['get', 'categorie']]);
+  assert.equal(e[2], '3', 'le libellé numérique est écrit en texte : le match compare du texte à du texte');
+  assert.equal(e[4], '4');
+  assert.equal(e.at(-1), '#808080');
+});
+
 test('categorized : un match sur le champ, valeur et libelle acceptes', () => {
   const decl = {
     kind: 'categorized', field: 'bee_species',
@@ -125,7 +134,7 @@ test('categorized : un match sur le champ, valeur et libelle acceptes', () => {
   };
   const e = expressionCouleurDeclarative(decl, '#808080');
   assert.equal(e[0], 'match');
-  assert.deepEqual(e[1], ['get', 'bee_species']);
+  assert.deepEqual(e[1], ['to-string', ['get', 'bee_species']], 'la propriété se compare en texte, comme les libellés');
   // Une categorie designee par sa valeur OU son libelle : les deux doivent peindre pareil.
   assert.deepEqual(e[2], ['Apis Mellifera Mellifera', 'European honey bee']);
   assert.equal(e[3], '#de7300');

@@ -613,6 +613,15 @@ export function creerClientPostgrest({ url, acces, annonce = null, fetchImpl = (
       await jeton('lecture');
       return { racine };
     },
+    /** Les champs d'une table (nom, type PostgreSQL, clé, géométrie), pour déclarer ce qu'une symbologie peut viser sans charger de lignes. */
+    colonnes: (schema, table) => colonnesDe(schema, table),
+    /**
+     * Les statistiques d'une table calculées par la base sur TOUTE la table (`/rpc/stats`) : bornes, valeurs distinctes et fréquences, nuls.
+     * C'est ce qui permet de graduer ou de catégoriser une grosse table qu'on ne charge pas.
+     */
+    async stats(schema, table, colonnes) {
+      return rpcEcrire('stats', { schema_nom: schema, table_nom: table, ...(Array.isArray(colonnes) && colonnes.length ? { colonnes } : {}) });
+    },
     jetonCourant(niveau = 'lecture') { const j = jetons.get(niveau); return j && maintenant() < j.expire ? j.valeur : null; },
     garantirJeton: (niveau = 'lecture') => jeton(niveau),
     async renouveler(niveau = 'lecture') { jetons.delete(niveau); return jeton(niveau); },

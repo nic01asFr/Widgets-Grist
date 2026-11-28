@@ -25,12 +25,12 @@ import { mettreAPlat } from './vue-import.js?v=20260911a';
 import { creerAccesPg } from './pg-acces.js?v=20261109a';
 import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acces-grist.js?v=20261122b';
 import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
-import { creerClientAuto } from './pg-postgrest.js?v=20261128a';
+import { creerClientAuto, typeGristDe } from './pg-postgrest.js?v=20261128b';
 import { lireAdresseDocument, demarrage, adresseAEnregistrer } from './pg-adresse.js?v=20261128a';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat, empriseEntites } from './pg-direct.js?v=20261128c';
-import { creerCoucheTuiles, modeDe } from './pg-tuiles.js?v=20261128b';
-import { cleApparence, typeDepuisCatalogue } from './pg-couche-atlas.js?v=20261128a';
+import { creerCoucheTuiles, modeDe } from './pg-tuiles.js?v=20261128c';
+import { cleApparence, typeDepuisCatalogue, champsDepuisColonnes } from './pg-couche-atlas.js?v=20261128b';
 import { ouvrirEdition } from './vue-edition-pg.js?v=20261122b';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109f';
@@ -230,6 +230,12 @@ function creerAccesPage(doc, ecriture, confirmer, dansGrist) {
 function clientDeTuiles(clientDirect) {
   let reel = null;
   return {
+    /** Le vrai client PostgREST (colonnes, statistiques) : jamais une passerelle. */
+    async client() {
+      if (!reel) reel = typeof clientDirect.fournisseurTuiles === 'function' ? await clientDirect.fournisseurTuiles() : null;
+      if (!reel) throw new Error('Cette adresse n’est pas un échangeur : elle ne sert pas de tuiles.');
+      return reel;
+    },
     async tuiles() {
       reel = typeof clientDirect.fournisseurTuiles === 'function' ? await clientDirect.fournisseurTuiles() : null;
       if (!reel) throw new Error('Cette adresse n’est pas un échangeur : elle ne sert pas de tuiles.');
@@ -379,6 +385,25 @@ export async function ouvrirImportPg(hote) {
   function majFiche() { if (vivant()) poserFiche(); }
 
   // --- COUCHES EN DIRECT
+  /**
+   * Les champs et les statistiques d'une grosse table : ce que la symbologie (champs, bornes, catégories) demande à des entités qu'on ne charge pas. Un contrat SQL sans
+   * `stats` ou une panne n'empêche pas la couche : elle reste affichée, sans classes, et on le dit.
+   */
+  async function decrireTuiles(entree, adaptateur, schema, table) {
+    const reel = await adaptateur.client();
+    const cols = await reel.colonnes(schema, table);
+    const champs = champsDepuisColonnes(cols, typeGristDe);
+    entree.rendu.surChamps(champs);
+    if (!(etat.capacites || []).includes('stats')) {
+      hote.annoncer(`${entree.libelle} : le contrat SQL installé ne calcule pas de statistiques (atlas.stats) : pas de classes ni de catégories. Rejouer sql/002_contrat.sql.`, 'warning');
+      return;
+    }
+    try {
+      entree.rendu.surStats(await reel.stats(schema, table, champs.map((c) => c.name).slice(0, 40)));
+    } catch (e) {
+      hote.annoncer(`${entree.libelle} : statistiques indisponibles, pas de classes ni de catégories (${texteErreur(e)}).`, 'warning');
+    }
+  }
   function demarrerDirecte({ clientDirect, url, connexion, schema, table, couleur, gristId = null }) {
     const id = idDirecte(connexion, schema, table);
     if (directes.has(id)) { hote.annoncer('Cette table est déjà sur la carte.', 'warning'); return null; }
@@ -393,9 +418,20 @@ export async function ouvrirImportPg(hote) {
     const info = etat.schema ? listerTables(etat.schema, '', etat.modifiables).find((x) => x.schema === schema && x.table === table) : null;
     const mode = modeDe({ lignesEstimees: info ? info.lignes : null, capacites: etat.capacites || [] });
     if (mode === 'tuiles') {
+      const adaptateur = clientDeTuiles(clientDirect);
+      // Une grosse table est AUSSI une vraie couche d'Atlas (liste, ordre, légende, style enregistré) : les statistiques de la base remplacent les entités qu'on ne charge pas.
+      if (typeof hote.creerCoucheAtlasTuiles === 'function') {
+        const brute = ((etat.schema && etat.schema.schemas) || []).find((x) => x.nom === schema);
+        const tableBrute = brute ? brute.tables.find((x) => x.nom === table) : null;
+        entree.rendu = hote.creerCoucheAtlasTuiles({
+          id, libelle: entree.libelle, couleur, geometrie: typeDepuisCatalogue(tableBrute ? tableBrute.geometries : null),
+          cle: cleApparence({ url, connexion, schema, table }), url, connexion, schema, table, lignesEstimees: info.lignes, champs: [],
+        });
+      }
       entree.couche = creerCoucheTuiles({
-        carte: hote.carte, client: clientDeTuiles(clientDirect), id, couleur, params: { connexion, schema, table }, lignesEstimees: info.lignes, surEtat,
+        carte: hote.carte, client: adaptateur, id, couleur, params: { connexion, schema, table }, lignesEstimees: info.lignes, surEtat, rendu: entree.rendu || null,
       });
+      entree.decrire = () => decrireTuiles(entree, adaptateur, schema, table);
     } else {
       // Une table modeste est une VRAIE couche d'Atlas (symbologie, fiche, ordre, légende) alimentée par ces lectures ; sans hôte capable, le module dessine lui-même.
       if (typeof hote.creerCoucheAtlas === 'function') {
@@ -411,7 +447,7 @@ export async function ouvrirImportPg(hote) {
     entree.mode = mode;
     directes.set(id, entree);
     dessinerDirectes();
-    Promise.resolve(entree.couche.demarrer()).catch((e) => {
+    Promise.resolve(entree.couche.demarrer()).then(() => (entree.decrire && entree.rendu ? entree.decrire() : null)).catch((e) => {
       entree.etat = texteErreur(e);
       hote.annoncer(`${entree.libelle} : ${texteErreur(e)}`, 'error');
       dessinerDirectes();

@@ -101,12 +101,14 @@ export function identifiantsTuiles(id) {
  * @param {string[]} [o.colonnes]  les attributs à embarquer (par défaut : tous, ce que l'édition demande)
  * @param {(etat:object)=>void} [o.surEtat]
  * @param {{set:Function, clear:Function}} [o.minuteur]  `set(f, ms)` répété ; `clear(t)`
+ * @param {{ids: object, poser: (gabarit:string, zoomMin:number)=>void}} [o.rendu]  l'hôte porte une VRAIE couche (liste, ordre, légende, style : `pg-couche-atlas.js`) :
+ *   `poser` lui donne l'adresse des tuiles et le zoom minimal, et c'est lui qui pose la source et les couches MapLibre et qui les retire
  */
 export function creerCoucheTuiles({
   carte, client, params, id, couleur = '#d62728', lignesEstimees = null, colonnes,
-  minuteur = { set: (f, ms) => setInterval(f, ms), clear: (t) => clearInterval(t) }, surEtat = () => {},
+  minuteur = { set: (f, ms) => setInterval(f, ms), clear: (t) => clearInterval(t) }, surEtat = () => {}, rendu = null,
 }) {
-  const ids = identifiantsTuiles(id);
+  const ids = rendu ? rendu.ids : identifiantsTuiles(id);
   const zoomMin = zoomMinimal(lignesEstimees);
   const etat = { phase: 'repos', nb: 0, tronque: false, avertissements: [], erreur: '', message: '' };
   let actif = false;
@@ -143,6 +145,7 @@ export function creerCoucheTuiles({
   }
 
   function monter() {
+    if (rendu) { rendu.poser(gabarit, zoomMin); return; }
     if (!carte.getSource(ids.source)) {
       carte.addSource(ids.source, { type: 'vector', tiles: [gabarit], minzoom: 0, maxzoom: ZOOM_MAX });
     }
@@ -214,6 +217,7 @@ export function creerCoucheTuiles({
       carte.off('moveend', majEtat);
       carte.off('idle', majEtat);
       carte.off('error', surErreurCarte);
+      if (rendu) return; // la couche est celle de l'hôte : c'est lui qui la retire
       for (const c of [ids.point, ids.ligne, ids.surface]) if (carte.getLayer(c)) carte.removeLayer(c);
       if (carte.getSource(ids.source)) carte.removeSource(ids.source);
     },

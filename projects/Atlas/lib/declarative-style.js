@@ -413,12 +413,13 @@ export function expressionCouleurDeclarative(decl, fallback = '#808080', fieldNa
   if (!field || !decl.stops?.length) return null;
 
   if (decl.kind === 'categorized') {
-    const expr = ['match', ['get', field]];
+    // La propriété se compare EN TEXTE, comme les libellés : un entier (3) d'une tuile vectorielle ou d'une table ne correspondrait sinon jamais à « 3 ».
+    const expr = ['match', ['to-string', ['get', field]]];
     for (const st of decl.stops) {
       // Une catégorie peut se désigner par sa valeur brute ou par son libellé —
       // `registerStopColors` en tient compte, l'expression doit en faire autant.
       const valeurs = [...new Set([st.value, st.label].filter(
-        (v) => v !== undefined && v !== null && v !== ''))];
+        (v) => v !== undefined && v !== null && v !== '').map((v) => String(v)))];
       if (!valeurs.length) continue;
       // MapLibre refuse un tableau vide et accepte une valeur seule ou plusieurs.
       expr.push(valeurs.length === 1 ? valeurs[0] : valeurs, st.color || fallback);

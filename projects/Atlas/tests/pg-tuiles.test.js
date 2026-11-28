@@ -256,6 +256,38 @@ describe('pg-tuiles — la couche', () => {
     assert.equal(couche.derniereVue().zoom, 13, 'elle garde la dernière vue utile');
   });
 
+  it('avec un hôte (`rendu`) : il pose la source et les couches, le module garde le jeton, le minuteur et les erreurs', async () => {
+    const poses = [];
+    const rendu = { ids: { source: 'pg-g', surface: 'pg-g', ligne: 'pg-g', point: 'pg-g' }, poser: (gabarit, zoomMin) => poses.push([gabarit, zoomMin]) };
+    const { carte, couche, client, minuteur } = fabrique({ reglages: { rendu } });
+    await couche.demarrer();
+    assert.equal(poses.length, 1);
+    assert.ok(poses[0][0].startsWith(`${RACINE}/rpc/tuile?`));
+    assert.equal(poses[0][1], 12);
+    assert.equal(carte.sources.size, 0, 'le module ne pose rien sur la carte');
+    assert.equal(carte.couches.size, 0);
+    assert.deepEqual(couche.ids, rendu.ids, 'les identifiants sont ceux de la couche de l’hôte');
+    // Le jeton part toujours, par la transformation de requêtes de la carte.
+    const url = poses[0][0].replace('{z}', '12').replace('{x}', '1').replace('{y}', '2');
+    assert.equal(carte.transformation(url, 'Tile').headers.Authorization, 'Bearer jeton1');
+    assert.equal(minuteur.actifs.size, 1);
+    assert.equal(client.appelsTuiles, 1);
+  });
+
+  it('avec un hôte, arrêter retire la route du jeton et le minuteur, mais ni source ni couche : elles sont à l’hôte', async () => {
+    const rendu = { ids: { source: 'pg-g', surface: 'pg-g', ligne: 'pg-g', point: 'pg-g' }, poser() {} };
+    const { carte, couche, minuteur } = fabrique({ reglages: { rendu } });
+    carte.sources.set('pg-g', {});
+    carte.couches.set('pg-g', { id: 'pg-g' });
+    await couche.demarrer();
+    const url = `${RACINE}/rpc/tuile?z=1`;
+    couche.arreter();
+    assert.equal(minuteur.actifs.size, 0);
+    assert.deepEqual(carte.transformation(url, 'Tile'), { url }, 'plus aucun jeton ne part');
+    assert.equal(carte.sources.size, 1, 'la source de l’hôte est intacte');
+    assert.equal(carte.couches.size, 1);
+  });
+
   it('les colonnes demandées allègent les tuiles', async () => {
     const { carte, couche } = fabrique({ reglages: { colonnes: ['id', 'nom'] } });
     await couche.demarrer();

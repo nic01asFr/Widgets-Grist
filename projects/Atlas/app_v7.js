@@ -159,7 +159,7 @@ import {
 } from './lib/geo-tables.js?v=20261002c';
 import { lireLiaison, ligneLiaison } from './lib/pg-liaisons.js?v=20261109a';
 import { htmlCouchesPgPanneau } from './lib/vue-pg-rendu.js?v=20261128d';
-import { typeDominant, identifiantsCoucheAtlas } from './lib/pg-couche-atlas.js?v=20261128a';
+import { typeDominant, identifiantsCoucheAtlas, valeursDepuisStats, bornesDepuisStats } from './lib/pg-couche-atlas.js?v=20261128b';
 import {
   layerFieldNames,
   controlFieldType,
@@ -1133,6 +1133,9 @@ const OSM_PRESETS = {
 // SYMBOLISATION — helpers (expressions compatibles MapLibre)
 // ============================================================
 function getUniqueValues(layer, field, max = 100) {
+    // Une couche en tuiles n'a pas d'entités : les valeurs viennent des statistiques que la base a calculées sur toute la table (`/rpc/stats`).
+    const deLaBase = valeursDepuisStats(layer?._stats?.[field], max);
+    if (deLaBase) return deLaBase;
     const propKey = resolveFeaturePropertyKey(layer, field);
     const counts = new Map();
     (layer.geojson?.features || []).forEach((f) => {
@@ -1144,6 +1147,8 @@ function getUniqueValues(layer, field, max = 100) {
         .sort((a, b) => b.count - a.count).slice(0, max);
 }
 function getNumericRange(layer, field) {
+    const deLaBase = bornesDepuisStats(layer?._stats?.[field], layer?._statsTotal);
+    if (deLaBase) return deLaBase;
     const propKey = resolveFeaturePropertyKey(layer, field);
     let min = Infinity, max = -Infinity, count = 0;
     (layer.geojson?.features || []).forEach((f) => {
@@ -4141,6 +4146,7 @@ function addLayerToMap(layer) {
         try { return addRasterLayerToMap(layer); }
         catch (e) { console.warn('[Atlas] tuiles non montées —', layer.name, e.message); return false; }
     }
+    if (layer._tuilesPg) return addTuilesPgToMap(layer);
     try {
         indexFeatures(layer);
         removeLayerGfx(layer);
@@ -6346,6 +6352,100 @@ function creerRenduCoucheAtlas({ id, libelle, couleur, geometrie, cle, url, conn
             updateLegend();
             rafraichirCouchesPg();
         },
+        retirer() {
+            const i = STATE.layers.indexOf(layer);
+            if (i >= 0) STATE.layers.splice(i, 1);
+            removeLayerGfx(layer);
+            if (STATE.selectedLayer === layer.id) STATE.selectedLayer = null;
+            updateRailBadge();
+            updateLegend();
+            rafraichirCouchesPg();
+        },
+    };
+}
+/**
+ * Une couche en TUILES PBF : la source est vectorielle, et chaque couche MapLibre que le style pose sur elle doit nommer la couche DE LA TUILE (`source-layer`, le nom de la table).
+ * Plutôt que de le répéter à chaque `addLayer` du style (une douzaine), `map.addLayer` est enveloppé UNE fois : seule une spécification dont la source est une couche en tuiles est complétée.
+ */
+function installerSourceLayerPg() {
+    if (map.__sourceLayerPg) return;
+    map.__sourceLayerPg = true;
+    const ajouter = map.addLayer.bind(map);
+    map.addLayer = (spec, avant) => {
+        const c = spec && typeof spec.source === 'string' ? STATE.layers.find((l) => l._tuilesPg && l.id === spec.source) : null;
+        if (!c) return ajouter(spec, avant);
+        const mini = c._zoom && Number.isFinite(c._zoom.minzoom) ? { minzoom: Math.max(spec.minzoom || 0, c._zoom.minzoom) } : {};
+        return ajouter({ ...spec, 'source-layer': c._tuilesPg.table, ...mini }, avant);
+    };
+}
+function addTuilesPgToMap(layer) {
+    if (!mapStyleUsable() || !layer._tuilesPg.gabarit) return false;
+    try {
+        installerSourceLayerPg();
+        removeLayerGfx(layer);
+        map.addSource(layer.id, { type: 'vector', tiles: [layer._tuilesPg.gabarit], minzoom: 0, maxzoom: 22 });
+        initSymbolization(layer);
+        applyLayerStyle(layer);
+        applyMapLayerVisibility(layer, layer.visible !== false);
+        if (!map.getLayer(layer.id)) { console.warn('[Atlas] couche en tuiles : pas de layer MapLibre pour', layer.name); return false; }
+        applyLayerOrder();
+        return true;
+    } catch (e) {
+        console.error('[Atlas] addTuilesPgToMap échoué:', layer.name, e);
+        return false;
+    }
+}
+/**
+ * Une GROSSE table PostgreSQL comme VRAIE couche d'Atlas, lue en tuiles (`lib/pg-tuiles.js`). Atlas ne détient pas ses entités (`_distant`) : le style et les filtres passent
+ * par des expressions MapLibre, la fiche d'entité par l'entité touchée, et les bornes et catégories par les statistiques que la base calcule (`surStats`).
+ * Comme pour une petite table, seule l'apparence s'enregistre (`Atlas_LayerPrefs`).
+ */
+function creerRenduTuilesAtlas({ id, libelle, couleur, geometrie, cle, url, connexion, schema, table, lignesEstimees, champs }) {
+    const layer = makeLayer(libelle, geometrie || 'Polygon', { type: 'FeatureCollection', features: [] }, null, null);
+    layer.id = 'pg-' + id;
+    layer.color = couleur;
+    layer.source = 'postgresql';
+    layer.manifestLayerId = cle;
+    layer._pgLive = { url, connexion, schema, table };
+    layer._tuilesPg = { table, gabarit: null };
+    layer._distant = true;
+    layer._nFeaturesDeclare = Number.isFinite(lignesEstimees) ? lignesEstimees : null;
+    layer._fields = champs || [];
+    layer.style = layer.style || { mode: 'mapbox' };
+    layer.style.polygonMode = 'flat';
+    initSymbolization(layer);
+    STATE.layers.splice(insertionIndex(STATE.layers, layer.geometryType), 0, layer);
+    updateRailBadge();
+    updateLegend();
+    rafraichirCouchesPg();
+    if (CONFIG.grist.ready) {
+        loadLayerPrefs(grist.docApi).then((prefs) => {
+            if (!STATE.layers.includes(layer) || !prefs.has(cle)) return;
+            applyLayerPrefs(layer, prefs);
+            initSymbolization(layer);
+            if (layer._tuilesPg.gabarit) addLayerToMap(layer);
+            updateLegend();
+            rafraichirCouchesPg();
+        }).catch((e) => console.warn('[Atlas] apparence de la couche PostgreSQL non relue :', e.message));
+    }
+    const redessiner = () => { updateLegend(); rafraichirCouchesPg(); if (STATE.selectedLayer === layer.id) renderInspector(); };
+    return {
+        layer,
+        ids: identifiantsCoucheAtlas(layer.id),
+        poser(gabarit, zoomMin) {
+            layer._tuilesPg.gabarit = gabarit;
+            layer._zoom = { minzoom: zoomMin, maxzoom: null };
+            addLayerToMap(layer);
+            redessiner();
+        },
+        surChamps(liste) { layer._fields = liste; redessiner(); },
+        surStats(st) {
+            layer._stats = st && st.colonnes ? st.colonnes : null;
+            layer._statsTotal = st && Number.isFinite(st.total) ? st.total : 0;
+            if (Number.isFinite(layer._statsTotal) && layer._statsTotal > 0) layer._nFeaturesDeclare = layer._statsTotal;
+            redessiner();
+        },
+        visible(v) { layer.visible = v; syncLayerToMapState(layer); redessiner(); },
         retirer() {
             const i = STATE.layers.indexOf(layer);
             if (i >= 0) STATE.layers.splice(i, 1);
@@ -15009,7 +15109,9 @@ function buildProject() {
         story: STATE.story,
         storyManifest: storyToManifestFragment(STATE.story),
         settings: { ...STATE.settings, date: STATE.settings.date.toISOString() },
-        layers: STATE.layers.map((l) => ({
+        // Une couche PostgreSQL en direct n'est JAMAIS dans le projet : ses entités sont celles de la base (droits et sécurité par ligne de la personne), elles ne se
+        // déposent ni dans le fichier téléchargé ni dans la copie locale du navigateur (`atlas_autosave`). Elle revient par la liaison, et sa source reste la base.
+        layers: STATE.layers.filter((l) => !l._pgLive).map((l) => ({
             id: l.id, name: l.name, color: l.color, visible: l.visible,
             geometryType: l.geometryType, source: l.source, geojson: l.geojson,
             style: l.style, _modelCat: l._modelCat, kind: l.kind,
@@ -16376,7 +16478,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261128j').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261128l').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     pgBascule: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.basculerCouchePg(id); },
     pgZoom: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.zoomCouchePg(id); },
     pgMenu: (id, ev) => menuCouchePg(id, ev),
