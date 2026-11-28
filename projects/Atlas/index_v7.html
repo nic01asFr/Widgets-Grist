@@ -1258,6 +1258,9 @@
         .menu-couche-item .posture-nom { display: flex; align-items: center; gap: 8px; font-size: 13px; }
         .menu-couche-item.danger { color: var(--accent); }
         .menu-couche-item { min-height: 40px; }
+        /* Action destructive : séparée des actions courantes, et plus haute au doigt. */
+        .menu-couche-item + .menu-couche-item.danger { margin-top: 6px; border-top: 1px solid var(--hairline); border-radius: 0 0 8px 8px; padding-top: 10px; }
+        @media (pointer: coarse) { .menu-couche-item { min-height: 48px; } }
         #menu-couche { width: min(250px, calc(100vw - 24px)); }
         #menu-couche.posture-feuille { width: auto; }
         /* Lieu : ou la carte s'ouvre, trois choix qui se deplient. */
