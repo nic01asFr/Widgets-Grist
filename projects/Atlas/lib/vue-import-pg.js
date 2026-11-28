@@ -27,6 +27,7 @@ import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acc
 import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
 import { creerClientAuto, typeGristDe } from './pg-postgrest.js?v=20261128b';
 import { lireAdresseDocument, demarrage, adresseAEnregistrer } from './pg-adresse.js?v=20261128a';
+import { lireCouches, repartir, listeAEnregistrer } from './pg-memoire-couches.js?v=20261128a';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat, empriseEntites } from './pg-direct.js?v=20261128c';
 import { creerCoucheTuiles, modeDe } from './pg-tuiles.js?v=20261128c';
@@ -136,6 +137,23 @@ function poserVisibilite(d, visible) {
   if (visible) { d.visible = true; d.etat = 'lecture de la zone visible…'; if (d.rendu) d.rendu.visible(true); d.couche.demarrer(); } else {
     d.couche.arreter(); d.visible = false; d.etat = 'masquée'; if (d.rendu) d.rendu.visible(false);
   }
+  persister();
+}
+
+// La mémoire des couches affichées : la liste est gardée dans le document (`pg-memoire-couches.js`) pour que les couches reviennent à la réouverture.
+// Tant que la liste du document n'a pas été lue et remise (`prete`), rien n'est écrit : on n'écrase jamais ce qu'on n'a pas lu.
+const memoireCouches = { prete: false, restauree: false, ailleurs: [], manquantes: [], file: Promise.resolve() };
+/** Écrire la liste des tables affichées (une écriture à la fois, dans l'ordre). Les liaisons gardées ont leur propre ligne : elles n'en font pas partie. */
+function persister() {
+  const hote = hoteCourant;
+  if (!hote || !memoireCouches.prete || typeof hote.memoriserCouches !== 'function' || hote.lectureSeule()) return;
+  const posees = [...directes.values()].filter((d) => d.gristId == null && d.url && d.couche && d.couche.params).map((d) => ({
+    url: d.url, connexion: d.couche.params.connexion, schema: d.couche.params.schema, table: d.couche.params.table, couleur: d.couleur, visible: d.visible !== false,
+  }));
+  const valeur = listeAEnregistrer({ posees, manquantes: memoireCouches.manquantes, ailleurs: memoireCouches.ailleurs });
+  memoireCouches.file = memoireCouches.file.then(() => hote.memoriserCouches(valeur)).catch((e) => {
+    hote.annoncer(`Les couches PostgreSQL affichées n’ont pas pu être mémorisées dans ce document (${(e && e.message) || e}) : elles ne reviendront pas à la réouverture.`, 'warning');
+  });
 }
 
 /** Le panneau Couches se redessine quand la liste des couches PostgreSQL change (sans toucher au panneau PostgreSQL, ni à une saisie en cours). */
@@ -165,6 +183,7 @@ export function retirerCoucheParAtlas(layerId) {
     if (d.rendu && d.rendu.layer && d.rendu.layer.id === layerId) {
       d.couche.arreter();
       directes.delete(id);
+      persister();
       noterChangement();
       return true;
     }
@@ -192,6 +211,7 @@ export function retirerCouchePg(id) {
   d.couche.arreter();
   if (d.rendu) d.rendu.retirer();
   directes.delete(id);
+  persister();
   noterChangement();
   return true;
 }
@@ -446,6 +466,7 @@ export async function ouvrirImportPg(hote) {
     }
     entree.mode = mode;
     directes.set(id, entree);
+    persister();
     dessinerDirectes();
     Promise.resolve(entree.couche.demarrer()).then(() => (entree.decrire && entree.rendu ? entree.decrire() : null)).catch((e) => {
       entree.etat = texteErreur(e);
@@ -520,6 +541,7 @@ export async function ouvrirImportPg(hote) {
     d.couche.arreter();
     if (d.rendu) d.rendu.retirer();
     directes.delete(id);
+    persister();
     dessinerDirectes(); // une liaison gardée reste dans la liste, « à afficher »
   }
   async function oublier(idListe) {
@@ -607,7 +629,10 @@ export async function ouvrirImportPg(hote) {
       etat.connecte = true;
       etat.enCours = false;
       await chargerSchema();
-      if (etat.schema) await memoriserAdresse(saisie); // une adresse dont on ne sait pas lire les tables n'est pas retenue pour tout le document
+      if (etat.schema) {
+        await memoriserAdresse(saisie); // une adresse dont on ne sait pas lire les tables n'est pas retenue pour tout le document
+        await restaurerCouches();
+      }
     } catch (e) {
       etat.enCours = false;
       etat.erreurConnexion = `Non connecté : ${texteErreur(e)}`;
@@ -615,6 +640,46 @@ export async function ouvrirImportPg(hote) {
       dire('');
       dessinerBase(); poserFiche();
     }
+  }
+
+  /**
+   * Remettre sur la carte les tables que le document se rappelle (`pgCouches`) : seulement celles de CETTE adresse et de CETTE connexion, une seule fois par page,
+   * et seulement après la confirmation d'identité (on est ici une fois connecté). Une table introuvable reste dans la liste, et le dit.
+   */
+  async function restaurerCouches() {
+    if (memoireCouches.restauree || !etat.schema) return;
+    if (typeof hote.couchesDocument !== 'function') { memoireCouches.prete = false; return; }
+    let brut;
+    try { brut = await hote.couchesDocument(); } catch (e) {
+      hote.annoncer(`PostgreSQL : les couches mémorisées dans ce document n’ont pas pu être lues (${(e && e.message) || e}).`, 'warning');
+      return;
+    }
+    const lue = lireCouches(brut);
+    memoireCouches.restauree = true;
+    if (lue.refus) { hote.annoncer(`PostgreSQL : ${lue.refus}. Elle n’est pas écrasée : corrigez ou supprimez cette ligne.`, 'warning'); return; }
+    if (lue.ignorees) hote.annoncer(`PostgreSQL : ${lue.ignorees} entrée(s) incomplète(s) ignorée(s) dans la liste des couches de ce document.`, 'warning');
+    const { ici, ailleurs } = repartir(lue.couches, { url: etat.url, connexion: etat.connexion });
+    memoireCouches.ailleurs = ailleurs;
+    memoireCouches.manquantes = [];
+    const tables = listerTables(etat.schema, '', etat.modifiables);
+    let remises = 0;
+    for (const e of ici) {
+      if (!tables.some((x) => x.schema === e.schema && x.table === e.table)) { memoireCouches.manquantes.push(e); continue; }
+      const lancee = demarrerDirecte({
+        clientDirect: client, url: etat.url, connexion: e.connexion, schema: e.schema, table: e.table, couleur: e.couleur || COULEURS_DIRECT[directes.size % COULEURS_DIRECT.length],
+      });
+      if (!lancee) continue;
+      if (!e.visible) poserVisibilite(lancee.entree, false);
+      remises++;
+    }
+    memoireCouches.prete = true;
+    if (memoireCouches.manquantes.length) {
+      const noms = memoireCouches.manquantes.map((m) => `${m.schema}.${m.table}`).join(', ');
+      hote.annoncer(`PostgreSQL : ${noms} — introuvable ou non accessible pour vous. Elle reste dans la liste de ce document.`, 'warning');
+    }
+    if (remises) hote.annoncer(`${remises} couche${remises > 1 ? 's' : ''} PostgreSQL remise${remises > 1 ? 's' : ''} sur la carte (mémorisée${remises > 1 ? 's' : ''} dans ce document).`, 'success');
+    dessinerDirectes();
+    if (hote.restauration && vivant()) hote.retour();
   }
 
   /** Une adresse qui vient de servir est gardée dans le document (si la personne peut y écrire) : elle n'est plus à saisir, pour personne. */

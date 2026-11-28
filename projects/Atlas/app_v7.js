@@ -12918,21 +12918,48 @@ async function lireOptionsPg() {
     const i = (cols.Cle || []).indexOf('pgAdresse');
     return i >= 0 ? { pgAdresse: cols.Valeur[i] } : null;
 }
-async function memoriserAdressePg(url) {
+async function ecrireCleConfigPg(cle, valeur) {
     if (!canWrite(CONFIG.viewMode)) throw new Error('Document ouvert en lecture seule : enregistrement impossible.');
     const tables = await grist.docApi.listTables();
     if (!tables.includes(TABLE_CONFIG_PG)) {
         await grist.docApi.applyUserActions([
             ['AddTable', TABLE_CONFIG_PG, [{ id: 'Cle', type: 'Text' }, { id: 'Valeur', type: 'Text' }]],
-            ['AddRecord', TABLE_CONFIG_PG, null, { Cle: 'pgAdresse', Valeur: url }],
+            ['AddRecord', TABLE_CONFIG_PG, null, { Cle: cle, Valeur: valeur }],
         ]);
         return;
     }
     const cols = await grist.docApi.fetchTable(TABLE_CONFIG_PG);
-    const i = (cols.Cle || []).indexOf('pgAdresse');
+    const i = (cols.Cle || []).indexOf(cle);
     await grist.docApi.applyUserActions([i >= 0
-        ? ['UpdateRecord', TABLE_CONFIG_PG, cols.id[i], { Valeur: url }]
-        : ['AddRecord', TABLE_CONFIG_PG, null, { Cle: 'pgAdresse', Valeur: url }]]);
+        ? ['UpdateRecord', TABLE_CONFIG_PG, cols.id[i], { Valeur: valeur }]
+        : ['AddRecord', TABLE_CONFIG_PG, null, { Cle: cle, Valeur: valeur }]]);
+}
+async function memoriserAdressePg(url) { await ecrireCleConfigPg('pgAdresse', url); }
+
+/**
+ * Les tables PostgreSQL affichées sur la carte, retrouvées à la réouverture : UNE ligne `pgCouches` de `Atlas_Config` (`lib/pg-memoire-couches.js`).
+ * Ni entité, ni jeton, ni identité. `lireCouchesPgDoc` rend le texte brut (ou null) ; la lecture ne crée jamais la table.
+ */
+async function lireCouchesPgDoc() {
+    if (!CONFIG.grist.ready) return null;
+    const tables = await grist.docApi.listTables();
+    if (!tables.includes(TABLE_CONFIG_PG)) return null;
+    const cols = await grist.docApi.fetchTable(TABLE_CONFIG_PG);
+    const i = (cols.Cle || []).indexOf('pgCouches');
+    return i >= 0 ? cols.Valeur[i] : null;
+}
+async function memoriserCouchesPg(valeur) { await ecrireCleConfigPg('pgCouches', valeur); }
+/** À l'ouverture du document : si des tables PostgreSQL y sont mémorisées ET que le document a son adresse, on ouvre le panneau PG, qui connecte et les remet. */
+async function remettreCouchesPg() {
+    try {
+        if (CONFIG.viewMode || !CONFIG.grist.ready) return;
+        const options = await lireOptionsPg();
+        if (!options || !options.pgAdresse) return;
+        const brut = await lireCouchesPgDoc();
+        if (brut === null || brut === undefined || String(brut).trim() === '' || String(brut).trim() === '[]') return;
+        openModule('couches');
+        await A.openPG({ restauration: true });
+    } catch (e) { showToast('Couches PostgreSQL du document non remises : ' + (e && e.message ? e.message : e), 'warning'); }
 }
 
 function finalizeNewLayer(layer) {
@@ -14418,6 +14445,7 @@ async function initGrist() {
         await syncStoryFromGrist();
         await chargerFormulaires();
         await chargerThemeDocument();
+        remettreCouchesPg(); // sans attendre : le panneau PG demande lui-même la confirmation d'identité
         // Ce qu'on peut proposer dépend des formulaires : la posture d'ouverture se
         // choisit maintenant (dernier choix retenu, ou Exploiter dans l'application).
         await choisirPostureAuDemarrage();
@@ -16486,7 +16514,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261128m').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: (opts = {}) => import('./lib/vue-import-pg.js?v=20261128n').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ restauration: !!(opts && opts.restauration === true), couchesDocument: lireCouchesPgDoc, memoriserCouches: memoriserCouchesPg, rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     pgBascule: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.basculerCouchePg(id); },
     pgZoom: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.zoomCouchePg(id); },
     pgMenu: (id, ev) => menuCouchePg(id, ev),
