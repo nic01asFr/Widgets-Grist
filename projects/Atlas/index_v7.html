@@ -1068,6 +1068,11 @@
             cursor: help; user-select: none; flex: 0 0 auto;
         }
         .info-i:hover, .info-i:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
+        /* Au doigt, un « i » de 15 px ne se touche pas : la zone touchable passe a 45 px, l'aspect ne change pas. */
+        @media (pointer: coarse) {
+            .info-i { position: relative; }
+            .info-i::after { content: ''; position: absolute; inset: -15px; }
+        }
         #info-bulle {
             position: fixed; z-index: 100000; display: none; pointer-events: none;
             background: var(--ink); color: var(--surface); border-radius: 8px; padding: 8px 10px;
