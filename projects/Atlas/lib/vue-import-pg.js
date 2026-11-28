@@ -28,7 +28,7 @@ import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
 import { creerClientAuto } from './pg-postgrest.js?v=20261122b';
 import { lireAdresseDocument, demarrage, adresseAEnregistrer } from './pg-adresse.js?v=20261128a';
 import { planImportPg } from './pg-import.js?v=20261109a';
-import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
+import { creerCoucheDirecte, libelleEtat, empriseEntites } from './pg-direct.js?v=20261128a';
 import { ouvrirEdition } from './vue-edition-pg.js?v=20261122b';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109f';
@@ -37,7 +37,7 @@ import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109f';
 import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122c';
 import {
   listerTables, htmlBase, htmlDirectes, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, nombre,
-} from './vue-pg-rendu.js?v=20261128a';
+} from './vue-pg-rendu.js?v=20261128c';
 
 // Le rendu pur vit dans `vue-pg-rendu.js` ; ces noms restent exportés d'ici pour qui les importait.
 export { listerTables, htmlTables, htmlApercu, htmlDirectes };
@@ -128,6 +128,45 @@ let accesPartage = null;
 let accesEcriturePartage = null;
 // L'hôte courant : le jeton Grist est demandé à CE document, à chaque demande (la page garde les accès, pas l'hôte).
 let hoteCourant = null;
+
+/** Le panneau Couches se redessine quand la liste des couches PostgreSQL change (sans toucher au panneau PostgreSQL, ni à une saisie en cours). */
+const noterChangement = () => { if (hoteCourant && typeof hoteCourant.rafraichirCouches === 'function') hoteCourant.rafraichirCouches(); };
+
+/**
+ * Les couches PostgreSQL posées sur la carte, pour le panneau Couches. Valable panneau PostgreSQL fermé : les couches directes survivent à sa fermeture.
+ * @returns {{id:string, libelle:string, couleur:string, visible:boolean, etat:string, enregistree:boolean, origine:string}[]}
+ */
+export function listerCouchesPg() {
+  return [...directes.entries()].map(([id, d]) => ({
+    id, libelle: d.libelle, couleur: d.couleur, visible: d.visible, etat: d.visible ? d.etat : 'masquée', enregistree: d.gristId != null, origine: d.url ? origineLisible(d.url) : '',
+  }));
+}
+/** L'œil d'une couche PostgreSQL du panneau Couches : montrer ou masquer. */
+export function basculerCouchePg(id) {
+  const d = directes.get(id);
+  if (!d) return false;
+  if (d.visible) { d.couche.arreter(); d.visible = false; d.etat = 'masquée'; } else { d.visible = true; d.etat = 'lecture de la zone visible…'; d.couche.demarrer(); }
+  noterChangement();
+  return true;
+}
+/** Cadrer la carte sur ce qui est chargé de la couche (rien de chargé : on le dit, la couche n'est pas devinée). */
+export function zoomCouchePg(id) {
+  const d = directes.get(id);
+  if (!d || !hoteCourant || !hoteCourant.carte) return false;
+  const e = empriseEntites(d.couche.entites());
+  if (!e) { hoteCourant.annoncer(`« ${d.libelle} » : aucune entité chargée à cadrer. Déplacez ou zoomez la carte sur la zone.`, 'warning'); return false; }
+  hoteCourant.carte.fitBounds([[e[0], e[1]], [e[2], e[3]]], { padding: 60, maxZoom: 17 });
+  return true;
+}
+/** Retirer de la carte une couche non gardée (une couche gardée s'oublie depuis le panneau PostgreSQL, avec sa confirmation). */
+export function retirerCouchePg(id) {
+  const d = directes.get(id);
+  if (!d || d.gristId != null) return false;
+  d.couche.arreter();
+  directes.delete(id);
+  noterChangement();
+  return true;
+}
 
 /**
  * Le jeton d'accès que Grist donne au widget pour ce document. `readOnly` : lecture seule (la passerelle refuse d'écrire avec).
@@ -266,6 +305,7 @@ export async function ouvrirImportPg(hote) {
   function dessinerDirectes() {
     const z = zone('#pg-directes');
     if (z) z.innerHTML = htmlDirectes(liste(), { icone });
+    noterChangement();
   }
 
   // --- DROITE

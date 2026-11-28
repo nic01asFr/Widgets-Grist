@@ -158,6 +158,7 @@ import {
   formatGeometrie,
 } from './lib/geo-tables.js?v=20261002c';
 import { lireLiaison, ligneLiaison } from './lib/pg-liaisons.js?v=20261109a';
+import { htmlCouchesPgPanneau } from './lib/vue-pg-rendu.js?v=20261128c';
 import {
   layerFieldNames,
   controlFieldType,
@@ -6165,9 +6166,11 @@ function renderLayersPanel(mode) {
     }
     $('module-title').textContent = 'Couches';
     const body = $('module-body');
+    // Les couches PostgreSQL posées sur la carte : listées ici avec les autres (le module n'est chargé qu'à la première ouverture du panneau PostgreSQL).
+    const sectionPg = htmlCouchesPgPanneau(STATE.pgVue ? STATE.pgVue.listerCouchesPg() : [], { icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') });
     if (STATE.layers.length === 0) {
         body.innerHTML = `
-            <div class="empty"><div class="ic">${icTrait(IC.dossier, 40)}</div><div class="t">Aucune couche affichée</div><div class="h">Affiche une table ci-dessous, ou importe</div></div>
+            ${sectionPg || `<div class="empty"><div class="ic">${icTrait(IC.dossier, 40)}</div><div class="t">Aucune couche affichée</div><div class="h">Affiche une table ci-dessous, ou importe</div></div>`}
             ${availableTablesSection()}
             <div class="section"><div class="drop" id="drop" onclick="document.getElementById('file-input').click()"><div class="ic">${icTrait(IC.fichier, 40)}</div><div class="t">Glissez un fichier</div><div class="h">GeoJSON, GPX, KML, CSV</div></div></div>
             ${actions()}`;
@@ -6213,6 +6216,7 @@ function renderLayersPanel(mode) {
                 </div>`;
             }).join('')}
         </div>
+        ${sectionPg}
         ${availableTablesSection()}
         ${actions()}`;
     wireLayerReorder(body);
@@ -6274,6 +6278,23 @@ function ouvrirMenuCouche(layer, ancre) {
     });
 }
 
+/** Le panneau Couches se redessine quand les couches PostgreSQL changent — seulement s'il est CE QU'ON VOIT (jamais par-dessus le panneau PostgreSQL ou un autre module). */
+function rafraichirCouchesPg() {
+    const titre = $('module-title');
+    if (titre && titre.textContent === 'Couches' && (STATE.currentModule === 'couches' || STATE.currentModule === 'symbo')) renderLayersPanel(STATE.currentModule);
+}
+/** Le menu d'une couche PostgreSQL du panneau Couches : le reste (modifier, garder, oublier) se fait dans le panneau PostgreSQL, qui porte la connexion. */
+function menuCouchePg(id, ev) {
+    if (ev) ev.stopPropagation();
+    const couche = STATE.pgVue ? STATE.pgVue.listerCouchesPg().find((c) => c.id === id) : null;
+    if (!couche) return;
+    const items = [{ id: 'panneau', nom: 'Modifier, garder… (panneau PostgreSQL)', ic: 'crayon' }];
+    if (!couche.enregistree) items.push({ id: 'retirer', nom: 'Retirer de la carte', ic: 'corbeille', danger: true });
+    ouvrirMenuActions(ev && ev.currentTarget, `Actions pour ${couche.libelle}`, items, (act) => {
+        if (act === 'panneau') A.openPG();
+        else if (act === 'retirer') STATE.pgVue.retirerCouchePg(id);
+    });
+}
 function renderLayersPanelLecture() {
     titreModule('Légende', 'Affichage tel que configuré par l’éditeur.');
     const body = $('module-body');
@@ -16292,7 +16313,10 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261128c').then((m) => m.ouvrirImportPg({ options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261128e').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    pgBascule: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.basculerCouchePg(id); },
+    pgZoom: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.zoomCouchePg(id); },
+    pgMenu: (id, ev) => menuCouchePg(id, ev),
     openIGN: () => import('./lib/vue-import-ign.js?v=20261010a').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {

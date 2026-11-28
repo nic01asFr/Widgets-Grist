@@ -24,6 +24,28 @@ import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
 export const DELAI_ANTIREBOND_MS = 400;
 export const LIMITE_DIRECT = 5000;
 
+/**
+ * L'emprise [ouest, sud, est, nord] d'une liste d'entités GeoJSON (WGS84), ou `null` s'il n'y a aucune coordonnée : de quoi cadrer une couche directe sur ce qui est chargé.
+ */
+export function empriseEntites(entites) {
+  let ouest = Infinity; let sud = Infinity; let est = -Infinity; let nord = -Infinity;
+  const parcourir = (c) => {
+    if (!Array.isArray(c)) return;
+    if (typeof c[0] === 'number' && typeof c[1] === 'number') {
+      if (!Number.isFinite(c[0]) || !Number.isFinite(c[1])) return;
+      ouest = Math.min(ouest, c[0]); est = Math.max(est, c[0]); sud = Math.min(sud, c[1]); nord = Math.max(nord, c[1]);
+      return;
+    }
+    for (const x of c) parcourir(x);
+  };
+  for (const e of entites || []) {
+    const g = e && e.geometry;
+    if (!g) continue;
+    if (g.type === 'GeometryCollection') { for (const sous of g.geometries || []) parcourir(sous && sous.coordinates); } else parcourir(g.coordinates);
+  }
+  return Number.isFinite(ouest) ? [ouest, sud, est, nord] : null;
+}
+
 const VIDE = Object.freeze({ type: 'FeatureCollection', features: [] });
 const SURFACES = ['Polygon', 'MultiPolygon'];
 const LIGNES = ['LineString', 'MultiLineString'];
@@ -79,6 +101,7 @@ export function creerCoucheDirecte({
   let sequence = 0;
   let attente = null;
   let actif = false;
+  let dernieres = []; // les entités de la dernière lecture réussie : de quoi cadrer la couche
 
   const publier = () => surEtat({ ...etat, avertissements: [...etat.avertissements] });
 
@@ -95,7 +118,8 @@ export function creerCoucheDirecte({
       const fc = await client.couche({ ...params, bbox: bboxDepuisBornes(carte.getBounds()), limite });
       if (!actif || mienne !== sequence) return; // arrêtée, ou dépassée par une lecture plus récente
       monter();
-      carte.getSource(ids.source).setData({ type: 'FeatureCollection', features: fc.features || [] });
+      dernieres = fc.features || [];
+      carte.getSource(ids.source).setData({ type: 'FeatureCollection', features: dernieres });
       etat.phase = 'ok';
       etat.nb = fc.nb_entites != null ? fc.nb_entites : (fc.features || []).length;
       etat.tronque = !!fc.tronque;
@@ -138,6 +162,8 @@ export function creerCoucheDirecte({
     },
     /** Relit tout de suite (après une erreur, par exemple). */
     relire: lire,
+    /** Les entités de la dernière lecture réussie (pour cadrer la couche). */
+    entites: () => dernieres,
     /** Retire la couche de la carte : plus de lecture, plus d'écouteur. */
     arreter() {
       actif = false;

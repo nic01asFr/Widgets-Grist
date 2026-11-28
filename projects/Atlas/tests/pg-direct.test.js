@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { creerCoucheDirecte, couchesDirectes, identifiantsDirects, libelleEtat, DELAI_ANTIREBOND_MS, LIMITE_DIRECT } from '../lib/pg-direct.js';
+import { creerCoucheDirecte, couchesDirectes, identifiantsDirects, libelleEtat, empriseEntites, DELAI_ANTIREBOND_MS, LIMITE_DIRECT } from '../lib/pg-direct.js';
 import { ErreurPasserelle } from '../lib/pg-passerelle.js';
 import { htmlDirectes, htmlApercu } from '../lib/vue-import-pg.js';
 
@@ -183,5 +183,53 @@ describe('vue — les couches directes', () => {
     const h = htmlApercu({ table: { schema: 'a', table: 'b' }, phase: 'pret', couche: { nb_entites: 1, avertissements: [] }, plan: { ok: false, erreur: 'x' }, sansDocument: true, lectureSeule: true, nom: 'B' });
     assert.match(h, /data-act="direct"[^>]*>Afficher sur la carte/);
     assert.doesNotMatch(h, /data-act="direct"[^>]*disabled/);
+  });
+});
+
+describe('pg-direct — l’emprise de ce qui est chargé (pour cadrer la couche)', () => {
+  const f = (geometry) => ({ type: 'Feature', geometry, properties: {} });
+
+  it('points, lignes et surfaces : le rectangle qui les contient', () => {
+    assert.deepEqual(empriseEntites([f({ type: 'Point', coordinates: [5.4, 43.3] })]), [5.4, 43.3, 5.4, 43.3]);
+    assert.deepEqual(empriseEntites([
+      f({ type: 'LineString', coordinates: [[1, 2], [3, 4]] }),
+      f({ type: 'Polygon', coordinates: [[[5, 6], [7, 6], [7, 9], [5, 6]]] }),
+    ]), [1, 2, 7, 9]);
+  });
+
+  it('les géométries multiples et les collections sont parcourues entièrement', () => {
+    assert.deepEqual(empriseEntites([f({ type: 'MultiPolygon', coordinates: [[[[0, 0], [1, 0], [1, 1], [0, 0]]], [[[10, 10], [11, 10], [11, 12], [10, 10]]]] })]), [0, 0, 11, 12]);
+    assert.deepEqual(empriseEntites([f({ type: 'GeometryCollection', geometries: [{ type: 'Point', coordinates: [-3, 4] }, { type: 'Point', coordinates: [8, -9] }] })]), [-3, -9, 8, 4]);
+  });
+
+  it('une altitude n’entre pas dans l’emprise', () => {
+    assert.deepEqual(empriseEntites([f({ type: 'Point', coordinates: [5, 43, 120.5] })]), [5, 43, 5, 43]);
+  });
+
+  it('rien à cadrer : null, jamais un rectangle inventé', () => {
+    assert.equal(empriseEntites([]), null);
+    assert.equal(empriseEntites(undefined), null);
+    assert.equal(empriseEntites([f(null), { type: 'Feature' }]), null, 'entités sans géométrie');
+    assert.equal(empriseEntites([f({ type: 'Point', coordinates: [] })]), null);
+    assert.equal(empriseEntites([f({ type: 'Point', coordinates: [NaN, 1] }), f({ type: 'Point', coordinates: [Infinity, 2] })]), null, 'coordonnées non finies ignorées');
+  });
+});
+
+describe('pg-direct — la couche garde ce qu’elle a chargé', () => {
+  it('`entites()` rend la dernière lecture réussie, et la garde si la suivante échoue', async () => {
+    const sources = new Map();
+    const carte = {
+      on() {}, off() {}, getBounds: () => ({ getWest: () => 5, getEast: () => 6, getSouth: () => 43, getNorth: () => 44 }),
+      getSource: (i) => sources.get(i) || null, addSource: (i) => sources.set(i, { setData() {} }), addLayer() {}, getLayer: () => null, removeLayer() {}, removeSource() {},
+    };
+    let echec = false;
+    const client = { couche: async () => { if (echec) throw new ErreurPasserelle('panne', { code: 'x', cote: 'serveur' }); return { features: [{ type: 'Feature', geometry: { type: 'Point', coordinates: [5.5, 43.5] }, properties: {} }], nb_entites: 1 }; } };
+    const c = creerCoucheDirecte({ carte, client, params: { connexion: 'b', schema: 's', table: 't' }, id: 'x' });
+    assert.deepEqual(c.entites(), [], 'rien avant la première lecture');
+    await c.demarrer();
+    assert.equal(c.entites().length, 1);
+    echec = true;
+    await c.relire();
+    assert.equal(c.entites().length, 1, 'une panne passagère n’efface pas ce qu’on a');
   });
 });

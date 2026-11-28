@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   htmlBase, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, listerTables,
+  htmlCouchesPgPanneau,
 } from '../lib/vue-pg-rendu.js';
 
 const SCHEMA = {
@@ -209,5 +210,44 @@ describe('vue-pg-rendu — la fiche d’une table (à droite)', () => {
 
   it('aucune table choisie : on invite à en choisir une', () => {
     assert.match(htmlApercu({ table: null }), /Choisissez une table dans la liste de gauche/);
+  });
+});
+
+describe('vue-pg-rendu — la section « Base PostgreSQL » du panneau Couches', () => {
+  const icone = (nom) => `[${nom}]`;
+  const items = [
+    { id: 'base-metier-batiment', libelle: 'metier.batiment', couleur: '#d62728', visible: true, etat: '12 entités', enregistree: false, origine: 'pg.exemple.fr' },
+    { id: 'base-metier-route', libelle: 'metier.route', couleur: '#1f77b4', visible: false, etat: 'masquée', enregistree: true, origine: 'pg.exemple.fr' },
+  ];
+
+  it('rien à montrer : rien du tout, pas même un titre', () => {
+    assert.equal(htmlCouchesPgPanneau([], { icone }), '');
+    assert.equal(htmlCouchesPgPanneau(undefined, { icone }), '');
+  });
+
+  it('une ligne par couche, au dessin des autres couches : œil, pastille, nom, zoom, menu', () => {
+    const h = htmlCouchesPgPanneau(items, { icone });
+    assert.match(h, /Base PostgreSQL/);
+    assert.equal((h.match(/class="layer-item"/g) || []).length, 2);
+    assert.match(h, /layer-vis on[^>]*aria-pressed="true"[^>]*onclick="A\.pgBascule\('base-metier-batiment', event\)"/);
+    assert.match(h, /layer-swatch" style="background:#d62728"/);
+    assert.match(h, /A\.pgZoom\('base-metier-batiment', event\)/);
+    assert.match(h, /A\.pgMenu\('base-metier-batiment', event\)/);
+    assert.match(h, /aria-haspopup="menu"/);
+    assert.ok(h.indexOf('[oeil]') > -1 && h.indexOf('[cible]') > -1 && h.indexOf('[plusieurs]') > -1);
+  });
+
+  it('une couche masquée a l’œil barré, et dit « Afficher » ; une couche gardée le dit', () => {
+    const h = htmlCouchesPgPanneau(items, { icone });
+    assert.match(h, /aria-pressed="false"[^>]*aria-label="Afficher metier\.route"/);
+    assert.match(h, /\[oeilBarre\]/);
+    assert.equal((h.match(/>gardée</g) || []).length, 1, 'seule la couche gardée porte « gardée »');
+    assert.equal((h.match(/>PostgreSQL</g) || []).length, 2, 'chaque ligne dit d’où elle vient');
+  });
+
+  it('un nom, une origine ou une couleur hostiles ne sortent jamais du texte', () => {
+    const h = htmlCouchesPgPanneau([{ id: "a'b", libelle: '<img src=x onerror=alert(1)>', couleur: '"><script>x</script>', visible: true, etat: '<b>', origine: '<i>', enregistree: false }], { icone });
+    assert.doesNotMatch(h, /<img src=x|<script>|<b>|<i>/);
+    assert.doesNotMatch(h, /pgBascule\('a'b'/, 'l’identifiant ne casse pas la chaîne de l’attribut');
   });
 });

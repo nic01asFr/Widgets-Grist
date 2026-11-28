@@ -227,3 +227,30 @@ export function htmlFicheTable(etat, info) {
     corps: htmlApercu(etat),
   };
 }
+
+/**
+ * La section « Base PostgreSQL » du panneau COUCHES : une ligne par couche posée sur la carte, au même dessin que les autres couches
+ * (œil, pastille, nom, zoom, menu), pour tout gérer au même endroit. Les actions sont `A.pgBascule`, `A.pgZoom`, `A.pgMenu`.
+ * @param {{id:string, libelle:string, couleur?:string, visible:boolean, etat?:string, enregistree?:boolean, origine?:string}[]} items
+ * @param {{icone?: (nom:string, taille?:number) => string}} [o]
+ */
+export function htmlCouchesPgPanneau(items, { icone = () => '' } = {}) {
+  if (!items || !items.length) return '';
+  const lignes = items.map((c) => {
+    const id = echapper(c.id);
+    const nom = echapper(c.libelle);
+    return `<div class="layer-item" data-pg="${id}">
+      <span class="layer-vis ${c.visible ? 'on' : ''}" role="button" tabindex="0" aria-pressed="${c.visible ? 'true' : 'false'}"
+        aria-label="${c.visible ? 'Masquer' : 'Afficher'} ${nom}" onclick="A.pgBascule('${id}', event)">${icone(c.visible ? 'oeil' : 'oeilBarre')}</span>
+      <span class="layer-swatch" style="background:${echapper(c.couleur || '#d62728')}"></span>
+      <div class="layer-info">
+        <div class="layer-name" title="${nom}">${nom}</div>
+        <div class="layer-meta"><span>${echapper(c.etat || '')}</span><span style="background:var(--muted);color:#fff;padding:1px 4px;border-radius:3px;font-size:8.5px" title="Lue directement dans PostgreSQL${c.origine ? ' (' + echapper(c.origine) + ')' : ''}, relue à chaque déplacement de la carte">PostgreSQL</span>${c.enregistree ? '<span style="background:var(--green);color:#fff;padding:1px 4px;border-radius:3px;font-size:8.5px" title="Gardée dans le document : elle reviendra à la prochaine ouverture">gardée</span>' : ''}</div>
+      </div>
+      <button class="layer-act layer-act-zoom" onclick="A.pgZoom('${id}', event)" title="Zoomer sur ce qui est chargé" aria-label="Zoomer sur ${nom}">${icone('cible')}</button>
+      <button class="layer-act" onclick="A.pgMenu('${id}', event)" title="Autres actions" aria-label="Autres actions pour ${nom}" aria-haspopup="menu">${icone('plusieurs')}</button>
+    </div>`;
+  }).join('');
+  return `<div class="section-title">Base PostgreSQL <span class="range-info" style="text-transform:none;letter-spacing:0">en direct</span></div>
+    <div class="layer-list" id="pg-couches">${lignes}</div>`;
+}
