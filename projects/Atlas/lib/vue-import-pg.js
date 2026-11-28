@@ -37,12 +37,15 @@ import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109f';
 import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122c';
 import {
   listerTables, htmlBase, htmlDirectes, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, nombre,
-} from './vue-pg-rendu.js?v=20261122b';
+} from './vue-pg-rendu.js?v=20261128a';
 
 // Le rendu pur vit dans `vue-pg-rendu.js` ; ces noms restent exportés d'ici pour qui les importait.
 export { listerTables, htmlTables, htmlApercu, htmlDirectes };
 
 const CLE_URL = 'atlas.pg.url';
+
+/** L'identifiant d'une couche directe : une table d'une connexion, jamais deux fois sur la carte. */
+const idDirecte = (connexion, schema, table) => `${connexion}-${schema}-${table}`.replace(/[^A-Za-z0-9_-]/g, '_');
 
 const COULEURS_DIRECT = ['#d62728', '#1f77b4', '#2ca02c', '#9467bd', '#ff7f0e', '#17becf'];
 
@@ -268,7 +271,7 @@ export async function ouvrirImportPg(hote) {
   // --- DROITE
   const infoTable = () => (etat.table ? listerTables(etat.schema, '', etat.modifiables).find((t) => t.schema === etat.table.schema && t.table === etat.table.table) || null : null);
   function contenuFiche() {
-    if (etat.fiche === 'table' && etat.table) return htmlFicheTable(etat, infoTable());
+    if (etat.fiche === 'table' && etat.table) return htmlFicheTable({ ...etat, surCarte: surCarte(etat.table) }, infoTable());
     return htmlFicheConnexion({
       url: etat.url, connecte: etat.connecte, enCours: etat.enCours, erreur: etat.erreurConnexion, modeAcces: etat.modeAcces,
       connexions: etat.connexions, connexion: etat.connexion,
@@ -291,7 +294,7 @@ export async function ouvrirImportPg(hote) {
 
   // --- COUCHES EN DIRECT
   function demarrerDirecte({ clientDirect, url, connexion, schema, table, couleur, gristId = null }) {
-    const id = `${connexion}-${schema}-${table}`.replace(/[^A-Za-z0-9_-]/g, '_');
+    const id = idDirecte(connexion, schema, table);
     if (directes.has(id)) { hote.annoncer('Cette table est déjà sur la carte.', 'warning'); return null; }
     const entree = { couleur, url, gristId, client: clientDirect, libelle: `${schema}.${table}`, etat: 'lecture de la zone visible…', couche: null, visible: true };
     entree.couche = creerCoucheDirecte({
@@ -578,8 +581,12 @@ export async function ouvrirImportPg(hote) {
     const info = infoTable();
     dessinerLignesTables();
     if (info && !info.geo) { etat.phase = 'pret'; majFiche(); return; }
+    // Choisir une table géographique la POSE SUR LA CARTE : c'est une couche, comme celles des autres sources. La fiche garde le reste (copier, synchroniser).
+    if (!surCarte(etat.table)) lier();
     lire();
   }
+  /** Cette table est-elle déjà une couche de la carte ? */
+  function surCarte(t) { return !!t && directes.has(idDirecte(etat.connexion, t.schema, t.table)); }
 
   // --- ÉVÉNEMENTS (ils arrivent de la liste, à gauche, et de la fiche, à droite)
   function surClic(e) {

@@ -199,8 +199,10 @@ export function htmlApercu(etat) {
   const bloqueCopie = !plan || !plan.ok || bloqueDoc;
   return `<div class="range-info" role="status" aria-live="polite"><strong>${nombre(n)}</strong> entité${n > 1 ? 's' : ''} dans la zone visible de la carte.</div>
     ${avert}
-    ${choix('Afficher sur la carte', 'Lecture seule, relue à chaque déplacement de la carte. Rien n’est écrit dans le document.',
-    `<button type="button" class="btn btn-primary btn-full" data-act="direct">Afficher sur la carte</button>
+    ${etat.surCarte
+    ? `<div class="range-info" role="status"><strong>Cette table est sur la carte</strong> (lecture seule, relue à chaque déplacement).${etat.peutEnregistrer ? ' Le menu de sa ligne, à gauche, la garde dans le document ou la retire.' : ''}</div>`
+    : choix('Afficher sur la carte', 'Lecture seule, relue à chaque déplacement de la carte. Rien n’est écrit dans le document.',
+      `<button type="button" class="btn btn-primary btn-full" data-act="direct">Afficher sur la carte</button>
       ${etat.peutEnregistrer ? '<button type="button" class="btn-lien" data-act="direct-enregistre" style="margin-top:6px" title="La liaison (adresse, table ; jamais l’identité ni le jeton) est gardée dans le document : elle reviendra à la prochaine ouverture.">Afficher et garder dans le document</button>' : ''}`)}
     ${choix('Copier dans le document', 'Un instantané de la zone visible, dans une nouvelle table Grist.',
     `${messagesDoc}${refusPlan}<label class="input-label" for="pg-nom">Nom de la table</label>

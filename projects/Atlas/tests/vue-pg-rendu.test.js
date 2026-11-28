@@ -168,6 +168,15 @@ describe('vue-pg-rendu — la fiche d’une table (à droite)', () => {
     assert.match(corps, /data-act="importer-sync"/);
   });
 
+  it('une table déjà sur la carte le dit, sans reproposer « Afficher » ; copier et synchroniser restent', () => {
+    const { corps } = htmlFicheTable({ ...pret, surCarte: true }, info);
+    assert.match(corps, /Cette table est sur la carte/);
+    assert.doesNotMatch(corps, /data-act="direct"/);
+    assert.doesNotMatch(corps, /data-act="direct-enregistre"/);
+    assert.match(corps, /data-act="importer"/);
+    assert.match(corps, /data-act="importer-sync"/);
+  });
+
   it('une table non modifiable n’offre pas la synchronisation', () => {
     const { corps } = htmlFicheTable({ ...pret, modifiable: null }, { ...info, modifiable: false });
     assert.doesNotMatch(corps, /importer-sync/);
