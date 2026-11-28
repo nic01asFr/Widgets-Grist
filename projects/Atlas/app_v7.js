@@ -12712,6 +12712,37 @@ async function supprimerLiaisonPg(gristId) {
     STATE.liaisonsPg = (STATE.liaisonsPg || []).filter((l) => l.gristId !== gristId);
 }
 
+/**
+ * L'adresse PostgreSQL du document : UNE ligne `pgAdresse` de la table `Atlas_Config` (Cle, Valeur). Jamais un jeton ni une identité.
+ * Les options du widget ne conviennent pas : Grist les garde « non enregistrées » tant que la personne n'a pas cliqué sur Enregistrer.
+ * La LECTURE ne crée jamais la table ; seule l'écriture, par quelqu'un qui peut écrire, la crée (`lib/pg-adresse.js`).
+ */
+const TABLE_CONFIG_PG = 'Atlas_Config';
+async function lireOptionsPg() {
+    if (!CONFIG.grist.ready) return null;
+    const tables = await grist.docApi.listTables();
+    if (!tables.includes(TABLE_CONFIG_PG)) return null;
+    const cols = await grist.docApi.fetchTable(TABLE_CONFIG_PG);
+    const i = (cols.Cle || []).indexOf('pgAdresse');
+    return i >= 0 ? { pgAdresse: cols.Valeur[i] } : null;
+}
+async function memoriserAdressePg(url) {
+    if (!canWrite(CONFIG.viewMode)) throw new Error('Document ouvert en lecture seule : enregistrement impossible.');
+    const tables = await grist.docApi.listTables();
+    if (!tables.includes(TABLE_CONFIG_PG)) {
+        await grist.docApi.applyUserActions([
+            ['AddTable', TABLE_CONFIG_PG, [{ id: 'Cle', type: 'Text' }, { id: 'Valeur', type: 'Text' }]],
+            ['AddRecord', TABLE_CONFIG_PG, null, { Cle: 'pgAdresse', Valeur: url }],
+        ]);
+        return;
+    }
+    const cols = await grist.docApi.fetchTable(TABLE_CONFIG_PG);
+    const i = (cols.Cle || []).indexOf('pgAdresse');
+    await grist.docApi.applyUserActions([i >= 0
+        ? ['UpdateRecord', TABLE_CONFIG_PG, cols.id[i], { Valeur: url }]
+        : ['AddRecord', TABLE_CONFIG_PG, null, { Cle: 'pgAdresse', Valeur: url }]]);
+}
+
 function finalizeNewLayer(layer) {
     // Empiler au sommet mettrait un bâti importé après un réseau par-dessus lui.
     // On insère sous les géométries plus fines : surfaces, puis lignes, puis points.
@@ -16261,7 +16292,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261122e').then((m) => m.ouvrirImportPg({ carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261128b').then((m) => m.ouvrirImportPg({ options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') })).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     openIGN: () => import('./lib/vue-import-ign.js?v=20261010a').then((m) => m.ouvrirImportIgn({ carte: map, corps: $('module-body'), titre: titreModule, creerCouche: makeLayer, ajouterCouche: finalizeNewLayer, annoncer: showToast, retour: () => A.openModule('couches') })).catch((e) => showToast('Import IGN indisponible : ' + e.message, 'error')),
     selectLayer(id) {
         if (CONFIG.viewMode) {

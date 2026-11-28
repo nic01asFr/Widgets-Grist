@@ -110,11 +110,15 @@ describe('le chargement ne contacte jamais une passerelle', () => {
     assert.doesNotMatch(corps, /creerCoucheDirecte|creerClientPg|ouvrirImportPg|pg-direct|vue-import-pg|fetch\(['"`]https?/);
   });
 
-  it('ouvrir le panneau PG ne contacte pas la passerelle : connexion à la demande', () => {
+  it('ouvrir le panneau PG ne contacte une passerelle que par l’adresse du DOCUMENT ; sinon, connexion à la demande', () => {
     const vue = lire('lib/vue-import-pg.js');
-    assert.doesNotMatch(vue, /if \(etat\.url\) connecter\(\)/);
-    // la seule façon d'atteindre connecter() est une action de la personne : le bouton, ou la touche Entrée dans le champ d'adresse
-    assert.equal((vue.match(/connecter\(\)/g) || []).length, 3, 'définition + bouton + touche Entrée');
+    assert.doesNotMatch(vue, /if \(etat\.url\) connecter\(/, 'une adresse du navigateur ne connecte jamais toute seule');
+    // Les gestes de la personne : le bouton, et la touche Entrée dans le champ d'adresse.
+    assert.equal((vue.match(/connecter\(\)/g) || []).length, 2, 'bouton + touche Entrée');
+    // La seule voie automatique : l'adresse enregistrée dans le document (`demarrage` la distingue de celle que le navigateur a retenue).
+    const autos = vue.match(/connecter\(\{ automatique: true \}\)/g) || [];
+    assert.equal(autos.length, 1);
+    assert.match(vue, /if \(depart\.connexionAuto\) connecter\(\{ automatique: true \}\)/);
     const rendu = lire('lib/vue-pg-rendu.js');
     assert.match(rendu, /data-act="connecter"/);
   });

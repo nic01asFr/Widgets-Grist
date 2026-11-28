@@ -26,6 +26,7 @@ import { creerAccesPg } from './pg-acces.js?v=20261109a';
 import { creerAccesGrist, creerAccesAuto, memoriserConfirmation } from './pg-acces-grist.js?v=20261122b';
 import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
 import { creerClientAuto } from './pg-postgrest.js?v=20261122b';
+import { lireAdresseDocument, demarrage, adresseAEnregistrer } from './pg-adresse.js?v=20261128a';
 import { planImportPg } from './pg-import.js?v=20261109a';
 import { creerCoucheDirecte, libelleEtat } from './pg-direct.js?v=20261109a';
 import { ouvrirEdition } from './vue-edition-pg.js?v=20261122b';
@@ -185,11 +186,21 @@ export async function ouvrirImportPg(hote) {
   const acces = accesPartage;
   const icone = (nom, taille) => (hote.icone ? hote.icone(nom, taille) : '');
 
+  // L'adresse du DOCUMENT (options du widget) décide et connecte tout seul ; celle qu'a retenue ce navigateur préremplit le champ seulement.
+  let options = null;
+  if (typeof hote.options === 'function') {
+    try { options = await hote.options(); } catch (e) { hote.annoncer(`PostgreSQL : l'adresse enregistrée dans ce document n'a pas pu être lue (${(e && e.message) || e}).`, 'warning'); }
+  }
+  const adresseDoc = lireAdresseDocument(options);
+  const depart = demarrage({ adresseDocument: adresseDoc.url, adresseNavigateur: lireUrl() });
   const etat = {
-    url: lireUrl(), connexions: [], connexion: '', schema: null, filtre: '', table: null, couche: null, plan: null, nom: '',
+    url: depart.url, adresseDocument: adresseDoc.url, connexions: [], connexion: '', schema: null, filtre: '', table: null, couche: null, plan: null, nom: '',
     phase: 'repos', erreur: '', lectureSeule: !!hote.lectureSeule(), peutEnregistrer: false, modifiables: null, modifiable: null, copies: [],
-    connecte: false, enCours: false, erreurConnexion: '', modeAcces: null, fiche: 'connexion',
+    connecte: false, enCours: false, erreurConnexion: '', modeAcces: null,
+    // Adresse du document : la fiche de connexion n'apparaît que si quelque chose ne va pas (ou sur « Réglages »). Sinon : champ à remplir.
+    fiche: depart.connexionAuto ? null : 'connexion',
   };
+  if (adresseDoc.refus) hote.annoncer(`PostgreSQL : ${adresseDoc.refus}.`, 'warning');
   let client = null;
   let racine = null;
   const vivant = () => !!racine && racine.isConnected && hote.corps.contains(racine);
@@ -266,6 +277,10 @@ export async function ouvrirImportPg(hote) {
   /** Redessine la fiche (à droite ; sous la liste sans inspecteur). Les champs gardent leur état dans `etat` : rien ne se perd. */
   function poserFiche() {
     if (!vivant()) return;
+    if (etat.fiche === null) { // adresse du document, tout va bien : rien à régler, rien à montrer à droite
+      if (hote.fiche) hote.fiche.retirer(); else { const z0 = zone('#pg-fiche'); if (z0) z0.innerHTML = ''; }
+      return;
+    }
     const f = contenuFiche();
     if (hote.fiche) { hote.fiche.poser({ tete: f.tete, corps: f.corps, surClic, surSaisie, surTouche }); return; }
     const z = zone('#pg-fiche');
@@ -411,13 +426,14 @@ export async function ouvrirImportPg(hote) {
     majFiche();
   }
 
-  async function connecter() {
+  /** `automatique` : à l'ouverture, avec l'adresse du document. La fiche de connexion ne s'ouvre alors que si la connexion échoue. */
+  async function connecter({ automatique = false } = {}) {
     const champ = hote.corps.ownerDocument.getElementById('pg-url');
     const saisie = (champ ? champ.value : etat.url).trim();
     etat.url = saisie;
     ecrireUrl(saisie);
     client = creerClientAuto({ url: saisie, acces });
-    etat.enCours = true; etat.connecte = false; etat.erreurConnexion = ''; etat.fiche = 'connexion';
+    etat.enCours = true; etat.connecte = false; etat.erreurConnexion = ''; etat.fiche = automatique ? null : 'connexion';
     dessinerBase(); poserFiche();
     dire('Connexion…');
     try {
@@ -429,6 +445,7 @@ export async function ouvrirImportPg(hote) {
       if (!info.connexions.length) {
         etat.enCours = false;
         etat.erreurConnexion = 'Aucune base de données n’est déclarée sur cette passerelle.';
+        etat.fiche = 'connexion'; // quelque chose ne va pas : l'adresse et l'erreur redeviennent visibles
         dire('');
         dessinerBase(); poserFiche();
         return;
@@ -437,11 +454,26 @@ export async function ouvrirImportPg(hote) {
       etat.connecte = true;
       etat.enCours = false;
       await chargerSchema();
+      if (etat.schema) await memoriserAdresse(saisie); // une adresse dont on ne sait pas lire les tables n'est pas retenue pour tout le document
     } catch (e) {
       etat.enCours = false;
       etat.erreurConnexion = `Non connecté : ${texteErreur(e)}`;
+      etat.fiche = 'connexion';
       dire('');
       dessinerBase(); poserFiche();
+    }
+  }
+
+  /** Une adresse qui vient de servir est gardée dans le document (si la personne peut y écrire) : elle n'est plus à saisir, pour personne. */
+  async function memoriserAdresse(saisie) {
+    const url = adresseAEnregistrer({ saisie, adresseDocument: etat.adresseDocument, peutEcrire: !etat.lectureSeule && typeof hote.memoriserAdresse === 'function' });
+    if (!url) return;
+    try {
+      await hote.memoriserAdresse(url);
+      etat.adresseDocument = url;
+      hote.annoncer('Adresse enregistrée dans ce document (table Atlas_Config) : elle n’est plus à saisir.', 'success');
+    } catch (e) {
+      hote.annoncer(`Adresse non enregistrée dans le document : ${(e && e.message) || e}`, 'warning');
     }
   }
 
@@ -460,6 +492,7 @@ export async function ouvrirImportPg(hote) {
       poserFiche();
     } catch (e) {
       etat.erreurConnexion = `Tables illisibles : ${texteErreur(e)}`;
+      etat.fiche = 'connexion';
       dire('');
       dessinerBase(); poserFiche();
     }
@@ -589,8 +622,11 @@ export async function ouvrirImportPg(hote) {
   dessinerDirectes();
   chargerCopies();
   poserFiche();
-  // Connexion À LA DEMANDE : ouvrir le panneau ne contacte pas la passerelle (et n'envoie donc rien). On peut ainsi
-  // afficher, masquer ou oublier une liaison gardée sans se connecter.
+  // Sans adresse enregistrée dans le document : connexion À LA DEMANDE. Ouvrir le panneau ne contacte pas la passerelle (et n'envoie donc rien) :
+  // on peut afficher, masquer ou oublier une liaison gardée sans se connecter. Avec une adresse du document : voir plus bas.
   nettoyageCourant = () => { racine = null; };
+  // L'adresse enregistrée dans le DOCUMENT connecte tout seul : une seule question à la personne (la confirmation qui nomme l'adresse, « Refuser » par défaut).
+  // Rien n'est envoyé avant : la sonde de l'échangeur ne porte aucune identité.
+  if (depart.connexionAuto) connecter({ automatique: true });
   return { etat, connecter, lire, importer };
 }
