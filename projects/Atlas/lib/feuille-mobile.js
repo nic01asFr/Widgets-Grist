@@ -21,9 +21,9 @@
 export const VERSION = '1.0.0';
 
 /** Part de la hauteur d'ecran occupee par la feuille, par position. */
-export const ANCRAGES = Object.freeze({ fermee: 0, demi: 0.52, pleine: 0.92 });
+export const ANCRAGES = Object.freeze({ fermee: 0, compacte: 0.36, demi: 0.52, pleine: 0.92 });
 
-/** L'ordre dans lequel un geste franc fait passer d'une position a l'autre. */
+/** L'ordre dans lequel un geste franc fait passer d'une position a l'autre. `compacte` n'y figure pas : elle se pose par programme, jamais par un geste. */
 const ORDRE = ['fermee', 'demi', 'pleine'];
 
 /**
@@ -100,17 +100,25 @@ export function ancrageApresOnglet({ ongletActif, onglet, position }) {
 }
 
 /**
- * Où doit se tenir la fiche quand on attend un toucher sur la carte ?
+ * Ou doit se tenir la fiche d'une saisie ?
  *
- * Toucher un champ déploie la fiche en pleine hauteur, pour que le clavier ne
- * masque pas la saisie. Mais après « Envoyer », en série, Atlas redemande de
- * toucher la carte pour placer l'objet suivant : restée en pleine hauteur, la
- * fiche la recouvre tout entière et on ne peut plus rien poser sans la replier
- * à la main. La pleine hauteur redescend donc à mi-hauteur ; les autres
- * positions ne bougent pas.
+ * Trois comportements s'y croisent, et une seule regle les tient d'accord :
+ * - tant que la geometrie n'est pas posee (le point a placer, la forme a
+ *   tracer), la fiche n'a rien a montrer qu'une consigne : elle prend la place
+ *   de son contenu (`compacte`) pour laisser la carte, ou l'on va toucher ;
+ * - la geometrie posee, le formulaire apparait : de `compacte` on passe a mi-hauteur ;
+ * - toucher un champ la deploie en pleine hauteur (clavier) : cette position
+ *   se respecte tant qu'on est en saisie, mais pas quand on repart poser un
+ *   objet (saisie en serie : la pleine hauteur cacherait de nouveau la carte).
+ *
+ * @param {object} e
+ * @param {boolean} e.attentePose la geometrie n'est pas encore posee
+ * @param {string} e.position la position actuelle de la fiche
+ * @returns {string} la position voulue
  */
-export function ancrageAvantPoseSurCarte(position) {
-  return position === 'pleine' ? 'demi' : position;
+export function positionFicheSaisie({ attentePose = false, position = 'demi' } = {}) {
+  if (attentePose) return position === 'fermee' ? 'fermee' : 'compacte';
+  return position === 'compacte' ? 'demi' : position;
 }
 
 /**

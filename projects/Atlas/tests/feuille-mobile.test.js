@@ -98,19 +98,32 @@ test('changer d’onglet ouvre a mi-hauteur, jamais en plein ecran', () => {
   assert.equal(ancrageApresOnglet({ ongletActif: 'couches', onglet: 'recit', position: 'pleine' }), 'demi');
 });
 
-/* ---------- attendre un toucher sur la carte ---------- */
+/* ---------- ou se tient la fiche d'une saisie ---------- */
 
-import { ancrageAvantPoseSurCarte } from '../lib/feuille-mobile.js';
+import { positionFicheSaisie } from '../lib/feuille-mobile.js';
 
-test('en attente d’un toucher sur la carte, la pleine hauteur redescend à mi-hauteur', () => {
-  // Après « Envoyer » en série, la fiche restée déployée par le clavier
-  // recouvrait toute la carte : impossible de placer l'objet suivant.
-  assert.equal(ancrageAvantPoseSurCarte('pleine'), 'demi');
+test('en attente de pose, la fiche prend la hauteur de son contenu', () => {
+  // Elle n'a qu'une consigne a montrer : mi-hauteur ou pleine hauteur cachaient la carte ou l'on touche.
+  assert.equal(positionFicheSaisie({ attentePose: true, position: 'demi' }), 'compacte');
+  assert.equal(positionFicheSaisie({ attentePose: true, position: 'pleine' }), 'compacte', 'saisie en serie apres un clavier');
+  assert.equal(positionFicheSaisie({ attentePose: true, position: 'compacte' }), 'compacte');
 });
 
-test('les autres positions ne bougent pas', () => {
-  assert.equal(ancrageAvantPoseSurCarte('demi'), 'demi');
-  assert.equal(ancrageAvantPoseSurCarte('fermee'), 'fermee');
+test('une fiche fermee reste fermee', () => {
+  assert.equal(positionFicheSaisie({ attentePose: true, position: 'fermee' }), 'fermee');
+  assert.equal(positionFicheSaisie({ attentePose: false, position: 'fermee' }), 'fermee');
+});
+
+test('la geometrie posee, le formulaire sort de la position compacte, sans toucher aux autres', () => {
+  assert.equal(positionFicheSaisie({ attentePose: false, position: 'compacte' }), 'demi');
+  assert.equal(positionFicheSaisie({ attentePose: false, position: 'demi' }), 'demi');
+  assert.equal(positionFicheSaisie({ attentePose: false, position: 'pleine' }), 'pleine', 'le clavier garde la pleine hauteur');
+});
+
+test('la position compacte est plus basse que mi-hauteur et hors de l’ordre des gestes', () => {
+  assert.ok(ANCRAGES.compacte > ANCRAGES.fermee && ANCRAGES.compacte < ANCRAGES.demi);
+  // Un geste lent qui s'arrete pres d'elle retombe sur une position de l'ordre, jamais sur elle.
+  assert.ok(['fermee', 'demi', 'pleine'].includes(ancragePlusProche(ANCRAGES.compacte)));
 });
 
 import { pourLeDoigt } from '../lib/feuille-mobile.js';

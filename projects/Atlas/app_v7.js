@@ -10949,6 +10949,24 @@ const CONSIGNES_SAISIE = {
  * Le panneau de création. Idempotent : `renderInspector` le rappelle à chaque
  * changement de module, et remonter la fiche effacerait la saisie.
  */
+/** L'étape en cours, dite en toutes lettres sur téléphone (le bureau montre la fiche à côté de la carte). */
+function etapeSaisieTelephone(famille) {
+    if (!surTelephone()) return '';
+    const geste = famille === 'Point' ? 'placer le point' : famille === 'Polygon' ? 'tracer la surface' : 'tracer la ligne';
+    return `<strong>Étape 1 sur 2 : ${geste}, puis remplir la fiche.</strong><br>`;
+}
+
+/** Les mêmes consignes au doigt : « toucher », et rien qui suppose un clavier (Alt, Entrée) ou une souris. */
+const CONSIGNES_SAISIE_DOIGT = {
+    Point: 'Touchez la carte pour placer le point.',
+    LineString: 'Touchez pour poser chaque sommet, puis « Terminer ». Les sommets s’accrochent aux objets proches.',
+    Polygon: 'Touchez pour poser chaque sommet ; touchez le premier sommet ou « Terminer » pour fermer la surface. Les sommets s’accrochent aux objets proches.',
+};
+const consigneSaisie = (famille) => {
+    const t = surTelephone() ? CONSIGNES_SAISIE_DOIGT : CONSIGNES_SAISIE;
+    return t[famille] || t.Point;
+};
+
 function renderSaisieObjet() {
     const s = _saisieObjet;
     const layer = STATE.layers.find((l) => l.id === s?.layerId);
@@ -10956,6 +10974,8 @@ function renderSaisieObjet() {
     const famille = familleGeometrie(layer.geometryType);
     if (s.modification) { renderModificationForme(s, layer, famille); return; }
     const g = s.geometrie;
+    // La fiche ne change de hauteur qu'au passage « à poser » <-> « posée » : pas à chaque sommet tracé.
+    if (s._attentePose !== !g) { s._attentePose = !g; ajusterFicheSaisie(); }
     let sous;
     if (famille === 'Point') sous = g ? libellePoint(g) : `Point · table ${escapeHtml(layer.sourceTable)}`;
     else sous = libelleMesures(mesurerGeometrie(g || formeEnCours(s)), famille);
@@ -10979,9 +10999,9 @@ function renderSaisieObjet() {
         // Retracer garde la fiche déjà remplie : seule la forme recommence.
         if (ficheEnPlace) {
             const r = $('saisie-rappel');
-            if (r) r.textContent = doigt(CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point);
+            if (r) r.textContent = consigneSaisie(famille);
         } else {
-            hote.innerHTML = `<div class="hint">${doigt(CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point)} Rien n'est écrit dans Grist avant l'envoi de la fiche.</div>`
+            hote.innerHTML = `<div class="hint">${etapeSaisieTelephone(famille)}${consigneSaisie(famille)} Rien n'est écrit dans Grist avant l'envoi de la fiche.</div>`
                 + (famille !== 'Point' && !s.trace ? '<div class="hint" style="margin-top:8px">Chargement de l’outil de tracé…</div>' : '');
         }
         $('insp-foot').innerHTML = abandonner + outils;
@@ -11057,6 +11077,21 @@ const CONSIGNES_MODIFICATION = {
 };
 
 /** Le panneau de modification de forme : ni fiche ni attributs, la forme seule. */
+/**
+ * Modifier une forme au doigt : glisser un sommet, glisser un point milieu pour en insérer un, glisser la forme.
+ * Le retrait d'un sommet n'est PAS promis ici : l'outil de tracé le réserve au clic droit, et rien dans Atlas ne
+ * l'offre au toucher (limite connue, à régler par un bouton « Retirer ce sommet » si on le veut).
+ */
+const CONSIGNES_MODIFICATION_DOIGT = {
+    Point: 'Touchez la carte à la nouvelle position du point.',
+    LineString: 'Glissez un sommet pour le déplacer, un point milieu pour en insérer un ; glissez la ligne pour la déplacer entière. « Annuler le geste » défait le dernier ajout. Les sommets s’accrochent aux objets proches.',
+    Polygon: 'Glissez un sommet pour le déplacer, un point milieu pour en insérer un ; glissez la surface pour la déplacer entière. « Annuler le geste » défait le dernier ajout. Les sommets s’accrochent aux objets proches.',
+};
+const consigneModification = (famille) => {
+    const t = surTelephone() ? CONSIGNES_MODIFICATION_DOIGT : CONSIGNES_MODIFICATION;
+    return t[famille] || t.Point;
+};
+
 function renderModificationForme(s, layer, famille) {
     const g = famille === 'Point' ? s.geometrie : formeEnCours(s);
     const sous = famille === 'Point' ? libellePoint(g) : libelleMesures(mesurerGeometrie(g), famille);
@@ -11066,7 +11101,7 @@ function renderModificationForme(s, layer, famille) {
         <div class="insp-sub">${sous}</div>`;
     $('insp-tabs').innerHTML = '';
     $('insp-body').innerHTML = `
-        <div class="hint">${CONSIGNES_MODIFICATION[famille] || CONSIGNES_MODIFICATION.Point}</div>
+        <div class="hint">${consigneModification(famille)}</div>
         <div class="hint" style="margin-top:8px">Seule la forme sera écrite dans <strong>${escapeHtml(layer.sourceTable)}</strong> ; les attributs ne changent pas.</div>
         ${famille !== 'Point' && !s.trace ? '<div class="hint" style="margin-top:8px">Chargement de l’outil de tracé…</div>' : ''}`;
     delete $('insp-body').dataset.saisie;
@@ -13586,7 +13621,17 @@ async function ouvrirFicheMobile() {
         feuilleAvantFiche = feuillePosition;
         poserFeuille('fermee');
     }
-    if (fichePosition === 'fermee') poserFiche('demi');
+    if (fichePosition === 'fermee') poserFiche(Feuille.positionFicheSaisie({ attentePose: saisieEnAttentePose(), position: 'demi' }));
+}
+
+/** Une saisie d'objet attend sa géométrie (le point à placer, la forme à tracer) : la carte doit rester à portée. */
+const saisieEnAttentePose = () => !!_saisieObjet && !_saisieObjet.geometrie && !_saisieObjet.modification;
+
+/** Remet la fiche à la hauteur que dit `positionFicheSaisie`, sur téléphone seulement. */
+function ajusterFicheSaisie() {
+    if (!surTelephone() || !Feuille || fichePosition === 'fermee') return;
+    const cible = Feuille.positionFicheSaisie({ attentePose: saisieEnAttentePose(), position: fichePosition });
+    if (cible !== fichePosition) poserFiche(cible);
 }
 
 function fermerFicheMobile() {
@@ -16076,15 +16121,12 @@ const A = {
         if (!suite && layer.visible === false) showToast(`La couche « ${layer.name} » est masquée : l’objet sera créé, mais pas affiché`, 'warning');
         renderSaisieObjet();
         openInspectorPanel();
-        // Une fiche restée en pleine hauteur (clavier) cacherait la carte où l'on va toucher.
-        if (surTelephone() && Feuille && fichePosition === 'pleine') poserFiche(Feuille.ancrageAvantPoseSurCarte(fichePosition));
-        const geste = famille === 'Point' ? 'cliquez sur la carte pour placer le point'
-            : famille === 'Polygon' ? 'tracez la surface sur la carte' : 'tracez la ligne sur la carte';
+        // La fiche déjà ouverte (série, clavier) cèderait la carte où l'on va toucher : elle se compacte.
+        ajusterFicheSaisie();
         // Position déjà donnée (celle de l'appareil, le centre de l'objet) : le point est posé, on passe au formulaire.
         if (parent?.forme) { poserFormeSaisie(parent.forme); return; }
         if (parent?.point) { poserPointSaisie(parent.point); return; }
-        // En série, « Objet créé » vient d'être dit : on n'ajoute que la suite.
-        showToast(doigt(suite ? `Suivant : ${geste}` : `${geste.charAt(0).toUpperCase()}${geste.slice(1)} · ${layer.name}`), 'info');
+        // Pas de message : la consigne est déjà dans la fiche (bandeau). Les messages disent ce qui vient d'arriver, pas ce qu'il reste à faire.
         if (famille !== 'Point') demarrerTrace(_saisieObjet, layer);
     },
     /** Depuis l'onglet d'un formulaire qui pose une position : la poser (carte, appareil, centre de l'objet), puis remplir. */
