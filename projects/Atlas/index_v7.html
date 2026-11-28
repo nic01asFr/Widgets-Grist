@@ -1984,7 +1984,8 @@
                début — « …penMapTiles » —, que la licence impose de laisser lisible.
                Le bouton flottant du récit occupait ce coin et le masquait. */
             body.mobile-layout .legend { bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 10px + var(--bande-attrib) + 8px); left: 12px; width: auto; max-width: calc(100% - 24px); }
-            body.mobile-layout .toasts { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); right: 12px; left: 12px; }
+            /* Les messages passent en haut : en bas, ils recouvraient les boutons de la feuille (« Abandonner », « Envoyer »). Sans prise : un message n'est jamais un obstacle. */
+            body.mobile-layout .toasts { top: calc(var(--header-h) + 8px); bottom: auto; right: 12px; left: 12px; pointer-events: none; }
             body.mobile-layout .maplibregl-ctrl-bottom-right { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
             /* Lecture : pas de bottom nav — carte plein écran */
             body.view-mode.mobile-layout .map-frame { padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -2003,7 +2004,7 @@
                 top: auto; bottom: var(--etage-recit, 240px); left: 6%;
             }
             body.story-presenting.mobile-layout .legend-body { max-height: min(220px, 30vh); }
-            body.view-mode.mobile-layout .toasts { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+            body.view-mode.mobile-layout .toasts { top: auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
             body.view-mode.mobile-layout .maplibregl-ctrl-bottom-right { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
             /* La bulle du récit se pose au-dessus de l'attribution, comme au
                bureau : ancrée à 24 px, elle recouvrait la mention dépliée à
