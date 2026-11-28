@@ -325,6 +325,19 @@
         }
 
         .header-actions { display: flex; align-items: center; gap: 6px; }
+        /* Au doigt, les boutons de la barre du haut (32 px, 34 px en mise en page mobile, 26 px pour
+           l'enregistrement) sont sous les 44 px recommandes. On agrandit la zone touchable, pas
+           l'aspect : un pseudo-element deborde de 6 px en hauteur et de 3 px en largeur — la moitie
+           de l'espace de 6 px entre deux boutons, pour qu'aucune zone n'en recouvre une autre. */
+        @media (pointer: coarse) {
+            .header-actions .btn-ghost, .header-actions .btn-posture,
+            .header-actions .enreg-etat, .header-actions .synchro-pastille { position: relative; }
+            .header-actions .btn-ghost::after, .header-actions .btn-posture::after,
+            .header-actions .enreg-etat::after, .header-actions .synchro-pastille::after {
+                content: ''; position: absolute; top: 50%; left: -3px; right: -3px;
+                height: 44px; transform: translateY(-50%);
+            }
+        }
         .btn-ghost {
             background: transparent; border: none; cursor: pointer;
             width: 32px; height: 32px; border-radius: 8px; color: var(--muted);
