@@ -131,6 +131,17 @@ describe('garde-fous du branchement dans l’application', () => {
     assert.match(projet, /STATE\.layers\.filter\(\(l\) => !l\._pgLive\)/, 'les couches PostgreSQL sont écartées avant la sérialisation');
   });
 
+  it('l’édition locale est verrouillée : clic, bouton Éditer, revue objet par objet, entrée en mode sélection', () => {
+    assert.match(app, /if \(layer\._distant \|\| layer\._pgLive\) \{\s+ouvrirObjet\(layer, idx, \{ lngLat: e\.lngLat, feature: f \}\);/, 'le clic ouvre la bulle de consultation');
+    const bouton = app.slice(app.indexOf('function boutonRevueObjets'), app.indexOf('function boutonRevueObjets') + 400);
+    assert.match(bouton, /if \(layer\._pgLive\) return '';/, 'pas de bouton « Éditer » ni « Saisir »');
+    const revue = app.slice(app.indexOf('    editLayerObjects(id) {'), app.indexOf('    editLayerObjects(id) {') + 400);
+    assert.match(revue, /if \(l\._pgLive\) \{ showToast\(/, 'la revue objet par objet est refusée, dite');
+    const selection = app.slice(app.indexOf('function enterSelectionMode'), app.indexOf('function enterSelectionMode') + 2500);
+    assert.match(selection, /if \(coucheCliquee\?\._pgLive\) \{\s+if \(idx != null\) ouvrirObjet\(coucheCliquee, idx, \{\}\);/, 'tout chemin vers la sélection (recherche, rectangle) ouvre la consultation');
+    assert.ok(selection.indexOf('_pgLive') < selection.indexOf('STATE.selection.mode = true'), 'le verrou précède l’entrée en mode sélection');
+  });
+
   it('supprimer la couche dans Atlas arrête ses lectures', () => {
     assert.match(app, /if \(l\._pgLive && STATE\.pgVue\) STATE\.pgVue\.retirerCoucheParAtlas\(l\.id\)/);
   });

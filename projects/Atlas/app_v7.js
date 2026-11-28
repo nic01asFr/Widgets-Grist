@@ -9359,6 +9359,7 @@ function renderInspector() {
  */
 function boutonRevueObjets(layer) {
     if (!layer?.geojson?.features?.length) return '';
+    if (layer._pgLive) return ''; // lecture seule : la base se modifie par « Modifier les données » du panneau PostgreSQL
     // Il nommait le formulaire — « Saisir sur les objets · Bâtiment — relevé ».
     // C'etait vrai quand une couche n'en portait qu'un ; depuis qu'elle en a
     // autant que de tables qui la referencent, nommer le premier laisserait
@@ -11772,7 +11773,8 @@ function setupInteraction() {
         // ouvrirait un inspecteur d'edition sur un objet qu'on ne peut pas
         // enregistrer — et « Enregistrer » qui echoue est pire que son absence.
         // On montre la fiche, en consultation, comme en lecture.
-        if (layer._distant) {
+        // Une couche PostgreSQL de même : ses entités sont celles de la base, relues à chaque déplacement ; les corriger ici ne remonterait jamais dans la base.
+        if (layer._distant || layer._pgLive) {
             ouvrirObjet(layer, idx, { lngLat: e.lngLat, feature: f });
             return;
         }
@@ -12436,6 +12438,12 @@ async function onLocationPick(e) {
 }
 function enterSelectionMode(layerId, idx, { consultation = false } = {}) {
     const coucheCliquee = STATE.layers.find((l) => l.id === layerId);
+    // Jamais d'édition locale sur une couche PostgreSQL : la fiche s'ouvre en consultation (bulle), quel que soit le geste qui a mené ici.
+    if (coucheCliquee?._pgLive) {
+        if (idx != null) ouvrirObjet(coucheCliquee, idx, {});
+        else showToast('Couche PostgreSQL : lecture seule dans Atlas. Pour modifier la base, « Modifier les données » dans le panneau PostgreSQL.', 'warning');
+        return;
+    }
     const enSaisie = coucheEnSaisie(coucheCliquee) || coucheDansSaisiesEtape(coucheCliquee);
     if (_storyPresenting && _trajetSuivi) {
         const deja = _trajetPause;
@@ -16478,7 +16486,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261128l').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261128m').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     pgBascule: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.basculerCouchePg(id); },
     pgZoom: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.zoomCouchePg(id); },
     pgMenu: (id, ev) => menuCouchePg(id, ev),
@@ -17678,6 +17686,7 @@ const A = {
 
     editLayerObjects(id) {
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
+        if (l._pgLive) { showToast('Couche PostgreSQL : lecture seule dans Atlas. Pour modifier la base, « Modifier les données » dans le panneau PostgreSQL.', 'warning'); return; }
         const n = l.geojson?.features?.length || 0;
         if (!n) { showToast('Aucun objet dans cette couche', 'warning'); return; }
         // Ce bouton n'ouvrait que le mode selection, VIDE, avec un toast disant
