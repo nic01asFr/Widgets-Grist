@@ -85,7 +85,8 @@ import { pagesDeTablesCreees, actionRetirerPages } from './lib/tables-sans-pages
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
 import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=20261031a';
 import { creerAccesDalles } from './lib/dalles3d-acces.js?v=20261031a';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
+import { estApplicationNative, creerRetour, saisieAvecContenu } from './lib/retour.js?v=20261128a';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut, raisonAucunFormulairePropose } from './lib/posture.js?v=20261128a';
 import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=20261003g';
 import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=20261002g';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
@@ -13185,7 +13186,7 @@ function raisonPostureNonOfferte(posture) {
     if (posture === 'preparer') return PLAFOND_LIEN ? 'Ce lien ouvre en exploitation : rouvrez le document sans « mode » pour régler' : 'Vos droits ne permettent pas de régler la configuration';
     return tablesDeReleve().length
         ? 'Le document refuse l’écriture dans les tables de relevé'
-        : 'Aucun formulaire de relevé n’est proposé : à régler en Préparer';
+        : raisonAucunFormulairePropose(surTelephone());
 }
 
 /** La seule écriture de `viewMode` et `peutSaisir` après l'ouverture. */
@@ -13837,16 +13838,24 @@ function allumerOngletMobile(module) {
 }
 
 /** La feuille des modules que la barre du bas ne peut pas porter. */
+/** La feuille « Plus » est-elle ouverte ? */
+const feuillePlusOuverte = () => { const f = $('mobile-plus'); return !!f && !f.hidden; };
+
+/** La referme. L'onglet « Plus » ne reste pas actif : il ouvre, il ne sélectionne pas. */
+function fermerFeuillePlus() {
+    const f = $('mobile-plus');
+    if (!f || f.hidden) return;
+    f.hidden = true;
+    allumerOngletMobile(STATE.currentModule);
+}
+
 function ouvrirFeuilleModules() {
     const f = $('mobile-plus');
     if (!f) return;
     f.hidden = false;
-    const fermer = () => {
-        f.hidden = true;
-        // L'onglet « Plus » ne reste pas actif : il ouvre, il ne selectionne pas.
-        allumerOngletMobile(STATE.currentModule);
-    };
+    const fermer = fermerFeuillePlus;
     f.querySelector('.mp-fond').onclick = fermer;
+    f.querySelector('[data-fermer-plus]').onclick = fermer;
     f.querySelectorAll('[data-module-plus]').forEach((b) => {
         // En lecture, `openModule` refuse ces modules avec un message. Les
         // laisser visibles offrirait quatre boutons qui disent tous non —
@@ -13868,6 +13877,67 @@ function ouvrirFeuilleModules() {
     });
 }
 
+/* ------------------------------------------------------------------ */
+/* Le retour d'Android                                                  */
+/* ------------------------------------------------------------------ */
+
+let _retour = null;
+
+/**
+ * Abandon par le retour d'Android. Une saisie vide se ferme comme « Abandonner » ; une saisie qui a quelque
+ * chose à perdre (point posé, forme commencée, champ rempli) demande d'abord, et reste ouverte si on refuse.
+ */
+function retourSaisie() {
+    const s = _saisieObjet;
+    if (!s) return true;
+    const valeurs = [...document.querySelectorAll('#insp-body input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=button]):not([type=submit]), #insp-body textarea')].map((e) => e.value);
+    if (saisieAvecContenu({ geometrie: !!s.geometrie, formeEnCours: !!formeEnCours(s), valeurs })
+        && !window.confirm('Abandonner cette saisie ? Ce qui est saisi ne sera pas envoyé.')) return false;
+    quitterSaisieObjet(messageAbandon());
+    return true;
+}
+
+/** Ce que le retour peut fermer, du dessus au dessous. Même ordre que la touche Échap, avec les menus d'abord. */
+function fermablesRetour() {
+    const present = (id) => !!document.getElementById(id);
+    return [
+        { id: 'menu-posture', ouvert: present('posture-menu'), fermer: fermerMenuPosture },
+        { id: 'menu-export', ouvert: present('export-menu'), fermer: fermerMenuExport },
+        { id: 'menu-couche', ouvert: present('menu-couche'), fermer: fermerMenuCouche },
+        { id: 'panneau-enreg', ouvert: present('panneau-enreg'), fermer: fermerPanneauEnreg },
+        { id: 'panneau-synchro', ouvert: present('panneau-synchro'), fermer: fermerPanneauSynchro },
+        { id: 'plus', ouvert: feuillePlusOuverte(), fermer: fermerFeuillePlus },
+        { id: 'palette', ouvert: !!$('cmd-overlay')?.classList.contains('open'), fermer: closeCmd },
+        { id: 'recit', ouvert: lecteurRecitActif(), fermer: () => A.storyExit() },
+        { id: 'saisie', ouvert: !!_saisieObjet, fermer: retourSaisie },
+        { id: 'itineraire', ouvert: !!_itineraire, fermer: () => { terminerItineraire(); showToast('Itinéraire annulé', 'info'); if (STATE.currentModule === 'recit') renderRecit(); } },
+        { id: 'choix-trajet', ouvert: !!trajetPickMode, fermer: () => { annulerChoixTrajet(); if (STATE.currentModule === 'recit') renderRecit(); } },
+        { id: 'choix-lieu', ouvert: !!locationPickMode, fermer: () => { locationPickMode = false; if (map) map.getCanvas().style.cursor = ''; } },
+        { id: 'selection', ouvert: !!STATE.selection.mode, fermer: exitSelectionMode },
+        { id: 'liste', ouvert: !!_liste, fermer: () => fermerListe() },
+        { id: 'module', ouvert: !!STATE.currentModule, fermer: closeModulePanel },
+        { id: 'fiche', ouvert: !!$('inspector')?.classList.contains('open'), fermer: () => A.closeInspector() },
+    ];
+}
+
+/**
+ * Branche le retour d'Android, dans l'application native SEULEMENT : ni un navigateur, ni un widget dans Grist
+ * ne voient leur historique touché. Une seule entrée d'historique « sentinelle » au-dessus de la page ; chaque
+ * retour la consomme, ferme la couche du dessus, puis la repose (voir `lib/retour.js`).
+ */
+function brancherRetourAndroid() {
+    if (_retour || !estApplicationNative()) return;
+    _retour = creerRetour({
+        fermables: fermablesRetour,
+        fermer: async (id) => (await fermablesRetour().find((f) => f.id === id)?.fermer()) !== false,
+        avertir: () => showToast('Appuyez encore pour quitter', 'info'),
+        pousserSentinelle: () => history.pushState({ atlasRetour: true }, ''),
+    });
+    history.replaceState({ atlasBase: true }, '');
+    window.addEventListener('popstate', () => { _retour.surRetour().catch((e) => console.warn('[Atlas] retour :', e)); });
+    _retour.armer();
+}
+
 function wireMobileNav() {
     document.querySelectorAll('#mobile-nav [data-mobile-tab]').forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -13875,6 +13945,8 @@ function wireMobileNav() {
             // Toucher l'onglet deja ouvert referme la feuille : c'est ce qui
             // remplace l'ancien onglet « Carte », sous le doigt plutot qu'a
             // l'autre bout de la barre — et sous la feuille qu'il fallait ecarter.
+            // Retoucher « Plus » alors que sa feuille est ouverte la referme (la barre reste visible dessous).
+            if (tab === 'plus' && feuillePlusOuverte()) { fermerFeuillePlus(); return; }
             const F = await chargerFeuille();
             const actif = document.querySelector('#mobile-nav [data-mobile-tab].active')?.dataset.mobileTab;
             if (tab !== 'plus' && F.ancrageApresOnglet({
@@ -18434,6 +18506,7 @@ function wireMapControlsDock() {
 function wireEvents() {
     updateMobileLayout();
     wireMobileNav();
+    brancherRetourAndroid();
     wireBasculeLectureEdition();
     wireLegendClicks();
     // Les bascules sont des `div` : `tabindex` les rend atteignables, mais

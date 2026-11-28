@@ -67,3 +67,13 @@ export function postureParDefaut({ offertes = [], memorisee = null, initiale = n
   if (initiale && permises.includes(initiale)) return initiale;
   return permises[0];
 }
+
+/**
+ * Pourquoi « Exploiter » n'est pas offerte quand aucun formulaire de relevé n'est proposé, et OÙ le régler.
+ * Le chemin est celui de l'interface : sur téléphone le module Formulaires se trouve sous « Plus », sur
+ * écran large il est dans la barre latérale. L'interrupteur est celui de la Fiche d'une couche.
+ */
+export function raisonAucunFormulairePropose(tactile) {
+  const ou = tactile ? 'Plus, puis Formulaires' : 'le module Formulaires';
+  return `Aucun formulaire de relevé n’est proposé. En Préparer : ${ou}, puis « Modifiable sur le terrain ».`;
+}

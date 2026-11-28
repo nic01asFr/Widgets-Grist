@@ -75,3 +75,12 @@ test('l ouverture sous plafond ne retombe pas en Préparer, même avec un choix 
   // Rien d'exploitable : la lecture, jamais l'édition que le lien écartait.
   assert.equal(postureParDefaut({ offertes: ['lecture'], memorisee: 'preparer', initiale: 'exploiter' }), 'lecture');
 });
+
+import { raisonAucunFormulairePropose } from '../lib/posture.js';
+
+test('« Exploiter » grisée dit où régler : le chemin réel de l’interface', () => {
+  // Plus > Formulaires > « Modifiable sur le terrain » sur téléphone ; le module Formulaires sur écran large.
+  assert.match(raisonAucunFormulairePropose(true), /Plus, puis Formulaires, puis « Modifiable sur le terrain »/);
+  assert.match(raisonAucunFormulairePropose(false), /le module Formulaires, puis « Modifiable sur le terrain »/);
+  assert.doesNotMatch(raisonAucunFormulairePropose(true), /à régler en Préparer$/, 'plus le texte sans chemin');
+});
