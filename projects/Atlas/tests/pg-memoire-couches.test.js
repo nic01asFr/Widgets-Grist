@@ -99,6 +99,16 @@ describe('garde-fous du branchement : mémoire des couches PostgreSQL', () => {
     }
   });
 
+  it('l’œil et « Tout masquer » de la liste commune préviennent la vue PostgreSQL : visibilité mémorisée, lectures arrêtées', () => {
+    const un = app.slice(app.indexOf('    toggleLayer(id, e) {'), app.indexOf('    toggleAllLayers(v) {'));
+    const tous = app.slice(app.indexOf('    toggleAllLayers(v) {'), app.indexOf('    zoomLayer(id, e) {'));
+    assert.match(un, /STATE\.pgVue\.visibiliteChangeeParAtlas\(l\.id, l\.visible\)/);
+    assert.match(tous, /STATE\.pgVue\.visibiliteChangeeParAtlas\(l\.id, v\)/);
+    const f = vue.slice(vue.indexOf('export function visibiliteChangeeParAtlas'), vue.indexOf('export function retirerCoucheParAtlas'));
+    assert.match(f, /poserVisibilite\(d, visible !== false\)/);
+    assert.match(f, /d\.visible !== false\) !== \(visible !== false\)/, 'sans effet si l’état est déjà le bon (pas de boucle)');
+  });
+
   it('une liste illisible n’est pas écrasée, une table introuvable reste dans la liste et est dite', () => {
     const f = vue.slice(vue.indexOf('async function restaurerCouches'), vue.indexOf('/** Une adresse qui vient de servir'));
     assert.match(f, /if \(lue\.refus\) \{ hote\.annoncer\(.*Elle n’est pas écrasée.*; return; \}/);

@@ -177,6 +177,19 @@ export function basculerCouchePg(id) {
   noterChangement();
   return true;
 }
+/**
+ * Atlas vient de montrer ou masquer une couche de sa liste commune (l'œil, « Tout masquer ») : si elle vient d'ici, ses lectures suivent
+ * (arrêt si masquée) et la visibilité est mémorisée dans le document. Sans effet si la couche n'est pas d'ici ou si l'état est déjà le bon.
+ */
+export function visibiliteChangeeParAtlas(layerId, visible) {
+  for (const d of directes.values()) {
+    if (d.rendu && d.rendu.layer && d.rendu.layer.id === layerId) {
+      if ((d.visible !== false) !== (visible !== false)) poserVisibilite(d, visible !== false);
+      return true;
+    }
+  }
+  return false;
+}
 /** Atlas vient de supprimer une couche qui venait d'ici : ses lectures s'arrêtent (la couche est déjà retirée de la carte par Atlas). */
 export function retirerCoucheParAtlas(layerId) {
   for (const [id, d] of directes) {

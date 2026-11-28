@@ -16514,7 +16514,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: (opts = {}) => import('./lib/vue-import-pg.js?v=20261128n').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ restauration: !!(opts && opts.restauration === true), couchesDocument: lireCouchesPgDoc, memoriserCouches: memoriserCouchesPg, rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: (opts = {}) => import('./lib/vue-import-pg.js?v=20261128o').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ restauration: !!(opts && opts.restauration === true), couchesDocument: lireCouchesPgDoc, memoriserCouches: memoriserCouchesPg, rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     pgBascule: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.basculerCouchePg(id); },
     pgZoom: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.zoomCouchePg(id); },
     pgMenu: (id, ev) => menuCouchePg(id, ev),
@@ -17573,6 +17573,7 @@ const A = {
         // qgis2grist : une table affichée puis masquée doit le rester au
         // rechargement. Le refus est dit en console, plus avalé.
         saveLayerPrefIfSynced(l);
+        if (STATE.pgVue) STATE.pgVue.visibiliteChangeeParAtlas(l.id, l.visible); // les lectures et la mémoire du document suivent l'œil
         renderLayersPanel(STATE.currentModule);
     },
     toggleAllLayers(v) {
@@ -17587,6 +17588,7 @@ const A = {
         syncAllLayersToMap();
         updateLegend();
         STATE.layers.forEach((l) => saveLayerPrefIfSynced(l));
+        if (STATE.pgVue) STATE.layers.forEach((l) => STATE.pgVue.visibiliteChangeeParAtlas(l.id, v));
         renderLayersPanel(STATE.currentModule);
     },
     zoomLayer(id, e) {
