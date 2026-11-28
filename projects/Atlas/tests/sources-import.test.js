@@ -52,3 +52,13 @@ describe('sources-import — le registre', () => {
     assert.doesNotMatch(h, /<b>|<i>/);
   });
 });
+
+describe('sources-import — PostgreSQL a l’icône d’une base de données', () => {
+  it('la source PG n’emprunte pas l’icône « carte » de l’IGN, et l’icône existe dans l’application', () => {
+    const pg = SOURCES_IMPORT.find((x) => x.id === 'pg');
+    assert.equal(pg.icone, 'baseDeDonnees');
+    assert.notEqual(pg.icone, SOURCES_IMPORT.find((x) => x.id === 'ign').icone);
+    const app = readFileSync(new URL('../app_v7.js', import.meta.url), 'utf8');
+    assert.match(app, /^    baseDeDonnees: '<ellipse/m, 'le dessin est défini dans IC');
+  });
+});

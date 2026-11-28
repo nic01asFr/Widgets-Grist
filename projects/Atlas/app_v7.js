@@ -248,7 +248,7 @@ import {
 } from './lib/view-mode.js?v=20260926a';
 import { mettreAPlat } from './lib/vue-import.js?v=20260911a';
 import { attributionDe, htmlProvenance } from './lib/provenance-couche.js?v=20261010a';
-import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=20261010a';
+import { boutonsSourcesImport, entreesPaletteSources } from './lib/sources-import.js?v=20261128a';
 import { enTetesOsm, messageRefusOsm, avecReprises, requeteOsm, repliWeb } from './lib/osm-requete.js?v=20261101b';
 import { objetsPourPalette, nomObjet } from './lib/palette-objets.js?v=20260916a';
 import { objetLePlusProche, direDistance, lignesReleve, distanceMetres } from './lib/releve.js?v=20260923b';
@@ -6358,6 +6358,7 @@ const IC = {
     dossier:   '<path d="M3 7h6l2 2h10v9a2 2 0 0 1-2 2H3z"/>',
     globe:     '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15 0 18M12 3C9.5 5.7 9.5 18 12 21"/>',
     carte:     '<path d="m9 3-6 3v15l6-3 6 3 6-3V3l-6 3z"/><path d="M9 3v15m6-12v15"/>',
+    baseDeDonnees: '<ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
     epingle:   '<path d="M12 22s7-7 7-12a7 7 0 0 0-14 0c0 5 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/>',
     loupe:     '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/>',
     soleil:    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/>',

@@ -20,8 +20,8 @@ export const SOURCES_IMPORT = Object.freeze([
     titre: 'Importer des données de l’IGN (BD TOPO, Admin Express)', ouvrir: 'openIGN',
   }),
   Object.freeze({
-    id: 'pg', nom: 'PostgreSQL', libelle: 'PG', icone: 'carte',
-    titre: 'Importer une table PostgreSQL/PostGIS via une passerelle pg-gateway', ouvrir: 'openPG',
+    id: 'pg', nom: 'PostgreSQL', libelle: 'PG', icone: 'baseDeDonnees',
+    titre: 'Importer une table PostgreSQL/PostGIS : l’afficher, la copier ou la synchroniser', ouvrir: 'openPG',
   }),
 ]);
 
