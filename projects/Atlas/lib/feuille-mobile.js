@@ -112,3 +112,15 @@ export function ancrageApresOnglet({ ongletActif, onglet, position }) {
 export function ancrageAvantPoseSurCarte(position) {
   return position === 'pleine' ? 'demi' : position;
 }
+
+/**
+ * Dit « touchez » où le texte dit « cliquez », quand l'écran se commande au doigt.
+ * Les consignes sont écrites pour la souris ; sur un téléphone, « Cliquez sur la
+ * carte » sonne comme une consigne qui n'est pas pour soi.
+ */
+export function pourLeDoigt(texte, tactile) {
+  if (!tactile || typeof texte !== 'string') return texte;
+  return texte
+    .replace(/\bCliquez sur /g, 'Touchez ').replace(/\bcliquez sur /g, 'touchez ')
+    .replace(/\bCliquez\b/g, 'Touchez').replace(/\bcliquez\b/g, 'touchez');
+}

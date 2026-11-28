@@ -112,3 +112,15 @@ test('les autres positions ne bougent pas', () => {
   assert.equal(ancrageAvantPoseSurCarte('demi'), 'demi');
   assert.equal(ancrageAvantPoseSurCarte('fermee'), 'fermee');
 });
+
+import { pourLeDoigt } from '../lib/feuille-mobile.js';
+
+test('au doigt, « cliquez » devient « touchez », avec ou sans majuscule', () => {
+  assert.equal(pourLeDoigt('Cliquez sur la carte pour placer le point.', true), 'Touchez la carte pour placer le point.');
+  assert.equal(pourLeDoigt('Cliquez ailleurs sur la carte', true), 'Touchez ailleurs sur la carte');
+  assert.equal(pourLeDoigt('Cliquez ; puis cliquez le premier sommet', true), 'Touchez ; puis touchez le premier sommet');
+});
+
+test('à la souris, le texte ne change pas', () => {
+  assert.equal(pourLeDoigt('Cliquez sur la carte', false), 'Cliquez sur la carte');
+});

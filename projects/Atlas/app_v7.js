@@ -10978,9 +10978,9 @@ function renderSaisieObjet() {
         // Retracer garde la fiche déjà remplie : seule la forme recommence.
         if (ficheEnPlace) {
             const r = $('saisie-rappel');
-            if (r) r.textContent = CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point;
+            if (r) r.textContent = doigt(CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point);
         } else {
-            hote.innerHTML = `<div class="hint">${CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point} Rien n'est écrit dans Grist avant l'envoi de la fiche.</div>`
+            hote.innerHTML = `<div class="hint">${doigt(CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point)} Rien n'est écrit dans Grist avant l'envoi de la fiche.</div>`
                 + (famille !== 'Point' && !s.trace ? '<div class="hint" style="margin-top:8px">Chargement de l’outil de tracé…</div>' : '');
         }
         $('insp-foot').innerHTML = abandonner + outils;
@@ -10989,14 +10989,14 @@ function renderSaisieObjet() {
     if (ficheEnPlace) {
         const r = $('saisie-rappel');
         if (r) r.textContent = famille === 'Point'
-            ? 'Cliquez ailleurs sur la carte pour déplacer le point.'
+            ? doigt('Cliquez ailleurs sur la carte pour déplacer le point.')
             : 'Forme prête. « Retracer » la recommence sans vider la fiche.';
         if (!s.repli) $('insp-foot').innerHTML = abandonner + outils;
         else $('insp-foot').innerHTML = abandonner + outils + boutonEnregistrerRepli();
         return;
     }
     const rappel = famille === 'Point'
-        ? `<div class="hint" id="saisie-rappel" style="margin-bottom:10px">Cliquez ailleurs sur la carte pour déplacer le point.</div>`
+        ? `<div class="hint" id="saisie-rappel" style="margin-bottom:10px">${doigt('Cliquez ailleurs sur la carte pour déplacer le point.')}</div>`
         : `<div class="hint" id="saisie-rappel" style="margin-bottom:10px">Forme prête. « Retracer » la recommence sans vider la fiche.</div>`;
     // Une ligne ajoutée à un objet : le formulaire est celui que la fiche de l'objet proposait (sa table, ses champs, ses valeurs
     // par défaut), pas la fiche de la couche des lignes.
@@ -13505,6 +13505,8 @@ async function chargerFeuille() {
 }
 
 const surTelephone = () => document.body.classList.contains('mobile-layout');
+/** Consigne écrite pour la souris, dite au doigt sur un téléphone (« Cliquez » devient « Touchez »). */
+const doigt = (texte) => (Feuille ? Feuille.pourLeDoigt(texte, surTelephone()) : texte);
 
 /**
  * Pose une feuille a une position.
@@ -15991,7 +15993,7 @@ const A = {
     pickOnMap() {
         locationPickMode = true;
         if (map) map.getCanvas().style.cursor = 'crosshair';
-        showToast('Cliquez sur la carte pour définir le lieu (Échap pour annuler)', 'info');
+        showToast(doigt('Cliquez sur la carte pour définir le lieu (Échap pour annuler)'), 'info');
     },
     useGeolocation() {
         if (!navigator.geolocation) { showToast('Géolocalisation non supportée', 'error'); return; }
@@ -16068,7 +16070,7 @@ const A = {
         if (parent?.forme) { poserFormeSaisie(parent.forme); return; }
         if (parent?.point) { poserPointSaisie(parent.point); return; }
         // En série, « Objet créé » vient d'être dit : on n'ajoute que la suite.
-        showToast(suite ? `Suivant : ${geste}` : `${geste.charAt(0).toUpperCase()}${geste.slice(1)} · ${layer.name}`, 'info');
+        showToast(doigt(suite ? `Suivant : ${geste}` : `${geste.charAt(0).toUpperCase()}${geste.slice(1)} · ${layer.name}`), 'info');
         if (famille !== 'Point') demarrerTrace(_saisieObjet, layer);
     },
     /** Depuis l'onglet d'un formulaire qui pose une position : la poser (carte, appareil, centre de l'objet), puis remplir. */
