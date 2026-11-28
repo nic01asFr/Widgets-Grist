@@ -158,7 +158,7 @@ import {
   formatGeometrie,
 } from './lib/geo-tables.js?v=20261002c';
 import { lireLiaison, ligneLiaison } from './lib/pg-liaisons.js?v=20261109a';
-import { htmlCouchesPgPanneau } from './lib/vue-pg-rendu.js?v=20261128d';
+import { htmlCouchesPgPanneau } from './lib/vue-pg-rendu.js?v=20261128e';
 import { typeDominant, identifiantsCoucheAtlas, valeursDepuisStats, bornesDepuisStats } from './lib/pg-couche-atlas.js?v=20261128b';
 import {
   layerFieldNames,
@@ -16514,7 +16514,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: (opts = {}) => import('./lib/vue-import-pg.js?v=20261128o').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ restauration: !!(opts && opts.restauration === true), couchesDocument: lireCouchesPgDoc, memoriserCouches: memoriserCouchesPg, rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: (opts = {}) => import('./lib/vue-import-pg.js?v=20261128p').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ restauration: !!(opts && opts.restauration === true), couchesDocument: lireCouchesPgDoc, memoriserCouches: memoriserCouchesPg, rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, creerCoucheAtlasTuiles: creerRenduTuilesAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     pgBascule: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.basculerCouchePg(id); },
     pgZoom: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.zoomCouchePg(id); },
     pgMenu: (id, ev) => menuCouchePg(id, ev),

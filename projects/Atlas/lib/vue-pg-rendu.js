@@ -96,6 +96,26 @@ export function htmlDirectes(liste, { icone = () => '' } = {}) {
 }
 
 /**
+ * « Mémorisées, introuvables » : les tables que le document se rappelle mais que cette base ne montre pas (renommées, supprimées, ou non accessibles pour
+ * la personne). Elles restent dans la liste du document tant qu'on ne les retire pas ; le bouton ne touche ni la table, ni la base.
+ * @param {{schema:string, table:string}[]} manquantes
+ */
+export function htmlManquantes(manquantes) {
+  if (!manquantes || !manquantes.length) return '';
+  const lignes = manquantes.map((m) => {
+    const nom = `${m.schema}.${m.table}`;
+    return `<div class="layer-item pg-ligne masquee" role="listitem">
+      <div class="layer-info">
+        <div class="layer-name" title="${echapper(nom)}">${echapper(nom)}</div>
+        <div class="layer-meta"><span>introuvable ou non accessible pour vous</span></div>
+      </div>
+      <button type="button" class="btn btn-soft" data-pg-oublier="${echapper(nom)}" title="Retirer cette table de la liste du document (la table PostgreSQL n’est pas touchée)">Retirer de la liste</button>
+    </div>`;
+  }).join('');
+  return `<div class="section">${titreSection('Mémorisées, introuvables', `${manquantes.length}`)}<div class="layer-list" role="list">${lignes}</div></div>`;
+}
+
+/**
  * Les lignes des tables de la base : une par table, comme « Tables du document ». Une table sans carte et non modifiable n'a
  * rien à offrir ici : elle est grisée plutôt que cachée (on voit qu'elle existe).
  */

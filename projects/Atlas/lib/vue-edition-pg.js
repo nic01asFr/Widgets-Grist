@@ -170,7 +170,7 @@ export function ouvrirEdition({ hote, entree, decl, meta, clientLecture, accesEc
       const r = await clientLecture.commande('pg_gateway_lire', { connexion: p.connexion, schema: p.schema, table: p.table, cles: [cle] });
       const ligne = (r.lignes || [])[0];
       if (!ligne) {
-        etat.phase = 'erreur'; etat.erreur = `La ligne ${libelleCle(cle)} n'existe plus dans PostgreSQL.`;
+        etat.phase = 'erreur'; etat.erreur = `La ligne ${libelleCle(cle)} est introuvable dans PostgreSQL (absente, ou supprimée entre-temps).`;
       } else {
         etat.ligne = ligne;
         etat.champs = champsEditables({ decl, table: meta, valeurs: ligne.valeurs });

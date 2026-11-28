@@ -39,8 +39,8 @@ import { lireTout } from './pg-lecture.js?v=20261109a';
 import { lireCopies, detacherCopie } from './pg-sync-session.js?v=20261109f';
 import { htmlCopies, ouvrirSynchro } from './vue-sync-pg.js?v=20261122c';
 import {
-  listerTables, htmlBase, htmlDirectes, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, nombre,
-} from './vue-pg-rendu.js?v=20261128d';
+  listerTables, htmlBase, htmlDirectes, htmlManquantes, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, nombre,
+} from './vue-pg-rendu.js?v=20261128e';
 
 // Le rendu pur vit dans `vue-pg-rendu.js` ; ces noms restent exportés d'ici pour qui les importait.
 export { listerTables, htmlTables, htmlApercu, htmlDirectes };
@@ -387,9 +387,16 @@ export async function ouvrirImportPg(hote) {
     }
     return items;
   }
+  /** Retirer de la liste du document une table mémorisée mais introuvable (la table PostgreSQL n'est pas touchée). */
+  function oublierManquante(nom) {
+    memoireCouches.manquantes = memoireCouches.manquantes.filter((m) => `${m.schema}.${m.table}` !== nom);
+    persister();
+    dessinerDirectes();
+    hote.annoncer(`${nom} retirée de la liste des couches PostgreSQL de ce document.`, 'success');
+  }
   function dessinerDirectes() {
     const z = zone('#pg-directes');
-    if (z) z.innerHTML = htmlDirectes(liste(), { icone });
+    if (z) z.innerHTML = htmlDirectes(liste(), { icone }) + htmlManquantes(memoireCouches.manquantes);
     noterChangement();
   }
 
@@ -828,6 +835,8 @@ export async function ouvrirImportPg(hote) {
     if (oeil) { basculer(oeil.dataset.pgBascule); return; }
     const men = t.closest('[data-pg-menu]');
     if (men) { menuLigne(men.dataset.pgMenu, men); return; }
+    const oubli = t.closest('[data-pg-oublier]');
+    if (oubli) { oublierManquante(oubli.dataset.pgOublier); return; }
     const act = t.closest('[data-act]');
     if (!act) return;
     const a = act.dataset.act;

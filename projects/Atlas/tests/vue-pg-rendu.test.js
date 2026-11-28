@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   htmlBase, htmlBlocTables, htmlTables, htmlFicheConnexion, htmlFicheTable, htmlApercu, listerTables,
-  htmlCouchesPgPanneau,
+  htmlCouchesPgPanneau, htmlManquantes,
 } from '../lib/vue-pg-rendu.js';
 
 const SCHEMA = {
@@ -255,5 +255,23 @@ describe('vue-pg-rendu — la section « Base PostgreSQL » du panneau Couches',
     const h = htmlCouchesPgPanneau([{ id: "a'b", libelle: '<img src=x onerror=alert(1)>', couleur: '"><script>x</script>', visible: true, etat: '<b>', origine: '<i>', enregistree: false }], { icone });
     assert.doesNotMatch(h, /<img src=x|<script>|<b>|<i>/);
     assert.doesNotMatch(h, /pgBascule\('a'b'/, 'l’identifiant ne casse pas la chaîne de l’attribut');
+  });
+});
+
+describe('tables mémorisées mais introuvables', () => {
+  it('rien à montrer sans entrée', () => {
+    assert.equal(htmlManquantes([]), '');
+    assert.equal(htmlManquantes(undefined), '');
+  });
+  it('chaque entrée dit pourquoi et offre de la retirer de la liste, sans toucher la table', () => {
+    const h = htmlManquantes([{ schema: 'metier', table: 'ancienne' }]);
+    assert.match(h, /metier\.ancienne/);
+    assert.match(h, /introuvable ou non accessible/);
+    assert.match(h, /data-pg-oublier="metier\.ancienne"/);
+    assert.match(h, /n’est pas touchée/);
+  });
+  it('un nom hostile est échappé', () => {
+    const h = htmlManquantes([{ schema: '"><script>x</script>', table: '<img src=x onerror=1>' }]);
+    assert.doesNotMatch(h, /<script>|<img src=x/);
   });
 });
