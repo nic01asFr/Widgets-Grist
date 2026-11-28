@@ -1677,6 +1677,10 @@
             font-family: var(--sans, inherit); font-style: normal; font-weight: 500;
             font-size: 10px; color: var(--muted); letter-spacing: 0;
         }
+        /* Au doigt, on ne clique pas : on touche. */
+        @media (pointer: coarse) {
+            .legend:has(.legend-clickable) .legend-head .t::after { content: " · touchez pour cibler"; }
+        }
         .maplibregl-popup.atlas-view-popup .maplibregl-popup-content {
             padding: 10px 12px; border-radius: 10px;
             font-family: inherit; box-shadow: 0 8px 28px rgba(30,20,10,0.16);
