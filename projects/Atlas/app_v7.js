@@ -81,6 +81,7 @@ import { SEUIL_VOLUME_M, marquerTailles, filtreVolume, filtreVaste } from './lib
 import { nomDeTableLibre } from './lib/atlas-tables.js?v=20261002c';
 import { champsDeLEntite, entreeObjet, listerObjets, dernieresParObjet } from './lib/objets-liste.js?v=20261003a';
 import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
+import { pagesDeTablesCreees, actionRetirerPages } from './lib/tables-sans-pages.js?v=20261128a';
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
 import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=20261031a';
 import { creerAccesDalles } from './lib/dalles3d-acces.js?v=20261031a';
@@ -13061,6 +13062,18 @@ function apprendreDroits(actions, erreur) {
 }
 
 /**
+ * Une table créée par Atlas vit en arrière-plan : Grist lui ajoute pourtant une page du
+ * même nom dans le volet de gauche, qu'on retire aussitôt (la table reste dans « Données
+ * source »). Au meilleur effort : un refus de droits ou un échec laisse la page, jamais
+ * une table à moitié créée, puisque la création est déjà faite.
+ */
+async function retirerPagesDeTables(ecrire, actions, resultat) {
+    const retrait = actionRetirerPages(pagesDeTablesCreees(actions, resultat));
+    if (!retrait) return;
+    try { await ecrire([retrait]); } catch (e) { console.warn('[Atlas] pages de tables non retirées', e && e.message); }
+}
+
+/**
  * Toute écriture passe par ici : le registre apprend du résultat, et l'erreur
  * revient inchangée à qui l'a causée, avec les tables qu'elle touchait
  * (`tablesAtlas`) pour que son appelant sache ce que le refus signifie.
@@ -13072,6 +13085,7 @@ function surveillerEcritures(docApi) {
         try {
             const resultat = await origine(actions, ...reste);
             apprendreDroits(actions, null);
+            await retirerPagesDeTables(origine, actions, resultat);
             return resultat;
         } catch (e) {
             const a = apprendreDroits(actions, e);
@@ -16346,7 +16360,7 @@ const A = {
                 <div class="input-label" style="margin-top:10px">Géométrie</div>
                 <div style="display:flex;gap:6px" role="group" aria-label="Géométrie">${types}</div>
                 <div class="layer-meta" id="nc-apercu" style="margin-top:10px" aria-live="polite"></div>
-                <div class="layer-meta" style="margin-top:6px">${grist._horsLigne?.local ? 'La couche est créée avec les colonnes Nom et Géométrie, sur cet appareil ; elle ira dans Grist avec la scène.' : 'Grist ajoutera aussi une page à ce nom, avec les colonnes Nom et Géométrie.'} Les autres champs s'ajoutent ensuite, par le module Formulaires${grist._horsLigne?.local ? '' : ' ou dans Grist'}.</div>
+                <div class="layer-meta" style="margin-top:6px">${grist._horsLigne?.local ? 'La couche est créée avec les colonnes Nom et Géométrie, sur cet appareil ; elle ira dans Grist avec la scène.' : 'La couche est créée avec les colonnes Nom et Géométrie, dans une nouvelle table Grist (sans page en plus).'} Les autres champs s'ajoutent ensuite, par le module Formulaires${grist._horsLigne?.local ? '' : ' ou dans Grist'}.</div>
                 <div style="display:flex;gap:8px;margin-top:12px">
                     <button class="btn btn-soft" style="flex:1" onclick="A.openModule('couches')">Annuler</button>
                     <button class="btn btn-primary" style="flex:1" id="nc-creer" onclick="A.creerNouvelleCouche()">Créer la couche</button>
