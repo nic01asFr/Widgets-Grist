@@ -18454,6 +18454,25 @@ function wireEvents() {
         setTimeout(() => champ.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 320);
     });
 
+    // Même défaut pour la feuille des modules (ex. « Nouvelle couche ») : à mi-hauteur, le clavier
+    // ne laisse que ~330 px et le bouton « Créer la couche » passe sous la barre du bas. On la
+    // déploie le temps de la saisie, puis on la rend à sa hauteur quand plus aucun champ n'a le focus.
+    let feuilleAvantSaisie = null;
+    $('module-panel')?.addEventListener('focusin', (e) => {
+        if (!surTelephone() || !Feuille) return;
+        if (!e.target?.matches?.('textarea, input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=button]):not([type=submit]):not([type=range])')) return;
+        if (feuillePosition === 'demi') { feuilleAvantSaisie = 'demi'; poserFeuille('pleine'); }
+        setTimeout(() => e.target.scrollIntoView?.({ block: 'center', behavior: 'smooth' }), 320);
+    });
+    $('module-panel')?.addEventListener('focusout', () => {
+        setTimeout(() => {
+            if (feuilleAvantSaisie == null || !Feuille) return;
+            if ($('module-panel')?.contains(document.activeElement) && document.activeElement?.matches?.('textarea, input')) return;
+            const retour = feuilleAvantSaisie; feuilleAvantSaisie = null;
+            if (feuillePosition === 'pleine') poserFeuille(retour);
+        }, 150);
+    });
+
     // command palette keyboard
     $('cmd-input').addEventListener('input', (e) => buildCmdItems(e.target.value));
     document.addEventListener('keydown', (e) => {
