@@ -10948,6 +10948,13 @@ const CONSIGNES_SAISIE = {
  * Le panneau de création. Idempotent : `renderInspector` le rappelle à chaque
  * changement de module, et remonter la fiche effacerait la saisie.
  */
+/** L'étape en cours, dite en toutes lettres sur téléphone (le bureau montre la fiche à côté de la carte). */
+function etapeSaisieTelephone(famille) {
+    if (!surTelephone()) return '';
+    const geste = famille === 'Point' ? 'placer le point' : famille === 'Polygon' ? 'tracer la surface' : 'tracer la ligne';
+    return `<strong>Étape 1 sur 2 : ${geste}, puis remplir la fiche.</strong><br>`;
+}
+
 function renderSaisieObjet() {
     const s = _saisieObjet;
     const layer = STATE.layers.find((l) => l.id === s?.layerId);
@@ -10955,6 +10962,8 @@ function renderSaisieObjet() {
     const famille = familleGeometrie(layer.geometryType);
     if (s.modification) { renderModificationForme(s, layer, famille); return; }
     const g = s.geometrie;
+    // La fiche ne change de hauteur qu'au passage « à poser » <-> « posée » : pas à chaque sommet tracé.
+    if (s._attentePose !== !g) { s._attentePose = !g; ajusterFicheSaisie(); }
     let sous;
     if (famille === 'Point') sous = g ? libellePoint(g) : `Point · table ${escapeHtml(layer.sourceTable)}`;
     else sous = libelleMesures(mesurerGeometrie(g || formeEnCours(s)), famille);
@@ -10980,7 +10989,7 @@ function renderSaisieObjet() {
             const r = $('saisie-rappel');
             if (r) r.textContent = doigt(CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point);
         } else {
-            hote.innerHTML = `<div class="hint">${doigt(CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point)} Rien n'est écrit dans Grist avant l'envoi de la fiche.</div>`
+            hote.innerHTML = `<div class="hint">${etapeSaisieTelephone(famille)}${doigt(CONSIGNES_SAISIE[famille] || CONSIGNES_SAISIE.Point)} Rien n'est écrit dans Grist avant l'envoi de la fiche.</div>`
                 + (famille !== 'Point' && !s.trace ? '<div class="hint" style="margin-top:8px">Chargement de l’outil de tracé…</div>' : '');
         }
         $('insp-foot').innerHTML = abandonner + outils;
@@ -13572,7 +13581,17 @@ async function ouvrirFicheMobile() {
         feuilleAvantFiche = feuillePosition;
         poserFeuille('fermee');
     }
-    if (fichePosition === 'fermee') poserFiche('demi');
+    if (fichePosition === 'fermee') poserFiche(Feuille.positionFicheSaisie({ attentePose: saisieEnAttentePose(), position: 'demi' }));
+}
+
+/** Une saisie d'objet attend sa géométrie (le point à placer, la forme à tracer) : la carte doit rester à portée. */
+const saisieEnAttentePose = () => !!_saisieObjet && !_saisieObjet.geometrie && !_saisieObjet.modification;
+
+/** Remet la fiche à la hauteur que dit `positionFicheSaisie`, sur téléphone seulement. */
+function ajusterFicheSaisie() {
+    if (!surTelephone() || !Feuille || fichePosition === 'fermee') return;
+    const cible = Feuille.positionFicheSaisie({ attentePose: saisieEnAttentePose(), position: fichePosition });
+    if (cible !== fichePosition) poserFiche(cible);
 }
 
 function fermerFicheMobile() {
@@ -16062,8 +16081,8 @@ const A = {
         if (!suite && layer.visible === false) showToast(`La couche « ${layer.name} » est masquée : l’objet sera créé, mais pas affiché`, 'warning');
         renderSaisieObjet();
         openInspectorPanel();
-        // Une fiche restée en pleine hauteur (clavier) cacherait la carte où l'on va toucher.
-        if (surTelephone() && Feuille && fichePosition === 'pleine') poserFiche(Feuille.ancrageAvantPoseSurCarte(fichePosition));
+        // La fiche déjà ouverte (série, clavier) cèderait la carte où l'on va toucher : elle se compacte.
+        ajusterFicheSaisie();
         const geste = famille === 'Point' ? 'cliquez sur la carte pour placer le point'
             : famille === 'Polygon' ? 'tracez la surface sur la carte' : 'tracez la ligne sur la carte';
         // Position déjà donnée (celle de l'appareil, le centre de l'objet) : le point est posé, on passe au formulaire.
