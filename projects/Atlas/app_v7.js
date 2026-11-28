@@ -13500,7 +13500,7 @@ let fichePosition = 'fermee';    // fiche d'un objet (l'inspecteur), memes posit
 let feuilleAvantFiche = null;
 
 async function chargerFeuille() {
-    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=20260821a');
+    if (!Feuille) Feuille = await import('./lib/feuille-mobile.js?v=20261128a');
     return Feuille;
 }
 
@@ -16060,6 +16060,8 @@ const A = {
         if (!suite && layer.visible === false) showToast(`La couche « ${layer.name} » est masquée : l’objet sera créé, mais pas affiché`, 'warning');
         renderSaisieObjet();
         openInspectorPanel();
+        // Une fiche restée en pleine hauteur (clavier) cacherait la carte où l'on va toucher.
+        if (surTelephone() && Feuille && fichePosition === 'pleine') poserFiche(Feuille.ancrageAvantPoseSurCarte(fichePosition));
         const geste = famille === 'Point' ? 'cliquez sur la carte pour placer le point'
             : famille === 'Polygon' ? 'tracez la surface sur la carte' : 'tracez la ligne sur la carte';
         // Position déjà donnée (celle de l'appareil, le centre de l'objet) : le point est posé, on passe au formulaire.

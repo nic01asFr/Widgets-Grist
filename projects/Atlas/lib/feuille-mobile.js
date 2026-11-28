@@ -98,3 +98,17 @@ export function ancrageApresOnglet({ ongletActif, onglet, position }) {
   if (onglet !== ongletActif) return 'demi';
   return position === 'fermee' ? 'demi' : 'fermee';
 }
+
+/**
+ * Où doit se tenir la fiche quand on attend un toucher sur la carte ?
+ *
+ * Toucher un champ déploie la fiche en pleine hauteur, pour que le clavier ne
+ * masque pas la saisie. Mais après « Envoyer », en série, Atlas redemande de
+ * toucher la carte pour placer l'objet suivant : restée en pleine hauteur, la
+ * fiche la recouvre tout entière et on ne peut plus rien poser sans la replier
+ * à la main. La pleine hauteur redescend donc à mi-hauteur ; les autres
+ * positions ne bougent pas.
+ */
+export function ancrageAvantPoseSurCarte(position) {
+  return position === 'pleine' ? 'demi' : position;
+}

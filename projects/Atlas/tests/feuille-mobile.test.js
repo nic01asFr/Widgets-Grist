@@ -97,3 +97,18 @@ test('changer d’onglet ouvre a mi-hauteur, jamais en plein ecran', () => {
   // La carte reste visible : c'est elle le sujet, le panneau l'accompagne.
   assert.equal(ancrageApresOnglet({ ongletActif: 'couches', onglet: 'recit', position: 'pleine' }), 'demi');
 });
+
+/* ---------- attendre un toucher sur la carte ---------- */
+
+import { ancrageAvantPoseSurCarte } from '../lib/feuille-mobile.js';
+
+test('en attente d’un toucher sur la carte, la pleine hauteur redescend à mi-hauteur', () => {
+  // Après « Envoyer » en série, la fiche restée déployée par le clavier
+  // recouvrait toute la carte : impossible de placer l'objet suivant.
+  assert.equal(ancrageAvantPoseSurCarte('pleine'), 'demi');
+});
+
+test('les autres positions ne bougent pas', () => {
+  assert.equal(ancrageAvantPoseSurCarte('demi'), 'demi');
+  assert.equal(ancrageAvantPoseSurCarte('fermee'), 'fermee');
+});
