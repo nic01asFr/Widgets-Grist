@@ -95,9 +95,11 @@ export function libelleEtat(etat) {
  */
 export function creerCoucheDirecte({
   carte, client, params, id, couleur = '#d62728', limite = LIMITE_DIRECT, delai = DELAI_ANTIREBOND_MS,
-  minuteur = { set: (f, ms) => setTimeout(f, ms), clear: (t) => clearTimeout(t) }, surEtat = () => {},
+  minuteur = { set: (f, ms) => setTimeout(f, ms), clear: (t) => clearTimeout(t) }, surEtat = () => {}, rendu = null,
 }) {
-  const ids = identifiantsDirects(id);
+  // `rendu` : l'hôte porte une VRAIE couche (symbologie, fiche, ordre : pg-couche-atlas.js). Le module garde les lectures, l'hôte dessine :
+  // `rendu.surDonnees(entites)` remplace `setData`, `rendu.ids` remplace les identifiants MapLibre, et `arreter` ne retire rien de la carte.
+  const ids = rendu ? rendu.ids : identifiantsDirects(id);
   const etat = { phase: 'repos', nb: 0, tronque: false, avertissements: [], erreur: '' };
   let sequence = 0;
   let attente = null;
@@ -107,6 +109,7 @@ export function creerCoucheDirecte({
   const publier = () => surEtat({ ...etat, avertissements: [...etat.avertissements] });
 
   function monter() {
+    if (rendu) return;
     if (!carte.getSource(ids.source)) carte.addSource(ids.source, { type: 'geojson', data: VIDE });
     for (const c of couchesDirectes(id, couleur)) if (!carte.getLayer(c.id)) carte.addLayer(c);
   }
@@ -118,9 +121,12 @@ export function creerCoucheDirecte({
     try {
       const fc = await client.couche({ ...params, bbox: bboxDepuisBornes(carte.getBounds()), limite });
       if (!actif || mienne !== sequence) return; // arrêtée, ou dépassée par une lecture plus récente
-      monter();
       dernieres = fc.features || [];
-      carte.getSource(ids.source).setData({ type: 'FeatureCollection', features: dernieres });
+      if (rendu) rendu.surDonnees(dernieres, { tronque: !!fc.tronque });
+      else {
+        monter();
+        carte.getSource(ids.source).setData({ type: 'FeatureCollection', features: dernieres });
+      }
       etat.phase = 'ok';
       etat.nb = fc.nb_entites != null ? fc.nb_entites : (fc.features || []).length;
       etat.tronque = !!fc.tronque;
@@ -172,6 +178,7 @@ export function creerCoucheDirecte({
       if (attente !== null) { minuteur.clear(attente); attente = null; }
       carte.off('moveend', planifier);
       carte.off('style.load', apresStyle);
+      if (rendu) return; // la couche est celle de l'hôte : c'est lui qui la retire
       for (const c of [ids.point, ids.ligne, ids.surface]) if (carte.getLayer(c)) carte.removeLayer(c);
       if (carte.getSource(ids.source)) carte.removeSource(ids.source);
     },

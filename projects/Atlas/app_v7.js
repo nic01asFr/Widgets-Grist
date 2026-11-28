@@ -159,6 +159,7 @@ import {
 } from './lib/geo-tables.js?v=20261002c';
 import { lireLiaison, ligneLiaison } from './lib/pg-liaisons.js?v=20261109a';
 import { htmlCouchesPgPanneau } from './lib/vue-pg-rendu.js?v=20261128d';
+import { typeDominant, identifiantsCoucheAtlas } from './lib/pg-couche-atlas.js?v=20261128a';
 import {
   layerFieldNames,
   controlFieldType,
@@ -6294,6 +6295,67 @@ function menuCouchePg(id, ev) {
         if (act === 'panneau') A.openPG();
         else if (act === 'retirer') STATE.pgVue.retirerCouchePg(id);
     });
+}
+/**
+ * Une table PostgreSQL « en direct » comme VRAIE couche d'Atlas (`lib/pg-couche-atlas.js`) : symbologie, fiche d'entité, ordre, légende et filtres s'y appliquent.
+ * Les entités viennent des lectures de la zone visible (`surDonnees`) et ne s'écrivent JAMAIS dans le document ; seule l'apparence s'enregistre, dans `Atlas_LayerPrefs`,
+ * sous la clé stable de la table (`manifestLayerId`).
+ * @returns {{ids: object, surDonnees: Function, visible: Function, retirer: Function, layer: object}}
+ */
+function creerRenduCoucheAtlas({ id, libelle, couleur, geometrie, cle, url, connexion, schema, table }) {
+    const layer = makeLayer(libelle, geometrie || 'Polygon', { type: 'FeatureCollection', features: [] }, null, null);
+    layer.id = 'pg-' + id;
+    layer.color = couleur;
+    layer.source = 'postgresql';
+    layer.manifestLayerId = cle;
+    layer._pgLive = { url, connexion, schema, table };
+    // Une table de données n'a pas de hauteur : surfaces À PLAT (comme les couches d'analyse), pas en volumes.
+    layer.style = layer.style || { mode: 'mapbox' };
+    layer.style.polygonMode = 'flat';
+    initSymbolization(layer);
+    STATE.layers.splice(insertionIndex(STATE.layers, layer.geometryType), 0, layer);
+    addLayerToMap(layer);
+    updateRailBadge();
+    updateLegend();
+    rafraichirCouchesPg();
+    // L'apparence que le document garde pour cette table : le style retrouvé quand on la remet sur la carte.
+    if (CONFIG.grist.ready) {
+        loadLayerPrefs(grist.docApi).then((prefs) => {
+            if (!STATE.layers.includes(layer) || !prefs.has(cle)) return;
+            applyLayerPrefs(layer, prefs);
+            initSymbolization(layer);
+            addLayerToMap(layer);
+            updateLegend();
+            rafraichirCouchesPg();
+        }).catch((e) => console.warn('[Atlas] apparence de la couche PostgreSQL non relue :', e.message));
+    }
+    return {
+        layer,
+        ids: identifiantsCoucheAtlas(layer.id),
+        surDonnees(features) {
+            layer.geojson = { type: 'FeatureCollection', features };
+            const t = typeDominant(features, layer.geometryType);
+            indexFeatures(layer);
+            if (features.length && t !== layer.geometryType) { layer.geometryType = t; initSymbolization(layer); addLayerToMap(layer); } else syncLayerSourceData(layer);
+            updateLegend();
+            rafraichirCouchesPg();
+        },
+        visible(v) {
+            layer.visible = v;
+            syncLayerToMapState(layer);
+            updateLegend();
+            rafraichirCouchesPg();
+        },
+        retirer() {
+            const i = STATE.layers.indexOf(layer);
+            if (i >= 0) STATE.layers.splice(i, 1);
+            removeLayerGfx(layer);
+            if (STATE.selectedLayer === layer.id) STATE.selectedLayer = null;
+            updateRailBadge();
+            updateLegend();
+            rafraichirCouchesPg();
+        },
+    };
 }
 function renderLayersPanelLecture() {
     titreModule('Légende', 'Affichage tel que configuré par l’éditeur.');
@@ -16314,7 +16376,7 @@ const A = {
 
     // Couches
     openOSM, runOSM,
-    openPG: () => import('./lib/vue-import-pg.js?v=20261128g').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
+    openPG: () => import('./lib/vue-import-pg.js?v=20261128j').then((m) => { STATE.pgVue = m; return m.ouvrirImportPg({ rafraichirCouches: rafraichirCouchesPg, options: lireOptionsPg, memoriserAdresse: memoriserAdressePg, creerCoucheAtlas: creerRenduCoucheAtlas, carte: map, corps: $('module-body'), titre: titreModule, annoncer: showToast, retour: () => A.openModule('couches'), lectureSeule: () => !canWrite(CONFIG.viewMode), tables: () => grist.docApi.listTables(), importer: importerCouchePg, liaisons: () => STATE.liaisonsPg || [], enregistrerLiaison: enregistrerLiaisonPg, supprimerLiaison: supprimerLiaisonPg, importerCopie: importerCopiePg, docApi: () => grist.docApi, fiche: fichePg, menu: ouvrirMenuActions, icone: (nom, taille) => (IC[nom] ? icTrait(IC[nom], taille) : '') }); }).catch((e) => showToast('Import PostgreSQL indisponible : ' + e.message, 'error')),
     pgBascule: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.basculerCouchePg(id); },
     pgZoom: (id, ev) => { if (ev) ev.stopPropagation(); STATE.pgVue && STATE.pgVue.zoomCouchePg(id); },
     pgMenu: (id, ev) => menuCouchePg(id, ev),
@@ -17427,8 +17489,9 @@ const A = {
         e.stopPropagation();
         const l = STATE.layers.find((x) => x.id === id); if (!l) return;
         if (!assertCanWrite('supprimer une couche')) return;
-        if (!confirm(`Supprimer la couche « ${l.name} » ?`)) return;
+        if (!confirm(l._pgLive ? `Retirer la couche « ${l.name} » de la carte ?\n\nLa table PostgreSQL n'est pas touchée.` : `Supprimer la couche « ${l.name} » ?`)) return;
         removeLayerGfx(l);
+        if (l._pgLive && STATE.pgVue) STATE.pgVue.retirerCoucheParAtlas(l.id); // les lectures de la table s'arrêtent avec la couche
         // Le refus se dit : sinon la couche revient au rechargement sans que
         // personne sache pourquoi.
         if (CONFIG.grist.ready && l.gristId) {

@@ -124,7 +124,7 @@ export function ouvrirEdition({ hote, entree, decl, meta, clientLecture, accesEc
     insertion: insertionPossible(decl, typeGeometrie),
   };
   const ids = entree.couche.ids;
-  const couches = [ids.point, ids.ligne, ids.surface];
+  const couches = [...new Set([ids.point, ids.ligne, ids.surface])]; // une couche d'Atlas porte les trois sous un seul identifiant
   let racine = null;
   let ferme = false;
 

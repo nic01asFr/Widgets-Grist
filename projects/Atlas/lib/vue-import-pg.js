@@ -28,8 +28,9 @@ import { bboxDepuisBornes, texteErreur } from './pg-passerelle.js?v=20261122b';
 import { creerClientAuto } from './pg-postgrest.js?v=20261128a';
 import { lireAdresseDocument, demarrage, adresseAEnregistrer } from './pg-adresse.js?v=20261128a';
 import { planImportPg } from './pg-import.js?v=20261109a';
-import { creerCoucheDirecte, libelleEtat, empriseEntites } from './pg-direct.js?v=20261128b';
+import { creerCoucheDirecte, libelleEtat, empriseEntites } from './pg-direct.js?v=20261128c';
 import { creerCoucheTuiles, modeDe } from './pg-tuiles.js?v=20261128b';
+import { cleApparence, typeDepuisCatalogue } from './pg-couche-atlas.js?v=20261128a';
 import { ouvrirEdition } from './vue-edition-pg.js?v=20261122b';
 import { origineLisible } from './pg-liaisons.js?v=20261109a';
 import { planCopie } from './pg-sync-copie.js?v=20261109f';
@@ -130,6 +131,13 @@ let accesEcriturePartage = null;
 // L'hôte courant : le jeton Grist est demandé à CE document, à chaque demande (la page garde les accès, pas l'hôte).
 let hoteCourant = null;
 
+/** Montrer ou masquer une couche en direct : les lectures s'arrêtent avec elle ; une vraie couche d'Atlas change aussi de visibilité. */
+function poserVisibilite(d, visible) {
+  if (visible) { d.visible = true; d.etat = 'lecture de la zone visible…'; if (d.rendu) d.rendu.visible(true); d.couche.demarrer(); } else {
+    d.couche.arreter(); d.visible = false; d.etat = 'masquée'; if (d.rendu) d.rendu.visible(false);
+  }
+}
+
 /** Le panneau Couches se redessine quand la liste des couches PostgreSQL change (sans toucher au panneau PostgreSQL, ni à une saisie en cours). */
 const noterChangement = () => { if (hoteCourant && typeof hoteCourant.rafraichirCouches === 'function') hoteCourant.rafraichirCouches(); };
 
@@ -138,7 +146,8 @@ const noterChangement = () => { if (hoteCourant && typeof hoteCourant.rafraichir
  * @returns {{id:string, libelle:string, couleur:string, visible:boolean, etat:string, enregistree:boolean, origine:string}[]}
  */
 export function listerCouchesPg() {
-  return [...directes.entries()].map(([id, d]) => ({
+  // Une vraie couche d'Atlas est déjà dans la liste commune des couches : cette section ne montre que les autres (tuiles).
+  return [...directes.entries()].filter(([, d]) => !d.rendu).map(([id, d]) => ({
     id, libelle: d.libelle, couleur: d.couleur, visible: d.visible, etat: d.visible ? d.etat : 'masquée', enregistree: d.gristId != null, origine: d.url ? origineLisible(d.url) : '', mode: d.mode || 'geojson',
   }));
 }
@@ -146,9 +155,21 @@ export function listerCouchesPg() {
 export function basculerCouchePg(id) {
   const d = directes.get(id);
   if (!d) return false;
-  if (d.visible) { d.couche.arreter(); d.visible = false; d.etat = 'masquée'; } else { d.visible = true; d.etat = 'lecture de la zone visible…'; d.couche.demarrer(); }
+  poserVisibilite(d, !d.visible);
   noterChangement();
   return true;
+}
+/** Atlas vient de supprimer une couche qui venait d'ici : ses lectures s'arrêtent (la couche est déjà retirée de la carte par Atlas). */
+export function retirerCoucheParAtlas(layerId) {
+  for (const [id, d] of directes) {
+    if (d.rendu && d.rendu.layer && d.rendu.layer.id === layerId) {
+      d.couche.arreter();
+      directes.delete(id);
+      noterChangement();
+      return true;
+    }
+  }
+  return false;
 }
 /** Cadrer la carte sur ce qui est chargé de la couche (rien de chargé : on le dit, la couche n'est pas devinée). */
 export function zoomCouchePg(id) {
@@ -169,6 +190,7 @@ export function retirerCouchePg(id) {
   const d = directes.get(id);
   if (!d || d.gristId != null) return false;
   d.couche.arreter();
+  if (d.rendu) d.rendu.retirer();
   directes.delete(id);
   noterChangement();
   return true;
@@ -375,7 +397,16 @@ export async function ouvrirImportPg(hote) {
         carte: hote.carte, client: clientDeTuiles(clientDirect), id, couleur, params: { connexion, schema, table }, lignesEstimees: info.lignes, surEtat,
       });
     } else {
-      entree.couche = creerCoucheDirecte({ carte: hote.carte, client: clientDirect, id, couleur, params: { connexion, schema, table }, surEtat });
+      // Une table modeste est une VRAIE couche d'Atlas (symbologie, fiche, ordre, légende) alimentée par ces lectures ; sans hôte capable, le module dessine lui-même.
+      if (typeof hote.creerCoucheAtlas === 'function') {
+        const brute = ((etat.schema && etat.schema.schemas) || []).find((x) => x.nom === schema);
+        const tableBrute = brute ? brute.tables.find((x) => x.nom === table) : null;
+        entree.rendu = hote.creerCoucheAtlas({
+          id, libelle: entree.libelle, couleur, geometrie: typeDepuisCatalogue(tableBrute ? tableBrute.geometries : null),
+          cle: cleApparence({ url, connexion, schema, table }), url, connexion, schema, table,
+        });
+      }
+      entree.couche = creerCoucheDirecte({ carte: hote.carte, client: clientDirect, id, couleur, params: { connexion, schema, table }, surEtat, rendu: entree.rendu || null });
     }
     entree.mode = mode;
     directes.set(id, entree);
@@ -422,7 +453,7 @@ export async function ouvrirImportPg(hote) {
     if (String(id).startsWith('liaison-')) { activer(id); return; }
     const d = directes.get(id);
     if (!d) return;
-    if (d.visible) { d.couche.arreter(); d.visible = false; d.etat = 'masquée'; } else { d.visible = true; d.etat = 'lecture de la zone visible…'; d.couche.demarrer(); }
+    poserVisibilite(d, !d.visible);
     dessinerDirectes();
   }
   // « Modifier les données » : la table doit être DÉCLARÉE modifiable par la passerelle ; sinon on le dit, on n'ouvre rien.
@@ -451,6 +482,7 @@ export async function ouvrirImportPg(hote) {
     const d = directes.get(id);
     if (!d) return;
     d.couche.arreter();
+    if (d.rendu) d.rendu.retirer();
     directes.delete(id);
     dessinerDirectes(); // une liaison gardée reste dans la liste, « à afficher »
   }
@@ -462,7 +494,7 @@ export async function ouvrirImportPg(hote) {
     if (!window.confirm(`Oublier la liaison « ${libelle || gristId} » ?\n\nElle disparaît du document. La table PostgreSQL n'est pas touchée.`)) return;
     try {
       await hote.supprimerLiaison(gristId);
-      if (d) { d.couche.arreter(); directes.delete(idListe); }
+      if (d) { d.couche.arreter(); if (d.rendu) d.rendu.retirer(); directes.delete(idListe); }
       hote.annoncer('Liaison oubliée.', 'success');
     } catch (e) {
       hote.annoncer(`Impossible d’oublier la liaison : ${(e && e.message) || e}`, 'error');
