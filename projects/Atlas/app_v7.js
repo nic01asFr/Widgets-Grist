@@ -16083,13 +16083,10 @@ const A = {
         openInspectorPanel();
         // La fiche déjà ouverte (série, clavier) cèderait la carte où l'on va toucher : elle se compacte.
         ajusterFicheSaisie();
-        const geste = famille === 'Point' ? 'cliquez sur la carte pour placer le point'
-            : famille === 'Polygon' ? 'tracez la surface sur la carte' : 'tracez la ligne sur la carte';
         // Position déjà donnée (celle de l'appareil, le centre de l'objet) : le point est posé, on passe au formulaire.
         if (parent?.forme) { poserFormeSaisie(parent.forme); return; }
         if (parent?.point) { poserPointSaisie(parent.point); return; }
-        // En série, « Objet créé » vient d'être dit : on n'ajoute que la suite.
-        showToast(doigt(suite ? `Suivant : ${geste}` : `${geste.charAt(0).toUpperCase()}${geste.slice(1)} · ${layer.name}`), 'info');
+        // Pas de message : la consigne est déjà dans la fiche (bandeau). Les messages disent ce qui vient d'arriver, pas ce qu'il reste à faire.
         if (famille !== 'Point') demarrerTrace(_saisieObjet, layer);
     },
     /** Depuis l'onglet d'un formulaire qui pose une position : la poser (carte, appareil, centre de l'objet), puis remplir. */
