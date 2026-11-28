@@ -84,7 +84,7 @@ import { decisionOuverture } from './lib/ouvrir-objet.js?v=20261002e';
 import { creerDroits, apprendre, categorieTable, configurationEcrivable, posturesOffertes } from './lib/droits-tables.js?v=20261002f';
 import { idLigne, retrouverEntite } from './lib/selection-grist.js?v=20261031a';
 import { creerAccesDalles } from './lib/dalles3d-acces.js?v=20261031a';
-import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut } from './lib/posture.js?v=20261002f';
+import { POSTURES, LIBELLES, postureDepuis, etatDePosture, postureParDefaut, raisonAucunFormulairePropose } from './lib/posture.js?v=20261128a';
 import { capturerApparence, restaurerApparence, memeApparence, Historique } from './lib/historique-apparence.js?v=20261003g';
 import { pasAffiche, rangParmiAffiches } from './lib/revue-selection.js?v=20261002g';
 import { edgeScrollStep } from './lib/edge-scroll.js?v=20260806a';
@@ -13171,7 +13171,7 @@ function raisonPostureNonOfferte(posture) {
     if (posture === 'preparer') return PLAFOND_LIEN ? 'Ce lien ouvre en exploitation : rouvrez le document sans « mode » pour régler' : 'Vos droits ne permettent pas de régler la configuration';
     return tablesDeReleve().length
         ? 'Le document refuse l’écriture dans les tables de relevé'
-        : 'Aucun formulaire de relevé n’est proposé : à régler en Préparer';
+        : raisonAucunFormulairePropose(surTelephone());
 }
 
 /** La seule écriture de `viewMode` et `peutSaisir` après l'ouverture. */
